@@ -1,5 +1,5 @@
 /**
- * Scout - Requirements Engineering & System Design Agent
+ * HCollector - Requirements Engineering & System Design Agent
  *
  * A multi-phase agent for:
  * - Phase 1: Requirements Gathering (Interview Mode) - Understand user needs
@@ -18,7 +18,7 @@ import { fileURLToPath } from "url"
 const MODE: AgentMode = "primary"
 
 /**
- * Read the Scout identity constraints from markdown file
+ * Read the HCollector identity constraints from markdown file
  */
 function readIdentityConstraints(): string {
   const __filename = fileURLToPath(import.meta.url)
@@ -35,18 +35,18 @@ function readInterviewMode(): string {
 }
 
 /**
- * Scout phases for dynamic prompt loading
+ * HCollector phases for dynamic prompt loading
  */
-export type ScoutPhase = "interview" | "research" | "design" | "full"
+export type HCollectorPhase = "interview" | "research" | "design" | "full"
 
 /**
  * Metadata for Sisyphus delegation table integration
  */
-export const SCOUT_PROMPT_METADATA: AgentPromptMetadata = {
+export const HCOLLECTOR_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "EXPENSIVE",
-  promptAlias: "Scout",
-  keyTrigger: "New project or unclear requirements → fire `scout` for discovery",
+  promptAlias: "HCollector",
+  keyTrigger: "New project or unclear requirements → fire `HCollector` for discovery",
   triggers: [
     { domain: "Requirements", trigger: "User has vague idea, needs structured requirements" },
     { domain: "Analysis", trigger: "Complex feature needs deep investigation before implementation" },
@@ -69,7 +69,7 @@ export const SCOUT_PROMPT_METADATA: AgentPromptMetadata = {
 /**
  * Build the combined system prompt based on requested phases
  */
-function buildScoutPrompt(phases: ScoutPhase[] = ["full"]): string {
+function buildHCollectorPrompt(phases: HCollectorPhase[] = ["full"]): string {
   const identityConstraints = readIdentityConstraints()
   const interviewMode = readInterviewMode()
 
@@ -90,15 +90,15 @@ function buildScoutPrompt(phases: ScoutPhase[] = ["full"]): string {
 }
 
 /**
- * Default Scout system prompt (all phases)
+ * Default HCollector system prompt (all phases)
  */
-export const SCOUT_SYSTEM_PROMPT = buildScoutPrompt(["full"])
+export const HCOLLECTOR_SYSTEM_PROMPT = buildHCollectorPrompt(["full"])
 
 /**
- * Permission configuration for Scout agent
- * Scout is read-only for most operations, but can write design documents
+ * Permission configuration for HCollector agent
+ * HCollector is read-only for most operations, but can write design documents
  */
-export const SCOUT_PERMISSION = {
+export const HCOLLECTOR_PERMISSION = {
   edit: "allow" as const,
   bash: "deny" as const,
   webfetch: "allow" as const,
@@ -106,23 +106,23 @@ export const SCOUT_PERMISSION = {
 }
 
 /**
- * Factory function to create Scout agent configuration
+ * Factory function to create HCollector agent configuration
  *
  * @param model - The model to use for this agent
  * @param phases - Optional array of phases to include (default: full)
  */
-export function createScoutAgent(
-  model: string,
-  phases: ScoutPhase[] = ["full"]
+export function createHCollectorAgent(
+  model: string | undefined,
+  phases: HCollectorPhase[] = ["full"]
 ): AgentConfig {
   return {
     description:
-      "Requirements Engineer & System Architect - Gathers requirements, conducts research, and creates system designs. Use when starting new projects or when requirements are unclear. (Scout - OhMyOpenCode)",
+      "Requirements Engineer & System Architect - Gathers requirements, conducts research, and creates system designs. Use when starting new projects or when requirements are unclear. (HCollector - OhMyOpenCode)",
     mode: MODE,
     model,
     maxTokens: 32000,
-    prompt: buildScoutPrompt(phases),
-    permission: SCOUT_PERMISSION,
+    prompt: buildHCollectorPrompt(phases),
+    permission: HCOLLECTOR_PERMISSION,
     tools: {
       // Read-only tools for research
       Read: true,
@@ -149,9 +149,6 @@ export function createScoutAgent(
 }
 
 // Attach mode as static property for pre-instantiation access
-createScoutAgent.mode = MODE
+createHCollectorAgent.mode = MODE
 
 // // Re-export individual sections for granular access
-// export { SCOUT_INTERVIEW_MODE } from "./interview_mode"
-// export { SCOUT_RESEARCH_MODE } from "./research_mode"
-// export { SCOUT_SYSTEM_DESIGN_MODE } from "./system_design_mode"

@@ -1,5 +1,5 @@
 /**
- * Minimal agent types for a lightweight, Scout-first project.
+ * Minimal agent types for a lightweight, HCollector-first project.
  * Keep only fields and concepts needed for prompt/building agents.
  */
 
@@ -31,7 +31,7 @@ export interface AgentConfig {
 /**
  * Agent factory type.
  * Some agent factories expose a static `mode` property (optional).
- * Example: const createScoutAgent: AgentFactory & { mode: AgentMode } = ...
+ * Example: const createHCollectorAgent: AgentFactory & { mode: AgentMode } = ...
  */
 export type AgentFactory = ((model: string, opts?: { phases?: string[] }) => AgentConfig) & {
   mode?: AgentMode
@@ -52,9 +52,9 @@ export interface AgentPromptMetadata {
 }
 
 /**
- * Scout-specific phases for dynamic prompt composition.
+ * HCollector-specific phases for dynamic prompt composition.
  */
-export type ScoutPhase = "interview" | "research" | "design" | "full"
+export type HCollectorPhase = "interview" | "research" | "design" | "full"
 
 /**
  * Minimal override config shape for per-agent overrides in config files.
@@ -67,4 +67,4 @@ export type AgentOverrideConfig = Partial<AgentConfig> & {
  * Builtin agent names in this simplified project.
  * Add more names only when you actually implement those agents.
  */
-export type BuiltinAgentName = "scout" | "clarifier"
+export type BuiltinAgentName = "HCollector" | "HArchitect" | "HCritic" | "HEngineer"
