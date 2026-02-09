@@ -5,12 +5,13 @@
 **注意：此阶段由 HCollector 专门处理**
 
 在此阶段，HCollector 将协助你收集项目相关资料，包括：
+
 - 代码库资料（当前项目、参考项目）
 - 领域资料（行业标准、术语表、竞品分析）
 - 系统需求分析资料（场景库、FMEA库、功能库）
 - 系统设计资料（架构图、模块设计、接口文档）
 
-完成后将生成资料索引文档 `.hyper-designer/document/index.md`。
+完成后将生成资料索引文档 `.hyper-designer/document/manifest.md`。
 
 ## 质量审核要求
 

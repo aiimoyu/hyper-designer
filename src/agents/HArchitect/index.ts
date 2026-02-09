@@ -69,24 +69,24 @@ export const HARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "EXPENSIVE",
   promptAlias: "HArchitect",
-  keyTrigger: "Requirements engineering and early-stage analysis workflow",
+  keyTrigger: "Requirements engineering workflow coordinator - from data collection to functional refinement. MUST delegate to @HCritic after completing each stage document.",
   triggers: [
-    { domain: "Requirements Engineering", trigger: "Need structured requirements analysis workflow" },
-    { domain: "System Analysis", trigger: "Requirements analysis and functional list refinement" },
-    { domain: "Workflow Management", trigger: "Multi-stage requirements process with handover to detailed design" },
+    { domain: "Requirements Engineering", trigger: "Starting requirements analysis workflow (IR Analysis → Scenario → UseCase → Functional Refinement)" },
+    { domain: "System Analysis", trigger: "Need structured requirements breakdown before detailed design" },
+    { domain: "Workflow Coordination", trigger: "Managing multi-stage requirements process with quality gates (HCritic) and handover to HEngineer" },
   ],
   useWhen: [
-    "Starting a new system design from requirements",
-    "Need to perform requirements analysis in structured stages",
-    "Require formal documentation at each analysis stage",
-    "Need design review and iteration process",
-    "Working on complex systems requiring requirements breakdown",
+    "Starting a new system design from user requirements",
+    "Need to perform IR Analysis, Scenario Analysis, Use Case Analysis, or Functional Refinement",
+    "Require formal documentation at each analysis stage with quality reviews",
+    "Working on requirements phase (before system/module design)",
+    "User provides high-level requirements that need structured analysis",
   ],
   avoidWhen: [
-    "Simple feature implementation with clear specs",
+    "System functional design or module design (use @HEngineer instead - HArchitect hands over after functional refinement)",
+    "Simple feature implementation with clear specs (no formal workflow needed)",
     "Quick prototyping without formal process",
     "Bug fixes or minor enhancements",
-    "Already completed functional list refinement (use HEngineer instead)",
   ],
 }
 
@@ -143,7 +143,7 @@ export function createHArchitectAgent(
   return {
     name: "HArchitect",
     description:
-      "System Architect - Manages requirements engineering workflow from data collection to functional list refinement. Hands over to HEngineer for detailed system and module design. Coordinates multi-stage design process with formal documentation and review cycles. (HArchitect - OhMyOpenCode)",
+      "System Architect & Requirements Workflow Coordinator - Manages requirements engineering from data collection (delegates to @HCollector) through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles. (HArchitect - OhMyOpenCode)",
     mode: MODE,
     model,
     maxTokens: 32000,

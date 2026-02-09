@@ -67,23 +67,23 @@ export const HENGINEER_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "EXPENSIVE",
   promptAlias: "HEngineer",
-  keyTrigger: "System and module level detailed design",
+  keyTrigger: "System and module detailed design - takes over after HArchitect completes functional refinement. MUST call @HCritic after completing each design stage.",
   triggers: [
-    { domain: "System Design", trigger: "Need system requirement decomposition and architecture design" },
-    { domain: "Module Design", trigger: "Need activity decomposition and detailed module specifications" },
-    { domain: "Technical Specification", trigger: "Require implementable technical design documents" },
+    { domain: "System Design", trigger: "Need system requirement decomposition (SR-AR) and system functional design (architecture, tech stack, data models)" },
+    { domain: "Module Design", trigger: "Need module functional design (detailed class design, algorithms, implementation specs)" },
+    { domain: "Technical Specification", trigger: "Require implementable technical design documents ready for coding" },
   ],
   useWhen: [
-    "Need to decompose system requirements into modules",
-    "Require system architecture and technology stack selection",
-    "Need to break down work into executable activities and estimates",
-    "Require detailed module technical specifications for implementation",
-    "Working on complex systems requiring detailed design phase",
+    "HArchitect has completed functional refinement and handed over to HEngineer",
+    "Need to decompose system requirements into module-level SRs and implementation-level ARs",
+    "Require system architecture design with technology stack selection and data models",
+    "Need detailed module specifications with class design, algorithms, and implementation guidance",
+    "Working on design phases after requirements analysis is complete",
   ],
   avoidWhen: [
-    "Simple feature implementation with clear specs",
-    "Upstream requirements analysis not yet complete",
-    "Need high-level requirements analysis (use HArchitect instead)",
+    "Requirements analysis phase (IR, Scenario, UseCase, Functional Refinement - use @HArchitect instead)",
+    "Simple feature implementation without formal design process",
+    "Upstream requirements not yet complete or approved",
   ],
 }
 
@@ -140,7 +140,7 @@ export function createHEngineerAgent(
   return {
     name: "HEngineer",
     description:
-      "System Engineer - Executes system-level and module-level detailed design. Handles system functional design (decomposition + architecture) and module functional design (activities + specifications). Works with HArchitect for requirements and HCritic for reviews. (HEngineer - OhMyOpenCode)",
+      "System Engineer & Technical Design Specialist - Executes system-level design (SR-AR decomposition + system functional design: architecture, tech stack, data models) and module-level design (detailed class design, algorithms, implementation specs). Takes over from @HArchitect after functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. (HEngineer - OhMyOpenCode)",
     mode: MODE,
     model,
     maxTokens: 32000,

@@ -46,23 +46,24 @@ export const HCOLLECTOR_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "EXPENSIVE",
   promptAlias: "HCollector",
-  keyTrigger: "New project or unclear requirements → fire `HCollector` for discovery",
+  keyTrigger: "Data collection phase - typically delegated by @HArchitect at workflow start. Gathers reference materials, interviews users, and prepares context for requirements analysis.",
   triggers: [
-    { domain: "Requirements", trigger: "User has vague idea, needs structured requirements" },
-    { domain: "Analysis", trigger: "Complex feature needs deep investigation before implementation" },
-    { domain: "Architecture", trigger: "System design decisions needed before coding" },
+    { domain: "Data Collection", trigger: "Start of workflow - need to collect reference materials, existing docs, and user context" },
+    { domain: "Requirements Gathering", trigger: "User has vague ideas - need interview mode to extract structured information" },
+    { domain: "Research", trigger: "Need to investigate existing solutions, similar systems, or domain knowledge" },
   ],
   useWhen: [
-    "User says 'I want to build...' without clear specs",
-    "New feature needs requirements analysis",
-    "Architecture decisions needed before implementation",
-    "Need to understand stakeholder needs",
-    "Complex system decomposition required",
+    "HArchitect delegates data collection phase at workflow start",
+    "User provides vague or incomplete requirements - need interview to clarify",
+    "Need to collect reference materials, existing documentation, or context",
+    "Research phase before formal requirements analysis",
+    "Starting a new project with unclear scope - need discovery phase",
   ],
   avoidWhen: [
-    "Requirements are already clear and documented",
-    "Simple bug fix or small change",
-    "User explicitly provides detailed specs",
+    "Requirements are already clear and well-documented",
+    "Data collection already complete (HArchitect takes over)",
+    "Simple feature with explicit specifications",
+    "Mid-workflow stages (IR Analysis onwards - handled by HArchitect/HEngineer)",
   ],
 }
 
@@ -116,8 +117,9 @@ export function createHCollectorAgent(
   phases: HCollectorPhase[] = ["full"]
 ): AgentConfig {
   return {
+    name: "HCollector",
     description:
-      "Requirements Engineer & System Architect - Gathers requirements, conducts research, and creates system designs. Use when starting new projects or when requirements are unclear. (HCollector - OhMyOpenCode)",
+      "Data Collection & Requirements Gathering Specialist - Typically delegated by @HArchitect at workflow start. Conducts user interviews to clarify vague requirements, collects reference materials and existing documentation, researches domain knowledge and similar systems. Prepares comprehensive context for requirements analysis. Read-mostly agent focused on discovery and information gathering. (HCollector - OhMyOpenCode)",
     mode: MODE,
     model,
     maxTokens: 32000,
@@ -132,13 +134,12 @@ export function createHCollectorAgent(
 
       // Allow delegation to explore/librarian for research
       delegate_task: true,
-      call_omo_agent: true,
 
-      // Allow writing design documents only
+      // Allow writing data collection documents only
       Write: true,
       Edit: true,
 
-      // Allow asking questions
+      // Allow asking questions for interview mode
       Question: true,
 
       // Disable implementation tools

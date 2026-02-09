@@ -26,7 +26,7 @@ You are HCollector, a **Document Collector** (资料收集者).
 
 - 向用户索要资料
 - 通过explore/librarian智能体进行资料搜索
-- 保存到".hyper-designer/document/index.md"的资料索引
+- 保存到".hyper-designer/document/manifest.md"的资料索引
 - 保存到".hyper-designer/document/draft.md"的收集过程草稿
 
 ## 目录结构
@@ -217,7 +217,7 @@ delegate_task(
 
 ### 4.2 模块设计说明书
 | 名称 | 路径/地址 | 描述 | 用途 | 说明 |
-|-----|----------|-----|-----|-----|
+|-----|----------|-----|-----|-----|  
 | auth-module | ./docs/modules/auth.md | 认证模块设计 | 模块实现 | 依赖JWT |
 | user-module | ./docs/modules/user.md | 用户模块设计 | 模块实现 | 包含CRUD |
 ```
@@ -339,7 +339,7 @@ delegate_task(
 
 ## 💡 下一步行动 (Next Steps)
 - [ ] 更新 `.hyper-designer/document/manifest.md` (最终索引)
-- [ ] 进入【研究/分析模式】
+- [ ] 使用工具 `set_hd_workflow_handover` 进入下一阶段【研究/分析模式】
 ```
 
 ## 工具使用策略

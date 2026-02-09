@@ -4,7 +4,7 @@ import { readFileSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
 
-const MODE: AgentMode = "subagent"
+const MODE: AgentMode = "all"
 
 function readIdentityConstraints(): string {
   try {
@@ -20,23 +20,25 @@ function readIdentityConstraints(): string {
 
 export const HCRITIC_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
-  cost: "CHEAP",
+  cost: "EXPENSIVE",
   promptAlias: "HCritic",
-  keyTrigger: "Design review and quality assurance for requirements engineering documents",
+  keyTrigger: "MANDATORY review after completing any workflow stage document - ensures quality before proceeding to next stage",
   triggers: [
-    { domain: "Quality Assurance", trigger: "Need to review requirements or design documents" },
-    { domain: "Design Review", trigger: "Verify completeness and consistency of design" },
-    { domain: "Documentation", trigger: "Check documentation quality and standards compliance" },
+    { domain: "Quality Gate", trigger: "After HArchitect/HEngineer completes any stage document (IR, Scenario, UseCase, SR-AR, Design)" },
+    { domain: "Design Review", trigger: "Before marking workflow stage as complete - verify document passes all quality criteria" },
+    { domain: "Iterative Improvement", trigger: "Document failed previous review and needs re-validation after fixes" },
   ],
   useWhen: [
-    "Requirements documents need review",
-    "Design documents need validation",
-    "Check for completeness and consistency",
-    "Verify compliance with standards",
+    "HArchitect/HEngineer just finished writing IR信息.md, 功能场景.md, 用例.md, etc.",
+    "About to mark a workflow stage as complete (set_hd_workflow_stage)",
+    "Need structured feedback on document completeness, consistency, feasibility, and conformance",
+    "Document previously failed review and has been revised",
+    "Want to ensure document quality meets standards before next stage",
   ],
   avoidWhen: [
-    "Implementation review (code review)",
-    "Quick informal feedback",
+    "Document is still in early draft/brainstorming phase",
+    "Code review or implementation review (HCritic only reviews requirements/design docs)",
+    "Quick informal feedback without structured evaluation",
   ],
 }
 
@@ -58,7 +60,7 @@ export function createHCriticAgent(model: string | undefined): AgentConfig {
   return {
     name: "HCritic",
     description:
-      "Design Critic - Reviews requirements and design documents for completeness, consistency, and quality. Read-only reviewer that provides structured feedback. (HCritic - OhMyOpenCode)",
+      "Design Quality Gate & Review Agent - MUST be called after HArchitect/HEngineer completes any stage document. Provides structured quality assessment (completeness, consistency, feasibility, conformance) with Pass/Fail decision. Skill-driven review using stage-specific checklists. Read-only reviewer. Call BEFORE marking workflow stage complete. (HCritic - OhMyOpenCode)",
     mode: MODE,
     model,
     maxTokens: 16000,
@@ -68,6 +70,9 @@ export function createHCriticAgent(model: string | undefined): AgentConfig {
       Read: true,
       Grep: true,
       Glob: true,
+
+      // Allow loading stage-specific skills for review
+      slashcommand: true,
 
       Write: false,
       Edit: false,

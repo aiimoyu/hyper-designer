@@ -28,6 +28,7 @@ Follow the 4-round questioning framework (see [socratic-guide.md](references/soc
 4. **Round 4 - Gap Filling**: Target missing 5W2H dimensions
 
 **Key Principles**:
+
 - Never rush to solutions
 - Ask no more than 4 questions per turn
 - Wait for user responses before continuing
@@ -35,12 +36,12 @@ Follow the 4-round questioning framework (see [socratic-guide.md](references/soc
 
 ### 3. Gather Context
 
-Read relevant documents from `.hyper-designer/document/index.md` if exists:
+Read relevant documents from `.hyper-designer/document/manifest.md` if exists:
 
 ```typescript
 // Check for existing documents
 if (documentIndexExists) {
-  Read(".hyper-designer/document/index.md")
+  Read(".hyper-designer/document/manifest.md");
   // Look for domain information, existing requirements, or context
 }
 ```
@@ -67,32 +68,41 @@ The `ir信息.md` must follow this structure:
 # IR信息 - [系统名称]
 
 ## 一句话总结
+
 [基于分析形成的IR一句话总结]
 
 ## 5W2H 结构化分析
 
 ### Who - 利益相关者
+
 [需求的利益相关者，系统上下文中的人或物等主语]
 
 ### What - 需求诉求
+
 [站在利益相关者上，对整个系统的期望诉求]
+
 - 必须具体化，不能过于抽象
 - 同一个IR内的诉求必须有强相关性
 - 不能写多个不相关的诉求
 
 ### When - 使用时机
+
 [需求在哪个生命周期使用]
 
 ### Why - 需求原因
+
 [需求产生的原因，为什么会提出这个需求]
 
 ### Where - 使用环境
+
 [需求产生的环境，需求提出方在什么环境中使用该需求]
 
 ### How Much - 规格约束
+
 [需求提出方对当前需求的规格约束，如体积/性能]
 
 ### How - 使用方式
+
 [需求提出方怎么使用该需求]
 ```
 
@@ -118,6 +128,7 @@ Before finalizing `ir信息.md`, verify:
 **User**: "我想做一个实时监控系统"
 
 **Round 1**:
+
 ```
 我理解您想要构建一个能够实时数据监控的系统。
 请问这是什么领域的监控？（如服务器性能、业务指标、工业设备等）
@@ -125,6 +136,7 @@ Before finalizing `ir信息.md`, verify:
 ```
 
 **Round 2** (after user clarifies):
+
 ```
 了解，是金融交易风险的实时监控。为了深入分析，我有几个问题：
 
@@ -135,6 +147,7 @@ Before finalizing `ir信息.md`, verify:
 ```
 
 **Round 3**:
+
 ```
 让我描述一个典型场景来确认理解：
 
@@ -152,6 +165,7 @@ Before finalizing `ir信息.md`, verify:
 ## Anti-Patterns to Avoid
 
 **Don't**:
+
 - Jump to architecture solutions before clarifying requirements
 - Make assumptions without user confirmation
 - Ask more than 4 questions at once
@@ -159,6 +173,7 @@ Before finalizing `ir信息.md`, verify:
 - Use vague descriptions ("性能要好", "用户体验佳")
 
 **Do**:
+
 - Guide users to concrete, measurable requirements
 - Confirm understanding at each stage
 - Document assumptions explicitly
