@@ -28,18 +28,94 @@ todowrite([
 
 ### 2. 全量预扫描确认 (Question 工具)
 
-根据你之前对目录的扫描结果，向用户确认分类。这决定了哪些文件会被归入“现有资料”。
+根据你之前对目录的扫描结果,向用户确认分类。这决定了哪些文件会被归入"现有资料"。
+
+**重要说明**:
+- `multiple`: 控制是否允许多选。默认false(单选)。当需要用户选择多个选项时设为true。
+- `header`: 简短标题(最多30字符),在UI中醒目显示
+- `question`: 完整问题描述,说明上下文和期望
+- 系统会自动添加"Type your own answer"选项,无需手动添加
 
 ```typescript
-Question({
-  title: "全量预扫描资产分类确认",
-  description: "我扫描了当前目录，并初步识别了以下资产，请确认分类是否准确：",
-  options: [
-    { label: "分类准确", description: "代码、需求文档、设计草稿已正确归类，开始下一步。" },
-    { label: "调整代码路径", description: "自动识别的核心代码位置有误，需手动指定。" },
-    { label: "调整文档路径", description: "部分文档（如场景、FMEA）被误判或需要排除旧版本。" },
-    { label: "完全手动重新定义", description: "忽略扫描结果，由我逐一提供。" }
-  ]
+// 示例1: 单选场景 - 确认整体分类策略
+question({
+  questions: [{
+    header: "资产分类确认",
+    question: "我扫描了当前目录,并初步识别了以下资产,请确认分类是否准确:",
+    multiple: false,  // 单选:只能选择一种处理方式
+    options: [
+      { 
+        label: "分类准确", 
+        description: "代码、需求文档、设计草稿已正确归类,开始下一步。" 
+      },
+      { 
+        label: "调整代码路径", 
+        description: "自动识别的核心代码位置有误,需手动指定。" 
+      },
+      { 
+        label: "调整文档路径", 
+        description: "部分文档(如场景、FMEA)被误判或需要排除旧版本。" 
+      },
+      { 
+        label: "完全手动重新定义", 
+        description: "忽略扫描结果,由我逐一提供。" 
+      }
+    ]
+  }]
+})
+
+// 示例2: 多选场景 - 确认需要重点关注的资料类型
+question({
+  questions: [{
+    header: "资料采集优先级",
+    question: "在预扫描中发现了多种资料,请选择您希望优先采集和分析的类型(可多选):",
+    multiple: true,  // 多选:用户可能需要同时关注多种资料
+    options: [
+      { 
+        label: "核心代码模块", 
+        description: "src/目录下的业务逻辑代码,用于理解当前实现。" 
+      },
+      { 
+        label: "需求文档", 
+        description: "PRD、用例文档、场景描述等需求相关资料。" 
+      },
+      { 
+        label: "设计文档", 
+        description: "架构图、接口文档、数据库设计等技术设计资料。" 
+      },
+      { 
+        label: "测试资料", 
+        description: "测试用例、测试报告、质量分析文档。" 
+      },
+      { 
+        label: "外部参考", 
+        description: "竞品分析、行业标准、开源项目参考。" 
+      }
+    ]
+  }]
+})
+
+// 示例3: 单选场景 - 确认代码库访问方式
+question({
+  questions: [{
+    header: "代码库访问方式",
+    question: "对于当前项目代码库,您希望我如何访问和分析?",
+    multiple: false,  // 单选:访问方式互斥
+    options: [
+      { 
+        label: "本地文件分析", 
+        description: "直接分析当前目录中的代码文件。" 
+      },
+      { 
+        label: "Git仓库分析", 
+        description: "提供Git仓库地址,我将克隆并分析。" 
+      },
+      { 
+        label: "手动指定关键文件", 
+        description: "您逐一指定需要分析的核心文件路径。" 
+      }
+    ]
+  }]
 })
 
 ```
