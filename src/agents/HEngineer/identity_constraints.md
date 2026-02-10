@@ -147,26 +147,10 @@ HEngineer管理以下2个核心阶段的工作流：
 
 7. **向用户确认进入下一阶段【强制使用Question工具】**
 
-   ```
-   【强制】HCritic审查通过后，必须使用Question工具向用户确认：
-   
-   question({
-     questions: [{
-       header: "阶段完成确认",
-       question: "该阶段工作已完成，HCritic审核通过。输出文档为 {文档列表}。请选择下一步行动：",
-       multiple: false,
-       options: [
-         {
-           label: "进入下一阶段",
-           description: "确认当前阶段已完成，使用set_hd_workflow_handover交接到下一阶段"
-         },
-         {
-           label: "继续修改",
-           description: "根据您的反馈意见继续调整文档，修改后将重新提交HCritic审查"
-         }
-       ]
-     }]
-   })
+      ```
+      【强制】HCritic审查通过后，必须使用Question工具向用户确认：
+      
+      {{TOOL:ask_user}}
    
    【禁止】：
    - ❌ 使用普通文本提问代替Question工具
@@ -189,9 +173,9 @@ HEngineer管理以下2个核心阶段的工作流：
     - **如果用户选择"进入下一阶段"**：
 
       ```
-      a. 【强制】使用 set_hd_workflow_handover 交接到下一阶段
+      a. 【强制】使用 {{TOOL:workflow_handover}} 交接到下一阶段
          - 【重要】不是 set_hd_workflow_stage
-         - 必须使用 set_hd_workflow_handover
+         - 必须使用 {{TOOL:workflow_handover}}
       b. hook会自动注入下一阶段的skill
       ```
 
@@ -206,7 +190,7 @@ HEngineer管理以下2个核心阶段的工作流：
     - ❌ 使用 set_hd_workflow_stage 代替 set_hd_workflow_handover
 
     【正确流程】每次修改后必须：
-    ✅ 修改文档 → 重新提交HCritic审查 → 等待明确"通过" → 使用Question工具询问用户 → 用户选择"进入下一阶段" → 使用set_hd_workflow_handover交接
+    ✅ 修改文档 → 重新提交HCritic审查 → 等待明确"通过" → 使用Question工具询问用户 → 用户选择"进入下一阶段" → 使用{{TOOL:workflow_handover}}交接
     ```
 
 ### 阶段1：系统功能设计 (systemFunctionalDesign)

@@ -45,10 +45,10 @@ describe('getWorkflowDefinition', () => {
 })
 
 describe('getAvailableWorkflows', () => {
-  it('returns string array (empty for now)', () => {
+  it('returns string array with registered workflows', () => {
     const result = getAvailableWorkflows()
     expect(Array.isArray(result)).toBe(true)
     expect(result.every(item => typeof item === 'string')).toBe(true)
-    expect(result).toEqual([])
+    expect(result).toContain('traditional')
   })
 })

@@ -1,8 +1,9 @@
 import type { WorkflowDefinition } from './types'
+import { traditionalWorkflow } from './traditional'
 
-// Internal registry of available workflows
-// Initially empty, will be populated in Task 5
-const workflowRegistry: Record<string, WorkflowDefinition> = {}
+const workflowRegistry: Record<string, WorkflowDefinition> = {
+  traditional: traditionalWorkflow,
+}
 
 /**
  * Returns the workflow definition for the given workflow ID

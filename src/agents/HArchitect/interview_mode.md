@@ -47,18 +47,9 @@
 
 #### 1. 建立任务队列
 
-调用 `todowrite` 工具，将当前阶段任务加入队列：
+调用 {{TOOL:create_todos}} 工具，将当前阶段任务加入队列：
 
-```javascript
-// 示例：初始需求分析阶段 (IRAnalysis)
-todowrite([
-  { id: "ir-1", content: "1. 收集业务背景与目标", status: "pending", priority: "high" },
-  { id: "ir-2", content: "2. 识别利益相关者", status: "pending", priority: "high" },
-  { id: "ir-3", content: "3. 梳理高层需求", status: "pending", priority: "medium" },
-  { id: "ir-4", content: "4. 确认约束条件", status: "pending", priority: "medium" },
-  { id: "ir-doc", content: "生成需求信息文档", status: "pending", priority: "high" }
-])
-```
+{{TOOL:create_todos}}
 
 #### 2. 阶段入口确认 (Question 工具示例)
 
@@ -76,201 +67,25 @@ todowrite([
 ```typescript
 // 示例1: 单选场景 - 初始需求分析阶段入口
 // 仅适用于 IRAnalysis, scenarioAnalysis, useCaseAnalysis, functionalRefinement 阶段
-question({
-  questions: [{
-    header: "初始需求分析入口",
-    question: "我将开始初始需求分析阶段,需要收集项目的业务背景、目标、利益相关者和高层需求。请选择您的起点:",
-    multiple: false,  // 单选:分析模式互斥
-    options: [
-      { 
-        label: "开始全新分析", 
-        description: "从零开始收集需求信息,通过访谈逐步梳理。" 
-      },
-      { 
-        label: "基于已有文档", 
-        description: "已有部分需求文档,我将基于现有资料进行补充和确认。" 
-      },
-      { 
-        label: "快速确认", 
-        description: "需求已非常明确,只需快速确认关键点后直接进入下一阶段。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例2: 多选场景 - 确认业务目标类型
-question({
-  questions: [{
-    header: "业务目标类型",
-    question: "这个项目的主要业务目标是什么?可以选择多个目标(多选):",
-    multiple: true,  // 多选:项目可能有多个业务目标
-    options: [
-      { 
-        label: "增收", 
-        description: "增加营收、扩大市场份额、开拓新业务。" 
-      },
-      { 
-        label: "降本", 
-        description: "降低运营成本、提升运营效率、自动化流程。" 
-      },
-      { 
-        label: "合规", 
-        description: "满足法律法规要求、通过审计、获取资质认证。" 
-      },
-      { 
-        label: "创新", 
-        description: "技术创新、业务模式创新、产品差异化。" 
-      },
-      { 
-        label: "体验", 
-        description: "提升用户体验、改善客户满意度、优化交互流程。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例3: 单选场景 - 场景覆盖策略
-question({
-  questions: [{
-    header: "场景分析策略",
-    question: "在场景分析阶段,我们需要选择分析的深度和广度策略:",
-    multiple: false,  // 单选:策略互斥
-    options: [
-      { 
-        label: "广度优先", 
-        description: "先识别所有场景,后续再逐个深入。适合场景数量多、关系复杂的系统。" 
-      },
-      { 
-        label: "深度优先", 
-        description: "聚焦核心场景,深入分析细节。适合核心场景明确、需要快速验证的项目。" 
-      },
-      { 
-        label: "混合策略", 
-        description: "核心场景深入分析,边缘场景快速梳理。平衡深度和广度。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例4: 多选场景 - 确认约束条件
-question({
-  questions: [{
-    header: "项目约束条件",
-    question: "请确认项目存在哪些约束条件(可多选):",
-    multiple: true,  // 多选:项目通常有多种约束
-    options: [
-      { 
-        label: "时间约束", 
-        description: "有明确的上线deadline或里程碑要求。" 
-      },
-      { 
-        label: "预算约束", 
-        description: "有严格的成本控制和预算限制。" 
-      },
-      { 
-        label: "技术约束", 
-        description: "必须使用或禁止使用特定技术栈。" 
-      },
-      { 
-        label: "合规约束", 
-        description: "必须遵守特定的法律法规或行业标准。" 
-      },
-      { 
-        label: "人力约束", 
-        description: "团队规模有限或技能栈受限。" 
-      },
-      { 
-        label: "集成约束", 
-        description: "必须与现有系统集成或保持兼容。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例5: 单选场景 - 用例复杂度评估
-question({
-  questions: [{
-    header: "用例复杂度",
-    question: "对于用例'[用例名称]',请评估其复杂度级别:",
-    multiple: false,  // 单选:复杂度是单一维度
-    options: [
-      { 
-        label: "简单", 
-        description: "单一功能点,无分支,1-2个参与步骤,实现直接。" 
-      },
-      { 
-        label: "中等", 
-        description: "有2-3个主要步骤,1-2个分支情况,涉及基本业务逻辑。" 
-      },
-      { 
-        label: "复杂", 
-        description: "多步骤流程,多个分支,涉及多个系统或复杂业务规则。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例6: 多选场景 - 功能模块完整性检查
-question({
-  questions: [{
-    header: "功能模块完整性",
-    question: "请确认系统需要包含哪些功能模块(可多选):",
-    multiple: true,  // 多选:系统通常包含多个模块
-    options: [
-      { 
-        label: "用户管理", 
-        description: "用户注册、登录、权限管理、个人信息管理。" 
-      },
-      { 
-        label: "内容管理", 
-        description: "内容创建、编辑、发布、审核流程。" 
-      },
-      { 
-        label: "交易支付", 
-        description: "订单处理、支付集成、退款管理。" 
-      },
-      { 
-        label: "通知消息", 
-        description: "站内信、邮件、短信、推送通知。" 
-      },
-      { 
-        label: "报表统计", 
-        description: "数据统计、报表生成、数据导出。" 
-      },
-      { 
-        label: "系统管理", 
-        description: "配置管理、日志审计、系统监控。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例7: 单选场景 - 功能优先级确认
-question({
-  questions: [{
-    header: "功能优先级",
-    question: "对于功能'[功能名称]',请确认其优先级:",
-    multiple: false,  // 单选:优先级是唯一的
-    options: [
-      { 
-        label: "P0 - 必须有", 
-        description: "核心功能,MVP必须包含,没有它系统无法运行。" 
-      },
-      { 
-        label: "P1 - 应该有", 
-        description: "重要功能,建议首批实现,对用户体验有显著影响。" 
-      },
-      { 
-        label: "P2 - 可以有", 
-        description: "增强功能,可后续迭代,锦上添花但非必需。" 
-      },
-      { 
-        label: "P3 - 暂不需要", 
-        description: "未来版本考虑,当前阶段不实现。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 ```
 
 ---
@@ -624,23 +439,7 @@ question({
 
 ```typescript
 // 【强制】必须使用Question工具进行阶段完成确认
-question({
-  questions: [{
-    header: "阶段完成确认",
-    question: "【{阶段名}】阶段已完成，HCritic审核通过。我已记录了：\n- {要点1}\n- {要点2}\n- {要点3}\n\n生成的文档：\n- {文档路径1}\n- {文档路径2}\n\n请选择下一步行动：",
-    multiple: false,
-    options: [
-      {
-        label: "进入下一阶段",
-        description: "确认当前阶段已完成，使用set_hd_workflow_handover交接到【{下一阶段}】"
-      },
-      {
-        label: "继续修改",
-        description: "根据您的反馈意见继续调整文档，修改后将重新提交HCritic审查"
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 【禁止】使用普通文本提问，如：
 // ❌ "是否可以进入下一阶段？" (错误示例)

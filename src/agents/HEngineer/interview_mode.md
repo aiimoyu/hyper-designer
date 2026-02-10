@@ -14,16 +14,7 @@
 
 调用 `todowrite` 工具，将当前阶段任务加入队列：
 
-```javascript
-// 示例：系统需求分解阶段
-todowrite([
-  { id: "srd-1", content: "1. 读取功能列表和FMEA分析", status: "pending", priority: "high" },
-  { id: "srd-2", content: "2. 识别系统模块边界", status: "pending", priority: "high" },
-  { id: "srd-3", content: "3. 定义模块间接口", status: "pending", priority: "high" },
-  { id: "srd-4", content: "4. 映射功能到模块", status: "pending", priority: "medium" },
-  { id: "srd-doc", content: "生成系统需求分解文档", status: "pending", priority: "high" }
-])
-```
+{{TOOL:create_todos}}
 
 ### 2. 阶段入口确认与输入审查 (Question 工具示例)
 
@@ -44,205 +35,25 @@ Read(".hyper-designer/functionalRefinement/功能列表.md")
 Read(".hyper-designer/functionalRefinement/FMEA.md")
 
 // 2. 使用Question确认阶段入口 - 单选场景
-question({
-  questions: [{
-    header: "系统需求分解入口",
-    question: "我将开始系统需求分解阶段。已读取功能列表和FMEA分析。基于这些输入,我将把功能映射到模块并定义模块间接口。请选择处理方式:",
-    multiple: false,  // 单选:处理方式互斥
-    options: [
-      { 
-        label: "开始分解", 
-        description: "基于现有功能列表进行系统需求分解,输入已充分。" 
-      },
-      { 
-        label: "需要先澄清需求", 
-        description: "功能列表中有部分条目需要澄清后再进行分解。" 
-      },
-      { 
-        label: "调整范围", 
-        description: "需要先调整功能范围(增加或删减功能)后再开始。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例2: 多选场景 - 确认模块划分策略考虑因素
-question({
-  questions: [{
-    header: "模块划分考虑因素",
-    question: "在进行模块划分时,请选择您希望重点考虑的因素(可多选):",
-    multiple: true,  // 多选:可能同时考虑多个因素
-    options: [
-      { 
-        label: "业务领域", 
-        description: "按业务域划分(如用户域、订单域、商品域),便于业务理解和团队协作。" 
-      },
-      { 
-        label: "技术层次", 
-        description: "按技术层划分(如接入层、业务层、数据层),便于技术架构清晰。" 
-      },
-      { 
-        label: "用户类型", 
-        description: "按用户类型划分(如用户端、商家端、管理端),便于权限控制和功能隔离。" 
-      },
-      { 
-        label: "部署独立性", 
-        description: "考虑独立部署和扩展需求,支持微服务架构。" 
-      },
-      { 
-        label: "团队结构", 
-        description: "考虑现有团队结构和技能分布,便于任务分配。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例3: 单选场景 - 技术方案选择(架构风格)
-question({
-  questions: [{
-    header: "架构风格选择",
-    question: "对于系统整体架构风格,请选择最适合项目特点的方案:",
-    multiple: false,  // 单选:架构风格互斥
-    options: [
-      { 
-        label: "单体架构", 
-        description: "所有模块部署在一起,简单直接,适合小型项目或MVP阶段。优点:开发简单,部署方便。缺点:扩展性受限。" 
-      },
-      { 
-        label: "微服务架构", 
-        description: "模块独立部署,高度解耦,适合大型复杂系统。优点:独立扩展,技术栈灵活。缺点:运维复杂,学习曲线陡。" 
-      },
-      { 
-        label: "Serverless架构", 
-        description: "基于函数即服务(FaaS),按需运行,适合事件驱动场景。优点:零运维,按使用付费。缺点:冷启动延迟,调试困难。" 
-      },
-      { 
-        label: "混合架构", 
-        description: "核心模块单体,边缘功能微服务,平衡复杂度和灵活性。适合渐进式演进。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例4: 多选场景 - 技术栈约束确认
-question({
-  questions: [{
-    header: "技术栈约束",
-    question: "请确认项目存在哪些技术栈约束(可多选):",
-    multiple: true,  // 多选:可能有多种约束
-    options: [
-      { 
-        label: "必须使用特定技术", 
-        description: "有明确要求必须使用的技术或框架(如公司统一技术栈)。" 
-      },
-      { 
-        label: "禁止使用特定技术", 
-        description: "有明确禁止使用的技术(如安全、合规或授权原因)。" 
-      },
-      { 
-        label: "兼容性要求", 
-        description: "必须与现有系统或平台兼容,技术选型受限。" 
-      },
-      { 
-        label: "性能基线要求", 
-        description: "有明确的性能指标要求(如响应时间、吞吐量)。" 
-      },
-      { 
-        label: "团队技能限制", 
-        description: "团队对某些技术不熟悉,需要考虑学习成本。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例5: 单选场景 - 接口风格选择
-question({
-  questions: [{
-    header: "接口通信风格",
-    question: "对于模块间的主要通信方式,请选择最合适的接口风格:",
-    multiple: false,  // 单选:主要风格应该统一
-    options: [
-      { 
-        label: "RESTful API", 
-        description: "基于HTTP的REST风格,成熟生态,适合外部集成和Web应用。易于理解和调试。" 
-      },
-      { 
-        label: "gRPC", 
-        description: "高性能二进制协议,适合内部服务间高频通信。性能优异但学习曲线较陡。" 
-      },
-      { 
-        label: "消息队列", 
-        description: "异步消息传递,解耦模块,适合高并发和最终一致性场景。复杂度较高。" 
-      },
-      { 
-        label: "混合模式", 
-        description: "对外REST,内部gRPC/消息队列,根据场景选择最优方案。灵活但需要管理多种协议。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例6: 多选场景 - 风险缓解措施确认
-question({
-  questions: [{
-    header: "风险缓解措施",
-    question: "对于FMEA中识别的高风险项,请选择需要优先设计的缓解措施(可多选):",
-    multiple: true,  // 多选:可能需要多种缓解措施
-    options: [
-      { 
-        label: "容错机制", 
-        description: "设计重试、降级、熔断等容错机制,提高系统鲁棒性。" 
-      },
-      { 
-        label: "监控告警", 
-        description: "建立完善的监控体系和告警机制,及时发现问题。" 
-      },
-      { 
-        label: "数据备份", 
-        description: "设计数据备份和恢复方案,防止数据丢失。" 
-      },
-      { 
-        label: "限流保护", 
-        description: "设计限流和过载保护机制,防止系统被压垮。" 
-      },
-      { 
-        label: "灰度发布", 
-        description: "支持灰度发布和快速回滚,降低发布风险。" 
-      },
-      { 
-        label: "异常处理", 
-        description: "统一异常处理和错误返回机制,提升用户体验。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例7: 单选场景 - 设计深度确认
-question({
-  questions: [{
-    header: "模块设计深度",
-    question: "对于模块功能设计阶段,请确认期望的设计深度:",
-    multiple: false,  // 单选:深度级别互斥
-    options: [
-      { 
-        label: "概念设计", 
-        description: "仅组件划分和职责定义,不涉及详细实现。适合快速验证方案。" 
-      },
-      { 
-        label: "逻辑设计", 
-        description: "包含接口定义和数据流,但不涉及具体算法。适合前期评审。" 
-      },
-      { 
-        label: "物理设计", 
-        description: "包含类图、时序图、数据库设计,接近代码实现。适合开发前准备。" 
-      },
-      { 
-        label: "完整设计", 
-        description: "包含所有细节、算法、测试策略,可直接指导编码。适合复杂或关键模块。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 ```
 
 ---
@@ -676,23 +487,7 @@ question({
 
 ```typescript
 // 【强制】必须使用Question工具进行阶段完成确认
-question({
-  questions: [{
-    header: "阶段完成确认",
-    question: "【{阶段名}】阶段已完成，HCritic审核通过。\n\n已生成技术文档：\n- {文档1}: {路径}\n- {文档2}: {路径}\n\n关键设计决策：\n1. [决策1]: [选择]\n2. [决策2]: [选择]\n\n请选择下一步行动：",
-    multiple: false,
-    options: [
-      {
-        label: "进入下一阶段",
-        description: "确认当前阶段已完成，使用set_hd_workflow_handover交接到【{下一阶段}】"
-      },
-      {
-        label: "继续修改",
-        description: "根据您的反馈意见继续调整设计，修改后将重新提交HCritic审查"
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 【禁止】使用普通文本提问，如：
 // ❌ "是否可以进入【{下一阶段}】？" (错误示例)
@@ -704,7 +499,7 @@ question({
 - ✅ 必须使用Question工具提供结构化选项
 - ✅ 选项必须包含"进入下一阶段"和"继续修改"
 - ✅ 必须在HCritic审查通过后才能询问用户
-- ✅ 用户选择"进入下一阶段"后，使用set_hd_workflow_handover（不是set_hd_workflow_stage）
+- ✅ 用户选择"进入下一阶段"后，使用{{TOOL:workflow_handover}}（不是set_hd_workflow_stage）
 
 ---
 

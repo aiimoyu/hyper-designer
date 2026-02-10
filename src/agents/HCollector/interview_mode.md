@@ -14,17 +14,7 @@
 
 调用 `todowrite` 工具，将预扫描确认作为首要任务：
 
-```javascript
-todowrite([
-  { id: "audit-0", content: "0. 全量预扫描分类确认 (代码/文档/设计)", status: "pending", priority: "high" },
-  { id: "audit-1", content: "1. 代码库资料增量采集", status: "pending", priority: "medium" },
-  { id: "audit-2", content: "2. 领域资料采集", status: "pending", priority: "medium" },
-  { id: "audit-3", content: "3. 系统需求分析资料采集 (场景/FMEA/功能)", status: "pending", priority: "medium" },
-  { id: "audit-4", content: "4. 系统设计资料采集 (架构/模块)", status: "pending", priority: "medium" },
-  { id: "audit-doc", content: "生成索引文件", status: "pending", priority: "medium" }
-])
-
-```
+{{TOOL:create_todos}}
 
 ### 2. 全量预扫描确认 (Question 工具)
 
@@ -38,85 +28,13 @@ todowrite([
 
 ```typescript
 // 示例1: 单选场景 - 确认整体分类策略
-question({
-  questions: [{
-    header: "资产分类确认",
-    question: "我扫描了当前目录,并初步识别了以下资产,请确认分类是否准确:",
-    multiple: false,  // 单选:只能选择一种处理方式
-    options: [
-      { 
-        label: "分类准确", 
-        description: "代码、需求文档、设计草稿已正确归类,开始下一步。" 
-      },
-      { 
-        label: "调整代码路径", 
-        description: "自动识别的核心代码位置有误,需手动指定。" 
-      },
-      { 
-        label: "调整文档路径", 
-        description: "部分文档(如场景、FMEA)被误判或需要排除旧版本。" 
-      },
-      { 
-        label: "完全手动重新定义", 
-        description: "忽略扫描结果,由我逐一提供。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例2: 多选场景 - 确认需要重点关注的资料类型
-question({
-  questions: [{
-    header: "资料采集优先级",
-    question: "在预扫描中发现了多种资料,请选择您希望优先采集和分析的类型(可多选):",
-    multiple: true,  // 多选:用户可能需要同时关注多种资料
-    options: [
-      { 
-        label: "核心代码模块", 
-        description: "src/目录下的业务逻辑代码,用于理解当前实现。" 
-      },
-      { 
-        label: "需求文档", 
-        description: "PRD、用例文档、场景描述等需求相关资料。" 
-      },
-      { 
-        label: "设计文档", 
-        description: "架构图、接口文档、数据库设计等技术设计资料。" 
-      },
-      { 
-        label: "测试资料", 
-        description: "测试用例、测试报告、质量分析文档。" 
-      },
-      { 
-        label: "外部参考", 
-        description: "竞品分析、行业标准、开源项目参考。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 // 示例3: 单选场景 - 确认代码库访问方式
-question({
-  questions: [{
-    header: "代码库访问方式",
-    question: "对于当前项目代码库,您希望我如何访问和分析?",
-    multiple: false,  // 单选:访问方式互斥
-    options: [
-      { 
-        label: "本地文件分析", 
-        description: "直接分析当前目录中的代码文件。" 
-      },
-      { 
-        label: "Git仓库分析", 
-        description: "提供Git仓库地址,我将克隆并分析。" 
-      },
-      { 
-        label: "手动指定关键文件", 
-        description: "您逐一指定需要分析的核心文件路径。" 
-      }
-    ]
-  }]
-})
+{{TOOL:ask_user}}
 
 ```
 

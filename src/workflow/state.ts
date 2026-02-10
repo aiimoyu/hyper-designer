@@ -1,33 +1,24 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
+import type { WorkflowDefinition } from "../workflows/types";
 
 export interface WorkflowStage {
   isCompleted: boolean;
 }
 
-export interface Workflow {
-  dataCollection: WorkflowStage;
-  IRAnalysis: WorkflowStage;
-  scenarioAnalysis: WorkflowStage;
-  useCaseAnalysis: WorkflowStage;
-  functionalRefinement: WorkflowStage;
-  requirementDecomposition: WorkflowStage;
-  systemFunctionalDesign: WorkflowStage;
-  moduleFunctionalDesign: WorkflowStage;
-}
-
 export interface WorkflowState {
-  workflow: Workflow;
-  currentStep: keyof Workflow | null;
-  handoverTo: keyof Workflow | null;
+  workflow: Record<string, WorkflowStage>;
+  currentStep: string | null;
+  handoverTo: string | null;
 }
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json");
 
 /**
- * Workflow steps in order
+ * Legacy hardcoded workflow stages for backward compatibility
+ * @deprecated Use WorkflowDefinition.stageOrder instead
  */
-export const WORKFLOW_STEPS: (keyof Workflow)[] = [
+const LEGACY_WORKFLOW_STAGES = [
   "dataCollection",
   "IRAnalysis",
   "scenarioAnalysis",
@@ -39,6 +30,32 @@ export const WORKFLOW_STEPS: (keyof Workflow)[] = [
 ];
 
 /**
+ * Returns the stage order from a workflow definition
+ * @param definition - The workflow definition
+ * @returns Array of stage names in order
+ */
+export function getStageOrder(definition: WorkflowDefinition): string[] {
+  return definition.stageOrder;
+}
+
+/**
+ * Initializes a WorkflowState from a WorkflowDefinition
+ * @param definition - The workflow definition to initialize from
+ * @returns A new WorkflowState with all stages set to not completed
+ */
+export function initializeWorkflowState(definition: WorkflowDefinition): WorkflowState {
+  const workflow: Record<string, WorkflowStage> = {};
+  for (const stage of definition.stageOrder) {
+    workflow[stage] = { isCompleted: false };
+  }
+  return {
+    workflow,
+    currentStep: null,
+    handoverTo: null,
+  };
+}
+
+/**
  * Reads the workflow state from the JSON file
  */
 function readWorkflowStateFile(): WorkflowState {
@@ -46,17 +63,12 @@ function readWorkflowStateFile(): WorkflowState {
     const data = readFileSync(WORKFLOW_STATE_PATH, "utf-8");
     return JSON.parse(data) as WorkflowState;
   } catch (error) {
+    const workflow: Record<string, WorkflowStage> = {};
+    for (const stage of LEGACY_WORKFLOW_STAGES) {
+      workflow[stage] = { isCompleted: false };
+    }
     return {
-      workflow: {
-        dataCollection: { isCompleted: false },
-        IRAnalysis: { isCompleted: false },
-        scenarioAnalysis: { isCompleted: false },
-        useCaseAnalysis: { isCompleted: false },
-        functionalRefinement: { isCompleted: false },
-        requirementDecomposition: { isCompleted: false },
-        systemFunctionalDesign: { isCompleted: false },
-        moduleFunctionalDesign: { isCompleted: false },
-      },
+      workflow,
       currentStep: null,
       handoverTo: null,
     };
@@ -81,11 +93,15 @@ function writeWorkflowStateFile(state: WorkflowState): void {
 /**
  * Gets the current workflow state
  */
-export function getWorkflowState(): WorkflowState {
+export function getWorkflowState(definition?: WorkflowDefinition): WorkflowState {
   const state = readWorkflowStateFile();
 
-  // If file doesn't exist (we got the default state), create it
   if (!existsSync(WORKFLOW_STATE_PATH)) {
+    if (definition) {
+      const newState = initializeWorkflowState(definition);
+      writeWorkflowStateFile(newState);
+      return newState;
+    }
     writeWorkflowStateFile(state);
   }
 
@@ -95,7 +111,7 @@ export function getWorkflowState(): WorkflowState {
 /**
  * Updates the completion status of a specific workflow stage
  */
-export function setWorkflowStage(stage_name: keyof Workflow, is_completed: boolean): WorkflowState {
+export function setWorkflowStage(stage_name: string, is_completed: boolean): WorkflowState {
   const state = readWorkflowStateFile();
   if (state.workflow[stage_name]) {
     state.workflow[stage_name].isCompleted = is_completed;
