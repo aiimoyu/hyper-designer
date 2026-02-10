@@ -15,6 +15,9 @@
     "functionalRefinement": {
       "isCompleted": false
     },
+    "requirementDecomposition": {
+      "isCompleted": false
+    },
     "systemFunctionalDesign": {
       "isCompleted": false
     },

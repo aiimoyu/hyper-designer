@@ -1,0 +1,140 @@
+import { describe, it, expect, afterEach } from "vitest"
+import { loadHDConfig, DEFAULT_AGENT_CONFIGS, DEFAULT_CONFIG_PATH, GLOBAL_CONFIG_PATH } from "../../config/loader"
+import { writeFileSync, mkdirSync, rmSync, existsSync } from "fs"
+import { join } from "path"
+
+const TEST_CONFIG_DIR = join(process.cwd(), ".test-temp", "config-tests")
+const TEST_CONFIG_PATH = join(TEST_CONFIG_DIR, "hd-config.json")
+
+describe("loadHDConfig", () => {
+  afterEach(() => {
+    if (existsSync(TEST_CONFIG_DIR)) {
+      rmSync(TEST_CONFIG_DIR, { recursive: true, force: true })
+    }
+  })
+
+  it("returns default config when no file exists", () => {
+    const config = loadHDConfig("/nonexistent/path/config.json")
+
+    expect(config).toHaveProperty("agents")
+    expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
+  })
+
+  it("loads valid config file", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+    
+    const testConfig = {
+      agents: {
+        HArchitect: {
+          temperature: 0.9,
+          maxTokens: 16000,
+        },
+      },
+    }
+    
+    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.agents.HArchitect.temperature).toBe(0.9)
+    expect(config.agents.HArchitect.maxTokens).toBe(16000)
+  })
+
+  it("merges config with defaults", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+    
+    const testConfig = {
+      agents: {
+        HArchitect: {
+          temperature: 0.8,
+        },
+      },
+    }
+    
+    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.agents.HArchitect.temperature).toBe(0.8)
+    expect(config.agents.HCollector).toEqual(DEFAULT_AGENT_CONFIGS.HCollector)
+    expect(config.agents.HCritic).toEqual(DEFAULT_AGENT_CONFIGS.HCritic)
+    expect(config.agents.HEngineer).toEqual(DEFAULT_AGENT_CONFIGS.HEngineer)
+  })
+
+  it("handles invalid JSON gracefully", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+    writeFileSync(TEST_CONFIG_PATH, "{ invalid json }")
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
+  })
+
+  it("handles empty config file", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+    writeFileSync(TEST_CONFIG_PATH, "{}")
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
+  })
+
+  it("preserves $schema field if present", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+    
+    const testConfig = {
+      $schema: "https://example.com/schema.json",
+      agents: {},
+    }
+    
+    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.$schema).toBe("https://example.com/schema.json")
+  })
+
+  it("handles config with additional agent overrides", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+    
+    const testConfig = {
+      agents: {
+        HCollector: {
+          model: "gpt-4-turbo",
+          temperature: 0.5,
+          prompt_append: "Additional instructions",
+          permission: { write: "deny" },
+        },
+      },
+    }
+    
+    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.agents.HCollector.model).toBe("gpt-4-turbo")
+    expect(config.agents.HCollector.temperature).toBe(0.5)
+    expect(config.agents.HCollector.prompt_append).toBe("Additional instructions")
+    expect(config.agents.HCollector.permission).toEqual({ write: "deny" })
+  })
+})
+
+describe("config constants", () => {
+  it("DEFAULT_CONFIG_PATH is correct", () => {
+    expect(DEFAULT_CONFIG_PATH).toBe("hd-config.json")
+  })
+
+  it("GLOBAL_CONFIG_PATH points to user's home", () => {
+    expect(GLOBAL_CONFIG_PATH).toContain(".config")
+    expect(GLOBAL_CONFIG_PATH).toContain("opencode")
+    expect(GLOBAL_CONFIG_PATH).toContain("hyper-designer")
+    expect(GLOBAL_CONFIG_PATH).toContain("hd-config.json")
+  })
+
+  it("DEFAULT_AGENT_CONFIGS has all required agents", () => {
+    expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HCollector")
+    expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HArchitect")
+    expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HCritic")
+    expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HEngineer")
+  })
+})

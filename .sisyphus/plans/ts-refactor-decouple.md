@@ -933,7 +933,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 7. Populate src/index.ts with Core Exports
+- [x] 7. Populate src/index.ts with Core Exports
 
   **What to do**:
   - Populate `src/index.ts` as the barrel export for the core package
@@ -1044,7 +1044,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 8. Write Tests + Final Validation
+- [x] 8. Write Tests + Final Validation
 
   **What to do**:
   - Write Vitest tests covering the core modules:

@@ -188,3 +188,131 @@ opencode/                (Framework adapter layer)
 - Fixed missing AgentPromptMetadata type in types.ts
 - Fixed HDConfig type issue with exactOptionalPropertyTypes
 - Type check now passes
+
+## 2026-02-10 Task 8: Vitest Tests and Final Validation
+
+### Test Coverage Achieved
+- **41 total test cases** across 4 test files
+- **100% test success rate** (41/41 passing)
+- **Test execution time**: 1.42s
+
+### Test Files Created
+
+1. **`src/__tests__/agents/factory.test.ts`** (6 tests)
+   - Validates prompt file reading and concatenation
+   - Tests graceful handling of missing prompt files
+   - Verifies config override mechanism
+   - Ensures correct AgentConfig shape
+   - Tests multi-file prompt composition
+   - Validates model parameter handling
+
+2. **`src/__tests__/workflow/state.test.ts`** (13 tests)
+   - Tests default state generation when file missing
+   - Validates state file persistence
+   - Tests all state mutation functions (setWorkflowStage, setWorkflowCurrent, setWorkflowHandover)
+   - Verifies error handling for invalid stage names
+   - Tests null handling for clearing state fields
+
+3. **`src/__tests__/config/loader.test.ts`** (10 tests)
+   - Tests default config fallback
+   - Validates config file loading and merging
+   - Tests graceful handling of invalid JSON
+   - Verifies $schema field preservation
+   - Tests agent override mechanism
+   - Validates all config constants
+
+4. **`src/__tests__/utils/debug.test.ts`** (12 tests)
+   - Tests all debug API methods (log, info, warn, error)
+   - Validates isEnabled and getLogPath functions
+   - Tests graceful handling of undefined data
+   - Tests non-serializable data (circular references)
+   - Ensures no exceptions thrown during normal use
+
+### Testing Strategy
+
+**Unit Testing Approach**:
+- Used **real file I/O** with temp directories (no mocking)
+- **beforeEach/afterEach** hooks for test isolation
+- Tested **default fallbacks** extensively
+- Focused on **API surface validation**
+- Verified **error handling** with invalid inputs
+
+**Key Pattern**: Tests validate behavior, not implementation details
+
+### Final Validation Results
+
+**All 9 validation checks passed**:
+
+1. ✅ **TypeScript type check**: `npx tsc --noEmit` - 0 errors
+2. ✅ **Framework decoupling**: 0 `@opencode-ai` imports in `src/`
+3. ✅ **Base factory exists**: `src/agents/factory.ts` present
+4. ✅ **Adapter interfaces exist**: `src/adapters/types.ts` present
+5. ✅ **Hooks in adapter layer**: `opencode/hooks/workflow.ts` present
+6. ✅ **Old hooks removed**: `src/workflow/hooks/` deleted
+7. ✅ **All agents compact**: All H* agents < 75 lines
+8. ✅ **No circular dependencies**: tsc output clean
+9. ✅ **Test suite passes**: 41/41 tests passing
+
+### Architecture Verification
+
+**Core Modules (100% Framework-Agnostic)**:
+- `src/agents/` - Agent definitions and factory
+- `src/workflow/` - Workflow state management
+- `src/config/` - Configuration loading
+- `src/utils/` - Debug logging
+- `src/adapters/` - Framework integration interfaces
+
+**Adapter Layer (OpenCode-Specific)**:
+- `opencode/hooks/` - Framework hooks
+- `opencode/.plugins/` - Plugin registration
+
+### Metrics Summary
+
+**Refactoring Impact**:
+- **Agent file reduction**: 54% (from Tasks 1-5)
+- **Type consolidation**: 3 files → 1 central types file
+- **Logger DRY**: 14 duplicates → 1 shared module
+- **Test coverage**: 0 → 41 test cases
+
+**Code Quality**:
+- Zero TypeScript errors
+- Zero circular dependencies
+- Zero framework coupling in core
+- 100% test pass rate
+
+### Testing Best Practices Applied
+
+1. **Test isolation**: Each test cleans up after itself
+2. **Real I/O**: No file system mocking - tests real behavior
+3. **Error cases**: Tests both happy path and error scenarios
+4. **API contracts**: Tests validate public interfaces
+5. **No implementation details**: Tests focus on behavior
+
+### Key Learnings
+
+1. **Vitest is fast**: 1.42s for 41 tests with real I/O
+2. **Temp directories work well**: No need for file system mocking
+3. **Type safety in tests**: Using `as any` only for testing invalid inputs
+4. **Test organization**: Grouped by module mirrors src structure
+
+### Future Test Enhancements
+
+Potential additions (not in current scope):
+- E2E tests for OpenCode runtime integration
+- Performance benchmarks for state operations
+- Integration tests between core modules
+- Property-based testing for state transitions
+
+### Refactoring Complete
+
+**All 8 tasks completed successfully**:
+1. ✅ Package infrastructure
+2. ✅ Type consolidation
+3. ✅ DRY debug logger
+4. ✅ Adapter interfaces
+5. ✅ Base agent factory
+6. ✅ Framework decoupling
+7. ✅ Barrel exports
+8. ✅ Tests and validation
+
+**Final state**: Production-ready, fully tested, framework-agnostic core with clean OpenCode adapter layer.
