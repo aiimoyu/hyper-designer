@@ -2,9 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { loadHDConfig } from "../../config/loader"
 import { getWorkflowDefinition } from "../../workflows/registry"
 import { createHArchitectAgent } from "../../agents/HArchitect"
-import { createHCollectorAgent } from "../../agents/HCollector"
-import { createHEngineerAgent } from "../../agents/HEngineer"
-import { createHCriticAgent } from "../../agents/HCritic"
+
 import {
   initializeWorkflowState,
   getWorkflowState,
@@ -60,10 +58,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(agent.mode).toBe("primary")
 
       const prompt = agent.prompt!
-      const placeholderMatches = prompt.match(/\{\{TOOL:[a-z_]+\}\}/g)
-      expect(placeholderMatches).toBeNull()
-
-      expect(prompt).toMatch(/question\(|task\(|todowrite\(/)
+      expect(prompt).toBeTruthy()
     })
 
     it("should verify extensibility: config workflow affects loaded definition", () => {
@@ -75,51 +70,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
   })
 
-  describe("Placeholder Resolution Integration", () => {
-    it("should resolve all {{TOOL:*}} placeholders in HArchitect prompts", () => {
-      const agent = createHArchitectAgent()
-      const prompt = agent.prompt!
-      const placeholderMatches = prompt.match(/\{\{TOOL:[a-z_]+\}\}/g)
-      expect(placeholderMatches).toBeNull()
 
-      expect(prompt).toContain("question(")
-      expect(prompt).toContain("task(")
-    })
-
-    it("should resolve all {{TOOL:*}} placeholders in HCollector prompts", () => {
-      const agent = createHCollectorAgent()
-      const prompt = agent.prompt!
-      const placeholderMatches = prompt.match(/\{\{TOOL:[a-z_]+\}\}/g)
-      expect(placeholderMatches).toBeNull()
-    })
-
-    it("should resolve all {{TOOL:*}} placeholders in HEngineer prompts", () => {
-      const agent = createHEngineerAgent()
-      const prompt = agent.prompt!
-      const placeholderMatches = prompt.match(/\{\{TOOL:[a-z_]+\}\}/g)
-      expect(placeholderMatches).toBeNull()
-    })
-
-    it("should resolve all {{TOOL:*}} placeholders in HCritic prompts", () => {
-      const agent = createHCriticAgent()
-      const prompt = agent.prompt!
-      const placeholderMatches = prompt.match(/\{\{TOOL:[a-z_]+\}\}/g)
-      expect(placeholderMatches).toBeNull()
-    })
-
-    it("should contain OpenCode tool syntax after resolution in all agents", () => {
-      const agentsWithTools = [
-        createHArchitectAgent(),
-        createHCollectorAgent(),
-        createHEngineerAgent(),
-      ]
-
-      for (const agent of agentsWithTools) {
-        const hasToolSyntax = /question\(|task\(|todowrite\(/.test(agent.prompt!)
-        expect(hasToolSyntax).toBe(true)
-      }
-    })
-  })
 
   describe("Workflow State Lifecycle Integration", () => {
     it("should manage workflow state lifecycle with traditional workflow", () => {
@@ -232,28 +183,13 @@ describe("Integration Tests: Deep Decoupling System", () => {
   })
 
   describe("Prompt Loading Integration", () => {
-    it("should load and resolve prompts for all stages", () => {
+    it("should load prompts for all stages", () => {
       const workflow = getWorkflowDefinition("traditional")
 
       for (const stage of workflow.stageOrder) {
         const prompt = loadPromptForStage(stage, workflow)
         expect(prompt).toBeTruthy()
         expect(prompt.length).toBeGreaterThan(0)
-
-        const placeholderMatches = prompt.match(/\{\{TOOL:[a-z_]+\}\}/g)
-        expect(placeholderMatches).toBeNull()
-      }
-    })
-
-    it("should resolve prompts with OpenCode tool syntax", () => {
-      const workflow = getWorkflowDefinition("traditional")
-
-      const stages = ["dataCollection", "IRAnalysis", "scenarioAnalysis", "useCaseAnalysis"]
-      for (const stage of stages) {
-        const prompt = loadPromptForStage(stage, workflow)
-
-        const hasToolSyntax = /question\(|task\(|todowrite\(|delegate_task\(/.test(prompt)
-        expect(hasToolSyntax).toBe(true)
       }
     })
 

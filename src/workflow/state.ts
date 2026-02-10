@@ -7,6 +7,7 @@ export interface WorkflowStage {
 }
 
 export interface WorkflowState {
+  workflowId: string;
   workflow: Record<string, WorkflowStage>;
   currentStep: string | null;
   handoverTo: string | null;
@@ -49,6 +50,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
     workflow[stage] = { isCompleted: false };
   }
   return {
+    workflowId: definition.id,
     workflow,
     currentStep: null,
     handoverTo: null,
@@ -61,13 +63,21 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
 function readWorkflowStateFile(): WorkflowState {
   try {
     const data = readFileSync(WORKFLOW_STATE_PATH, "utf-8");
-    return JSON.parse(data) as WorkflowState;
+    const parsed = JSON.parse(data);
+    // Backward compatibility: provide default workflowId for legacy state files
+    return {
+      workflowId: parsed.workflowId ?? "traditional",
+      workflow: parsed.workflow,
+      currentStep: parsed.currentStep,
+      handoverTo: parsed.handoverTo,
+    };
   } catch (error) {
     const workflow: Record<string, WorkflowStage> = {};
     for (const stage of LEGACY_WORKFLOW_STAGES) {
       workflow[stage] = { isCompleted: false };
     }
     return {
+      workflowId: "traditional",
       workflow,
       currentStep: null,
       handoverTo: null,

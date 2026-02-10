@@ -8,7 +8,7 @@ export type { SessionPromptSender, SkillLoader } from "./adapters/types"
 export type { AgentDefinition } from "./agents/factory"
 export type { HandoverConfig } from "./adapters/types"
 export type { WorkflowDefinition, WorkflowStageDefinition } from "./workflows/types"
-export type { ToolRegistry, PromptResolverConfig } from "./prompts/types"
+
 
 // Agent creation
 export { createBuiltinAgents } from "./agents/utils"
@@ -17,10 +17,6 @@ export { createHCollectorAgent } from "./agents/HCollector"
 export { createHArchitectAgent } from "./agents/HArchitect"
 export { createHCriticAgent } from "./agents/HCritic"
 export { createHEngineerAgent } from "./agents/HEngineer"
-
-// Prompt resolution
-export { resolvePrompt } from "./prompts/resolver"
-export { OPENCODE_TOOL_REGISTRY } from "./prompts/toolRegistries/opencode"
 
 // Workflow state management
 export { 

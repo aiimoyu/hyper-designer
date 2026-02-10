@@ -27,11 +27,6 @@ describe("workflow/prompts", () => {
       })
     })
 
-    it("should resolve {{TOOL:*}} placeholders", () => {
-      const prompt = loadPromptForStage("IRAnalysis", traditionalWorkflow)
-      expect(prompt).not.toContain("{{TOOL:")
-    })
-
     it("should throw error for unknown stage", () => {
       expect(() => loadPromptForStage("unknownStage", traditionalWorkflow)).toThrow(
         "Unknown stage: unknownStage"

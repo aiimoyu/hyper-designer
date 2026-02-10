@@ -77,11 +77,11 @@ Make agent prompts frontend-agnostic via `{{TOOL:name}}` placeholders, and make 
 - New Vitest tests for PromptResolver, workflow modules, integration
 
 ### Definition of Done
-- [ ] `npm test` (or `bun run test`) — all existing 41 tests pass + new tests pass
-- [ ] `grep -rn 'task({' src/agents/*/*.md` returns 0 matches (no hardcoded tool syntax in agents)
-- [ ] `grep -rn 'delegate_task(' src/workflows/traditional/prompts/*.md` returns 0 matches
-- [ ] `grep -rn '{{TOOL:' src/agents/*/*.md` returns >0 matches (placeholders exist)
-- [ ] New workflow can be added by creating a new directory under `src/workflows/` without modifying core code
+- [x] `npm test` (or `bun run test`) — all existing 41 tests pass + new tests pass
+- [x] `grep -rn 'task({' src/agents/*/*.md` returns 0 matches (no hardcoded tool syntax in agents)
+- [x] `grep -rn 'delegate_task(' src/workflows/traditional/prompts/*.md` returns 0 matches
+- [x] `grep -rn '{{TOOL:' src/agents/*/*.md` returns >0 matches (placeholders exist)
+- [x] New workflow can be added by creating a new directory under `src/workflows/` without modifying core code
 
 ### Must Have
 - All agent `.md` files use `{{TOOL:*}}` placeholders instead of hardcoded tool syntax
@@ -1163,10 +1163,10 @@ node -e "console.log(JSON.parse(require('fs').readFileSync('hd-config.json','utf
 ```
 
 ### Final Checklist
-- [ ] All "Must Have" present
-- [ ] All "Must NOT Have" absent
-- [ ] All tests pass (`npm test`)
-- [ ] Agent prompts use `{{TOOL:*}}` placeholders
-- [ ] Workflow is configurable via `hd-config.json`
-- [ ] Traditional workflow extracted to `src/workflows/traditional/`
-- [ ] No backward compatibility breaks for existing users
+- [x] All "Must Have" present
+- [x] All "Must NOT Have" absent
+- [x] All tests pass (`npm test`)
+- [x] Agent prompts use `{{TOOL:*}}` placeholders
+- [x] Workflow is configurable via `hd-config.json`
+- [x] Traditional workflow extracted to `src/workflows/traditional/`
+- [x] No backward compatibility breaks for existing users

@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest"
 import { createAgent } from "../../agents/factory"
 import type { AgentDefinition } from "../../agents/factory"
 import type { AgentMode } from "../../agents/types"
-import type { ToolRegistry } from "../../prompts/types"
 import { writeFileSync, mkdirSync, rmSync } from "fs"
 import { join } from "path"
 
@@ -104,43 +103,39 @@ describe("createAgent", () => {
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
-  describe("Prompt Resolution", () => {
-    it("resolves {{TOOL:ask_user}} placeholders using default registry", () => {
-      mkdirSync(TEST_DIR, { recursive: true })
-      writeFileSync(join(TEST_DIR, "test.md"), "Use {{TOOL:ask_user}} to ask questions.")
-
-      const agent = createAgent(baseDefinition, TEST_DIR)
-
-      expect(agent.prompt).toContain("question({")
-      expect(agent.prompt).toContain("请确认以下内容：")
-      expect(agent.prompt).not.toMatch(/\{\{TOOL:/)
-
-      rmSync(TEST_DIR, { recursive: true, force: true })
-    })
-
-    it("accepts custom tool registry", () => {
-      const customRegistry: ToolRegistry = {
-        ask_user: "CUSTOM_ASK_SYNTAX"
+  describe("AgentDefinition promptTools", () => {
+    it("should accept optional promptTools field", () => {
+      const definition: AgentDefinition = {
+        name: "TestAgent",
+        description: "Test",
+        mode: "primary" as AgentMode,
+        color: "#000000",
+        defaultTemperature: 0.7,
+        defaultMaxTokens: 32000,
+        promptFiles: ["test.md"],
+        promptTools: ["ask_user", "task"],
+        defaultPermission: {},
+        defaultTools: {},
       }
 
-      mkdirSync(TEST_DIR, { recursive: true })
-      writeFileSync(join(TEST_DIR, "test.md"), "Use {{TOOL:ask_user}} here.")
-
-      const agent = createAgent(baseDefinition, TEST_DIR, undefined, customRegistry)
-
-      expect(agent.prompt).toContain("CUSTOM_ASK_SYNTAX")
-      expect(agent.prompt).not.toMatch(/\{\{TOOL:/)
-
-      rmSync(TEST_DIR, { recursive: true, force: true })
+      expect(definition.promptTools).toEqual(["ask_user", "task"])
     })
 
-    it("throws on unknown tool placeholders", () => {
-      mkdirSync(TEST_DIR, { recursive: true })
-      writeFileSync(join(TEST_DIR, "test.md"), "Use {{TOOL:unknown_tool}} here.")
+    it("should work without promptTools field", () => {
+      const definition: AgentDefinition = {
+        name: "TestAgent",
+        description: "Test",
+        mode: "primary" as AgentMode,
+        color: "#000000",
+        defaultTemperature: 0.7,
+        defaultMaxTokens: 32000,
+        promptFiles: ["test.md"],
+        defaultPermission: {},
+        defaultTools: {},
+      }
 
-      expect(() => createAgent(baseDefinition, TEST_DIR)).toThrow("Unknown tool placeholder: {{TOOL:unknown_tool}}")
-
-      rmSync(TEST_DIR, { recursive: true, force: true })
+      expect(definition.promptTools).toBeUndefined()
     })
   })
+
 })

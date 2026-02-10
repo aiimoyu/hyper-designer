@@ -1,9 +1,9 @@
 {
-  "active_plan": "/home/li/.config/opencode/hyper-designer/.sisyphus/plans/deep-decoupling.md",
-  "started_at": "2026-02-10T11:48:40.377Z",
+  "active_plan": "/home/li/.config/opencode/hyper-designer/.sisyphus/plans/prompt-composition-refactor.md",
+  "started_at": "2026-02-10T18:33:27.606Z",
   "session_ids": [
     "ses_3b8db29ffffeU0obRn7YwESu3Q"
   ],
-  "plan_name": "deep-decoupling",
+  "plan_name": "prompt-composition-refactor",
   "agent": "atlas"
 }

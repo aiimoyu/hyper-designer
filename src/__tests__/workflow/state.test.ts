@@ -9,8 +9,8 @@ import {
   getStageOrder
 } from "../../workflow/state"
 import type { WorkflowDefinition } from "../../workflows/types"
-import { rmSync, existsSync } from "fs"
-import { join } from "path"
+import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
+import { join, dirname } from "path"
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 
@@ -110,6 +110,7 @@ describe("workflow state management", () => {
       expect(state.workflow.IRAnalysis).toEqual({ isCompleted: false })
       expect(state.currentStep).toBeNull()
       expect(state.handoverTo).toBeNull()
+      expect(state.workflowId).toBe("traditional")
     })
 
     it("works with custom workflow definition", () => {
@@ -174,6 +175,7 @@ describe("workflow state management", () => {
       expect(state).toHaveProperty("workflow")
       expect(state).toHaveProperty("currentStep", null)
       expect(state).toHaveProperty("handoverTo", null)
+      expect(state).toHaveProperty("workflowId", "traditional")
 
       expect(state.workflow.dataCollection.isCompleted).toBe(false)
       expect(state.workflow.IRAnalysis.isCompleted).toBe(false)
@@ -201,6 +203,32 @@ describe("workflow state management", () => {
 
       const secondState = getWorkflowState()
       expect(secondState.workflow.dataCollection.isCompleted).toBe(true)
+    })
+
+    it("loads legacy state file without workflowId with default value", () => {
+      // Write a legacy state file without workflowId
+      const legacyState = {
+        workflow: {
+          dataCollection: { isCompleted: true },
+          IRAnalysis: { isCompleted: false },
+          scenarioAnalysis: { isCompleted: false },
+          useCaseAnalysis: { isCompleted: false },
+          functionalRefinement: { isCompleted: false },
+          requirementDecomposition: { isCompleted: false },
+          systemFunctionalDesign: { isCompleted: false },
+          moduleFunctionalDesign: { isCompleted: false },
+        },
+        currentStep: null,
+        handoverTo: null,
+      }
+
+      mkdirSync(dirname(STATE_FILE), { recursive: true })
+      writeFileSync(STATE_FILE, JSON.stringify(legacyState, null, 2))
+
+      const state = getWorkflowState()
+      expect(state.workflowId).toBe("traditional")
+      expect(state.workflow.dataCollection.isCompleted).toBe(true)
+      expect(state.currentStep).toBeNull()
     })
   })
 

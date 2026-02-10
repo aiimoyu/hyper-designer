@@ -657,3 +657,35 @@ This deep-decoupling project represents a significant architectural improvement:
 
 **Status**: Project complete. All goals achieved. System ready for production use.
 
+
+## [2026-02-10 20:34] Cleanup Task: Prose Reference Conversion
+
+### What Happened
+After all 10 main tasks completed, found 6 remaining hardcoded `delegate_task()` references in workflow prompt files. These were not actual code but documentation/prose showing "调用方式" (calling method).
+
+### Files Fixed
+- functionalRefinement.md:15
+- moduleFunctionalDesign.md:17
+- requirementDecomposition.md:15
+- scenarioAnalysis.md:15
+- systemFunctionalDesign.md:17
+- useCaseAnalysis.md:15
+
+### Pattern
+Changed:
+```
+   - 调用方式：`delegate_task(subagent_type="HCritic", load_skills=[], ...)`
+```
+
+To:
+```
+   - 调用方式：{{TOOL:delegate_critic_review}}
+```
+
+### Learning
+**Prose references to tool syntax must ALSO use placeholders** - not just code blocks. The placeholder system is for ALL mentions of tool syntax, whether in code or documentation.
+
+### Verification
+- `grep -rn 'delegate_task(' src/workflows/traditional/prompts/*.md | grep -v '{{TOOL' | wc -l` → 0 ✅
+- All 131 tests still pass ✅
+- Commit: 1a54a84
