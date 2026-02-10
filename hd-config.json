@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "workflow": "traditional",
   "agents": {
     "HCollector": {
       "model": "zhipuai-coding-plan/glm-4.7",

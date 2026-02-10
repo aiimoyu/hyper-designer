@@ -9,6 +9,11 @@
       "type": "string",
       "description": "JSON Schema reference for validation"
     },
+    "workflow": {
+      "type": "string",
+      "description": "Workflow type to use",
+      "default": "traditional"
+    },
     "agents": {
       "type": "object",
       "description": "Per-agent configuration overrides",

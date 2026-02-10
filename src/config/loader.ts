@@ -14,6 +14,7 @@ export interface AgentOverrideConfig {
 
 export interface HDConfig {
   $schema?: string
+  workflow?: string
   agents: Record<string, AgentOverrideConfig>
 }
 
@@ -67,6 +68,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
     debug.log("Using default config (no file found)", DEFAULT_AGENT_CONFIGS)
     return {
       agents: DEFAULT_AGENT_CONFIGS,
+      workflow: "traditional",
     }
   }
 
@@ -75,6 +77,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
     const config = JSON.parse(content) as HDConfig
 
     const mergedConfig: HDConfig = {
+      workflow: config.workflow ?? "traditional",
       agents: {
         ...DEFAULT_AGENT_CONFIGS,
         ...config.agents,
@@ -92,6 +95,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
     debug.error(`Failed to load HD config from ${path}`, error)
     return {
       agents: DEFAULT_AGENT_CONFIGS,
+      workflow: "traditional",
     }
   }
 }
