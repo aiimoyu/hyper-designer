@@ -12,7 +12,7 @@
 
 1. **生成文档**：完成本阶段所有输出文档
 2. **立即触发HCritic审查**：文档生成后，**立即自动**使用 `HCritic` agent 进行设计审核
-   - 调用方式：`delegate_task(subagent_type="HCritic", load_skills=[], ...)`
+   - 调用方式：{{TOOL:delegate_critic_review}}
    - **不要等待用户确认，直接触发审查**
 3. **处理审查结果**：
    - 审核未通过时：根据 HCritic 的反馈意见，**必须**修改文档并重新提交审查（返回步骤2）
