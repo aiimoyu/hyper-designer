@@ -17,7 +17,7 @@
 
 **强制审核：** 完成本阶段所有输出文档后，**必须**使用 `HCritic` agent 进行设计审核。
 
-- 调用方式：`delegate_task(subagent_type="HCritic", load_skills=[], ...)`
+- 调用方式：`{{TOOL:delegate_critic_review}}`
 - 审核未通过时：根据 HCritic 的反馈意见，**必须**修改文档并重新提交审核
 - 审核流程：重复"生成文档 → HCritic 审核 → 修改"直到审核通过
 - **禁止跳过审核**：未经 HCritic 审核通过的文档不得进入下一阶段
