@@ -831,7 +831,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 8. Update Agent Factory to Integrate PromptResolver
+- [x] 8. Update Agent Factory to Integrate PromptResolver
 
   **What to do**:
   - Update `src/agents/factory.ts`:
@@ -910,7 +910,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 9. Update Handover, Prompt Loading, and OpenCode Hooks for Dynamic Workflows
+- [x] 9. Update Handover, Prompt Loading, and OpenCode Hooks for Dynamic Workflows
 
   **What to do**:
   - Update `src/workflow/handover.ts`:

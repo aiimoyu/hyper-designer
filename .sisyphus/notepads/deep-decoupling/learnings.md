@@ -296,3 +296,136 @@ Successfully integrated PromptResolver into the agent creation pipeline. All age
 - ✅ All 89 tests pass (no regressions)
 - ✅ Type safety maintained with proper ToolRegistry typing
 - ✅ Backward compatibility confirmed
+
+## [2026-02-10T20:18:00Z] Task 9: Dynamic Workflow Integration
+
+**Completed:** Refactored workflow handover, prompt loading, and OpenCode hooks to use dynamic workflow definitions from the registry.
+
+**Key Changes:**
+
+### Handover Refactoring (src/workflow/handover.ts)
+- **Before:** Static `HANDOVER_CONFIG` constant with hardcoded 8 stages
+- **After:** Helper functions `getHandoverAgent()` and `getHandoverPrompt()` that query WorkflowDefinition
+- Pattern: Extract data from definition instead of maintaining parallel structures
+- Benefits: Single source of truth, supports any workflow structure
+
+### Prompt Loading Refactoring (src/workflow/prompts.ts)
+- **Before:** Hardcoded `promptMap` and fixed `PROMPTS_DIR` pointing to `src/workflow/prompts/`
+- **After:** Dynamic path resolution based on workflow ID + `resolvePrompt()` integration
+- Path pattern: `src/workflows/{definition.id}/{stageConfig.promptFile}`
+- Auto-resolves `{{TOOL:*}}` placeholders using `OPENCODE_TOOL_REGISTRY`
+- Benefits: Framework-agnostic prompts, workflow-specific prompt directories
+
+### OpenCode Hook Integration (opencode/hooks/workflow.ts)
+- Load workflow definition once at hook initialization from config
+- Session idle event: Use `getHandoverAgent()` and `getHandoverPrompt()` with workflow
+- System transform event: Use `loadPromptForStage()` with workflow definition
+- Error handling: Try-catch around prompt loading to prevent hook failures
+
+### Plugin Tool Updates (opencode/.plugins/hyper-designer.ts)
+- Load workflow definition from config at plugin initialization
+- Remove `Workflow` type import (no longer exists)
+- Pass workflow definition to `setWorkflowHandover()` function
+- Remove type casts to `keyof Workflow` (now accepts string)
+
+### Cleanup Completed
+- ✅ Deleted `src/workflow/prompts/` directory (8 .md files removed)
+- ✅ Prompts now live in `src/workflows/traditional/prompts/`
+- ✅ Removed `HANDOVER_CONFIG` export from `src/index.ts`
+- ✅ Added exports for `getHandoverAgent()` and `getHandoverPrompt()`
+- ✅ Fixed `SkillLoader` interface to accept `string` instead of `keyof Workflow`
+- ✅ Fixed HEngineer agent missing `defaultPermission` field
+
+### Testing Strategy
+- Created `src/__tests__/workflow/handover.test.ts` (11 tests)
+  - Tests for agent lookup, prompt generation, error handling
+  - Tests with custom workflow definition to validate generic behavior
+- Created `src/__tests__/workflow/prompts.test.ts` (8 tests)
+  - Tests loading all traditional workflow stages
+  - Tests placeholder resolution (no `{{TOOL:*}}` in output)
+  - Tests error handling for unknown stages and missing files
+  - Tests Chinese content preservation
+- All 108 tests passing
+
+**Patterns Established:**
+
+1. **WorkflowDefinition Injection Pattern:**
+   - Functions accept `WorkflowDefinition` parameter
+   - Extract configuration data from definition dynamically
+   - No hardcoded stage names or configuration
+
+2. **Path Resolution Pattern:**
+   ```typescript
+   const workflowDir = join(process.cwd(), "src", "workflows", definition.id)
+   const promptPath = join(workflowDir, stageConfig.promptFile)
+   ```
+   - Prompts live in workflow module directories
+   - Each workflow can have its own directory structure
+
+3. **Prompt Resolution Pipeline:**
+   ```typescript
+   const rawPrompt = readFileSync(promptPath, "utf-8")
+   return resolvePrompt(rawPrompt, OPENCODE_TOOL_REGISTRY)
+   ```
+   - Load raw markdown
+   - Resolve placeholders with registry
+   - Return framework-specific prompt
+
+4. **Hook Initialization Pattern:**
+   ```typescript
+   export async function createWorkflowHooks(ctx: PluginInput) {
+     const config = loadHDConfig()
+     const workflow = getWorkflowDefinition(config.workflow || "traditional")
+     // Use workflow throughout hook lifecycle
+   }
+   ```
+   - Load workflow once at initialization
+   - Reuse workflow definition across all hook events
+
+**Key Findings:**
+
+1. **Error Handling Critical:**
+   - Prompt loading can fail (file not found, read errors)
+   - OpenCode hook must try-catch to avoid breaking chat system
+   - Throw descriptive errors in library functions, catch in integration layer
+
+2. **Type Safety Trade-offs:**
+   - Lost compile-time checking of stage names (was `keyof Workflow`)
+   - Gained runtime flexibility (any workflow structure)
+   - Runtime validation via `definition.stages[stage]` existence checks
+
+3. **Path Resolution Challenges:**
+   - Need consistent strategy for locating workflow module directories
+   - Using `process.cwd()` + relative paths for now
+   - ESM `import.meta.url` not needed since we use synchronous file operations
+
+4. **Test Discrepancies:**
+   - Initial test expected "数据收集" but prompt uses "资料收集"
+   - Highlights importance of checking actual file content, not assumptions
+   - Fixed by reading prompt file to verify correct Chinese text
+
+5. **Plugin Tool Signatures:**
+   - `setWorkflowHandover()` now requires WorkflowDefinition parameter
+   - Plugin must load and pass workflow definition
+   - Ensures stage validation uses correct workflow
+
+**Migration Success Metrics:**
+- ✅ 0 references to old `HANDOVER_CONFIG`
+- ✅ 0 files in `src/workflow/prompts/`
+- ✅ 8 prompt files in `src/workflows/traditional/prompts/`
+- ✅ 108 tests passing (86 previous + 19 new + 3 updated)
+- ✅ 0 LSP errors
+- ✅ All placeholder resolution working (no `{{TOOL:*}}` in outputs)
+
+**Impact Analysis:**
+- ✅ Workflow system now 100% config-driven
+- ✅ No hardcoded stage names in core system
+- ✅ Easy to add new workflows by registering WorkflowDefinition
+- ✅ Prompt resolution integrated into loading pipeline
+- ✅ OpenCode adapter decoupled from workflow specifics
+
+**Next Steps (Future Tasks):**
+- Add other framework adapters (Claude Code, etc.) using same workflow definitions
+- Implement workflow configuration hot-reloading
+- Add workflow validation on registration
+- Document workflow module creation process
