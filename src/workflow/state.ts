@@ -25,6 +25,20 @@ export interface WorkflowState {
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json");
 
 /**
+ * Workflow steps in order
+ */
+export const WORKFLOW_STEPS: (keyof Workflow)[] = [
+  "dataCollection",
+  "IRAnalysis",
+  "scenarioAnalysis",
+  "useCaseAnalysis",
+  "functionalRefinement",
+  "requirementDecomposition",
+  "systemFunctionalDesign",
+  "moduleFunctionalDesign",
+];
+
+/**
  * Reads the workflow state from the JSON file
  */
 function readWorkflowStateFile(): WorkflowState {
@@ -108,11 +122,70 @@ export function setWorkflowCurrent(step_name: keyof Workflow | null): WorkflowSt
 
 export function setWorkflowHandover(step_name: keyof Workflow | null): WorkflowState {
   const state = readWorkflowStateFile();
-  if (step_name === null || state.workflow[step_name]) {
-    state.handoverTo = step_name;
+
+  if (step_name === null) {
+    state.handoverTo = null;
     writeWorkflowStateFile(state);
-  } else {
+    return state;
+  }
+
+  if (!state.workflow[step_name]) {
     throw new Error(`Invalid workflow step: ${step_name}`);
   }
+
+  const currentStep = state.currentStep;
+  const currentIndex = currentStep ? WORKFLOW_STEPS.indexOf(currentStep) : -1;
+  const targetIndex = WORKFLOW_STEPS.indexOf(step_name);
+
+  if (currentIndex === -1) {
+    throw new Error(`Cannot set handover: current step is not set`);
+  }
+
+  const isNextStep = targetIndex === currentIndex + 1;
+  const isBackwardStep = targetIndex <= currentIndex;
+
+  if (!isNextStep && !isBackwardStep) {
+    throw new Error(
+      `Cannot skip steps when setting handover. ` +
+      `Current step: ${currentStep} (index ${currentIndex}), ` +
+      `Target step: ${step_name} (index ${targetIndex}). ` +
+      `You can only go to the next step or return to a previous step.`
+    );
+  }
+
+  state.handoverTo = step_name;
+  writeWorkflowStateFile(state);
+  return state;
+}
+
+export function executeWorkflowHandover(): WorkflowState {
+  const state = readWorkflowStateFile();
+
+  if (state.handoverTo === null) {
+    throw new Error("No handover target set. Call setWorkflowHandover first.");
+  }
+
+  const fromStep = state.currentStep;
+  const toStep = state.handoverTo;
+  const fromIndex = fromStep ? WORKFLOW_STEPS.indexOf(fromStep) : -1;
+  const toIndex = WORKFLOW_STEPS.indexOf(toStep);
+
+  if (fromIndex === -1) {
+    throw new Error(`Cannot execute handover: current step is not set`);
+  }
+
+  if (toIndex > fromIndex) {
+    state.workflow[fromStep!].isCompleted = true;
+  } else if (toIndex < fromIndex) {
+    for (let i = toIndex; i <= fromIndex; i++) {
+      const step = WORKFLOW_STEPS[i];
+      state.workflow[step].isCompleted = false;
+    }
+  }
+
+  state.handoverTo = null;
+  state.currentStep = toStep;
+
+  writeWorkflowStateFile(state);
   return state;
 }

@@ -1,8 +1,7 @@
 import { PluginInput } from "@opencode-ai/plugin";
 import {
   getWorkflowState,
-  setWorkflowHandover,
-  setWorkflowCurrent,
+  executeWorkflowHandover,
 } from "../../src/workflow/state";
 import { HANDOVER_CONFIG } from "../../src/workflow/handover";
 import { loadPromptForStage } from "../../src/workflow/prompts";
@@ -35,13 +34,10 @@ export async function createWorkflowHooks(ctx: PluginInput) {
           const config = HANDOVER_CONFIG[handoverPhase];
 
           if (config) {
-            setWorkflowCurrent(handoverPhase);
-
             let handoverContent = config.getPrompt(currentPhase, handoverPhase);
 
             await prompt(sessionID, config.agent, handoverContent);
-            setWorkflowHandover(null);
-            setWorkflowCurrent(handoverPhase);
+            executeWorkflowHandover();
           }
         }
       }
