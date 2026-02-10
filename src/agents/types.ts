@@ -41,14 +41,19 @@ export type AgentFactory = ((model: string, opts?: { phases?: string[] }) => Age
  * Lightweight metadata used when building dynamic prompts (e.g. Sisyphus-style).
  * Keep only helpful fields for prompt generation and UI listing.
  */
+export type BuiltinAgentName = "HCollector" | "HArchitect" | "HCritic" | "HEngineer"
+
+/**
+ * Metadata for agent prompts, used for dynamic prompt building and agent selection.
+ */
 export interface AgentPromptMetadata {
-  category?: string
-  cost?: "FREE" | "CHEAP" | "EXPENSIVE"
-  promptAlias?: string
-  useWhen?: string[]
-  avoidWhen?: string[]
-  keyTrigger?: string
-  triggers?: Array<{ domain: string; trigger: string }>
+  category: string
+  cost: string
+  promptAlias: string
+  keyTrigger: string
+  triggers: Array<{ domain: string; trigger: string }>
+  useWhen: string[]
+  avoidWhen: string[]
 }
 
 

@@ -74,12 +74,15 @@ export function loadHDConfig(configPath?: string): HDConfig {
     const content = readFileSync(path, "utf-8")
     const config = JSON.parse(content) as HDConfig
 
-    const mergedConfig = {
-      $schema: config.$schema,
+    const mergedConfig: HDConfig = {
       agents: {
         ...DEFAULT_AGENT_CONFIGS,
         ...config.agents,
       },
+    }
+
+    if (config.$schema) {
+      mergedConfig.$schema = config.$schema
     }
 
     debug.log("Loaded config", { path, raw: config, merged: mergedConfig })

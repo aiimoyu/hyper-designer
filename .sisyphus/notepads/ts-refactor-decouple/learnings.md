@@ -175,3 +175,16 @@ opencode/                (Framework adapter layer)
 - Core workflow layer fully decoupled ✅
 - Ready to populate `src/index.ts` with clean public API exports
 - All imports from core will be framework-agnostic
+
+## 2026-02-10T16:40:09+08:00 Task 7: Core Barrel Exports
+- Successfully populated src/index.ts with 30+ export statements
+- Exported framework-agnostic types, functions, and agent factories
+- Verified no @opencode-ai imports
+- Type check passed without circular dependencies
+- Import hierarchy maintained: types → config → utils → workflow → agents → index.ts
+
+## 2026-02-10T16:48:13+08:00 Task 7: Core Barrel Exports
+- Populated src/index.ts with 17 export statements
+- Fixed missing AgentPromptMetadata type in types.ts
+- Fixed HDConfig type issue with exactOptionalPropertyTypes
+- Type check now passes
