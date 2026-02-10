@@ -27,27 +27,40 @@ Successfully converted all 8 workflow prompt files from hardcoded `delegate_task
 - Workflow prompts now decoupled from specific tool implementation
 - Enables dynamic tool resolution via PromptResolver system
 - Maintains backward compatibility through placeholder substitution
-## [2026-02-10T20:00:52Z] Task 5: Extract Traditional Workflow Module
+## [2026-02-10T20:11:00Z] Task 8: Integrate PromptResolver into Agent Factory
 
-**Completed:** Created complete traditional workflow module with all 8 stages.
+Successfully integrated PromptResolver into the agent creation pipeline. All agent prompts now automatically resolve `{{TOOL:*}}` placeholders to actual tool syntax before being returned to callers.
 
-**Key Findings:**
+**Integration Pattern:**
+- Added optional `toolRegistry?: ToolRegistry` parameter to `createAgent()` function
+- Default registry: `OPENCODE_TOOL_REGISTRY` (8 tool entries)
+- Resolution occurs after prompt concatenation but before returning AgentConfig
+- Maintains backward compatibility: existing callers work unchanged
+- Enables custom registries for testing or alternative tool syntax
 
-### Skill Mapping Discrepancies
-- Task spec suggested "IR Analysis" but actual prompt files use "ir-analysis" (kebab-case)
-- Corrected skill names from prompt file analysis:
-  - IRAnalysis → "ir-analysis" (not "IR Analysis")
-  - scenarioAnalysis → "scenario-analysis"
-  - useCaseAnalysis → "use-case-analysis"
-  - functionalRefinement → "functional-refinement"
-  - requirementDecomposition → "sr-ar-decomposition" (primary skill, also has ir-sr-ar-traceability)
-  - systemFunctionalDesign → "functional-design"
-  - moduleFunctionalDesign → "functional-design"
-- dataCollection stage has no skill assignment (confirmed in prompt file)
+**Test Coverage Added:**
+- ✅ Placeholder resolution test: Verifies `{{TOOL:ask_user}}` resolves to question syntax
+- ✅ Custom registry test: Confirms custom tool mappings work correctly  
+- ✅ Error handling test: Validates unknown placeholders throw descriptive errors
+- ✅ Regression protection: All existing 6 tests still pass
+- ✅ Full suite verification: 89/89 tests passing
 
-### Handover Prompt Structure
-- All handover prompts follow consistent pattern: `{prefix}进入{next}阶段。{description}`
-- Prefix conditional: current step present = `步骤${current}结束，`, else empty string
+**Edge Cases Handled:**
+- Missing prompt files: Graceful fallback with error message (no resolution attempted)
+- Empty tool registry: Would fail on first placeholder (expected behavior)
+- Multiple placeholders: All resolved in single pass (regex global flag)
+- Config append: Resolved after concatenation with user config appends
+
+**Performance Impact:**
+- Minimal overhead: Single regex pass per prompt creation
+- No impact on existing agents without placeholders
+- Resolution only occurs during agent creation, not runtime
+
+**Verification Results:**
+- ✅ LSP diagnostics clean on both modified files
+- ✅ All 89 tests pass (no regressions)
+- ✅ Type safety maintained with proper ToolRegistry typing
+- ✅ Backward compatibility confirmed
 - Each stage has unique description tailored to its purpose
 - Prompts are in Chinese, matching existing workflow system language
 
@@ -248,3 +261,38 @@ Successfully converted all 7 agent `.md` files from tool-coupled syntax (JavaScr
 - Optional parameters (`definition?: WorkflowDefinition`) allow gradual migration
 - Deprecated constants can coexist with new APIs during transition period
 - Test coverage essential for catching type errors across codebase
+
+## [2026-02-10T20:11:00Z] Task 8: Integrate PromptResolver into Agent Factory
+
+Successfully integrated PromptResolver into the agent creation pipeline. All agent prompts now automatically resolve `{{TOOL:*}}` placeholders to actual tool syntax before being returned to callers.
+
+**Integration Pattern:**
+- Added optional `toolRegistry?: ToolRegistry` parameter to `createAgent()` function
+- Default registry: `OPENCODE_TOOL_REGISTRY` (8 tool entries)
+- Resolution occurs after prompt concatenation but before returning AgentConfig
+- Maintains backward compatibility: existing callers work unchanged
+- Enables custom registries for testing or alternative tool syntax
+
+**Test Coverage Added:**
+- ✅ Placeholder resolution test: Verifies `{{TOOL:ask_user}}` resolves to question syntax
+- ✅ Custom registry test: Confirms custom tool mappings work correctly  
+- ✅ Error handling test: Validates unknown placeholders throw descriptive errors
+- ✅ Regression protection: All existing 6 tests still pass
+- ✅ Full suite verification: 89/89 tests passing
+
+**Edge Cases Handled:**
+- Missing prompt files: Graceful fallback with error message (no resolution attempted)
+- Empty tool registry: Would fail on first placeholder (expected behavior)
+- Multiple placeholders: All resolved in single pass (regex global flag)
+- Config append: Resolved after concatenation with user config appends
+
+**Performance Impact:**
+- Minimal overhead: Single regex pass per prompt creation
+- No impact on existing agents without placeholders
+- Resolution only occurs during agent creation, not runtime
+
+**Verification Results:**
+- ✅ LSP diagnostics clean on both modified files
+- ✅ All 89 tests pass (no regressions)
+- ✅ Type safety maintained with proper ToolRegistry typing
+- ✅ Backward compatibility confirmed

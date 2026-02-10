@@ -1,5 +1,3 @@
-import type { Workflow } from "../workflow/state"
-
 /**
  * Represents a frontend's ability to send prompts to agents in a session.
  * OpenCode implements this via ctx.client.session.prompt().
@@ -23,5 +21,5 @@ export interface HandoverConfig {
  * Core defines the contract, adapters implement how skills are delivered to agents.
  */
 export interface SkillLoader {
-  loadSkillForStage(stage: keyof Workflow): string
+  loadSkillForStage(stage: string): string
 }

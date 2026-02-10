@@ -37,7 +37,7 @@ export {
 export { getWorkflowDefinition, getAvailableWorkflows } from "./workflows/registry"
 
 // Workflow data
-export { HANDOVER_CONFIG } from "./workflow/handover"
+export { getHandoverAgent, getHandoverPrompt } from "./workflow/handover"
 export { loadPromptForStage } from "./workflow/prompts"
 
 // Config

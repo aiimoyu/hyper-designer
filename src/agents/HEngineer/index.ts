@@ -41,6 +41,17 @@ const DEFINITION: AgentDefinition = {
   defaultTemperature: 0.4,
   defaultMaxTokens: 32000,
   promptFiles: ["identity_constraints.md", "interview_mode.md"],
+  defaultPermission: {
+    bash: "deny",
+    edit: "allow",
+    skill: "allow",
+    todoread: "allow",
+    webfetch: "deny",
+    websearch: "deny",
+    question: "allow",
+    task: "allow",
+    external_directory: "allow",
+  },
   defaultTools: {
     bash: false,
     edit: true,

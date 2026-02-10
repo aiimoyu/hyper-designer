@@ -8,9 +8,10 @@ import {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
-  Workflow,
 } from "../../src/workflow/state";
 import { createWorkflowHooks } from "../hooks/workflow";
+import { loadHDConfig } from "../../src/config/loader";
+import { getWorkflowDefinition } from "../../src/workflows/registry";
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
@@ -45,6 +46,9 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     };
   }
 
+  const hdConfig = loadHDConfig();
+  const workflow = getWorkflowDefinition(hdConfig.workflow || "traditional");
+
   const hdWorkflowStateTool = {
     get_hd_workflow_state: tool({
       description: "Get the current workflow state of the Hyper Designer project",
@@ -70,7 +74,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         is_completed: tool.schema.boolean().describe("Whether the stage is completed"),
       },
       async execute(params: { stage_name: string; is_completed: boolean }) {
-        const state = setWorkflowStage(params.stage_name as keyof Workflow, params.is_completed);
+        const state = setWorkflowStage(params.stage_name, params.is_completed);
         return JSON.stringify(state, null, 2);
       },
     }),
@@ -89,7 +93,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         ]).describe("The name of the workflow step to set as current"),
       },
       async execute(params: { step_name: string }) {
-        const state = setWorkflowCurrent(params.step_name as keyof Workflow | null);
+        const state = setWorkflowCurrent(params.step_name);
         return JSON.stringify(state, null, 2);
       },
     }),
@@ -108,7 +112,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         ]).describe("The name of the workflow step to set as handover"),
       },
       async execute(params: { step_name: string }) {
-        const state = setWorkflowHandover(params.step_name as keyof Workflow | null);
+        const state = setWorkflowHandover(params.step_name, workflow);
         return JSON.stringify(state, null, 2);
       },
     }),
