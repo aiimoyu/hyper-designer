@@ -615,7 +615,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 5. Create Base Agent Factory + Refactor All Agents
+- [x] 5. Create Base Agent Factory + Refactor All Agents
 
   **What to do**:
   - Create `src/agents/factory.ts` with a generic `createAgent()` function that encapsulates the shared pattern

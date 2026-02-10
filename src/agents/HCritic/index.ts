@@ -1,22 +1,10 @@
-import type { AgentConfig, AgentMode, AgentPromptMetadata } from "../types"
-
-import { readFileSync } from "fs"
-import { dirname, join } from "path"
+import type { AgentPromptMetadata } from "../types"
+import type { AgentDefinition } from "../factory"
+import { createAgent } from "../factory"
+import { dirname } from "path"
 import { fileURLToPath } from "url"
 
-const MODE: AgentMode = "all"
-
-function readIdentityConstraints(): string {
-  try {
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = dirname(__filename)
-    const filePath = join(__dirname, "identity_constraints.md")
-    return readFileSync(filePath, "utf-8")
-  } catch (error) {
-    console.error(`Failed to read HCritic identity constraints: ${error}`)
-    return "# HCritic Identity - Failed to load identity constraints"
-  }
-}
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export const HCRITIC_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
@@ -42,45 +30,36 @@ export const HCRITIC_PROMPT_METADATA: AgentPromptMetadata = {
   ],
 }
 
-function buildHCriticPrompt(): string {
-  const identityConstraints = readIdentityConstraints()
-  return identityConstraints
+const DEFINITION: AgentDefinition = {
+  name: "HCritic",
+  description:
+    "Design Quality Gate & Review Agent - MUST be called after HArchitect/HEngineer completes any stage document. Provides structured quality assessment (completeness, consistency, feasibility, conformance) with Pass/Fail decision. Skill-driven review using stage-specific checklists. Read-only reviewer. Call BEFORE marking workflow stage complete. (HCritic - OhMyOpenCode)",
+  mode: "all",
+  color: "#8B0000",
+  defaultTemperature: 0.1,
+  defaultMaxTokens: 16000,
+  promptFiles: ["identity_constraints.md"],
+  defaultPermission: {
+    edit: "deny",
+    bash: "deny",
+    webfetch: "deny",
+    question: "deny",
+  },
+  defaultTools: {
+    Read: true,
+    Grep: true,
+    Glob: true,
+    slashcommand: true,
+    Write: false,
+    Edit: false,
+    Bash: false,
+    Question: false,
+    delegate_task: false,
+  },
 }
 
-export const HCRITIC_SYSTEM_PROMPT = buildHCriticPrompt()
-
-export const HCRITIC_PERMISSION = {
-  edit: "deny" as const,
-  bash: "deny" as const,
-  webfetch: "deny" as const,
-  question: "deny" as const,
+export function createHCriticAgent(model?: string) {
+  return createAgent(DEFINITION, __dirname, model)
 }
 
-export function createHCriticAgent(model: string | undefined): AgentConfig {
-  return {
-    name: "HCritic",
-    description:
-      "Design Quality Gate & Review Agent - MUST be called after HArchitect/HEngineer completes any stage document. Provides structured quality assessment (completeness, consistency, feasibility, conformance) with Pass/Fail decision. Skill-driven review using stage-specific checklists. Read-only reviewer. Call BEFORE marking workflow stage complete. (HCritic - OhMyOpenCode)",
-    mode: MODE,
-    model,
-    maxTokens: 16000,
-    prompt: buildHCriticPrompt(),
-    permission: HCRITIC_PERMISSION,
-    tools: {
-      Read: true,
-      Grep: true,
-      Glob: true,
-
-      // Allow loading stage-specific skills for review
-      slashcommand: true,
-
-      Write: false,
-      Edit: false,
-      Bash: false,
-      Question: false,
-      delegate_task: false,
-    },
-  }
-}
-
-createHCriticAgent.mode = MODE
+createHCriticAgent.mode = DEFINITION.mode

@@ -1,70 +1,13 @@
-/**
- * HArchitect - System Architect Agent
- *
- * A workflow-driven agent for requirements analysis and early-stage design:
- * - Coordinates the requirements engineering workflow (first half)
- * - Manages handovers between workflow stages
- * - Outputs structured design documents at each stage
- * - Works with HCollector for data collection phase
- * - Hands over to HEngineer for detailed design phases
- * - Coordinates with HCritic for design review
- *
- * Workflow stages handled by HArchitect:
- * 1. Data Collection (delegated to HCollector)
- * 2. Initial Requirement Analysis
- * 3. Scenario Analysis
- * 4. Use Case Analysis
- * 5. Functional List Refinement (hands over to HEngineer after this)
- *
- * Note: systemFunctionalDesign and moduleFunctionalDesign are handled by HEngineer.
- */
-
-import type { AgentConfig, AgentMode, AgentPromptMetadata } from "../types"
-
-import { readFileSync } from "fs"
-import { dirname, join } from "path"
+import type { AgentPromptMetadata } from "../types"
+import type { AgentDefinition } from "../factory"
+import { createAgent } from "../factory"
+import { dirname } from "path"
 import { fileURLToPath } from "url"
 
-const MODE: AgentMode = "primary"
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
-/**
- * Read the HArchitect identity constraints from markdown file
- */
-function readIdentityConstraints(): string {
-  try {
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = dirname(__filename)
-    const filePath = join(__dirname, "identity_constraints.md")
-    return readFileSync(filePath, "utf-8")
-  } catch (error) {
-    console.error(`Failed to read HArchitect identity constraints: ${error}`)
-    return "# HArchitect Identity - Failed to load identity constraints"
-  }
-}
-
-/**
- * Read the HArchitect interview mode from markdown file
- */
-function readInterviewMode(): string {
-  try {
-    const __filename = fileURLToPath(import.meta.url)
-    const __dirname = dirname(__filename)
-    const filePath = join(__dirname, "interview_mode.md")
-    return readFileSync(filePath, "utf-8")
-  } catch (error) {
-    console.error(`Failed to read HArchitect interview mode: ${error}`)
-    return "# HArchitect Interview Mode - Failed to load interview mode"
-  }
-}
-
-/**
- * HArchitect phases for dynamic prompt loading
- */
 export type HArchitectPhase = "interview" | "workflow" | "full"
 
-/**
- * Metadata for Sisyphus delegation table integration
- */
 export const HARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "EXPENSIVE",
@@ -90,93 +33,40 @@ export const HARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
   ],
 }
 
-/**
- * Build the HArchitect system prompt based on requested phases
- */
-function buildHArchitectPrompt(phases: HArchitectPhase[] = ["full"]): string {
-  const identityConstraints = readIdentityConstraints()
-  const interviewMode = readInterviewMode()
-
-  // If "full" is requested, include all phases
-  if (phases.includes("full")) {
-    return `${identityConstraints}
-
-${interviewMode}`
-  }
-
-  // Otherwise, build prompt from selected phases
-  let prompt = identityConstraints
-
-  if (phases.includes("interview")) {
-    prompt += "\n\n" + interviewMode
-  }
-
-  return prompt
+const DEFINITION: AgentDefinition = {
+  name: "HArchitect",
+  description:
+    "System Architect & Requirements Workflow Coordinator - Manages requirements engineering from data collection (delegates to @HCollector) through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles. (HArchitect - OhMyOpenCode)",
+  mode: "primary",
+  color: "#C8102E",
+  defaultTemperature: 0.7,
+  defaultMaxTokens: 32000,
+  promptFiles: ["identity_constraints.md", "interview_mode.md"],
+  defaultPermission: {
+    edit: "allow",
+    bash: "deny",
+    webfetch: "allow",
+    question: "allow",
+  },
+  defaultTools: {
+    Read: true,
+    Grep: true,
+    Glob: true,
+    Write: true,
+    Edit: true,
+    get_hd_workflow_state: true,
+    set_hd_workflow_stage: true,
+    set_hd_workflow_current: true,
+    set_hd_workflow_handover: true,
+    delegate_task: true,
+    Question: true,
+    Bash: false,
+    task: false,
+  },
 }
 
-/**
- * Default HArchitect system prompt (all phases)
- */
-export const HARCHITECT_SYSTEM_PROMPT = buildHArchitectPrompt(["full"])
-
-/**
- * Permission configuration for HArchitect agent
- * HArchitect can write design documents and coordinate workflow
- */
-export const HARCHITECT_PERMISSION = {
-  edit: "allow" as const,
-  bash: "deny" as const,
-  webfetch: "allow" as const,
-  question: "allow" as const,
+export function createHArchitectAgent(model?: string) {
+  return createAgent(DEFINITION, __dirname, model)
 }
 
-/**
- * Factory function to create HArchitect agent configuration
- *
- * @param model - The model to use for this agent
- * @param phases - Optional array of phases to include (default: full)
- */
-export function createHArchitectAgent(
-  model: string | undefined,
-  phases: HArchitectPhase[] = ["full"]
-): AgentConfig {
-  return {
-    name: "HArchitect",
-    description:
-      "System Architect & Requirements Workflow Coordinator - Manages requirements engineering from data collection (delegates to @HCollector) through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles. (HArchitect - OhMyOpenCode)",
-    mode: MODE,
-    model,
-    maxTokens: 32000,
-    prompt: buildHArchitectPrompt(phases),
-    permission: HARCHITECT_PERMISSION,
-    tools: {
-      // Read tools for research and context
-      Read: true,
-      Grep: true,
-      Glob: true,
-
-      // Write tools for design documents
-      Write: true,
-      Edit: true,
-
-      // Workflow coordination tools
-      get_hd_workflow_state: true,
-      set_hd_workflow_stage: true,
-      set_hd_workflow_current: true,
-      set_hd_workflow_handover: true,
-
-      // Allow delegation to explore/librarian for research
-      delegate_task: true,
-
-      // Allow asking questions
-      Question: true,
-
-      // Disable implementation tools
-      Bash: false,
-      task: false,
-    },
-  }
-}
-
-// Attach mode as static property for pre-instantiation access
-createHArchitectAgent.mode = MODE
+createHArchitectAgent.mode = DEFINITION.mode
