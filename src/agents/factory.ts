@@ -7,6 +7,9 @@ import type { AgentOverrideConfig } from "../config/loader"
 import { loadHDConfig } from "../config/loader"
 import { readFileSync } from "fs"
 import { join } from "path"
+import { resolvePrompt } from "../prompts/resolver"
+import { OPENCODE_TOOL_REGISTRY } from "../prompts/toolRegistries/opencode"
+import type { ToolRegistry } from "../prompts/types"
 
 /**
  * Defines the unique characteristics of an agent.
@@ -36,7 +39,8 @@ export interface AgentDefinition {
 export function createAgent(
   definition: AgentDefinition,
   agentDir: string,
-  model?: string
+  model?: string,
+  toolRegistry?: ToolRegistry
 ): AgentConfig {
   const config = loadHDConfig()
   const agentConfig = config.agents[definition.name] as AgentOverrideConfig | undefined
@@ -53,13 +57,16 @@ export function createAgent(
     .join("\n\n")
     + (agentConfig?.prompt_append ? `\n\n${agentConfig.prompt_append}` : "")
 
+  // Resolve tool placeholders in the prompt
+  const resolvedPrompt = resolvePrompt(prompt, toolRegistry ?? OPENCODE_TOOL_REGISTRY)
+
   const result: AgentConfig = {
     name: definition.name,
     description: definition.description,
     mode: definition.mode,
     temperature: agentConfig?.temperature ?? definition.defaultTemperature,
     maxTokens: agentConfig?.maxTokens ?? definition.defaultMaxTokens,
-    prompt,
+    prompt: resolvedPrompt,
     permission: agentConfig?.permission ?? definition.defaultPermission,
     color: definition.color,
     tools: definition.defaultTools,
