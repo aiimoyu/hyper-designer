@@ -292,7 +292,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 2. Convert Agent `.md` Files to Use `{{TOOL:*}}` Placeholders
+- [x] 2. Convert Agent `.md` Files to Use `{{TOOL:*}}` Placeholders
 
   **What to do**:
   - Convert all tool-coupled syntax in the following 6 agent `.md` files to `{{TOOL:*}}` placeholders:
@@ -399,7 +399,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 3. Convert Workflow Prompt `.md` Files to Use `{{TOOL:*}}` Placeholders
+- [x] 3. Convert Workflow Prompt `.md` Files to Use `{{TOOL:*}}` Placeholders
 
   **What to do**:
   - Convert tool-coupled syntax in the 8 workflow prompt files:
@@ -566,7 +566,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 5. Extract Traditional Workflow to Module
+- [x] 5. Extract Traditional Workflow to Module
 
   **What to do**:
   - Create `src/workflows/traditional/index.ts` exporting a `WorkflowDefinition`:
@@ -734,7 +734,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] 7. Genericize Workflow State Management
+- [x] 7. Genericize Workflow State Management
 
   **What to do**:
   - Update `src/workflow/state.ts`:

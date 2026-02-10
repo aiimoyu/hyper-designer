@@ -125,7 +125,7 @@ export function setWorkflowStage(stage_name: string, is_completed: boolean): Wor
 /**
  * Sets the current workflow step
  */
-export function setWorkflowCurrent(step_name: keyof Workflow | null): WorkflowState {
+export function setWorkflowCurrent(step_name: string | null): WorkflowState {
   const state = readWorkflowStateFile();
   if (step_name === null || state.workflow[step_name]) {
     state.currentStep = step_name;
@@ -136,7 +136,7 @@ export function setWorkflowCurrent(step_name: keyof Workflow | null): WorkflowSt
   return state;
 }
 
-export function setWorkflowHandover(step_name: keyof Workflow | null): WorkflowState {
+export function setWorkflowHandover(step_name: string | null, definition: WorkflowDefinition): WorkflowState {
   const state = readWorkflowStateFile();
 
   if (step_name === null) {
@@ -149,9 +149,10 @@ export function setWorkflowHandover(step_name: keyof Workflow | null): WorkflowS
     throw new Error(`Invalid workflow step: ${step_name}`);
   }
 
+  const stageOrder = definition.stageOrder;
   const currentStep = state.currentStep;
-  const currentIndex = currentStep ? WORKFLOW_STEPS.indexOf(currentStep) : -1;
-  const targetIndex = WORKFLOW_STEPS.indexOf(step_name);
+  const currentIndex = currentStep ? stageOrder.indexOf(currentStep) : -1;
+  const targetIndex = stageOrder.indexOf(step_name);
 
   if (currentIndex === -1) {
     throw new Error(`Cannot set handover: current step is not set`);
@@ -174,17 +175,18 @@ export function setWorkflowHandover(step_name: keyof Workflow | null): WorkflowS
   return state;
 }
 
-export function executeWorkflowHandover(): WorkflowState {
+export function executeWorkflowHandover(definition: WorkflowDefinition): WorkflowState {
   const state = readWorkflowStateFile();
 
   if (state.handoverTo === null) {
     throw new Error("No handover target set. Call setWorkflowHandover first.");
   }
 
+  const stageOrder = definition.stageOrder;
   const fromStep = state.currentStep;
   const toStep = state.handoverTo;
-  const fromIndex = fromStep ? WORKFLOW_STEPS.indexOf(fromStep) : -1;
-  const toIndex = WORKFLOW_STEPS.indexOf(toStep);
+  const fromIndex = fromStep ? stageOrder.indexOf(fromStep) : -1;
+  const toIndex = stageOrder.indexOf(toStep);
 
   if (fromIndex === -1) {
     throw new Error(`Cannot execute handover: current step is not set`);
@@ -194,7 +196,7 @@ export function executeWorkflowHandover(): WorkflowState {
     state.workflow[fromStep!].isCompleted = true;
   } else if (toIndex < fromIndex) {
     for (let i = toIndex; i <= fromIndex; i++) {
-      const step = WORKFLOW_STEPS[i];
+      const step = stageOrder[i];
       state.workflow[step].isCompleted = false;
     }
   }

@@ -3,7 +3,7 @@
 // Types
 export type { AgentConfig, AgentMode, AgentFactory, AgentPromptMetadata, BuiltinAgentName } from "./agents/types"
 export type { AgentOverrideConfig, HDConfig } from "./config/loader"
-export type { WorkflowStage, Workflow, WorkflowState } from "./workflow/state"
+export type { WorkflowStage, WorkflowState } from "./workflow/state"
 export type { SessionPromptSender, SkillLoader } from "./adapters/types"
 export type { AgentDefinition } from "./agents/factory"
 export type { HandoverConfig } from "./adapters/types"
@@ -23,7 +23,15 @@ export { resolvePrompt } from "./prompts/resolver"
 export { OPENCODE_TOOL_REGISTRY } from "./prompts/toolRegistries/opencode"
 
 // Workflow state management
-export { getWorkflowState, setWorkflowStage, setWorkflowCurrent, setWorkflowHandover } from "./workflow/state"
+export { 
+  getWorkflowState, 
+  setWorkflowStage, 
+  setWorkflowCurrent, 
+  setWorkflowHandover, 
+  executeWorkflowHandover,
+  initializeWorkflowState,
+  getStageOrder
+} from "./workflow/state"
 
 // Workflow registry
 export { getWorkflowDefinition, getAvailableWorkflows } from "./workflows/registry"
