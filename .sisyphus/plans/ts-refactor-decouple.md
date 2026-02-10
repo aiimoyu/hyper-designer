@@ -178,7 +178,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ## TODOs
 
-- [ ] 1. Add Package Infrastructure (package.json + tsconfig.json + vitest.config.ts)
+- [x] 1. Add Package Infrastructure (package.json + tsconfig.json + vitest.config.ts)
 
   **What to do**:
   - Create `package.json` with:
@@ -290,7 +290,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 2. Delete Broken Files + Consolidate Duplicate Types
+- [x] 2. Delete Broken Files + Consolidate Duplicate Types
 
   **What to do**:
   - **Delete `src/agents/indext.ts`** — This file has a typo filename and references a non-existent `Clarifier` module. It's dead code.
@@ -397,7 +397,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 3. Refactor Debug Logger (DRY)
+- [x] 3. Refactor Debug Logger (DRY)
 
   **What to do**:
   - Refactor `src/utils/debug.ts` to eliminate the 4 near-identical methods
@@ -494,7 +494,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 4. Define Core Adapter Interfaces
+- [x] 4. Define Core Adapter Interfaces
 
   **What to do**:
   - Create `src/adapters/types.ts` with minimal interfaces that define the contract between core and frontend adapters
