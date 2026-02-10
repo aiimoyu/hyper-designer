@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "title": "Hyper Designer Configuration",
+  "description": "Configuration schema for Hyper Designer plugin - customize agent models, temperatures, and other settings",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for validation"
+    },
+    "agents": {
+      "type": "object",
+      "description": "Per-agent configuration overrides",
+      "properties": {
+        "HCollector": {
+          "$ref": "#/definitions/agentConfig",
+          "description": "Data Collection & Requirements Gathering Specialist"
+        },
+        "HArchitect": {
+          "$ref": "#/definitions/agentConfig",
+          "description": "System Architect & Requirements Workflow Coordinator"
+        },
+        "HCritic": {
+          "$ref": "#/definitions/agentConfig",
+          "description": "Design Quality Gate & Review Agent"
+        },
+        "HEngineer": {
+          "$ref": "#/definitions/agentConfig",
+          "description": "System Engineer & Technical Design Specialist"
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/agentConfig",
+        "description": "Custom agent configuration"
+      }
+    }
+  },
+  "required": ["agents"],
+  "definitions": {
+    "agentConfig": {
+      "type": "object",
+      "description": "Agent-specific configuration overrides",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model identifier (e.g., 'github-copilot/claude-sonnet-4.5', 'github-copilot/gpt-5.2', 'github-copilot/grok-code-fast-1')"
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Temperature for response randomness (0.0 = deterministic, 1.0 = creative)"
+        },
+        "maxTokens": {
+          "type": "number",
+          "minimum": 1,
+          "description": "Maximum tokens per response (e.g., 16000, 32000, 64000)"
+        },
+        "variant": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "max", "xhigh"],
+          "description": "Model variant for reasoning/thinking modes (low/medium/high/max/xhigh)"
+        },
+        "prompt_append": {
+          "type": "string",
+          "description": "Additional prompt text to append to the agent's system prompt"
+        },
+        "permission": {
+          "type": "object",
+          "description": "Permission configuration for the agent (overrides default permissions)",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "edit": "allow",
+              "bash": "deny",
+              "webfetch": "allow",
+              "question": "allow",
+              "task": "allow"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

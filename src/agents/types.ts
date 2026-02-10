@@ -51,20 +51,5 @@ export interface AgentPromptMetadata {
   triggers?: Array<{ domain: string; trigger: string }>
 }
 
-/**
- * HCollector-specific phases for dynamic prompt composition.
- */
-export type HCollectorPhase = "interview" | "research" | "design" | "full"
 
-/**
- * Minimal override config shape for per-agent overrides in config files.
- */
-export type AgentOverrideConfig = Partial<AgentConfig> & {
-  prompt_append?: string
-}
 
-/**
- * Builtin agent names in this simplified project.
- * Add more names only when you actually implement those agents.
- */
-export type BuiltinAgentName = "HCollector" | "HArchitect" | "HCritic" | "HEngineer"

@@ -1,0 +1,27 @@
+{
+  "workflow": {
+    "dataCollection": {
+      "isCompleted": false
+    },
+    "IRAnalysis": {
+      "isCompleted": false
+    },
+    "scenarioAnalysis": {
+      "isCompleted": false
+    },
+    "useCaseAnalysis": {
+      "isCompleted": false
+    },
+    "functionalRefinement": {
+      "isCompleted": false
+    },
+    "systemFunctionalDesign": {
+      "isCompleted": false
+    },
+    "moduleFunctionalDesign": {
+      "isCompleted": false
+    }
+  },
+  "currentStep": null,
+  "handoverTo": null
+}

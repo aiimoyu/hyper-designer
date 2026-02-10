@@ -1,0 +1,660 @@
+[2026-02-10T07:04:14.420Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:14.420Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.420Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.420Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:14.420Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.420Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.421Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:14.421Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.421Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.421Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:14.421Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:14.421Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.527Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:46.527Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.527Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.527Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:46.527Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.527Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.528Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:46.528Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.528Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.528Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:04:46.528Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:04:46.528Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.820Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:09:36.820Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.820Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.820Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:09:36.820Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.820Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.820Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:09:36.820Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.820Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.821Z] Loading config {
+  "path": "/home/li/.config/opencode/hyper-designer/hd-config.json",
+  "cwd": "/home/li/.config/opencode/hyper-designer",
+  "exists": true
+}
+[2026-02-10T07:09:36.821Z] Raw config from file {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
+[2026-02-10T07:09:36.821Z] Merged config {
+  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "agents": {
+    "HCollector": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.3,
+      "maxTokens": 32000
+    },
+    "HArchitect": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.7,
+      "maxTokens": 32000
+    },
+    "HCritic": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.1,
+      "maxTokens": 16000
+    },
+    "HEngineer": {
+      "model": "zhipuai-coding-plan/glm-4.7",
+      "temperature": 0.4,
+      "maxTokens": 32000
+    }
+  }
+}
