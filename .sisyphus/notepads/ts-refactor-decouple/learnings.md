@@ -118,3 +118,60 @@ Refactored all 4 agent files to use the base factory.
 ✅ All agent files under 75 lines (HArchitect: 72, HCollector: 69, HCritic: 65, HEngineer: 71)
 ✅ TypeScript type check passes for all agent files
 
+
+## 2026-02-10T08:00:00+00:00 Task 6: Move to Adapter Layer
+
+### What Was Done
+- Moved `src/workflow/hooks/opencode/workflow.ts` → `opencode/hooks/workflow.ts`
+- Updated import in `opencode/.plugins/hyper-designer.ts`: `../../src/workflow/hooks/opencode/workflow` → `../hooks/workflow`
+- Deleted entire `src/workflow/hooks/` directory tree
+- Fixed type annotation for event parameter: `{ event }: { event: any }`
+
+### Critical Success
+**ACHIEVED**: `grep -r "@opencode-ai" src/` returns ZERO matches
+- Core (`src/`) is now 100% framework-agnostic
+- All OpenCode-specific adapter code isolated in `opencode/` directory
+- Hook properly imports core utilities: `HANDOVER_CONFIG`, `loadPromptForStage`
+
+### Architecture Pattern: Adapter Layer
+```typescript
+// opencode/hooks/workflow.ts (ADAPTER)
+import { PluginInput } from "@opencode-ai/plugin"          // Framework-specific
+import { HANDOVER_CONFIG } from "../../src/workflow/handover"  // Core logic
+import { loadPromptForStage } from "../../src/workflow/prompts" // Core logic
+
+export async function createWorkflowHooks(ctx: PluginInput) {
+  // Wraps framework-agnostic core with OpenCode-specific ctx.client.session.prompt()
+  return {
+    event: async ({ event }: { event: any }) => {
+      // Uses HANDOVER_CONFIG from core, calls ctx.client from framework
+    }
+  }
+}
+```
+
+### Dependency Flow (After Task 6)
+```
+src/                     (ZERO framework imports ✅)
+  └─ workflow/
+     ├─ state.ts         (pure state management)
+     ├─ handover.ts      (pure config)
+     └─ prompts.ts       (pure file loading)
+
+opencode/                (Framework adapter layer)
+  ├─ hooks/
+  │  └─ workflow.ts      (uses @opencode-ai/plugin, imports from src/)
+  └─ .plugins/
+     └─ hyper-designer.ts (OpenCode plugin entry point)
+```
+
+### Key Learning
+**Type Safety in Event Handlers**: Hook event handlers need explicit types even when parameters are typed by framework. Using `{ event }: { event: any }` prevents implicit `any` errors while maintaining compatibility.
+
+### Pre-existing Issues (Not Introduced)
+- `src/config/loader.ts:87` - Type error with `exactOptionalPropertyTypes` (existed before this task)
+
+### Next Steps (Task 7 Preparation)
+- Core workflow layer fully decoupled ✅
+- Ready to populate `src/index.ts` with clean public API exports
+- All imports from core will be framework-agnostic

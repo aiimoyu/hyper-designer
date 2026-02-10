@@ -10,7 +10,7 @@ import {
   setWorkflowHandover,
   Workflow,
 } from "../../src/workflow/state";
-import { createWorkflowHooks } from "../../src/workflow/hooks/opencode/workflow";
+import { createWorkflowHooks } from "../hooks/workflow";
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {

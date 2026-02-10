@@ -821,7 +821,7 @@ Critical Path: Task 1 → Task 3 → Task 5 → Task 6 → Task 7 → Task 8
 
 ---
 
-- [ ] 6. Move OpenCode-Specific Code to Adapter Layer
+- [x] 6. Move OpenCode-Specific Code to Adapter Layer
 
   **What to do**:
   - Create `opencode/hooks/workflow.ts` — the OpenCode-specific adapter implementation
