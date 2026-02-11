@@ -1,4 +1,4 @@
-import type { WorkflowDefinition } from "../types"
+import type { WorkflowDefinition } from "./types"
 
 export function getHandoverAgent(definition: WorkflowDefinition, stage: string): string {
   const stageConfig = definition.stages[stage]

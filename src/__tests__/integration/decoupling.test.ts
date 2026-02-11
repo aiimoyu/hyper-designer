@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { loadHDConfig } from "../../config/loader"
-import { getWorkflowDefinition } from "../../workflows/registry"
+import { getWorkflowDefinition } from "../../workflows/core/registry"
 import { createHArchitectAgent } from "../../agents/HArchitect"
 
 import {
@@ -10,9 +10,9 @@ import {
   setWorkflowCurrent,
   setWorkflowHandover,
   executeWorkflowHandover,
-} from "../../workflows/state"
-import { getHandoverAgent, getHandoverPrompt } from "../../workflows/handover"
-import { loadPromptForStage } from "../../workflows/prompts"
+} from "../../workflows/core/state"
+import { getHandoverAgent, getHandoverPrompt } from "../../workflows/core/handover"
+import { loadPromptForStage } from "../../workflows/core/prompts"
 import { rmSync, existsSync } from "fs"
 import { join } from "path"
 
@@ -97,7 +97,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
       initializeWorkflowState(workflow)
 
       setWorkflowStage("dataCollection", true)
-      const updatedState = getWorkflowState(workflow)
+      const updatedState = getWorkflowState()
+      if (!updatedState) {
+        throw new Error("Workflow state should be initialized")
+      }
       expect(updatedState.workflow.dataCollection.isCompleted).toBe(true)
 
       expect(existsSync(STATE_FILE)).toBe(true)
@@ -110,7 +113,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
       setWorkflowStage("dataCollection", true)
       setWorkflowStage("IRAnalysis", true)
 
-      const state = getWorkflowState(workflow)
+      const state = getWorkflowState()
+      if (!state) {
+        throw new Error("Workflow state should be initialized")
+      }
       expect(state.workflow.dataCollection.isCompleted).toBe(true)
       expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
       expect(state.workflow.scenarioAnalysis.isCompleted).toBe(false)
@@ -125,6 +131,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
       setWorkflowHandover("IRAnalysis", workflow)
 
       const state = getWorkflowState()
+      if (!state) {
+        throw new Error("Workflow state should be initialized")
+      }
       expect(state.currentStep).toBe("dataCollection")
       expect(state.handoverTo).toBe("IRAnalysis")
 

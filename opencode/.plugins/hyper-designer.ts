@@ -8,10 +8,10 @@ import {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
-} from "../../src/workflows/state";
+} from "../../src/workflows";
 import { createWorkflowHooks } from "../../src/workflows/hooks/opencode";
 import { loadHDConfig } from "../../src/config/loader";
-import { getWorkflowDefinition } from "../../src/workflows/registry";
+import { getWorkflowDefinition } from "../../src/workflows";
 import { debug } from "../../src/utils/debug";
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {

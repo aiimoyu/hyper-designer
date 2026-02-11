@@ -1,8 +1,10 @@
 import type { WorkflowDefinition } from './types'
-import { traditionalWorkflow } from './traditional'
+import { traditionalWorkflow } from '../plugins/traditional'
+import { openSourceWorkflow } from '../plugins/open-source'
 
 const workflowRegistry: Record<string, WorkflowDefinition> = {
   traditional: traditionalWorkflow,
+  "open-source": openSourceWorkflow,
 }
 
 /**

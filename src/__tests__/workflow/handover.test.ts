@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { getHandoverAgent, getHandoverPrompt } from "../../workflows/handover"
-import { traditionalWorkflow } from "../../workflows/traditional"
-import type { WorkflowDefinition } from "../../workflows/types"
+import { getHandoverAgent, getHandoverPrompt } from "../../workflows/core/handover"
+import { traditionalWorkflow } from "../../workflows/plugins/traditional"
+import type { WorkflowDefinition } from "../../workflows/core/types"
 
 describe("workflow/handover", () => {
   describe("getHandoverAgent", () => {
@@ -17,8 +17,7 @@ describe("workflow/handover", () => {
 
     it("should return the correct agent for requirementDecomposition stage", () => {
       const agent = getHandoverAgent(traditionalWorkflow, "requirementDecomposition")
-
-
+      expect(agent).toBe("HEngineer")
     })
 
     it("should throw error for unknown stage", () => {
@@ -98,14 +97,14 @@ describe("workflow/handover", () => {
             description: "First stage",
             agent: "Agent1",
             promptFile: "prompts/stage1.md",
-            getHandoverPrompt: (current, next) => `Moving from ${current} to ${next}`,
+            getHandoverPrompt: () => "Moving from start to stage1",
           },
           stage2: {
             name: "Stage 2",
             description: "Second stage",
             agent: "Agent2",
             promptFile: "prompts/stage2.md",
-            getHandoverPrompt: (current, next) => `Transitioning from ${current} to ${next}`,
+            getHandoverPrompt: () => "Transitioning from stage1 to stage2",
           },
         },
       }

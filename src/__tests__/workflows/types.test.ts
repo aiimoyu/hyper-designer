@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { WorkflowDefinition } from '../../workflows/types'
-import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/registry'
+import type { WorkflowDefinition } from '../../workflows/core/types'
+import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/core/registry'
 
 describe('WorkflowDefinition', () => {
   it('can be constructed with valid data', () => {
@@ -16,14 +16,14 @@ describe('WorkflowDefinition', () => {
           agent: 'test-agent',
           skill: 'test-skill',
           promptFile: 'stage1.md',
-          getHandoverPrompt: (current, next) => `Handover from ${current} to ${next}`
+          getHandoverPrompt: (current) => `Handover from ${current ?? 'start'} to stage1`
         },
         stage2: {
           name: 'Stage 2',
           description: 'Second stage',
           agent: 'test-agent',
           promptFile: 'stage2.md',
-          getHandoverPrompt: (current, next) => `Handover from ${current} to ${next}`
+          getHandoverPrompt: (current) => `Handover from ${current ?? 'stage1'} to stage2`
         }
       }
     }

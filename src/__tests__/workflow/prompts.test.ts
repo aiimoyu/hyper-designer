@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { loadPromptForStage } from "../../workflows/prompts"
-import { traditionalWorkflow } from "../../workflows/traditional"
-import type { WorkflowDefinition } from "../../workflows/types"
+import { loadPromptForStage } from "../../workflows/core/prompts"
+import { traditionalWorkflow } from "../../workflows/plugins/traditional"
+import type { WorkflowDefinition } from "../../workflows/core/types"
 
 describe("workflow/prompts", () => {
   describe("loadPromptForStage", () => {

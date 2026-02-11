@@ -5,8 +5,9 @@ import { createHArchitectAgent } from "../../agents/HArchitect"
 import { createHCollectorAgent } from "../../agents/HCollector"
 import { createHEngineerAgent } from "../../agents/HEngineer"
 import { createHCriticAgent } from "../../agents/HCritic"
-import { getWorkflowDefinition } from "../../workflows/registry"
-import { getWorkflowState } from "../../workflows/state"
+import type { RuntimeType } from "../../tools"
+import { getWorkflowDefinition } from "../../workflows/core/registry"
+import { getWorkflowState } from "../../workflows/core/state"
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 
@@ -72,7 +73,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HArchitect prompt with split files, tools, and no placeholders", () => {
-    const agent = createHArchitectAgent(undefined, Runtime)
+    const agent = createHArchitectAgent(undefined, "opencode" as RuntimeType)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HArchitect")
@@ -86,7 +87,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HEngineer prompt with split files, tools, and no placeholders", () => {
-    const agent = createHEngineerAgent(undefined, Runtime)
+    const agent = createHEngineerAgent(undefined, "opencode" as RuntimeType)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HEngineer")
@@ -100,7 +101,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HCollector prompt without workflow content", () => {
-    const agent = createHCollectorAgent(undefined, Runtime)
+    const agent = createHCollectorAgent(undefined, "opencode" as RuntimeType)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HCollector")
@@ -123,7 +124,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HCritic prompt without workflow content", () => {
-    const agent = createHCriticAgent(undefined, Runtime)
+    const agent = createHCriticAgent(undefined, "opencode" as RuntimeType)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HCritic")
@@ -147,7 +148,10 @@ describe("Integration Tests: Prompt Composition", () => {
 
   it("should persist typeId when initializing workflow state", () => {
     const workflow = getWorkflowDefinition("traditional")
-    const state = getWorkflowState(workflow)
+    const state = getWorkflowState()
+    if (!state) {
+      throw new Error("Workflow state should be initialized")
+    }
 
     expect(state.typeId).toBe(workflow.id)
 

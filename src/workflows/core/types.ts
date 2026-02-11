@@ -22,6 +22,7 @@ export interface WorkflowDefinition {
    description: string
    /** Prompt file path relative to the workflow directory for the entire process */
    promptFile?: string
+   stageFallbackPromptFile?: string
    /** Ordered list of stage keys */
    stageOrder: string[]
    /** Stage definitions keyed by stage name */

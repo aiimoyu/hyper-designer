@@ -40,7 +40,6 @@ const DEFINITION: AgentDefinition = {
   mode: "subagent",
   color: "#FBC803",
   defaultTemperature: 0.1,
-  defaultMaxTokens: 32000,
   promptGenerators: [
     filePrompt(join(__dirname, "identity.md")),
     filePrompt(join(__dirname, "constraints.md")),

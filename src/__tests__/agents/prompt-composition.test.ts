@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs"
 import { join } from "path"
 import { generateToolsPrompt, type RuntimeType } from "../../tools"
-import type { WorkflowState } from "../../workflows/state"
+import type { WorkflowState } from "../../workflows/core/state"
 
 // Local type definition for ToolRegistry (used in placeholder resolution tests)
 type ToolRegistry = Record<string, string>
@@ -534,8 +534,8 @@ RegEx: /\\{\{TOOL:(\w+)\\}\}/g`
  * TODO: Implement in src/prompts/composition.ts
  */
 function composePrompt(
-  promptsDir: string,
-  options: {
+  _promptsDir: string,
+  _options: {
     includeTools: boolean
     toolList: string[]
     runtime: RuntimeType
@@ -550,8 +550,8 @@ function composePrompt(
  * TODO: Implement in src/prompts/composition.ts
  */
 function composePromptWithRegistry(
-  promptsDir: string,
-  registry: ToolRegistry
+  _promptsDir: string,
+  _registry: ToolRegistry
 ): string {
   // PLACEHOLDER: This will be implemented
   throw new Error("composePromptWithRegistry not implemented - TDD RED phase")
@@ -562,9 +562,9 @@ function composePromptWithRegistry(
  * TODO: Implement in src/prompts/composition.ts
  */
 function composeAgentPrompt(
-  agentName: string,
-  promptsDir: string,
-  options: {
+  _agentName: string,
+  _promptsDir: string,
+  _options: {
     includeWorkflow: boolean
     runtime: RuntimeType
     tools: string[]
@@ -579,7 +579,7 @@ function composeAgentPrompt(
  * TODO: Update src/workflow/state.ts to include typeId
  */
 function getWorkflowStateWithId(
-  definition: {
+  _definition: {
     id: string
     stageOrder: string[]
     stages: Record<string, unknown>

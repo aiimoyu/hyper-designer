@@ -2,11 +2,11 @@ import { PluginInput } from "@opencode-ai/plugin"
 import {
   getWorkflowState,
   executeWorkflowHandover,
-} from "../../state"
-import { getHandoverAgent, getHandoverPrompt } from "../../handover"
-import { loadPromptForStage } from "../../prompts"
+} from "../../core/state"
+import { getHandoverAgent, getHandoverPrompt } from "../../core/handover"
+import { loadWorkflowPrompt, loadStagePrompt } from "../../core/prompts"
 import { loadHDConfig } from "../../../config/loader"
-import { getWorkflowDefinition } from "../../registry"
+import { getWorkflowDefinition } from "../../core/registry"
 
 type PlaceholderResolver = {
   token: string
@@ -24,14 +24,12 @@ function replacePlaceholders(
     }
 
     const replacement = resolver.resolve()
-    if (replacement === null) {
-      continue
-    }
+    const safeReplacement = replacement ?? ""
 
     for (let index = 0; index < systemMessages.length; index += 1) {
       const message = systemMessages[index]
       if (message.includes(resolver.token)) {
-        systemMessages[index] = message.split(resolver.token).join(replacement)
+        systemMessages[index] = message.split(resolver.token).join(safeReplacement)
       }
     }
   }
@@ -69,9 +67,8 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
           const nextAgent = getHandoverAgent(workflow, handoverPhase)
           const handoverContent = getHandoverPrompt(workflow, currentPhase, handoverPhase)
-
-          await prompt(sessionID, nextAgent, handoverContent)
           executeWorkflowHandover(workflow)
+          await prompt(sessionID, nextAgent, handoverContent)
         }
       }
     },
@@ -80,13 +77,24 @@ export async function createWorkflowHooks(ctx: PluginInput) {
       const workflowState = getWorkflowState()
       const placeholderResolvers: PlaceholderResolver[] = [
         {
-          token: "{HYPER_DESIGNER_WORKFLOW_PROMPT}",
+          token: "{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}",
+          resolve: () => {
+            try {
+              return loadWorkflowPrompt(workflow)
+            } catch (error) {
+              console.error(`Failed to load workflow overview prompt:`, error)
+              return null
+            }
+          },
+        },
+        {
+          token: "{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}",
           resolve: () => {
             const currentStep = workflowState?.currentStep || null
             try {
-              return loadPromptForStage(currentStep, workflow)
+              return loadStagePrompt(currentStep, workflow)
             } catch (error) {
-              console.error(`Failed to load prompt for stage ${currentStep ?? "(none)"}:`, error)
+              console.error(`Failed to load workflow step prompt for stage ${currentStep ?? "(none)"}:`, error)
               return null
             }
           },

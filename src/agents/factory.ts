@@ -35,12 +35,13 @@ export interface AgentDefinition {
   name: string
   description: string
   mode: AgentMode
-  color: string
+  color?: string
   defaultTemperature: number
-  defaultMaxTokens: number
+  defaultMaxTokens?: number
+  defaultVariant?: string
   promptGenerators: PromptGenerator[]
-  defaultPermission: Record<string, string>
-  defaultTools: Record<string, boolean>
+  defaultPermission?: Record<string, string>
+  defaultTools?: Record<string, boolean>
 }
 
 export function createAgent(
@@ -68,11 +69,25 @@ export function createAgent(
     description: definition.description,
     mode: definition.mode,
     temperature: agentConfig?.temperature ?? definition.defaultTemperature,
-    maxTokens: agentConfig?.maxTokens ?? definition.defaultMaxTokens,
     prompt: finalPrompt,
-    permission: agentConfig?.permission ?? definition.defaultPermission,
-    color: definition.color,
-    tools: definition.defaultTools,
+  }
+
+  const maxTokensValue = agentConfig?.maxTokens ?? definition.defaultMaxTokens
+  if (maxTokensValue !== undefined) {
+    result.maxTokens = maxTokensValue
+  }
+
+  const permissionValue = agentConfig?.permission ?? definition.defaultPermission
+  if (permissionValue !== undefined) {
+    result.permission = permissionValue
+  }
+
+  if (definition.color !== undefined) {
+    result.color = definition.color
+  }
+
+  if (definition.defaultTools !== undefined) {
+    result.tools = definition.defaultTools
   }
 
   const modelValue = agentConfig?.model ?? model
@@ -80,8 +95,9 @@ export function createAgent(
     result.model = modelValue
   }
 
-  if (agentConfig?.variant !== undefined) {
-    result.variant = agentConfig.variant
+  const variantValue = agentConfig?.variant ?? definition.defaultVariant
+  if (variantValue !== undefined) {
+    result.variant = variantValue
   }
 
   return result

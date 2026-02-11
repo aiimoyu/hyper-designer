@@ -7,8 +7,8 @@ import {
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder
-} from "../../workflows/state"
-import type { WorkflowDefinition } from "../../workflows/types"
+} from "../../workflows/core/state"
+import type { WorkflowDefinition } from "../../workflows/core/types"
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
 import { join, dirname } from "path"
 
@@ -17,8 +17,7 @@ const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 const traditionalWorkflowDef: WorkflowDefinition = {
   id: "traditional",
   name: "Traditional Workflow",
-
-
+  description: "Test workflow",
   stageOrder: [
     "dataCollection",
     "IRAnalysis",
@@ -35,56 +34,56 @@ const traditionalWorkflowDef: WorkflowDefinition = {
       description: "Collect initial data",
       agent: "HCollector",
       promptFile: "data_collection.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "start"} to dataCollection`
     },
     IRAnalysis: {
       name: "IR Analysis",
       description: "Initial requirements analysis",
       agent: "HArchitect",
       promptFile: "ir_analysis.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "dataCollection"} to IRAnalysis`
     },
     scenarioAnalysis: {
       name: "Scenario Analysis",
       description: "Analyze scenarios",
       agent: "HArchitect",
       promptFile: "scenario_analysis.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "IRAnalysis"} to scenarioAnalysis`
     },
     useCaseAnalysis: {
       name: "Use Case Analysis",
       description: "Analyze use cases",
       agent: "HArchitect",
       promptFile: "use_case_analysis.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "scenarioAnalysis"} to useCaseAnalysis`
     },
     functionalRefinement: {
       name: "Functional Refinement",
       description: "Refine functionality",
       agent: "HEngineer",
       promptFile: "functional_refinement.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "useCaseAnalysis"} to functionalRefinement`
     },
     requirementDecomposition: {
       name: "Requirement Decomposition",
       description: "Decompose requirements",
       agent: "HEngineer",
       promptFile: "requirement_decomposition.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "functionalRefinement"} to requirementDecomposition`
     },
     systemFunctionalDesign: {
       name: "System Functional Design",
       description: "Design system functionality",
       agent: "HArchitect",
       promptFile: "system_functional_design.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "requirementDecomposition"} to systemFunctionalDesign`
     },
     moduleFunctionalDesign: {
       name: "Module Functional Design",
       description: "Design module functionality",
       agent: "HEngineer",
       promptFile: "module_functional_design.md",
-      getHandoverPrompt: (from, to) => `Handover from ${from} to ${to}`
+      getHandoverPrompt: (from) => `Handover from ${from ?? "systemFunctionalDesign"} to moduleFunctionalDesign`
     }
   }
 }
@@ -126,21 +125,21 @@ describe("workflow state management", () => {
             description: "First stage",
             agent: "TestAgent",
             promptFile: "stage1.md",
-            getHandoverPrompt: (from, to) => `${from} -> ${to}`
+            getHandoverPrompt: (from) => `${from ?? "start"} -> stage1`
           },
           stage2: {
             name: "Stage 2",
             description: "Second stage",
             agent: "TestAgent",
             promptFile: "stage2.md",
-            getHandoverPrompt: (from, to) => `${from} -> ${to}`
+            getHandoverPrompt: (from) => `${from ?? "stage1"} -> stage2`
           },
           stage3: {
             name: "Stage 3",
             description: "Third stage",
             agent: "TestAgent",
             promptFile: "stage3.md",
-            getHandoverPrompt: (from, to) => `${from} -> ${to}`
+            getHandoverPrompt: (from) => `${from ?? "stage2"} -> stage3`
           }
         }
       }
@@ -234,6 +233,9 @@ describe("workflow state management", () => {
       setWorkflowStage("scenarioAnalysis", true)
 
       const reloadedState = getWorkflowState()
+      if (!reloadedState) {
+        throw new Error("Expected workflow state to be present")
+      }
       expect(reloadedState.workflow.scenarioAnalysis.isCompleted).toBe(true)
     })
 
@@ -268,6 +270,9 @@ describe("workflow state management", () => {
       setWorkflowCurrent("systemFunctionalDesign")
 
       const reloadedState = getWorkflowState()
+      if (!reloadedState) {
+        throw new Error("Expected workflow state to be present")
+      }
       expect(reloadedState.currentStep).toBe("systemFunctionalDesign")
     })
   })

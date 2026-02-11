@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
-import type { WorkflowDefinition } from "../types";
-import { getWorkflowDefinition } from "../registry";
+import type { WorkflowDefinition } from "./types";
+import { getWorkflowDefinition } from "./registry";
 
 export interface WorkflowStage {
   isCompleted: boolean;
@@ -128,20 +128,28 @@ export function setWorkflowHandover(step_name: string | null, definition: Workfl
   const currentIndex = currentStep ? stageOrder.indexOf(currentStep) : -1;
   const targetIndex = stageOrder.indexOf(step_name);
 
+  // If no current step is set, only allow setting handover to the first step
   if (currentIndex === -1) {
-    throw new Error(`Cannot set handover: current step is not set`);
-  }
+    if (targetIndex !== 0) {
+      throw new Error(
+        `Cannot set handover: no current step is set. ` +
+        `You can only set handover to the first step (${stageOrder[0]}). ` +
+        `Target step: ${step_name} (index ${targetIndex}).`
+      );
+    }
+  } else {
+    // Normal logic: only allow next step or backward steps
+    const isNextStep = targetIndex === currentIndex + 1;
+    const isBackwardStep = targetIndex <= currentIndex;
 
-  const isNextStep = targetIndex === currentIndex + 1;
-  const isBackwardStep = targetIndex <= currentIndex;
-
-  if (!isNextStep && !isBackwardStep) {
-    throw new Error(
-      `Cannot skip steps when setting handover. ` +
-      `Current step: ${currentStep} (index ${currentIndex}), ` +
-      `Target step: ${step_name} (index ${targetIndex}). ` +
-      `You can only go to the next step or return to a previous step.`
-    );
+    if (!isNextStep && !isBackwardStep) {
+      throw new Error(
+        `Cannot skip steps when setting handover. ` +
+        `Current step: ${currentStep} (index ${currentIndex}), ` +
+        `Target step: ${step_name} (index ${targetIndex}). ` +
+        `You can only go to the next step or return to a previous step.`
+      );
+    }
   }
 
   state.handoverTo = step_name;
@@ -150,9 +158,11 @@ export function setWorkflowHandover(step_name: string | null, definition: Workfl
 }
 
 export function executeWorkflowHandover(definition: WorkflowDefinition): WorkflowState {
-  const state = readWorkflowStateFile();
+  let state = readWorkflowStateFile();
+
+  // Auto-initialize state if it doesn't exist
   if (state === null) {
-    throw new Error("Workflow state not initialized. Use setWorkflowCurrent or setWorkflowHandover to initialize.");
+    state = initializeWorkflowState(definition);
   }
 
   if (state.handoverTo === null) {
@@ -165,11 +175,15 @@ export function executeWorkflowHandover(definition: WorkflowDefinition): Workflo
   const fromIndex = fromStep ? stageOrder.indexOf(fromStep) : -1;
   const toIndex = stageOrder.indexOf(toStep);
 
+  // If no current step is set, this is the initial handover to first step
   if (fromIndex === -1) {
-    throw new Error(`Cannot execute handover: current step is not set`);
-  }
-
-  if (toIndex > fromIndex) {
+    if (toIndex !== 0) {
+      throw new Error(
+        `Cannot execute handover: no current step is set. ` +
+        `Initial handover can only go to the first step (${stageOrder[0]}).`
+      );
+    }
+  } else if (toIndex > fromIndex) {
     state.workflow[fromStep!].isCompleted = true;
   } else if (toIndex < fromIndex) {
     for (let i = toIndex; i <= fromIndex; i++) {

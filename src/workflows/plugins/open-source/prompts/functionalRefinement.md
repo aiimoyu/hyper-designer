@@ -1,10 +1,10 @@
 # 当前阶段
 
-**你现在处于：初始需求分析 (Initial Requirement Analysis) 阶段**
+**你现在处于：功能列表梳理 (Functional List Refinement) 阶段**
 
-**必须使用 Skill：`ir-analysis`**
+**必须使用 Skill：`functional-refinement`**
 
-使用此 skill 引导用户通过结构化对话澄清系统/产品需求，最终生成包含 5W2H 分析的 `ir信息.md` 文档。
+使用此 skill 从用例中提取完整的功能列表，进行优先级排序（MoSCoW方法），并进行FMEA风险分析，生成功能列表和FMEA文档。
 
 ## 质量审核要求
 
@@ -12,7 +12,7 @@
 
 1. **生成文档**：完成本阶段所有输出文档
 2. **立即触发HCritic审查**：文档生成后，**立即自动**使用 `HCritic` agent 进行设计审核
-   - 调用方式：`{{TOOL:delegate_critic_review}}`
+ - 调用方式：{{TOOL:delegate_critic_review}}
    - **不要等待用户确认，直接触发审查**
 3. **处理审查结果**：
    - 审核未通过时：根据 HCritic 的反馈意见，**必须**修改文档并重新提交审查（返回步骤2）

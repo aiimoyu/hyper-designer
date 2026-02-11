@@ -43,7 +43,6 @@ const DEFINITION: AgentDefinition = {
   mode: "all",
   color: "#63B232",
   defaultTemperature: 0.3,
-  defaultMaxTokens: 32000,
   promptGenerators: [
     filePrompt(join(__dirname, "identity.md")),
     filePrompt(join(__dirname, "constraints.md")),

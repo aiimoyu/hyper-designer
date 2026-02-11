@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/registry'
-import { traditionalWorkflow } from '../../workflows/traditional'
+import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/core/registry'
+import { traditionalWorkflow } from '../../workflows/plugins/traditional'
 
 describe('Traditional Workflow', () => {
   describe('metadata', () => {
@@ -140,7 +140,7 @@ describe('Traditional Workflow', () => {
     it('should generate handover prompts for all stages', () => {
       const workflow = getWorkflowDefinition('traditional')
       workflow.stageOrder.forEach((stageName) => {
-        const prompt = workflow.stages[stageName].getHandoverPrompt(null, stageName)
+        const prompt = workflow.stages[stageName].getHandoverPrompt(null)
         expect(prompt).toBeTruthy()
         expect(typeof prompt).toBe('string')
         expect(prompt.length).toBeGreaterThan(0)
@@ -149,20 +149,20 @@ describe('Traditional Workflow', () => {
 
     it('should include current step in prompt when provided', () => {
       const workflow = getWorkflowDefinition('traditional')
-      const promptWithCurrent = workflow.stages.dataCollection.getHandoverPrompt('previousStep', 'dataCollection')
+      const promptWithCurrent = workflow.stages.dataCollection.getHandoverPrompt('previousStep')
       expect(promptWithCurrent).toContain('previousStep')
     })
 
     it('should include next step in prompt', () => {
       const workflow = getWorkflowDefinition('traditional')
-      const prompt = workflow.stages.IRAnalysis.getHandoverPrompt(null, 'IRAnalysis')
+      const prompt = workflow.stages.IRAnalysis.getHandoverPrompt(null)
       expect(prompt).toContain('IRAnalysis')
     })
 
     it('should generate different prompts for different stages', () => {
       const workflow = getWorkflowDefinition('traditional')
-      const prompt1 = workflow.stages.dataCollection.getHandoverPrompt(null, 'dataCollection')
-      const prompt2 = workflow.stages.IRAnalysis.getHandoverPrompt(null, 'IRAnalysis')
+      const prompt1 = workflow.stages.dataCollection.getHandoverPrompt(null)
+      const prompt2 = workflow.stages.IRAnalysis.getHandoverPrompt(null)
       expect(prompt1).not.toBe(prompt2)
     })
   })
