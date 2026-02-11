@@ -375,7 +375,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] **8. Update Agent Definitions**
+- [x] **8. Update Agent Definitions**
 
   **What to do**:
   - Update `src/agents/HArchitect/index.ts` promptFiles to use split files
@@ -411,7 +411,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] **9. Final Integration Tests**
+- [x] **9. Final Integration Tests**
 
   **What to do**:
   - Create integration test `src/__tests__/integration/prompt-composition.test.ts`

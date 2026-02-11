@@ -39,7 +39,8 @@ const DEFINITION: AgentDefinition = {
   color: "#FBC803",
   defaultTemperature: 0.1,
   defaultMaxTokens: 32000,
-  promptFiles: ["identity_constraints.md"],
+  promptFiles: ["identity.md", "constraints.md", "step.md", "standard.md", "interview.md"],
+  promptTools: ["ask_user", "task"],
   defaultPermission: {
     bash: "deny",
     edit: "deny",
