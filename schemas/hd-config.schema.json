@@ -14,12 +14,6 @@
       "description": "Workflow type to use",
       "default": "traditional"
     },
-    "frontend": {
-      "type": "string",
-      "enum": ["opencode", "claudecode"],
-      "default": "opencode",
-      "description": "CLI frontend type (opencode or claudecode)"
-    },
     "agents": {
       "type": "object",
       "description": "Per-agent configuration overrides",

@@ -1,7 +1,7 @@
 /**
- * Represents a frontend's ability to send prompts to agents in a session.
+ * Represents a runtime's ability to send prompts to agents in a session.
  * OpenCode implements this via ctx.client.session.prompt().
- * Other frontends would implement their own session communication.
+ * Other runtimes would implement their own session communication.
  */
 export interface SessionPromptSender {
   sendPrompt(sessionId: string, agent: string, content: string): Promise<void>
@@ -9,7 +9,7 @@ export interface SessionPromptSender {
 
 /**
  * Configuration for how workflow handovers trigger agent prompts.
- * This is frontend-agnostic — each adapter uses it to drive its own session system.
+ * This is runtime-agnostic — each adapter uses it to drive its own session system.
  */
 export interface HandoverConfig {
   agent: string

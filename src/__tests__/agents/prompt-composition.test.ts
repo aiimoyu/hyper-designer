@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs"
 import { join } from "path"
-import { generateToolsPrompt, type FrontendType } from "../../prompts/toolsGenerator"
-import type { WorkflowState } from "../../workflow/state"
+import { generateToolsPrompt, type RuntimeType } from "../../tools/toolsGenerator"
+import type { WorkflowState } from "../../workflows/state"
 
 // Local type definition for ToolRegistry (used in placeholder resolution tests)
 type ToolRegistry = Record<string, string>
@@ -45,7 +45,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       const composedPrompt = composePrompt(promptsDir, {
         includeTools: true,
         toolList: ["ask_user", "task"],
-        frontend: "opencode",
+        runtime: "opencode",
       })
 
       // Assert: Verify concatenation order using markers
@@ -80,7 +80,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       const composedPrompt = composePrompt(promptsDir, {
         includeTools: false,
         toolList: [],
-        frontend: "opencode",
+        runtime: "opencode",
       })
 
       // Assert: Should only include existing files in order
@@ -102,20 +102,20 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
         composePrompt(promptsDir, {
           includeTools: false,
           toolList: [],
-          frontend: "opencode",
+          runtime: "opencode",
         })
       }).toThrow("Required prompt file 'identity.md' not found")
     })
   })
 
-  describe("2. toolsGenerator produces correct output per frontend", () => {
-    it("should generate OpenCode-specific tool syntax for opencode frontend", () => {
+  describe("2. toolsGenerator produces correct output per runtime", () => {
+    it("should generate OpenCode-specific tool syntax for opencode runtime", () => {
       // Arrange
       const tools: string[] = ["ask_user", "task", "todowrite"]
-      const frontend: FrontendType = "opencode"
+      const runtime: RuntimeType = "opencode"
 
       // Act
-      const prompt = generateToolsPrompt(frontend, tools)
+      const prompt = generateToolsPrompt(runtime, tools)
 
       // Assert
       expect(prompt).toContain("## 可用工具")
@@ -125,13 +125,13 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       expect(prompt).toContain("**语法**（opencode）")
     })
 
-    it("should generate Claude Code-specific tool syntax for claudecode frontend", () => {
+    it("should generate Claude Code-specific tool syntax for claudecode runtime", () => {
       // Arrange
       const tools: string[] = ["ask_user", "task"]
-      const frontend: FrontendType = "claudecode"
+      const runtime: RuntimeType = "claudecode"
 
       // Act
-      const prompt = generateToolsPrompt(frontend, tools)
+      const prompt = generateToolsPrompt(runtime, tools)
 
       // Assert
       expect(prompt).toContain("## 可用工具")
@@ -140,24 +140,24 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       expect(prompt).toMatch(/@ask_user|@tool:ask_user/)
     })
 
-    it("should throw error for unsupported frontend type", () => {
+    it("should throw error for unsupported runtime type", () => {
       // Arrange
       const tools: string[] = ["ask_user"]
-      const invalidFrontend = "unsupported" as FrontendType
+      const invalidFrontend = "unsupported" as RuntimeType
 
       // Act & Assert
       expect(() => {
         generateToolsPrompt(invalidFrontend, tools)
-      }).toThrow("Unknown frontend: unsupported")
+      }).toThrow("Unknown runtime: unsupported")
     })
 
     it("should handle empty tool list gracefully", () => {
       // Arrange
       const tools: string[] = []
-      const frontend: FrontendType = "opencode"
+      const runtime: RuntimeType = "opencode"
 
       // Act
-      const prompt = generateToolsPrompt(frontend, tools)
+      const prompt = generateToolsPrompt(runtime, tools)
 
       // Assert
       expect(prompt).toContain("## 可用工具")
@@ -168,10 +168,10 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Arrange
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
       const tools: string[] = ["ask_user", "unknown_tool", "task"]
-      const frontend: FrontendType = "opencode"
+      const runtime: RuntimeType = "opencode"
 
       // Act
-      const prompt = generateToolsPrompt(frontend, tools)
+      const prompt = generateToolsPrompt(runtime, tools)
 
       // Assert
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("unknown_tool"))
@@ -361,7 +361,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Act
       const prompt = composeAgentPrompt("HArchitect", promptsDir, {
         includeWorkflow: true,
-        frontend: "opencode",
+        runtime: "opencode",
         tools: ["ask_user", "task"],
       })
 
@@ -383,7 +383,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Act
       const prompt = composeAgentPrompt("HEngineer", promptsDir, {
         includeWorkflow: true,
-        frontend: "opencode",
+        runtime: "opencode",
         tools: [],
       })
 
@@ -404,7 +404,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Act
       const prompt = composeAgentPrompt("HCollector", promptsDir, {
         includeWorkflow: false, // HCollector doesn't participate in workflow stages
-        frontend: "opencode",
+        runtime: "opencode",
         tools: ["ask_user"],
       })
 
@@ -425,7 +425,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Act
       const prompt = composeAgentPrompt("HCritic", promptsDir, {
         includeWorkflow: false, // HCritic is called ad-hoc, not workflow participant
-        frontend: "opencode",
+        runtime: "opencode",
         tools: ["read", "edit"],
       })
 
@@ -450,7 +450,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
         composePrompt(promptsDir, {
           includeTools: false,
           toolList: [],
-          frontend: "opencode",
+          runtime: "opencode",
         })
       }).not.toThrow()
     })
@@ -470,7 +470,7 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       const composedPrompt = composePrompt(promptsDir, {
         includeTools: false,
         toolList: [],
-        frontend: "opencode",
+        runtime: "opencode",
       })
       const endTime = Date.now()
 
@@ -497,7 +497,7 @@ RegEx: /\\{\{TOOL:(\w+)\\}\}/g`
       const composedPrompt = composePrompt(promptsDir, {
         includeTools: false,
         toolList: [],
-        frontend: "opencode",
+        runtime: "opencode",
       })
 
       // Assert
@@ -512,7 +512,7 @@ RegEx: /\\{\{TOOL:(\w+)\\}\}/g`
         composePrompt("", {
           includeTools: false,
           toolList: [],
-          frontend: "opencode",
+          runtime: "opencode",
         })
       }).toThrow("Invalid prompts directory: empty string")
 
@@ -520,9 +520,9 @@ RegEx: /\\{\{TOOL:(\w+)\\}\}/g`
         composePrompt(TEST_DIR, {
           includeTools: true,
           toolList: ["ask_user"],
-          frontend: "" as FrontendType,
+          runtime: "" as RuntimeType,
         })
-      }).toThrow("Invalid frontend type: empty string")
+      }).toThrow("Invalid runtime type: empty string")
     })
   })
 })
@@ -538,7 +538,7 @@ function composePrompt(
   options: {
     includeTools: boolean
     toolList: string[]
-    frontend: FrontendType
+    runtime: RuntimeType
   }
 ): string {
   // PLACEHOLDER: This will be implemented
@@ -566,7 +566,7 @@ function composeAgentPrompt(
   promptsDir: string,
   options: {
     includeWorkflow: boolean
-    frontend: FrontendType
+    runtime: RuntimeType
     tools: string[]
   }
 ): string {

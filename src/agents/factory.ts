@@ -5,7 +5,7 @@
 import type { AgentConfig, AgentMode } from "./types"
 import type { AgentOverrideConfig } from "../config/loader"
 import { loadHDConfig } from "../config/loader"
-import { generateToolsPrompt, type FrontendType } from "../prompts/toolsGenerator"
+import { generateToolsPrompt, type RuntimeType } from "../tools/toolsGenerator"
 import { readFileSync } from "fs"
 import { join } from "path"
 
@@ -25,7 +25,7 @@ export interface AgentDefinition {
   promptFiles: string[]
   /** Tools that need prompt documentation (optional) */
   promptTools?: string[]
-  frontend?: FrontendType
+  runtime?: RuntimeType
   /** Default permissions */
   defaultPermission: Record<string, string>
   /** Default tools */
@@ -42,7 +42,7 @@ export function createAgent(
   definition: AgentDefinition,
   agentDir: string,
   model?: string,
-  frontend?: FrontendType
+  runtime?: RuntimeType
 ): AgentConfig {
   const config = loadHDConfig()
   const agentConfig = config.agents[definition.name] as AgentOverrideConfig | undefined
@@ -60,14 +60,14 @@ export function createAgent(
     + (agentConfig?.prompt_append ? `\n\n${agentConfig.prompt_append}` : "")
 
   const toolList = definition.promptTools ?? ["ask_user", "task"]
-  const resolvedFrontend = frontend ?? definition.frontend ?? "opencode"
+  const resolvedRuntime = runtime ?? definition.runtime ?? "opencode"
   let toolsPrompt = ""
 
   try {
-    toolsPrompt = generateToolsPrompt(resolvedFrontend, toolList)
+    toolsPrompt = generateToolsPrompt(resolvedRuntime, toolList)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Failed to generate tools prompt for ${resolvedFrontend}: ${message}`)
+    throw new Error(`Failed to generate tools prompt for ${resolvedRuntime}: ${message}`)
   }
 
   const finalPrompt = `${prompt}\n\n${toolsPrompt}`

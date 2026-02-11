@@ -7,7 +7,7 @@ import {
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder
-} from "../../workflow/state"
+} from "../../workflows/state"
 import type { WorkflowDefinition } from "../../workflows/types"
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
 import { join, dirname } from "path"
@@ -17,7 +17,8 @@ const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 const traditionalWorkflowDef: WorkflowDefinition = {
   id: "traditional",
   name: "Traditional Workflow",
-  description: "Traditional 8-stage workflow",
+
+
   stageOrder: [
     "dataCollection",
     "IRAnalysis",
@@ -169,40 +170,28 @@ describe("workflow state management", () => {
   })
 
   describe("getWorkflowState", () => {
-    it("returns default state when file doesn't exist", () => {
+    it("returns null when file doesn't exist", () => {
       const state = getWorkflowState()
-
-      expect(state).toHaveProperty("workflow")
-      expect(state).toHaveProperty("currentStep", null)
-      expect(state).toHaveProperty("handoverTo", null)
-      expect(state).toHaveProperty("workflowId", "traditional")
-
-      expect(state.workflow.dataCollection.isCompleted).toBe(false)
-      expect(state.workflow.IRAnalysis.isCompleted).toBe(false)
-      expect(state.workflow.scenarioAnalysis.isCompleted).toBe(false)
-      expect(state.workflow.useCaseAnalysis.isCompleted).toBe(false)
-      expect(state.workflow.functionalRefinement.isCompleted).toBe(false)
-      expect(state.workflow.requirementDecomposition.isCompleted).toBe(false)
-      expect(state.workflow.systemFunctionalDesign.isCompleted).toBe(false)
-      expect(state.workflow.moduleFunctionalDesign.isCompleted).toBe(false)
+      expect(state).toBeNull()
     })
 
-    it("creates state file if it doesn't exist", () => {
+    it("does not create state file when called", () => {
       expect(existsSync(STATE_FILE)).toBe(false)
-
       getWorkflowState()
-
-      expect(existsSync(STATE_FILE)).toBe(true)
+      expect(existsSync(STATE_FILE)).toBe(false)
     })
 
     it("reads existing state file correctly", () => {
+      setWorkflowCurrent("dataCollection")
+      
       const firstState = getWorkflowState()
-      firstState.workflow.dataCollection.isCompleted = true
+      expect(firstState).not.toBeNull()
+      expect(firstState!.currentStep).toBe("dataCollection")
       
       setWorkflowStage("dataCollection", true)
 
       const secondState = getWorkflowState()
-      expect(secondState.workflow.dataCollection.isCompleted).toBe(true)
+      expect(secondState!.workflow.dataCollection.isCompleted).toBe(true)
     })
 
     it("loads legacy state file without workflowId with default value", () => {
@@ -226,9 +215,10 @@ describe("workflow state management", () => {
       writeFileSync(STATE_FILE, JSON.stringify(legacyState, null, 2))
 
       const state = getWorkflowState()
-      expect(state.workflowId).toBe("traditional")
-      expect(state.workflow.dataCollection.isCompleted).toBe(true)
-      expect(state.currentStep).toBeNull()
+      expect(state).not.toBeNull()
+      expect(state!.workflowId).toBe("traditional")
+      expect(state!.workflow.dataCollection.isCompleted).toBe(true)
+      expect(state!.currentStep).toBeNull()
     })
   })
 

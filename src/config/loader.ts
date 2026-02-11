@@ -15,7 +15,6 @@ export interface AgentOverrideConfig {
 export interface HDConfig {
   $schema?: string
   workflow?: string
-  frontend?: 'opencode' | 'claudecode'
   agents: Record<string, AgentOverrideConfig>
 }
 
@@ -70,7 +69,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
     return {
       agents: DEFAULT_AGENT_CONFIGS,
       workflow: "traditional",
-      frontend: "opencode",
     }
   }
 
@@ -80,7 +78,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
 
     const mergedConfig: HDConfig = {
       workflow: config.workflow ?? "traditional",
-      frontend: config.frontend ?? "opencode",
       agents: {
         ...DEFAULT_AGENT_CONFIGS,
         ...config.agents,
@@ -99,7 +96,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
     return {
       agents: DEFAULT_AGENT_CONFIGS,
       workflow: "traditional",
-      frontend: "opencode",
     }
   }
 }

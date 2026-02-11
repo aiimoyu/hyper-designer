@@ -1,11 +1,11 @@
 /**
  * Tools Prompt Generator
  *
- * 根据frontend类型生成工具使用说明提示词
+ * 根据runtime类型生成工具使用说明提示词
  */
 
 /**
- * 工具的通用描述（所有frontend共享）
+ * 工具的通用描述（所有runtime共享）
  */
 export interface ToolPromptDefinition {
   /** 工具名称 */
@@ -17,9 +17,9 @@ export interface ToolPromptDefinition {
 }
 
 /**
- * Frontend特定的工具语法
+ * Runtime特定的工具语法
  */
-export interface FrontendToolSyntax {
+export interface RuntimeToolSyntax {
   /** 工具名称 */
   toolName: string
   /** 语法格式 */
@@ -31,17 +31,17 @@ export interface FrontendToolSyntax {
 }
 
 /**
- * Frontend类型
+ * Runtime类型
  */
-export type FrontendType = 'opencode' | 'claudecode'
+export type RuntimeType = 'opencode' | 'claudecode'
 
 /**
  * 工具语法注册表
  */
-export type ToolSyntaxRegistry = Record<string, FrontendToolSyntax>
+export type ToolSyntaxRegistry = Record<string, RuntimeToolSyntax>
 
 /**
- * 通用工具描述（所有frontend共享）
+ * 通用工具描述（所有runtime共享）
  */
 export const TOOL_DEFINITIONS: Record<string, ToolPromptDefinition> = {
   ask_user: {
@@ -253,32 +253,32 @@ export const OPENCODE_TOOL_SYNTAX: ToolSyntaxRegistry = {
 }
 
 /**
- * 获取指定frontend的工具语法注册表
+ * 获取指定runtime的工具语法注册表
  */
-function getToolSyntaxRegistry(frontend: FrontendType): ToolSyntaxRegistry {
-  switch (frontend) {
+function getToolSyntaxRegistry(runtime: RuntimeType): ToolSyntaxRegistry {
+  switch (runtime) {
     case 'opencode':
       return OPENCODE_TOOL_SYNTAX
     case 'claudecode':
       // 未来实现Claude Code语法
-      throw new Error(`Frontend '${frontend}' not yet supported`)
+      throw new Error(`Runtime '${runtime}' not yet supported`)
     default:
-      throw new Error(`Unknown frontend: ${frontend}`)
+      throw new Error(`Unknown runtime: ${runtime}`)
   }
 }
 
 /**
  * 生成工具使用说明提示词
  *
- * @param frontend - Frontend类型（opencode/claudecode）
+ * @param runtime - Runtime类型（opencode/claudecode）
  * @param requiredTools - 需要生成说明的工具列表
  * @returns 生成的工具提示词字符串
  */
 export function generateToolsPrompt(
-  frontend: FrontendType,
+  runtime: RuntimeType,
   requiredTools: string[]
 ): string {
-  const syntaxRegistry = getToolSyntaxRegistry(frontend)
+  const syntaxRegistry = getToolSyntaxRegistry(runtime)
 
   let prompt = '## 可用工具\n\n'
   prompt += '以下是你可以使用的工具及其用法说明。\n\n'
@@ -294,14 +294,14 @@ export function generateToolsPrompt(
     }
 
     if (!syntax) {
-      console.warn(`Tool syntax not found for ${frontend}: ${toolName}`)
+      console.warn(`Tool syntax not found for ${runtime}: ${toolName}`)
       continue
     }
 
     prompt += `### ${definition.name}\n\n`
     prompt += `**用途**：${definition.description}\n\n`
     prompt += `**使用方式**：\n\`\`\`\n${definition.usage}\n\`\`\`\n\n`
-    prompt += `**语法**（${frontend}）：\n\`\`\`typescript\n${syntax.syntax}\n\`\`\`\n\n`
+    prompt += `**语法**（${runtime}）：\n\`\`\`typescript\n${syntax.syntax}\n\`\`\`\n\n`
     prompt += `**示例**：\n\`\`\`typescript\n${syntax.example}\n\`\`\`\n\n`
 
     if (syntax.parameters && Object.keys(syntax.parameters).length > 0) {

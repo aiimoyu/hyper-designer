@@ -1,6 +1,6 @@
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
-import type { FrontendType } from "../../prompts/toolsGenerator"
+import type { RuntimeType } from "../../tools/toolsGenerator"
 import { createAgent } from "../factory"
 import { dirname } from "path"
 import { fileURLToPath } from "url"
@@ -78,8 +78,8 @@ const DEFINITION: AgentDefinition = {
   },
 }
 
-export function createHCollectorAgent(model?: string, frontend?: FrontendType) {
-  return createAgent(DEFINITION, __dirname, model, frontend)
+export function createHCollectorAgent(model?: string, runtime?: RuntimeType) {
+  return createAgent(DEFINITION, __dirname, model, runtime)
 }
 
 createHCollectorAgent.mode = DEFINITION.mode

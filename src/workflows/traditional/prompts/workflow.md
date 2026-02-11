@@ -9,8 +9,13 @@ HArchitect管理以下5个阶段的工作流：
 3. **scenarioAnalysis** (场景分析) - HArchitect执行
 4. **useCaseAnalysis** (用例分析) - HArchitect执行
 5. **functionalRefinement** (功能列表梳理) - HArchitect执行
+6. **systemFunctionalDesign** (系统功能设计) - HEngineer执行
+   - 包含两个子步骤：**系统需求分解** + **系统功能设计**
 
-**注意：** 后续的systemFunctionalDesign和moduleFunctionalDesign阶段由HEngineer负责执行。
+7. **moduleFunctionalDesign** (模块功能设计) - HEngineer执行
+   - 包含两个子步骤：**活动需求分解** + **模块功能设计**
+
+
 
 **每个阶段都必须遵循"单个阶段标准执行流程"的7个步骤。**
 

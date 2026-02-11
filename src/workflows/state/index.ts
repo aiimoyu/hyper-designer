@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
-import type { WorkflowDefinition } from "../workflows/types";
+import type { WorkflowDefinition } from "../types";
+import { getWorkflowDefinition } from "../registry";
 
 export interface WorkflowStage {
   isCompleted: boolean;
@@ -16,24 +17,7 @@ export interface WorkflowState {
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json");
 
 /**
- * Legacy hardcoded workflow stages for backward compatibility
- * @deprecated Use WorkflowDefinition.stageOrder instead
- */
-const LEGACY_WORKFLOW_STAGES = [
-  "dataCollection",
-  "IRAnalysis",
-  "scenarioAnalysis",
-  "useCaseAnalysis",
-  "functionalRefinement",
-  "requirementDecomposition",
-  "systemFunctionalDesign",
-  "moduleFunctionalDesign",
-];
-
-/**
  * Returns the stage order from a workflow definition
- * @param definition - The workflow definition
- * @returns Array of stage names in order
  */
 export function getStageOrder(definition: WorkflowDefinition): string[] {
   return definition.stageOrder;
@@ -41,8 +25,6 @@ export function getStageOrder(definition: WorkflowDefinition): string[] {
 
 /**
  * Initializes a WorkflowState from a WorkflowDefinition
- * @param definition - The workflow definition to initialize from
- * @returns A new WorkflowState with all stages set to not completed
  */
 export function initializeWorkflowState(definition: WorkflowDefinition): WorkflowState {
   const workflow: Record<string, WorkflowStage> = {};
@@ -59,29 +41,20 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
 
 /**
  * Reads the workflow state from the JSON file
+ * Returns null if file doesn't exist
  */
-function readWorkflowStateFile(): WorkflowState {
+function readWorkflowStateFile(): WorkflowState | null {
   try {
     const data = readFileSync(WORKFLOW_STATE_PATH, "utf-8");
     const parsed = JSON.parse(data);
-    // Backward compatibility: provide default workflowId for legacy state files
     return {
       workflowId: parsed.workflowId ?? "traditional",
       workflow: parsed.workflow,
       currentStep: parsed.currentStep,
       handoverTo: parsed.handoverTo,
     };
-  } catch (error) {
-    const workflow: Record<string, WorkflowStage> = {};
-    for (const stage of LEGACY_WORKFLOW_STAGES) {
-      workflow[stage] = { isCompleted: false };
-    }
-    return {
-      workflowId: "traditional",
-      workflow,
-      currentStep: null,
-      handoverTo: null,
-    };
+  } catch {
+    return null;
   }
 }
 
@@ -100,29 +73,23 @@ function writeWorkflowStateFile(state: WorkflowState): void {
   }
 }
 
-/**
- * Gets the current workflow state
- */
-export function getWorkflowState(definition?: WorkflowDefinition): WorkflowState {
-  const state = readWorkflowStateFile();
-
-  if (!existsSync(WORKFLOW_STATE_PATH)) {
-    if (definition) {
-      const newState = initializeWorkflowState(definition);
-      writeWorkflowStateFile(newState);
-      return newState;
-    }
-    writeWorkflowStateFile(state);
-  }
-
-  return state;
+export function getWorkflowState(): WorkflowState | null {
+  return readWorkflowStateFile();
 }
 
-/**
- * Updates the completion status of a specific workflow stage
- */
-export function setWorkflowStage(stage_name: string, is_completed: boolean): WorkflowState {
+function ensureWorkflowStateExists(definition?: WorkflowDefinition): WorkflowState {
   const state = readWorkflowStateFile();
+  if (state !== null) {
+    return state;
+  }
+  const workflowDef = definition ?? getWorkflowDefinition("traditional");
+  const newState = initializeWorkflowState(workflowDef);
+  writeWorkflowStateFile(newState);
+  return newState;
+}
+
+export function setWorkflowStage(stage_name: string, is_completed: boolean, definition?: WorkflowDefinition): WorkflowState {
+  const state = ensureWorkflowStateExists(definition);
   if (state.workflow[stage_name]) {
     state.workflow[stage_name].isCompleted = is_completed;
     writeWorkflowStateFile(state);
@@ -132,11 +99,8 @@ export function setWorkflowStage(stage_name: string, is_completed: boolean): Wor
   return state;
 }
 
-/**
- * Sets the current workflow step
- */
-export function setWorkflowCurrent(step_name: string | null): WorkflowState {
-  const state = readWorkflowStateFile();
+export function setWorkflowCurrent(step_name: string | null, definition?: WorkflowDefinition): WorkflowState {
+  const state = ensureWorkflowStateExists(definition);
   if (step_name === null || state.workflow[step_name]) {
     state.currentStep = step_name;
     writeWorkflowStateFile(state);
@@ -147,7 +111,7 @@ export function setWorkflowCurrent(step_name: string | null): WorkflowState {
 }
 
 export function setWorkflowHandover(step_name: string | null, definition: WorkflowDefinition): WorkflowState {
-  const state = readWorkflowStateFile();
+  const state = ensureWorkflowStateExists(definition);
 
   if (step_name === null) {
     state.handoverTo = null;
@@ -187,6 +151,9 @@ export function setWorkflowHandover(step_name: string | null, definition: Workfl
 
 export function executeWorkflowHandover(definition: WorkflowDefinition): WorkflowState {
   const state = readWorkflowStateFile();
+  if (state === null) {
+    throw new Error("Workflow state not initialized. Use setWorkflowCurrent or setWorkflowHandover to initialize.");
+  }
 
   if (state.handoverTo === null) {
     throw new Error("No handover target set. Call setWorkflowHandover first.");

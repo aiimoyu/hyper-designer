@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { loadPromptForStage } from "../../workflow/prompts"
+import { loadPromptForStage } from "../../workflows/prompts"
 import { traditionalWorkflow } from "../../workflows/traditional"
 import type { WorkflowDefinition } from "../../workflows/types"
 

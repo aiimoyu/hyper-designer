@@ -3,7 +3,7 @@
 // Types
 export type { AgentConfig, AgentMode, AgentFactory, AgentPromptMetadata, BuiltinAgentName } from "./agents/types"
 export type { AgentOverrideConfig, HDConfig } from "./config/loader"
-export type { WorkflowStage, WorkflowState } from "./workflow/state"
+export type { WorkflowStage, WorkflowState } from "./workflows/state"
 export type { SessionPromptSender, SkillLoader } from "./adapters/types"
 export type { AgentDefinition } from "./agents/factory"
 export type { HandoverConfig } from "./adapters/types"
@@ -27,14 +27,14 @@ export {
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder
-} from "./workflow/state"
+} from "./workflows/state"
 
 // Workflow registry
 export { getWorkflowDefinition, getAvailableWorkflows } from "./workflows/registry"
 
 // Workflow data
-export { getHandoverAgent, getHandoverPrompt } from "./workflow/handover"
-export { loadPromptForStage } from "./workflow/prompts"
+export { getHandoverAgent, getHandoverPrompt } from "./workflows/handover"
+export { loadPromptForStage } from "./workflows/prompts"
 
 // Config
 export { loadHDConfig } from "./config/loader"

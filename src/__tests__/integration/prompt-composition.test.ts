@@ -6,7 +6,7 @@ import { createHCollectorAgent } from "../../agents/HCollector"
 import { createHEngineerAgent } from "../../agents/HEngineer"
 import { createHCriticAgent } from "../../agents/HCritic"
 import { getWorkflowDefinition } from "../../workflows/registry"
-import { getWorkflowState } from "../../workflow/state"
+import { getWorkflowState } from "../../workflows/state"
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 
@@ -17,7 +17,8 @@ const PROMPT_FILES = {
   HCritic: ["identity.md", "constraints.md", "step.md", "standard.md", "interview.md"],
 }
 
-const FRONTEND = "opencode" as const
+
+
 
 function getPromptsDir(agentName: keyof typeof PROMPT_FILES): string {
   return join(process.cwd(), "src", "agents", agentName, "prompts")
@@ -71,7 +72,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HArchitect prompt with split files, tools, and no placeholders", () => {
-    const agent = createHArchitectAgent(undefined, FRONTEND)
+    const agent = createHArchitectAgent(undefined, Runtime)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HArchitect")
@@ -85,7 +86,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HEngineer prompt with split files, tools, and no placeholders", () => {
-    const agent = createHEngineerAgent(undefined, FRONTEND)
+    const agent = createHEngineerAgent(undefined, Runtime)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HEngineer")
@@ -99,7 +100,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HCollector prompt without workflow content", () => {
-    const agent = createHCollectorAgent(undefined, FRONTEND)
+    const agent = createHCollectorAgent(undefined, Runtime)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HCollector")
@@ -122,7 +123,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should compose HCritic prompt without workflow content", () => {
-    const agent = createHCriticAgent(undefined, FRONTEND)
+    const agent = createHCriticAgent(undefined, Runtime)
     const prompt = agent.prompt ?? ""
 
     const promptsDir = getPromptsDir("HCritic")

@@ -10,13 +10,14 @@ import {
   setWorkflowCurrent,
   setWorkflowHandover,
   executeWorkflowHandover,
-} from "../../workflow/state"
-import { getHandoverAgent, getHandoverPrompt } from "../../workflow/handover"
-import { loadPromptForStage } from "../../workflow/prompts"
+} from "../../workflows/state"
+import { getHandoverAgent, getHandoverPrompt } from "../../workflows/handover"
+import { loadPromptForStage } from "../../workflows/prompts"
 import { rmSync, existsSync } from "fs"
 import { join } from "path"
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
+
 
 describe("Integration Tests: Deep Decoupling System", () => {
   beforeEach(() => {

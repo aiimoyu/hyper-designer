@@ -8,8 +8,8 @@ import {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
-} from "../../src/workflow/state";
-import { createWorkflowHooks } from "../hooks/workflow";
+} from "../../src/workflows/state";
+import { createWorkflowHooks } from "../../src/workflows/hooks/opencode";
 import { loadHDConfig } from "../../src/config/loader";
 import { getWorkflowDefinition } from "../../src/workflows/registry";
 
@@ -51,11 +51,14 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
 
   const hdWorkflowStateTool = {
     get_hd_workflow_state: tool({
-      description: "Get the current workflow state of the Hyper Designer project",
+      description: "Get the current workflow state of the Hyper Designer project. Returns null if workflow has not been initialized.",
       args: {},
       async execute() {
         const state = getWorkflowState();
-        return JSON.stringify(state, null, 2);
+        if (state === null) {
+          return JSON.stringify({ initialized: false, message: "Workflow not initialized. Use set_hd_workflow_current or set_hd_workflow_handover to start." }, null, 2);
+        }
+        return JSON.stringify({ initialized: true, ...state }, null, 2);
       },
     }),
     set_hd_workflow_stage: tool({
