@@ -1,19 +1,36 @@
-/**
- * Base agent factory - centralizes common agent creation boilerplate
- */
-
 import type { AgentConfig, AgentMode } from "./types"
 import type { AgentOverrideConfig } from "../config/loader"
 import { loadHDConfig } from "../config/loader"
-import { generateToolsPrompt, type RuntimeType } from "../tools/toolsGenerator"
+import { generateToolsPrompt, type RuntimeType } from "../tools"
 import { readFileSync } from "fs"
-import { join } from "path"
 
+export type PromptGenerator = (runtime: RuntimeType) => string
 
-/**
- * Defines the unique characteristics of an agent.
- * The base factory handles all the common boilerplate.
- */
+export function filePrompt(filePath: string): PromptGenerator {
+  return () => {
+    try {
+      return readFileSync(filePath, "utf-8")
+    } catch {
+      return `# Failed to load ${filePath}`
+    }
+  }
+}
+
+export function toolsPrompt(toolNames: string[]): PromptGenerator {
+  return (runtime) => {
+    try {
+      return generateToolsPrompt(runtime, toolNames)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`Failed to generate tools prompt for ${runtime}: ${message}`)
+    }
+  }
+}
+
+export function stringPrompt(content: string): PromptGenerator {
+  return () => content
+}
+
 export interface AgentDefinition {
   name: string
   description: string
@@ -21,56 +38,30 @@ export interface AgentDefinition {
   color: string
   defaultTemperature: number
   defaultMaxTokens: number
-  /** Paths to .md files for prompt composition, resolved relative to the agent's directory */
-  promptFiles: string[]
-  /** Tools that need prompt documentation (optional) */
-  promptTools?: string[]
-  runtime?: RuntimeType
-  /** Default permissions */
+  promptGenerators: PromptGenerator[]
   defaultPermission: Record<string, string>
-  /** Default tools */
   defaultTools: Record<string, boolean>
 }
 
-/**
- * Creates an AgentConfig from an AgentDefinition, handling:
- * - Reading .md prompt files from the agent's directory
- * - Loading and merging user config overrides
- * - Applying defaults for all optional fields
- */
 export function createAgent(
   definition: AgentDefinition,
-  agentDir: string,
   model?: string,
   runtime?: RuntimeType
 ): AgentConfig {
   const config = loadHDConfig()
   const agentConfig = config.agents[definition.name] as AgentOverrideConfig | undefined
 
-  // Read and concatenate prompt files
-  const prompt = definition.promptFiles
-    .map(file => {
-      try {
-        return readFileSync(join(agentDir, file), "utf-8")
-      } catch {
-        return `# ${definition.name} - Failed to load ${file}`
-      }
-    })
-    .join("\n\n")
-    + (agentConfig?.prompt_append ? `\n\n${agentConfig.prompt_append}` : "")
+  const resolvedRuntime = runtime ?? "opencode"
 
-  const toolList = definition.promptTools ?? ["ask_user", "task"]
-  const resolvedRuntime = runtime ?? definition.runtime ?? "opencode"
-  let toolsPrompt = ""
+  const promptParts = definition.promptGenerators.map(generator =>
+    generator(resolvedRuntime)
+  )
 
-  try {
-    toolsPrompt = generateToolsPrompt(resolvedRuntime, toolList)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`Failed to generate tools prompt for ${resolvedRuntime}: ${message}`)
+  if (agentConfig?.prompt_append) {
+    promptParts.push(agentConfig.prompt_append)
   }
 
-  const finalPrompt = `${prompt}\n\n${toolsPrompt}`
+  const finalPrompt = promptParts.join("\n\n")
 
   const result: AgentConfig = {
     name: definition.name,

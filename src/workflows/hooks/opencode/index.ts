@@ -7,7 +7,35 @@ import { getHandoverAgent, getHandoverPrompt } from "../../handover"
 import { loadPromptForStage } from "../../prompts"
 import { loadHDConfig } from "../../../config/loader"
 import { getWorkflowDefinition } from "../../registry"
-import { isHDBuiltinAgent } from "../../../agents/utils"
+
+type PlaceholderResolver = {
+  token: string
+  resolve: () => string | null
+}
+
+function replacePlaceholders(
+  systemMessages: string[],
+  resolvers: PlaceholderResolver[]
+): void {
+  for (const resolver of resolvers) {
+    const needsReplacement = systemMessages.some(message => message.includes(resolver.token))
+    if (!needsReplacement) {
+      continue
+    }
+
+    const replacement = resolver.resolve()
+    if (replacement === null) {
+      continue
+    }
+
+    for (let index = 0; index < systemMessages.length; index += 1) {
+      const message = systemMessages[index]
+      if (message.includes(resolver.token)) {
+        systemMessages[index] = message.split(resolver.token).join(replacement)
+      }
+    }
+  }
+}
 
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()
@@ -47,27 +75,25 @@ export async function createWorkflowHooks(ctx: PluginInput) {
         }
       }
     },
-    "experimental.chat.system.transform": async (input: unknown, output: { system: string[] }) => {
-      // const inputObj = input as Record<string, unknown> | undefined
-      // const agentName = inputObj?.agent as string | undefined
-
-      // if (!isHDBuiltinAgent(agentName)) return
+    "experimental.chat.system.transform": async (_input: unknown, output: { system: string[] }) => {
 
       const workflowState = getWorkflowState()
-      if (!workflowState) return
+      const placeholderResolvers: PlaceholderResolver[] = [
+        {
+          token: "{HYPER_DESIGNER_WORKFLOW_PROMPT}",
+          resolve: () => {
+            const currentStep = workflowState?.currentStep || null
+            try {
+              return loadPromptForStage(currentStep, workflow)
+            } catch (error) {
+              console.error(`Failed to load prompt for stage ${currentStep ?? "(none)"}:`, error)
+              return null
+            }
+          },
+        },
+      ]
 
-      const currentStep = workflowState.currentStep
-
-      if (currentStep) {
-        try {
-          const promptContent = loadPromptForStage(currentStep, workflow)
-          if (promptContent) {
-            output.system.push(promptContent)
-          }
-        } catch (error) {
-          console.error(`Failed to load prompt for stage ${currentStep}:`, error)
-        }
-      }
+      replacePlaceholders(output.system, placeholderResolvers)
     },
   }
 }

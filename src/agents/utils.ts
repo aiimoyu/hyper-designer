@@ -8,17 +8,26 @@ import { createHCollectorAgent } from "./HCollector"
 import { createHArchitectAgent } from "./HArchitect"
 import { createHCriticAgent } from "./HCritic"
 import { createHEngineerAgent } from "./HEngineer"
-import type { RuntimeType } from "../tools/toolsGenerator"
+import type { RuntimeType } from "../tools"
 
 
+
+export const BUILTIN_AGENT_FACTORIES = {
+  HCollector: createHCollectorAgent,
+  HArchitect: createHArchitectAgent,
+  HCritic: createHCriticAgent,
+  HEngineer: createHEngineerAgent,
+} as const
 
 /**
  * List of all builtin hyper-designer agent names.
  * Used for filtering hooks to only activate for hyper-designer agents.
  */
-export const HD_BUILTIN_AGENT_NAMES = ["HCollector", "HArchitect", "HCritic", "HEngineer"] as const
+export const HD_BUILTIN_AGENT_NAMES = Object.keys(
+  BUILTIN_AGENT_FACTORIES
+) as Array<keyof typeof BUILTIN_AGENT_FACTORIES>
 
-export type HDBuiltinAgentName = (typeof HD_BUILTIN_AGENT_NAMES)[number]
+export type HDBuiltinAgentName = keyof typeof BUILTIN_AGENT_FACTORIES
 
 /**
  * Check if an agent name is a hyper-designer builtin agent.
@@ -27,27 +36,17 @@ export function isHDBuiltinAgent(agentName: string | undefined): boolean {
   return agentName !== undefined && HD_BUILTIN_AGENT_NAMES.includes(agentName as HDBuiltinAgentName)
 }
 
-/**
- * createBuiltinAgents: 返回项目实际可用的 agent 配置
- * 这里用简单逻辑：使用同一个默认 model，调用各 factory 生成配置。
- */
 export async function createBuiltinAgents(
-  modelOrRuntime: string | RuntimeType | undefined = process.env.DEFAULT_AGENT_MODEL ?? undefined,
-  runtime?: RuntimeType
-): Promise<Record<string, AgentConfig>> {
-  const resolvedRuntime =
-    runtime ?? (modelOrRuntime === "opencode" || modelOrRuntime === "claudecode" ? modelOrRuntime : "opencode")
-  const resolvedModel =
-    modelOrRuntime === "opencode" || modelOrRuntime === "claudecode"
-      ? process.env.DEFAULT_AGENT_MODEL ?? undefined
-      : modelOrRuntime
+  runtime: RuntimeType,
+  model?: string
+): Promise<Record<HDBuiltinAgentName, AgentConfig>> {
+  const result: Partial<Record<HDBuiltinAgentName, AgentConfig>> = {}
 
-  return {
-    HCollector: createHCollectorAgent(resolvedModel, resolvedRuntime),
-    HArchitect: createHArchitectAgent(resolvedModel, resolvedRuntime),
-    HCritic: createHCriticAgent(resolvedModel, resolvedRuntime),
-    HEngineer: createHEngineerAgent(resolvedModel, resolvedRuntime),
+  for (const name of HD_BUILTIN_AGENT_NAMES) {
+    result[name] = BUILTIN_AGENT_FACTORIES[name](model, runtime)
   }
+
+  return result as Record<HDBuiltinAgentName, AgentConfig>
 }
 
 // export { agentSources, agentMetadata }

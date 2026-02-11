@@ -1,7 +1,9 @@
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
-import type { RuntimeType } from "../../tools/toolsGenerator"
+import { filePrompt, toolsPrompt } from "../factory"
+import type { RuntimeType } from "../../tools"
 import { createAgent } from "../factory"
+import { join } from "path"
 import { dirname } from "path"
 import { fileURLToPath } from "url"
 
@@ -39,8 +41,14 @@ const DEFINITION: AgentDefinition = {
   color: "#FBC803",
   defaultTemperature: 0.1,
   defaultMaxTokens: 32000,
-  promptFiles: ["identity.md", "constraints.md", "step.md", "standard.md", "interview.md"],
-  promptTools: ["ask_user", "task"],
+  promptGenerators: [
+    filePrompt(join(__dirname, "identity.md")),
+    filePrompt(join(__dirname, "constraints.md")),
+    filePrompt(join(__dirname, "step.md")),
+    filePrompt(join(__dirname, "standard.md")),
+    filePrompt(join(__dirname, "interview.md")),
+    toolsPrompt(["ask_user", "task"]),
+  ],
   defaultPermission: {
     bash: "deny",
     edit: "deny",
@@ -76,7 +84,7 @@ const DEFINITION: AgentDefinition = {
 }
 
 export function createHCriticAgent(model?: string, runtime?: RuntimeType) {
-  return createAgent(DEFINITION, __dirname, model, runtime)
+  return createAgent(DEFINITION, model, runtime)
 }
 
 createHCriticAgent.mode = DEFINITION.mode

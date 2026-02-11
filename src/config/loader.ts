@@ -48,16 +48,13 @@ function findConfigPath(): string | null {
     GLOBAL_CONFIG_PATH,
   ]
 
-  debug.log("Searching for config in paths", { paths: searchPaths, cwd: process.cwd() })
 
   for (const path of searchPaths) {
     if (existsSync(path)) {
-      debug.log("Found config file", { path })
       return path
     }
   }
 
-  debug.log("No config file found in any search path")
   return null
 }
 
@@ -65,7 +62,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
   const path = configPath ?? findConfigPath()
 
   if (!path) {
-    debug.log("Using default config (no file found)", DEFAULT_AGENT_CONFIGS)
     return {
       agents: DEFAULT_AGENT_CONFIGS,
       workflow: "traditional",
@@ -88,7 +84,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
       mergedConfig.$schema = config.$schema
     }
 
-    debug.log("Loaded config", { path, raw: config, merged: mergedConfig })
 
     return mergedConfig
   } catch (error) {

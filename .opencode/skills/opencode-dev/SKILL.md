@@ -22,24 +22,24 @@ Immediate triggers (load this SKILL.md when any apply):
 Quick classifier signals (fast heuristics to choose a guide):
 
 - If user needs UI-hosted commands that run inside a local OpenCode runtime →
-  Plugin (guides/02-plugins.md).
+  Plugin (references/02-plugins.md).
 - If user needs custom tools the LLM can call during conversations →
-  Tool (guides/03-tools.md).
+  Tool (references/03-tools.md).
 - If user wants programmatic API integration, client libraries, or embedding
-  OpenCode into another platform → SDK (guides/01-sdk.md).
+  OpenCode into another platform → SDK (references/01-sdk.md).
 - If user plans agent configurations or custom agent behaviors →
-  Agent (guides/04-agents.md).
-- For debugging runtime or configuration issues → Debug (guides/05-debugging.md).
+  Agent (references/04-agents.md).
+- For debugging runtime or configuration issues → Debug (references/05-debugging.md).
 
 # Decision Matrix — map intent to solution
 
 | Intent | Must-have constraint | Recommended path | Guide (file) |
 |--------|---------------------|------------------|--------------|
-| Local iteration, fast UI commands | Needs to run inside OpenCode UI; small JS surface | Plugin | guides/02-plugins.md |
-| Custom LLM-callable tools | Needs to extend tool surface with custom logic | Tool | guides/03-tools.md |
-| Full lifecycle integration, SDK access | Need programmatic client, typed APIs, server SDKs | SDK | guides/01-sdk.md |
-| Custom agent configurations | Define agent behavior, prompts, permissions | Agent | guides/04-agents.md |
-| Troubleshooting runtime failures | Traces, logs, diagnostic commands | Debug | guides/05-debugging.md |
+| Local iteration, fast UI commands | Needs to run inside OpenCode UI; small JS surface | Plugin | references/02-plugins.md |
+| Custom LLM-callable tools | Needs to extend tool surface with custom logic | Tool | references/03-tools.md |
+| Full lifecycle integration, SDK access | Need programmatic client, typed APIs, server SDKs | SDK | references/01-sdk.md |
+| Custom agent configurations | Define agent behavior, prompts, permissions | Agent | references/04-agents.md |
+| Troubleshooting runtime failures | Traces, logs, diagnostic commands | Debug | references/05-debugging.md |
 
 Decision heuristics (short):
 
@@ -51,7 +51,7 @@ Decision heuristics (short):
 
 # SDK vs Plugin vs Tool vs Agent — practical tradeoffs
 
-## 1) SDK (guides/01-sdk.md)
+## 1) SDK (references/01-sdk.md)
 
 Purpose: Embed OpenCode into apps and provide programmatic APIs. Use when the
 primary deliverable is a library or client that other developers call.
@@ -82,7 +82,7 @@ async function listSessions() {
 }
 ```
 
-## 2) Plugin (guides/02-plugins.md)
+## 2) Plugin (references/02-plugins.md)
 
 Purpose: Extend OpenCode by hooking into events and customizing behavior.
 Run inside the OpenCode host runtime.
@@ -125,7 +125,7 @@ export const MyPlugin: Plugin = async ({ project, client, $, directory, worktree
 };
 ```
 
-## 3) Tool (guides/03-tools.md)
+## 3) Tool (references/03-tools.md)
 
 Purpose: Create custom tools the LLM can call during conversations.
 
@@ -154,7 +154,7 @@ export default tool({
 });
 ```
 
-## 4) Agent (guides/04-agents.md)
+## 4) Agent (references/04-agents.md)
 
 Purpose: Configure AI agent behavior through markdown files.
 
@@ -322,7 +322,7 @@ from the Navigation Map.
 
 This SKILL.md is a decision hub — keep it concise and focused on
 selection heuristics and load triggers. Do not duplicate implementation details
-found in the guides. When deeper instructions are required, open the single
+found in the references. When deeper instructions are required, open the single
 guide mapped in the Navigation Map (01–05).
 
 # Appendix — practical patterns
@@ -407,7 +407,7 @@ jobs:
 # Change log and maintenance guidance
 
 When you update SKILL.md, change only decision heuristics, triggers, or the
-Navigation Map. Implementation guidance belongs in the 01–05 guides.
+Navigation Map. Implementation guidance belongs in the 01–05 references.
 
 ---
 

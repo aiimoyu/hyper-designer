@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { createAgent } from "../../agents/factory"
+import { createAgent, filePrompt, toolsPrompt } from "../../agents/factory"
 import type { AgentDefinition } from "../../agents/factory"
 import type { AgentMode } from "../../agents/types"
 import { writeFileSync, mkdirSync, rmSync } from "fs"
@@ -15,35 +15,33 @@ describe("createAgent", () => {
     color: "#FF0000",
     defaultTemperature: 0.5,
     defaultMaxTokens: 8000,
-    promptFiles: ["test.md"],
+    promptGenerators: [filePrompt(join(TEST_DIR, "test.md"))],
     defaultPermission: { read: "allow" },
     defaultTools: { bash: true },
   }
 
   it("reads prompt files and concatenates them", () => {
-    // Setup test directory
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "# Test Prompt")
 
-    const agent = createAgent(baseDefinition, TEST_DIR)
+    const agent = createAgent(baseDefinition)
 
     expect(agent.prompt).toContain("# Test Prompt")
 
-    // Cleanup
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
   it("handles missing prompt files gracefully", () => {
-    const agent = createAgent(baseDefinition, "/nonexistent-dir")
+    const agent = createAgent(baseDefinition)
 
-    expect(agent.prompt).toContain("TestAgent - Failed to load test.md")
+    expect(agent.prompt).toContain("Failed to load")
   })
 
   it("falls back to defaults when no config override", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "Content")
 
-    const agent = createAgent(baseDefinition, TEST_DIR)
+    const agent = createAgent(baseDefinition)
 
     expect(agent.temperature).toBe(0.5)
     expect(agent.maxTokens).toBe(8000)
@@ -56,7 +54,7 @@ describe("createAgent", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "Content")
 
-    const agent = createAgent(baseDefinition, TEST_DIR, "gpt-4")
+    const agent = createAgent(baseDefinition, "gpt-4")
 
     expect(agent).toHaveProperty("name", "TestAgent")
     expect(agent).toHaveProperty("description")
@@ -72,17 +70,20 @@ describe("createAgent", () => {
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
-  it("concatenates multiple prompt files", () => {
+  it("concatenates multiple prompt generators", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "part1.md"), "# Part 1")
     writeFileSync(join(TEST_DIR, "part2.md"), "# Part 2")
 
     const multiFileDefinition: AgentDefinition = {
       ...baseDefinition,
-      promptFiles: ["part1.md", "part2.md"],
+      promptGenerators: [
+        filePrompt(join(TEST_DIR, "part1.md")),
+        filePrompt(join(TEST_DIR, "part2.md")),
+      ],
     }
 
-    const agent = createAgent(multiFileDefinition, TEST_DIR)
+    const agent = createAgent(multiFileDefinition)
 
     expect(agent.prompt).toContain("# Part 1")
     expect(agent.prompt).toContain("# Part 2")
@@ -94,17 +95,20 @@ describe("createAgent", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "Content")
 
-    const agentWithModel = createAgent(baseDefinition, TEST_DIR, "claude-3")
+    const agentWithModel = createAgent(baseDefinition, "claude-3")
     expect(agentWithModel.model).toBe("claude-3")
 
-    const agentWithoutModel = createAgent(baseDefinition, TEST_DIR)
+    const agentWithoutModel = createAgent(baseDefinition)
     expect(agentWithoutModel.model).toBeUndefined()
 
     rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
-  describe("AgentDefinition promptTools", () => {
-    it("should accept optional promptTools field", () => {
+  describe("promptGenerators", () => {
+    it("should accept filePrompt and toolsPrompt generators", () => {
+      mkdirSync(TEST_DIR, { recursive: true })
+      writeFileSync(join(TEST_DIR, "test.md"), "Identity content")
+
       const definition: AgentDefinition = {
         name: "TestAgent",
         description: "Test",
@@ -112,16 +116,21 @@ describe("createAgent", () => {
         color: "#000000",
         defaultTemperature: 0.7,
         defaultMaxTokens: 32000,
-        promptFiles: ["test.md"],
-        promptTools: ["ask_user", "task"],
+        promptGenerators: [
+          filePrompt(join(TEST_DIR, "test.md")),
+          toolsPrompt(["ask_user"]),
+        ],
         defaultPermission: {},
         defaultTools: {},
       }
 
-      expect(definition.promptTools).toEqual(["ask_user", "task"])
+      const agent = createAgent(definition)
+      expect(agent.prompt).toContain("Identity content")
+
+      rmSync(TEST_DIR, { recursive: true, force: true })
     })
 
-    it("should work without promptTools field", () => {
+    it("should allow empty promptGenerators array", () => {
       const definition: AgentDefinition = {
         name: "TestAgent",
         description: "Test",
@@ -129,12 +138,13 @@ describe("createAgent", () => {
         color: "#000000",
         defaultTemperature: 0.7,
         defaultMaxTokens: 32000,
-        promptFiles: ["test.md"],
+        promptGenerators: [],
         defaultPermission: {},
         defaultTools: {},
       }
 
-      expect(definition.promptTools).toBeUndefined()
+      const agent = createAgent(definition)
+      expect(agent.prompt).toBe("")
     })
   })
 

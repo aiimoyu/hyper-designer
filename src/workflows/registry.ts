@@ -7,14 +7,14 @@ const workflowRegistry: Record<string, WorkflowDefinition> = {
 
 /**
  * Returns the workflow definition for the given workflow ID
- * @param workflowId - The unique identifier of the workflow
+ * @param typeId - The unique identifier of the workflow
  * @returns The workflow definition
  * @throws Error if the workflow ID is not found
  */
-export function getWorkflowDefinition(workflowId: string): WorkflowDefinition {
-  const workflow = workflowRegistry[workflowId]
+export function getWorkflowDefinition(typeId: string): WorkflowDefinition {
+  const workflow = workflowRegistry[typeId]
   if (!workflow) {
-    throw new Error(`Unknown workflow: ${workflowId}. Available: ${getAvailableWorkflows().join(', ')}`)
+    throw new Error(`Unknown workflow: ${typeId}. Available: ${getAvailableWorkflows().join(', ')}`)
   }
   return workflow
 }

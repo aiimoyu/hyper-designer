@@ -12,6 +12,7 @@ import {
 import { createWorkflowHooks } from "../../src/workflows/hooks/opencode";
 import { loadHDConfig } from "../../src/config/loader";
 import { getWorkflowDefinition } from "../../src/workflows/registry";
+import { debug } from "../../src/utils/debug";
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
@@ -40,6 +41,8 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   const agents = await createBuiltinAgents("opencode");
   const mappedAgents = toOpencodeAgents(agents);
   const agentHandler = async (config: Record<string, unknown>) => {
+    console.error("config", config);
+    // 程序暂停
     config.agent = {
       ...(config.agent ?? {}),
       ...mappedAgents,

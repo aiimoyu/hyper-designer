@@ -5,7 +5,8 @@ export type { AgentConfig, AgentMode, AgentFactory, AgentPromptMetadata, Builtin
 export type { AgentOverrideConfig, HDConfig } from "./config/loader"
 export type { WorkflowStage, WorkflowState } from "./workflows/state"
 export type { SessionPromptSender, SkillLoader } from "./adapters/types"
-export type { AgentDefinition } from "./agents/factory"
+export type { AgentDefinition, PromptGenerator } from "./agents/factory"
+export { filePrompt, toolsPrompt } from "./agents/factory"
 export type { HandoverConfig } from "./adapters/types"
 export type { WorkflowDefinition, WorkflowStageDefinition } from "./workflows/types"
 

@@ -8,7 +8,7 @@ export interface WorkflowStage {
 }
 
 export interface WorkflowState {
-  workflowId: string;
+  typeId: string;
   workflow: Record<string, WorkflowStage>;
   currentStep: string | null;
   handoverTo: string | null;
@@ -32,7 +32,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
     workflow[stage] = { isCompleted: false };
   }
   return {
-    workflowId: definition.id,
+    typeId: definition.id,
     workflow,
     currentStep: null,
     handoverTo: null,
@@ -48,7 +48,7 @@ function readWorkflowStateFile(): WorkflowState | null {
     const data = readFileSync(WORKFLOW_STATE_PATH, "utf-8");
     const parsed = JSON.parse(data);
     return {
-      workflowId: parsed.workflowId ?? "traditional",
+      typeId: parsed.typeId ?? "traditional",
       workflow: parsed.workflow,
       currentStep: parsed.currentStep,
       handoverTo: parsed.handoverTo,

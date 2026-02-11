@@ -145,16 +145,16 @@ describe("Integration Tests: Prompt Composition", () => {
     expectNoToolPlaceholders(prompt)
   })
 
-  it("should persist workflowId when initializing workflow state", () => {
+  it("should persist typeId when initializing workflow state", () => {
     const workflow = getWorkflowDefinition("traditional")
     const state = getWorkflowState(workflow)
 
-    expect(state.workflowId).toBe(workflow.id)
+    expect(state.typeId).toBe(workflow.id)
 
     const persisted = JSON.parse(readFileSync(WORKFLOW_STATE_PATH, "utf-8")) as {
-      workflowId?: string
+      typeId?: string
     }
 
-    expect(persisted.workflowId).toBe(workflow.id)
+    expect(persisted.typeId).toBe(workflow.id)
   })
 })

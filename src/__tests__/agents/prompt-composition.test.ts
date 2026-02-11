@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "fs"
 import { join } from "path"
-import { generateToolsPrompt, type RuntimeType } from "../../tools/toolsGenerator"
+import { generateToolsPrompt, type RuntimeType } from "../../tools"
 import type { WorkflowState } from "../../workflows/state"
 
 // Local type definition for ToolRegistry (used in placeholder resolution tests)
@@ -183,12 +183,12 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
     })
   })
 
-  describe("3. workflowId is written to workflow_state.json on new file creation", () => {
-    it("should include workflowId when initializing new workflow state", () => {
+  describe("3. typeId is written to workflow_state.json on new file creation", () => {
+    it("should include typeId when initializing new workflow state", () => {
       // Arrange
-      const workflowId = "test-workflow-123"
+      const typeId = "test-workflow-123"
       const definition = {
-        id: workflowId,
+        id: typeId,
         stageOrder: ["stage1", "stage2"],
         stages: {
           stage1: { name: "Stage 1", description: "First stage", promptFile: "stage1.md" },
@@ -201,23 +201,23 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
         rmSync(WORKFLOW_STATE_PATH)
       }
 
-      // Act: Initialize workflow state (should create new file with workflowId)
+      // Act: Initialize workflow state (should create new file with typeId)
       const state = getWorkflowStateWithId(definition)
 
       // Assert
-      expect(state.workflowId).toBe(workflowId)
+      expect(state.typeId).toBe(typeId)
 
-      // Verify file was written with workflowId
+      // Verify file was written with typeId
       const fileContent = readFileSync(WORKFLOW_STATE_PATH, "utf-8")
-      const parsedState = JSON.parse(fileContent) as WorkflowState & { workflowId?: string }
-      expect(parsedState.workflowId).toBe(workflowId)
+      const parsedState = JSON.parse(fileContent) as WorkflowState & { typeId?: string }
+      expect(parsedState.typeId).toBe(typeId)
     })
 
-    it("should preserve existing workflowId when reading existing state", () => {
+    it("should preserve existing typeId when reading existing state", () => {
       // Arrange
-      const existingWorkflowId = "existing-workflow-456"
-      const existingState: WorkflowState & { workflowId: string } = {
-        workflowId: existingWorkflowId,
+      const existingtypeId = "existing-workflow-456"
+      const existingState: WorkflowState & { typeId: string } = {
+        typeId: existingtypeId,
         workflow: {
           stage1: { isCompleted: true },
           stage2: { isCompleted: false },
@@ -242,12 +242,12 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Act
       const state = getWorkflowStateWithId(newDefinition)
 
-      // Assert: Should preserve existing workflowId, not overwrite
-      expect(state.workflowId).toBe(existingWorkflowId)
+      // Assert: Should preserve existing typeId, not overwrite
+      expect(state.typeId).toBe(existingtypeId)
     })
 
-    it("should migrate legacy state without workflowId", () => {
-      // Arrange: Create legacy state without workflowId (simulating old file format)
+    it("should migrate legacy state without typeId", () => {
+      // Arrange: Create legacy state without typeId (simulating old file format)
       const legacyState = {
         workflow: {
           dataCollection: { isCompleted: false },
@@ -271,8 +271,8 @@ describe("Prompt Composition Architecture - TDD Tests", () => {
       // Act
       const state = getWorkflowStateWithId(definition)
 
-      // Assert: Should add workflowId during migration
-      expect(state.workflowId).toBe("migrated-workflow")
+      // Assert: Should add typeId during migration
+      expect(state.typeId).toBe("migrated-workflow")
     })
   })
 
@@ -575,8 +575,8 @@ function composeAgentPrompt(
 }
 
 /**
- * Gets workflow state with workflowId support
- * TODO: Update src/workflow/state.ts to include workflowId
+ * Gets workflow state with typeId support
+ * TODO: Update src/workflow/state.ts to include typeId
  */
 function getWorkflowStateWithId(
   definition: {
@@ -584,7 +584,7 @@ function getWorkflowStateWithId(
     stageOrder: string[]
     stages: Record<string, unknown>
   }
-): WorkflowState & { workflowId?: string } {
+): WorkflowState & { typeId?: string } {
   // PLACEHOLDER: This will be implemented
   throw new Error("getWorkflowStateWithId not implemented - TDD RED phase")
 }

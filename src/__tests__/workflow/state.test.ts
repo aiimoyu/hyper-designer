@@ -111,7 +111,7 @@ describe("workflow state management", () => {
       expect(state.workflow.IRAnalysis).toEqual({ isCompleted: false })
       expect(state.currentStep).toBeNull()
       expect(state.handoverTo).toBeNull()
-      expect(state.workflowId).toBe("traditional")
+      expect(state.typeId).toBe("traditional")
     })
 
     it("works with custom workflow definition", () => {
@@ -194,8 +194,8 @@ describe("workflow state management", () => {
       expect(secondState!.workflow.dataCollection.isCompleted).toBe(true)
     })
 
-    it("loads legacy state file without workflowId with default value", () => {
-      // Write a legacy state file without workflowId
+    it("loads legacy state file without typeId with default value", () => {
+      // Write a legacy state file without typeId
       const legacyState = {
         workflow: {
           dataCollection: { isCompleted: true },
@@ -216,7 +216,7 @@ describe("workflow state management", () => {
 
       const state = getWorkflowState()
       expect(state).not.toBeNull()
-      expect(state!.workflowId).toBe("traditional")
+      expect(state!.typeId).toBe("traditional")
       expect(state!.workflow.dataCollection.isCompleted).toBe(true)
       expect(state!.currentStep).toBeNull()
     })
