@@ -77,13 +77,13 @@ Refactor agent prompt system to use split prompt files with natural language too
 7. **Test Suite**: TDD with comprehensive tests
 
 ### Definition of Done
-- [ ] All agents use split prompt files (identity, constraints, step, workflow, standard, interview)
-- [ ] No {{TOOL:*}} placeholders in any .md files
-- [ ] Tools prompt generated dynamically via toolsGenerator
-- [ ] Placeholder resolver and toolRegistries removed
-- [ ] workflow_state.json includes workflowId
-- [ ] All tests pass (new + existing)
-- [ ] HArchitect/HEngineer include workflow prompts; HCollector/HCritic omit
+- [x] All agents use split prompt files (identity, constraints, step, workflow, standard, interview)
+- [x] No {{TOOL:*}} placeholders in any .md files
+- [x] Tools prompt generated dynamically via toolsGenerator
+- [x] Placeholder resolver and toolRegistries removed
+- [x] workflow_state.json includes workflowId
+- [x] All tests pass (new + existing)
+- [x] HArchitect/HEngineer include workflow prompts; HCollector/HCritic omit
 
 ### Must Have
 - Natural language tool descriptions in agent prompts
@@ -478,14 +478,14 @@ test -d src/prompts/toolRegistries && echo "FAIL" || echo "PASS"  # Expected: PA
 ```
 
 ### Final Checklist
-- [ ] All agents use split prompts
-- [ ] No {{TOOL:*}} placeholders anywhere
-- [ ] Tools prompts generated dynamically
-- [ ] workflowId in workflow_state.json
-- [ ] All tests pass
-- [ ] HArchitect/HEngineer include workflow; HCollector/HCritic omit
-- [ ] Old combined prompt files deleted
-- [ ] Placeholder system completely removed
+- [x] All agents use split prompts
+- [x] No {{TOOL:*}} placeholders anywhere
+- [x] Tools prompts generated dynamically
+- [x] workflowId in workflow_state.json
+- [x] All tests pass
+- [x] HArchitect/HEngineer include workflow; HCollector/HCritic omit
+- [x] Old combined prompt files deleted
+- [x] Placeholder system completely removed
 
 ---
 
