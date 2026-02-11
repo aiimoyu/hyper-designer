@@ -267,7 +267,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] **4. Integrate toolsGenerator into Factory**
+- [x] **4. Integrate toolsGenerator into Factory**
 
   **What to do**:
   - Modify `src/agents/factory.ts` to call toolsGenerator
@@ -301,7 +301,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] **5. Split HCollector Prompts**
+- [x] **5. Split HCollector Prompts**
 
   **What to do**:
   - Create `src/agents/HCollector/prompts/identity.md`
@@ -328,7 +328,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] **6. Split HEngineer Prompts**
+- [x] **6. Split HEngineer Prompts**
 
   **What to do**:
   - Create `src/agents/HEngineer/prompts/identity.md`
@@ -352,7 +352,7 @@ Wave 3 (After Wave 2):
 
 ---
 
-- [ ] **7. Split HCritic Prompts**
+- [x] **7. Split HCritic Prompts**
 
   **What to do**:
   - Create `src/agents/HCritic/prompts/identity.md`

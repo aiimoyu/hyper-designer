@@ -37,7 +37,7 @@ const toOpencodeAgents = (
 };
 
 export const HyperDesignerPlugin: Plugin = async (ctx) => {
-  const agents = await createBuiltinAgents();
+  const agents = await createBuiltinAgents("opencode");
   const mappedAgents = toOpencodeAgents(agents);
   const agentHandler = async (config: Record<string, unknown>) => {
     config.agent = {

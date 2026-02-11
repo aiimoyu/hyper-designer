@@ -5,6 +5,7 @@
 import type { AgentConfig, AgentMode } from "./types"
 import type { AgentOverrideConfig } from "../config/loader"
 import { loadHDConfig } from "../config/loader"
+import { generateToolsPrompt, type FrontendType } from "../prompts/toolsGenerator"
 import { readFileSync } from "fs"
 import { join } from "path"
 
@@ -24,6 +25,7 @@ export interface AgentDefinition {
   promptFiles: string[]
   /** Tools that need prompt documentation (optional) */
   promptTools?: string[]
+  frontend?: FrontendType
   /** Default permissions */
   defaultPermission: Record<string, string>
   /** Default tools */
@@ -39,7 +41,8 @@ export interface AgentDefinition {
 export function createAgent(
   definition: AgentDefinition,
   agentDir: string,
-  model?: string
+  model?: string,
+  frontend?: FrontendType
 ): AgentConfig {
   const config = loadHDConfig()
   const agentConfig = config.agents[definition.name] as AgentOverrideConfig | undefined
@@ -56,13 +59,26 @@ export function createAgent(
     .join("\n\n")
     + (agentConfig?.prompt_append ? `\n\n${agentConfig.prompt_append}` : "")
 
+  const toolList = definition.promptTools ?? ["ask_user", "task"]
+  const resolvedFrontend = frontend ?? definition.frontend ?? "opencode"
+  let toolsPrompt = ""
+
+  try {
+    toolsPrompt = generateToolsPrompt(resolvedFrontend, toolList)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to generate tools prompt for ${resolvedFrontend}: ${message}`)
+  }
+
+  const finalPrompt = `${prompt}\n\n${toolsPrompt}`
+
   const result: AgentConfig = {
     name: definition.name,
     description: definition.description,
     mode: definition.mode,
     temperature: agentConfig?.temperature ?? definition.defaultTemperature,
     maxTokens: agentConfig?.maxTokens ?? definition.defaultMaxTokens,
-    prompt: prompt,
+    prompt: finalPrompt,
     permission: agentConfig?.permission ?? definition.defaultPermission,
     color: definition.color,
     tools: definition.defaultTools,

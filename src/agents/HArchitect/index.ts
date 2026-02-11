@@ -1,5 +1,6 @@
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
+import type { FrontendType } from "../../prompts/toolsGenerator"
 import { createAgent } from "../factory"
 import { dirname } from "path"
 import { fileURLToPath } from "url"
@@ -76,8 +77,8 @@ const DEFINITION: AgentDefinition = {
   },
 }
 
-export function createHArchitectAgent(model?: string) {
-  return createAgent(DEFINITION, __dirname, model)
+export function createHArchitectAgent(model?: string, frontend?: FrontendType) {
+  return createAgent(DEFINITION, __dirname, model, frontend)
 }
 
 createHArchitectAgent.mode = DEFINITION.mode

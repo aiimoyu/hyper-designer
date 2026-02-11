@@ -8,6 +8,7 @@ import { createHCollectorAgent } from "./HCollector"
 import { createHArchitectAgent } from "./HArchitect"
 import { createHCriticAgent } from "./HCritic"
 import { createHEngineerAgent } from "./HEngineer"
+import type { FrontendType } from "../prompts/toolsGenerator"
 
 
 
@@ -16,13 +17,21 @@ import { createHEngineerAgent } from "./HEngineer"
  * 这里用简单逻辑：使用同一个默认 model，调用各 factory 生成配置。
  */
 export async function createBuiltinAgents(
-  model: string | undefined = process.env.DEFAULT_AGENT_MODEL ?? undefined
+  modelOrFrontend: string | FrontendType | undefined = process.env.DEFAULT_AGENT_MODEL ?? undefined,
+  frontend?: FrontendType
 ): Promise<Record<string, AgentConfig>> {
+  const resolvedFrontend =
+    frontend ?? (modelOrFrontend === "opencode" || modelOrFrontend === "claudecode" ? modelOrFrontend : "opencode")
+  const resolvedModel =
+    modelOrFrontend === "opencode" || modelOrFrontend === "claudecode"
+      ? process.env.DEFAULT_AGENT_MODEL ?? undefined
+      : modelOrFrontend
+
   return {
-    HCollector: createHCollectorAgent(model),
-    HArchitect: createHArchitectAgent(model),
-    HCritic: createHCriticAgent(model),
-    HEngineer: createHEngineerAgent(model),
+    HCollector: createHCollectorAgent(resolvedModel, resolvedFrontend),
+    HArchitect: createHArchitectAgent(resolvedModel, resolvedFrontend),
+    HCritic: createHCriticAgent(resolvedModel, resolvedFrontend),
+    HEngineer: createHEngineerAgent(resolvedModel, resolvedFrontend),
   }
 }
 
