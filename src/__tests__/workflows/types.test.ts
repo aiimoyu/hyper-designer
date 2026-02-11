@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { WorkflowDefinition } from '../../workflows/core/types'
 import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/core/registry'
 
@@ -35,12 +35,16 @@ describe('WorkflowDefinition', () => {
 })
 
 describe('getWorkflowDefinition', () => {
-  it('throws Error for nonexistent workflow', () => {
-    expect(() => getWorkflowDefinition('nonexistent')).toThrow(Error)
+  it('returns null for nonexistent workflow', () => {
+    const result = getWorkflowDefinition('nonexistent')
+    expect(result).toBeNull()
   })
 
-  it('error message includes available workflows list', () => {
-    expect(() => getWorkflowDefinition('nonexistent')).toThrow('Unknown workflow: nonexistent. Available: ')
+  it('logs error message for nonexistent workflow', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
+    getWorkflowDefinition('nonexistent')
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown workflow: nonexistent'))
+    consoleSpy.mockRestore()
   })
 })
 
@@ -49,6 +53,6 @@ describe('getAvailableWorkflows', () => {
     const result = getAvailableWorkflows()
     expect(Array.isArray(result)).toBe(true)
     expect(result.every(item => typeof item === 'string')).toBe(true)
-    expect(result).toContain('traditional')
+    expect(result).toContain('classic')
   })
 })

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { 
-  getWorkflowState, 
-  setWorkflowStage, 
-  setWorkflowCurrent, 
-  setWorkflowHandover, 
+import {
+  getWorkflowState,
+  setWorkflowStage,
+  setWorkflowCurrent,
+  setWorkflowHandover,
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder
@@ -14,9 +14,9 @@ import { join, dirname } from "path"
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 
-const traditionalWorkflowDef: WorkflowDefinition = {
-  id: "traditional",
-  name: "Traditional Workflow",
+const classicWorkflowDef: WorkflowDefinition = {
+  id: "classic",
+  name: "Classic Workflow",
   description: "Test workflow",
   stageOrder: [
     "dataCollection",
@@ -103,14 +103,14 @@ describe("workflow state management", () => {
 
   describe("initializeWorkflowState", () => {
     it("creates state from workflow definition", () => {
-      const state = initializeWorkflowState(traditionalWorkflowDef)
+      const state = initializeWorkflowState(classicWorkflowDef)
 
       expect(Object.keys(state.workflow)).toHaveLength(8)
       expect(state.workflow.dataCollection).toEqual({ isCompleted: false })
       expect(state.workflow.IRAnalysis).toEqual({ isCompleted: false })
       expect(state.currentStep).toBeNull()
       expect(state.handoverTo).toBeNull()
-      expect(state.typeId).toBe("traditional")
+      expect(state.typeId).toBe("classic")
     })
 
     it("works with custom workflow definition", () => {
@@ -154,7 +154,7 @@ describe("workflow state management", () => {
 
   describe("getStageOrder", () => {
     it("returns stage order from definition", () => {
-      const order = getStageOrder(traditionalWorkflowDef)
+      const order = getStageOrder(classicWorkflowDef)
       expect(order).toEqual([
         "dataCollection",
         "IRAnalysis",
@@ -182,11 +182,11 @@ describe("workflow state management", () => {
 
     it("reads existing state file correctly", () => {
       setWorkflowCurrent("dataCollection")
-      
+
       const firstState = getWorkflowState()
       expect(firstState).not.toBeNull()
       expect(firstState!.currentStep).toBe("dataCollection")
-      
+
       setWorkflowStage("dataCollection", true)
 
       const secondState = getWorkflowState()
@@ -215,7 +215,7 @@ describe("workflow state management", () => {
 
       const state = getWorkflowState()
       expect(state).not.toBeNull()
-      expect(state!.typeId).toBe("traditional")
+      expect(state!.typeId).toBe("classic")
       expect(state!.workflow.dataCollection.isCompleted).toBe(true)
       expect(state!.currentStep).toBeNull()
     })
@@ -280,15 +280,15 @@ describe("workflow state management", () => {
   describe("setWorkflowHandover", () => {
     it("sets handover step", () => {
       setWorkflowCurrent("dataCollection")
-      const updatedState = setWorkflowHandover("IRAnalysis", traditionalWorkflowDef)
+      const updatedState = setWorkflowHandover("IRAnalysis", classicWorkflowDef)
 
       expect(updatedState.handoverTo).toBe("IRAnalysis")
     })
 
     it("allows null to clear handover", () => {
       setWorkflowCurrent("dataCollection")
-      setWorkflowHandover("IRAnalysis", traditionalWorkflowDef)
-      const clearedState = setWorkflowHandover(null, traditionalWorkflowDef)
+      setWorkflowHandover("IRAnalysis", classicWorkflowDef)
+      const clearedState = setWorkflowHandover(null, classicWorkflowDef)
 
       expect(clearedState.handoverTo).toBeNull()
     })
@@ -296,20 +296,20 @@ describe("workflow state management", () => {
     it("throws error for invalid handover step", () => {
       setWorkflowCurrent("dataCollection")
       expect(() => {
-        setWorkflowHandover("invalidHandover" as any, traditionalWorkflowDef)
+        setWorkflowHandover("invalidHandover" as any, classicWorkflowDef)
       }).toThrow("Invalid workflow step")
     })
 
     it("validates stage order for handover", () => {
       setWorkflowCurrent("dataCollection")
       expect(() => {
-        setWorkflowHandover("useCaseAnalysis", traditionalWorkflowDef)
+        setWorkflowHandover("useCaseAnalysis", classicWorkflowDef)
       }).toThrow("Cannot skip steps")
     })
 
     it("allows backward handover", () => {
       setWorkflowCurrent("scenarioAnalysis")
-      const state = setWorkflowHandover("IRAnalysis", traditionalWorkflowDef)
+      const state = setWorkflowHandover("IRAnalysis", classicWorkflowDef)
       expect(state.handoverTo).toBe("IRAnalysis")
     })
   })
@@ -317,9 +317,9 @@ describe("workflow state management", () => {
   describe("executeWorkflowHandover", () => {
     it("executes handover and marks current step complete", () => {
       setWorkflowCurrent("dataCollection")
-      setWorkflowHandover("IRAnalysis", traditionalWorkflowDef)
+      setWorkflowHandover("IRAnalysis", classicWorkflowDef)
 
-      const state = executeWorkflowHandover(traditionalWorkflowDef)
+      const state = executeWorkflowHandover(classicWorkflowDef)
 
       expect(state.currentStep).toBe("IRAnalysis")
       expect(state.handoverTo).toBeNull()
@@ -329,16 +329,16 @@ describe("workflow state management", () => {
 
     it("marks steps incomplete when going backward", () => {
       setWorkflowCurrent("dataCollection")
-      setWorkflowHandover("IRAnalysis", traditionalWorkflowDef)
-      executeWorkflowHandover(traditionalWorkflowDef)
+      setWorkflowHandover("IRAnalysis", classicWorkflowDef)
+      executeWorkflowHandover(classicWorkflowDef)
 
       setWorkflowCurrent("IRAnalysis")
-      setWorkflowHandover("scenarioAnalysis", traditionalWorkflowDef)
-      executeWorkflowHandover(traditionalWorkflowDef)
+      setWorkflowHandover("scenarioAnalysis", classicWorkflowDef)
+      executeWorkflowHandover(classicWorkflowDef)
 
       setWorkflowCurrent("scenarioAnalysis")
-      setWorkflowHandover("IRAnalysis", traditionalWorkflowDef)
-      const state = executeWorkflowHandover(traditionalWorkflowDef)
+      setWorkflowHandover("IRAnalysis", classicWorkflowDef)
+      const state = executeWorkflowHandover(classicWorkflowDef)
 
       expect(state.workflow.IRAnalysis.isCompleted).toBe(false)
       expect(state.workflow.scenarioAnalysis.isCompleted).toBe(false)

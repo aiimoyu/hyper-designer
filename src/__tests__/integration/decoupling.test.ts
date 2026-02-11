@@ -35,12 +35,12 @@ describe("Integration Tests: Deep Decoupling System", () => {
   describe("Full Pipeline Integration", () => {
     it("should load config, get workflow, create agent, and resolve prompts end-to-end", () => {
       const config = loadHDConfig()
-      expect(config.workflow).toBe("traditional")
+      expect(config.workflow).toBe("classic")
       expect(config.agents).toBeDefined()
 
       const workflow = getWorkflowDefinition(config.workflow!)
-      expect(workflow.id).toBe("traditional")
-      expect(workflow.name).toBe("Traditional Requirements Engineering")
+      expect(workflow.id).toBe("classic")
+      expect(workflow.name).toBe("Classic Requirements Engineering")
       expect(workflow.stageOrder).toHaveLength(8)
       expect(workflow.stageOrder).toEqual([
         "dataCollection",
@@ -64,7 +64,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
     it("should verify extensibility: config workflow affects loaded definition", () => {
       const config = loadHDConfig()
-      expect(config.workflow).toBe("traditional")
+      expect(config.workflow).toBe("classic")
 
       const workflow = getWorkflowDefinition(config.workflow!)
       expect(workflow.id).toBe(config.workflow)
@@ -74,8 +74,8 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
 
   describe("Workflow State Lifecycle Integration", () => {
-    it("should manage workflow state lifecycle with traditional workflow", () => {
-      const workflow = getWorkflowDefinition("traditional")
+    it("should manage workflow state lifecycle with classic workflow", () => {
+      const workflow = getWorkflowDefinition("classic")
       const state = initializeWorkflowState(workflow)
 
       expect(Object.keys(state.workflow)).toHaveLength(8)
@@ -93,7 +93,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should complete stages and persist to disk", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
       initializeWorkflowState(workflow)
 
       setWorkflowStage("dataCollection", true)
@@ -107,7 +107,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should transition through multiple stages", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
       initializeWorkflowState(workflow)
 
       setWorkflowStage("dataCollection", true)
@@ -125,7 +125,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
   describe("Handover End-to-End Integration", () => {
     it("should perform handover from dataCollection to IRAnalysis", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
 
       setWorkflowCurrent("dataCollection")
       setWorkflowHandover("IRAnalysis", workflow)
@@ -146,7 +146,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should execute handover and update state correctly", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
 
       setWorkflowCurrent("dataCollection")
       setWorkflowHandover("IRAnalysis", workflow)
@@ -160,7 +160,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should handle full handover chain: dataCollection → IRAnalysis → scenarioAnalysis", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
 
       setWorkflowCurrent("dataCollection")
       setWorkflowHandover("IRAnalysis", workflow)
@@ -179,7 +179,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should get correct agent for each stage", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
 
       expect(getHandoverAgent(workflow, "dataCollection")).toBe("HCollector")
       expect(getHandoverAgent(workflow, "IRAnalysis")).toBe("HArchitect")
@@ -194,7 +194,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
   describe("Prompt Loading Integration", () => {
     it("should load prompts for all stages", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
 
       for (const stage of workflow.stageOrder) {
         const prompt = loadPromptForStage(stage, workflow)
@@ -204,7 +204,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should throw error for invalid stage", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
 
       expect(() => loadPromptForStage("invalidStage", workflow)).toThrow(
         "Unknown stage: invalidStage"
@@ -213,9 +213,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
   })
 
   describe("Config Default Behavior", () => {
-    it("should default to traditional workflow when not specified", () => {
+    it("should default to classic workflow when not specified", () => {
       const config = loadHDConfig()
-      expect(config.workflow).toBe("traditional")
+      expect(config.workflow).toBe("classic")
     })
 
     it("should merge agent configs with defaults", () => {
@@ -233,9 +233,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
   describe("Extensibility Verification", () => {
     it("should verify workflow registry is extensible", () => {
-      expect(getWorkflowDefinition("traditional")).toBeDefined()
+      expect(getWorkflowDefinition("classic")).toBeDefined()
 
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
       expect(workflow).toHaveProperty("id")
       expect(workflow).toHaveProperty("name")
       expect(workflow).toHaveProperty("description")
@@ -264,7 +264,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
   describe("Backward Compatibility Verification", () => {
     it("should maintain existing workflow state structure", () => {
-      const workflow = getWorkflowDefinition("traditional")
+      const workflow = getWorkflowDefinition("classic")
       const state = initializeWorkflowState(workflow)
 
       expect(state).toHaveProperty("workflow")

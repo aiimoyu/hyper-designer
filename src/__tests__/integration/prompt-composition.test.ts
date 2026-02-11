@@ -147,7 +147,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("should persist typeId when initializing workflow state", () => {
-    const workflow = getWorkflowDefinition("traditional")
+    const workflow = getWorkflowDefinition("classic")
     const state = getWorkflowState()
     if (!state) {
       throw new Error("Workflow state should be initialized")

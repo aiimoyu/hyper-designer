@@ -1,27 +1,27 @@
 import { describe, it, expect } from "vitest"
 import { getHandoverAgent, getHandoverPrompt } from "../../workflows/core/handover"
-import { traditionalWorkflow } from "../../workflows/plugins/traditional"
+import { classicWorkflow } from "../../workflows/plugins/classic"
 import type { WorkflowDefinition } from "../../workflows/core/types"
 
 describe("workflow/handover", () => {
   describe("getHandoverAgent", () => {
     it("should return the correct agent for dataCollection stage", () => {
-      const agent = getHandoverAgent(traditionalWorkflow, "dataCollection")
+      const agent = getHandoverAgent(classicWorkflow, "dataCollection")
       expect(agent).toBe("HCollector")
     })
 
     it("should return the correct agent for IRAnalysis stage", () => {
-      const agent = getHandoverAgent(traditionalWorkflow, "IRAnalysis")
+      const agent = getHandoverAgent(classicWorkflow, "IRAnalysis")
       expect(agent).toBe("HArchitect")
     })
 
     it("should return the correct agent for requirementDecomposition stage", () => {
-      const agent = getHandoverAgent(traditionalWorkflow, "requirementDecomposition")
+      const agent = getHandoverAgent(classicWorkflow, "requirementDecomposition")
       expect(agent).toBe("HEngineer")
     })
 
     it("should throw error for unknown stage", () => {
-      expect(() => getHandoverAgent(traditionalWorkflow, "unknownStage")).toThrow(
+      expect(() => getHandoverAgent(classicWorkflow, "unknownStage")).toThrow(
         "Unknown stage: unknownStage"
       )
     })
@@ -57,30 +57,30 @@ describe("workflow/handover", () => {
 
   describe("getHandoverPrompt", () => {
     it("should return non-empty prompt for dataCollection stage", () => {
-      const prompt = getHandoverPrompt(traditionalWorkflow, null, "dataCollection")
+      const prompt = getHandoverPrompt(classicWorkflow, null, "dataCollection")
       expect(prompt).toBeTruthy()
       expect(prompt.length).toBeGreaterThan(0)
     })
 
     it("should return non-empty prompt for IRAnalysis stage", () => {
-      const prompt = getHandoverPrompt(traditionalWorkflow, "dataCollection", "IRAnalysis")
+      const prompt = getHandoverPrompt(classicWorkflow, "dataCollection", "IRAnalysis")
       expect(prompt).toBeTruthy()
       expect(prompt.length).toBeGreaterThan(0)
     })
 
     it("should include current step in prompt when provided", () => {
-      const prompt = getHandoverPrompt(traditionalWorkflow, "dataCollection", "IRAnalysis")
+      const prompt = getHandoverPrompt(classicWorkflow, "dataCollection", "IRAnalysis")
       expect(prompt).toContain("dataCollection")
     })
 
     it("should generate different prompts for different stages", () => {
-      const prompt1 = getHandoverPrompt(traditionalWorkflow, null, "dataCollection")
-      const prompt2 = getHandoverPrompt(traditionalWorkflow, null, "IRAnalysis")
+      const prompt1 = getHandoverPrompt(classicWorkflow, null, "dataCollection")
+      const prompt2 = getHandoverPrompt(classicWorkflow, null, "IRAnalysis")
       expect(prompt1).not.toBe(prompt2)
     })
 
     it("should throw error for unknown stage", () => {
-      expect(() => getHandoverPrompt(traditionalWorkflow, null, "unknownStage")).toThrow(
+      expect(() => getHandoverPrompt(classicWorkflow, null, "unknownStage")).toThrow(
         "Unknown stage: unknownStage"
       )
     })

@@ -22,7 +22,8 @@ export function toolsPrompt(toolNames: string[]): PromptGenerator {
       return generateToolsPrompt(runtime, toolNames)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`Failed to generate tools prompt for ${runtime}: ${message}`)
+      console.error(`[ERROR] Failed to generate tools prompt for ${runtime}: ${message}`)
+      return `# Failed to generate tools prompt for ${runtime}: ${message}`
     }
   }
 }

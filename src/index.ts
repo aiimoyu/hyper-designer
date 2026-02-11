@@ -37,6 +37,3 @@ export { loadPromptForStage } from "./workflows"
 
 // Config
 export { loadHDConfig } from "./config/loader"
-
-// Utils
-export { debug } from "./utils/debug"

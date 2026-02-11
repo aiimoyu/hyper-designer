@@ -4,7 +4,7 @@ import type { WorkflowDefinition } from '../../core/types'
  * Open Source Requirements Engineering Workflow
  *
  * An 8-stage workflow for comprehensive requirements engineering and system design
- * specifically tailored for open source projects. Based on the traditional workflow
+ * specifically tailored for open source projects. Based on the classic workflow
  * but adapted for open source development practices.
  */
 export const openSourceWorkflow: WorkflowDefinition = {

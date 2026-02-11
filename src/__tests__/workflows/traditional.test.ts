@@ -1,21 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/core/registry'
-import { traditionalWorkflow } from '../../workflows/plugins/traditional'
+import { classicWorkflow } from '../../workflows/plugins/classic'
 
-describe('Traditional Workflow', () => {
+describe('Classic Workflow', () => {
   describe('metadata', () => {
     it('should have correct ID', () => {
-      const workflow = getWorkflowDefinition('traditional')
-      expect(workflow.id).toBe('traditional')
+      const workflow = getWorkflowDefinition('classic')
+      expect(workflow.id).toBe('classic')
     })
 
     it('should have correct name', () => {
-      const workflow = getWorkflowDefinition('traditional')
-      expect(workflow.name).toBe('Traditional Requirements Engineering')
+      const workflow = getWorkflowDefinition('classic')
+      expect(workflow.name).toBe('Classic Requirements Engineering')
     })
 
     it('should have description', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.description).toBeTruthy()
       expect(workflow.description).toContain('8-stage')
     })
@@ -23,22 +23,22 @@ describe('Traditional Workflow', () => {
 
   describe('stage order', () => {
     it('should have exactly 8 stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stageOrder).toHaveLength(8)
     })
 
     it('should start with dataCollection', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stageOrder[0]).toBe('dataCollection')
     })
 
     it('should end with moduleFunctionalDesign', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stageOrder[7]).toBe('moduleFunctionalDesign')
     })
 
     it('should have correct order', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stageOrder).toEqual([
         'dataCollection',
         'IRAnalysis',
@@ -54,14 +54,14 @@ describe('Traditional Workflow', () => {
 
   describe('stage definitions', () => {
     it('should have stage definitions for all stages in stageOrder', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       workflow.stageOrder.forEach((stageName) => {
         expect(workflow.stages[stageName]).toBeDefined()
       })
     })
 
     it('should have no extra stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       const stageKeys = Object.keys(workflow.stages)
       expect(stageKeys).toHaveLength(workflow.stageOrder.length)
       stageKeys.forEach((key) => {
@@ -72,12 +72,12 @@ describe('Traditional Workflow', () => {
 
   describe('agent assignments', () => {
     it('should assign HCollector to dataCollection', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.dataCollection.agent).toBe('HCollector')
     })
 
     it('should assign HArchitect to IR/scenario/useCase/functional stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.IRAnalysis.agent).toBe('HArchitect')
       expect(workflow.stages.scenarioAnalysis.agent).toBe('HArchitect')
       expect(workflow.stages.useCaseAnalysis.agent).toBe('HArchitect')
@@ -85,7 +85,7 @@ describe('Traditional Workflow', () => {
     })
 
     it('should assign HEngineer to decomposition/design stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.requirementDecomposition.agent).toBe('HEngineer')
       expect(workflow.stages.systemFunctionalDesign.agent).toBe('HEngineer')
       expect(workflow.stages.moduleFunctionalDesign.agent).toBe('HEngineer')
@@ -94,12 +94,12 @@ describe('Traditional Workflow', () => {
 
   describe('skill assignments', () => {
     it('should not assign skill to dataCollection', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.dataCollection.skill).toBeUndefined()
     })
 
     it('should assign correct skills to analysis stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.IRAnalysis.skill).toBe('ir-analysis')
       expect(workflow.stages.scenarioAnalysis.skill).toBe('scenario-analysis')
       expect(workflow.stages.useCaseAnalysis.skill).toBe('use-case-analysis')
@@ -107,7 +107,7 @@ describe('Traditional Workflow', () => {
     })
 
     it('should assign correct skills to decomposition/design stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.requirementDecomposition.skill).toBe('sr-ar-decomposition')
       expect(workflow.stages.systemFunctionalDesign.skill).toBe('functional-design')
       expect(workflow.stages.moduleFunctionalDesign.skill).toBe('functional-design')
@@ -116,7 +116,7 @@ describe('Traditional Workflow', () => {
 
   describe('prompt files', () => {
     it('should have promptFile for all stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       workflow.stageOrder.forEach((stageName) => {
         expect(workflow.stages[stageName].promptFile).toBeTruthy()
         expect(workflow.stages[stageName].promptFile).toMatch(/^prompts\/.*\.md$/)
@@ -124,7 +124,7 @@ describe('Traditional Workflow', () => {
     })
 
     it('should use correct prompt file names', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow.stages.dataCollection.promptFile).toBe('prompts/dataCollection.md')
       expect(workflow.stages.IRAnalysis.promptFile).toBe('prompts/IRAnalysis.md')
       expect(workflow.stages.scenarioAnalysis.promptFile).toBe('prompts/scenarioAnalysis.md')
@@ -138,7 +138,7 @@ describe('Traditional Workflow', () => {
 
   describe('handover prompts', () => {
     it('should generate handover prompts for all stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       workflow.stageOrder.forEach((stageName) => {
         const prompt = workflow.stages[stageName].getHandoverPrompt(null)
         expect(prompt).toBeTruthy()
@@ -148,19 +148,19 @@ describe('Traditional Workflow', () => {
     })
 
     it('should include current step in prompt when provided', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       const promptWithCurrent = workflow.stages.dataCollection.getHandoverPrompt('previousStep')
       expect(promptWithCurrent).toContain('previousStep')
     })
 
     it('should include next step in prompt', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       const prompt = workflow.stages.IRAnalysis.getHandoverPrompt(null)
       expect(prompt).toContain('IRAnalysis')
     })
 
     it('should generate different prompts for different stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       const prompt1 = workflow.stages.dataCollection.getHandoverPrompt(null)
       const prompt2 = workflow.stages.IRAnalysis.getHandoverPrompt(null)
       expect(prompt1).not.toBe(prompt2)
@@ -169,7 +169,7 @@ describe('Traditional Workflow', () => {
 
   describe('stage properties', () => {
     it('should have name for all stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       workflow.stageOrder.forEach((stageName) => {
         expect(workflow.stages[stageName].name).toBeTruthy()
         expect(typeof workflow.stages[stageName].name).toBe('string')
@@ -177,7 +177,7 @@ describe('Traditional Workflow', () => {
     })
 
     it('should have description for all stages', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       workflow.stageOrder.forEach((stageName) => {
         expect(workflow.stages[stageName].description).toBeTruthy()
         expect(typeof workflow.stages[stageName].description).toBe('string')
@@ -188,18 +188,18 @@ describe('Traditional Workflow', () => {
   describe('registry integration', () => {
     it('should be registered in workflow registry', () => {
       const available = getAvailableWorkflows()
-      expect(available).toContain('traditional')
+      expect(available).toContain('classic')
     })
 
     it('should be retrievable via getWorkflowDefinition', () => {
-      const workflow = getWorkflowDefinition('traditional')
+      const workflow = getWorkflowDefinition('classic')
       expect(workflow).toBeDefined()
-      expect(workflow.id).toBe('traditional')
+      expect(workflow.id).toBe('classic')
     })
 
     it('should be the same instance as exported constant', () => {
-      const workflow = getWorkflowDefinition('traditional')
-      expect(workflow).toBe(traditionalWorkflow)
+      const workflow = getWorkflowDefinition('classic')
+      expect(workflow).toBe(classicWorkflow)
     })
   })
 })

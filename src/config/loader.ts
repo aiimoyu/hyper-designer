@@ -1,7 +1,6 @@
 import { readFileSync, existsSync } from "fs"
 import { join } from "path"
 import { homedir } from "os"
-import { debug } from "../utils/debug"
 
 export interface AgentOverrideConfig {
   model?: string
@@ -26,19 +25,15 @@ export const GLOBAL_CONFIG_PATH = join(GLOBAL_CONFIG_DIR, "hd-config.json")
 export const DEFAULT_AGENT_CONFIGS: Record<string, AgentOverrideConfig> = {
   HCollector: {
     temperature: 0.3,
-    maxTokens: 32000,
   },
   HArchitect: {
     temperature: 0.7,
-    maxTokens: 32000,
   },
   HCritic: {
     temperature: 0.1,
-    maxTokens: 16000,
   },
   HEngineer: {
     temperature: 0.4,
-    maxTokens: 32000,
   },
 }
 
@@ -64,7 +59,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
   if (!path) {
     return {
       agents: DEFAULT_AGENT_CONFIGS,
-      workflow: "traditional",
+      workflow: "classic",
     }
   }
 
@@ -73,7 +68,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
     const config = JSON.parse(content) as HDConfig
 
     const mergedConfig: HDConfig = {
-      workflow: config.workflow ?? "traditional",
+      workflow: config.workflow ?? "classic",
       agents: {
         ...DEFAULT_AGENT_CONFIGS,
         ...config.agents,
@@ -87,10 +82,9 @@ export function loadHDConfig(configPath?: string): HDConfig {
 
     return mergedConfig
   } catch (error) {
-    debug.error(`Failed to load HD config from ${path}`, error)
     return {
       agents: DEFAULT_AGENT_CONFIGS,
-      workflow: "traditional",
+      workflow: "classic",
     }
   }
 }

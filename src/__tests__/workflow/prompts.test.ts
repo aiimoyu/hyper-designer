@@ -1,34 +1,34 @@
 import { describe, it, expect } from "vitest"
 import { loadPromptForStage } from "../../workflows/core/prompts"
-import { traditionalWorkflow } from "../../workflows/plugins/traditional"
+import { classicWorkflow } from "../../workflows/plugins/classic"
 import type { WorkflowDefinition } from "../../workflows/core/types"
 
 describe("workflow/prompts", () => {
   describe("loadPromptForStage", () => {
     it("should load prompt for dataCollection stage", () => {
-      const prompt = loadPromptForStage("dataCollection", traditionalWorkflow)
+      const prompt = loadPromptForStage("dataCollection", classicWorkflow)
       expect(prompt).toBeTruthy()
       expect(prompt.length).toBeGreaterThan(0)
     })
 
     it("should load prompt for IRAnalysis stage", () => {
-      const prompt = loadPromptForStage("IRAnalysis", traditionalWorkflow)
+      const prompt = loadPromptForStage("IRAnalysis", classicWorkflow)
       expect(prompt).toBeTruthy()
       expect(prompt.length).toBeGreaterThan(0)
     })
 
-    it("should load prompt for all traditional workflow stages", () => {
-      const stages = traditionalWorkflow.stageOrder
-      
+    it("should load prompt for all classic workflow stages", () => {
+      const stages = classicWorkflow.stageOrder
+
       stages.forEach(stage => {
-        const prompt = loadPromptForStage(stage, traditionalWorkflow)
+        const prompt = loadPromptForStage(stage, classicWorkflow)
         expect(prompt).toBeTruthy()
         expect(prompt.length).toBeGreaterThan(0)
       })
     })
 
     it("should throw error for unknown stage", () => {
-      expect(() => loadPromptForStage("unknownStage", traditionalWorkflow)).toThrow(
+      expect(() => loadPromptForStage("unknownStage", classicWorkflow)).toThrow(
         "Unknown stage: unknownStage"
       )
     })
@@ -56,14 +56,14 @@ describe("workflow/prompts", () => {
     })
 
     it("should load prompts from workflow module directory", () => {
-      const prompt = loadPromptForStage("dataCollection", traditionalWorkflow)
-      
+      const prompt = loadPromptForStage("dataCollection", classicWorkflow)
+
       expect(prompt).toContain("资料收集")
     })
 
     it("should preserve Chinese content in loaded prompts", () => {
-      const prompt = loadPromptForStage("IRAnalysis", traditionalWorkflow)
-      
+      const prompt = loadPromptForStage("IRAnalysis", classicWorkflow)
+
       expect(prompt).toMatch(/[\u4e00-\u9fa5]/)
     })
   })

@@ -37,7 +37,15 @@ function replacePlaceholders(
 
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()
-  const workflow = getWorkflowDefinition(config.workflow || "traditional")
+  const workflow = getWorkflowDefinition(config.workflow || "classic")
+
+  if (!workflow) {
+    console.error(`[ERROR] Failed to load workflow: ${config.workflow || "classic"}`)
+    return {
+      event: async () => { },
+      "experimental.chat.system.transform": async () => { },
+    }
+  }
 
   const prompt = async (sessionID: string, agent: string, content: string) => {
     await ctx.client.session.prompt({
@@ -65,9 +73,19 @@ export async function createWorkflowHooks(ctx: PluginInput) {
           const handoverPhase = workflowState.handoverTo
           const currentPhase = workflowState.currentStep
 
-          const nextAgent = getHandoverAgent(workflow, handoverPhase)
-          const handoverContent = getHandoverPrompt(workflow, currentPhase, handoverPhase)
-          executeWorkflowHandover(workflow)
+          const nextAgent = getHandoverAgent(workflow!, handoverPhase)
+          if (!nextAgent) {
+            console.error(`[ERROR] Failed to get handover agent for phase: ${handoverPhase}`)
+            return
+          }
+
+          const handoverContent = getHandoverPrompt(workflow!, currentPhase, handoverPhase)
+          if (!handoverContent) {
+            console.error(`[ERROR] Failed to get handover prompt for phase: ${handoverPhase}`)
+            return
+          }
+
+          executeWorkflowHandover(workflow!)
           await prompt(sessionID, nextAgent, handoverContent)
         }
       }
@@ -79,24 +97,14 @@ export async function createWorkflowHooks(ctx: PluginInput) {
         {
           token: "{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}",
           resolve: () => {
-            try {
-              return loadWorkflowPrompt(workflow)
-            } catch (error) {
-              console.error(`Failed to load workflow overview prompt:`, error)
-              return null
-            }
+            return loadWorkflowPrompt(workflow!)
           },
         },
         {
           token: "{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}",
           resolve: () => {
             const currentStep = workflowState?.currentStep || null
-            try {
-              return loadStagePrompt(currentStep, workflow)
-            } catch (error) {
-              console.error(`Failed to load workflow step prompt for stage ${currentStep ?? "(none)"}:`, error)
-              return null
-            }
+            return loadStagePrompt(currentStep, workflow!)
           },
         },
       ]

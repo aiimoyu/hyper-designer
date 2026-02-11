@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
-  "workflow": "traditional",
+  "workflow": "classic",
   "agents": {
     "HCollector": {
       "model": "zhipuai-coding-plan/glm-4.7",
@@ -24,7 +24,7 @@
     "HCritic": {
       "model": "zhipuai-coding-plan/glm-4.7",
       "temperature": 0.1,
-      "maxTokens": 16000
+      "maxTokens": 32000
     },
     "HEngineer": {
       "model": "zhipuai-coding-plan/glm-4.7",

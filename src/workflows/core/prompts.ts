@@ -19,14 +19,14 @@ export function loadWorkflowPrompt(definition: WorkflowDefinition): string {
     try {
       const rawPrompt = readFileSync(workflowPromptPath, "utf-8")
       if (!rawPrompt.trim()) {
-        throw new Error(`Workflow prompt file is empty: ${workflowPromptPath}`)
+        console.error(`[ERROR] Workflow prompt file is empty: ${workflowPromptPath}`)
+        return ""
       }
       return rawPrompt
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to load workflow prompt: ${error.message}`)
-      }
-      throw error
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`[ERROR] Failed to load workflow prompt: ${message}`)
+      return ""
     }
   }
 
@@ -38,9 +38,10 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
 
   if (stage !== null) {
     const stageConfig = definition.stages[stage]
-    console.log(`Loading prompt for stage "${stage}" in workflow "${definition.id}" from ${stageConfig}`)
+    console.log(`Loading prompt for stage "${stage}" in workflow "${definition.id}"`)
     if (!stageConfig) {
-      throw new Error(`Unknown stage: ${stage}. Available stages: ${Object.keys(definition.stages).join(', ')}`)
+      console.error(`[ERROR] Unknown stage: ${stage}. Available stages: ${Object.keys(definition.stages).join(', ')}`)
+      return ""
     }
 
     if (stageConfig.promptFile) {
@@ -49,14 +50,14 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
       try {
         const rawPrompt = readFileSync(stagePromptPath, "utf-8")
         if (!rawPrompt.trim()) {
-          throw new Error(`Stage prompt file is empty: ${stagePromptPath}`)
+          console.error(`[ERROR] Stage prompt file is empty: ${stagePromptPath}`)
+          return ""
         }
         return rawPrompt
       } catch (error) {
-        if (error instanceof Error) {
-          throw new Error(`Failed to load prompt for stage "${stage}": ${error.message}`)
-        }
-        throw error
+        const message = error instanceof Error ? error.message : String(error)
+        console.error(`[ERROR] Failed to load prompt for stage "${stage}": ${message}`)
+        return ""
       }
     }
   } else if (definition.stageFallbackPromptFile) {
@@ -65,14 +66,14 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
     try {
       const rawPrompt = readFileSync(fallbackPromptPath, "utf-8")
       if (!rawPrompt.trim()) {
-        throw new Error(`Stage fallback prompt file is empty: ${fallbackPromptPath}`)
+        console.error(`[ERROR] Stage fallback prompt file is empty: ${fallbackPromptPath}`)
+        return ""
       }
       return rawPrompt
     } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to load fallback prompt for stage "${stage}": ${error.message}`)
-      }
-      throw error
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`[ERROR] Failed to load fallback prompt for stage "${stage}": ${message}`)
+      return ""
     }
   }
 

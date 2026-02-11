@@ -12,7 +12,7 @@
     "workflow": {
       "type": "string",
       "description": "Workflow type to use",
-      "default": "traditional"
+      "default": "classic"
     },
     "agents": {
       "type": "object",
@@ -41,7 +41,9 @@
       }
     }
   },
-  "required": ["agents"],
+  "required": [
+    "agents"
+  ],
   "definitions": {
     "agentConfig": {
       "type": "object",
@@ -64,7 +66,13 @@
         },
         "variant": {
           "type": "string",
-          "enum": ["low", "medium", "high", "max", "xhigh"],
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "max",
+            "xhigh"
+          ],
           "description": "Model variant for reasoning/thinking modes (low/medium/high/max/xhigh)"
         },
         "prompt_append": {

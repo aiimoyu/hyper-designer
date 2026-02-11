@@ -19,9 +19,11 @@ function getToolSyntaxRegistry(runtime: RuntimeType): ToolSyntaxRegistry {
     case "opencode":
       return OPENCODE_TOOL_SYNTAX
     case "claudecode":
-      throw new Error(`Runtime '${runtime}' not yet supported`)
+      console.error(`[ERROR] Runtime '${runtime}' not yet supported`)
+      return OPENCODE_TOOL_SYNTAX
     default:
-      throw new Error(`Unknown runtime: ${runtime}`)
+      console.error(`[ERROR] Unknown runtime: ${runtime}, using opencode as fallback`)
+      return OPENCODE_TOOL_SYNTAX
   }
 }
 

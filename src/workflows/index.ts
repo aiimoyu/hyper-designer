@@ -19,5 +19,5 @@ export {
 export { getHandoverAgent, getHandoverPrompt } from "./core/handover"
 export { loadPromptForStage } from "./core/prompts"
 
-export { traditionalWorkflow } from "./plugins/traditional"
+export { classicWorkflow } from "./plugins/classic"
 export { openSourceWorkflow } from "./plugins/open-source"

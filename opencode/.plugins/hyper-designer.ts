@@ -12,7 +12,6 @@ import {
 import { createWorkflowHooks } from "../../src/workflows/hooks/opencode";
 import { loadHDConfig } from "../../src/config/loader";
 import { getWorkflowDefinition } from "../../src/workflows";
-import { debug } from "../../src/utils/debug";
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
@@ -50,7 +49,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   }
 
   const hdConfig = loadHDConfig();
-  const workflow = getWorkflowDefinition(hdConfig.workflow || "traditional");
+  const workflow = getWorkflowDefinition(hdConfig.workflow || "classic");
 
   const hdWorkflowStateTool = {
     get_hd_workflow_state: tool({

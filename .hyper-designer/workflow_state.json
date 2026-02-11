@@ -1,9 +1,0 @@
-{
-  "workflow": {
-    "dataCollection": {
-      "isCompleted": false
-    }
-  },
-  "currentStep": null,
-  "handoverTo": null
-}

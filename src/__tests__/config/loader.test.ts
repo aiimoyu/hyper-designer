@@ -18,12 +18,12 @@ describe("loadHDConfig", () => {
 
     expect(config).toHaveProperty("agents")
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("loads valid config file", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-    
+
     const testConfig = {
       agents: {
         HArchitect: {
@@ -32,19 +32,19 @@ describe("loadHDConfig", () => {
         },
       },
     }
-    
+
     writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
 
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.agents.HArchitect.temperature).toBe(0.9)
     expect(config.agents.HArchitect.maxTokens).toBe(16000)
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("merges config with defaults", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-    
+
     const testConfig = {
       agents: {
         HArchitect: {
@@ -52,7 +52,7 @@ describe("loadHDConfig", () => {
         },
       },
     }
-    
+
     writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
 
     const config = loadHDConfig(TEST_CONFIG_PATH)
@@ -61,7 +61,7 @@ describe("loadHDConfig", () => {
     expect(config.agents.HCollector).toEqual(DEFAULT_AGENT_CONFIGS.HCollector)
     expect(config.agents.HCritic).toEqual(DEFAULT_AGENT_CONFIGS.HCritic)
     expect(config.agents.HEngineer).toEqual(DEFAULT_AGENT_CONFIGS.HEngineer)
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("handles invalid JSON gracefully", () => {
@@ -71,7 +71,7 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("handles empty config file", () => {
@@ -81,28 +81,28 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("preserves $schema field if present", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-    
+
     const testConfig = {
       $schema: "https://example.com/schema.json",
       agents: {},
     }
-    
+
     writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
 
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.$schema).toBe("https://example.com/schema.json")
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("handles config with additional agent overrides", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-    
+
     const testConfig = {
       agents: {
         HCollector: {
@@ -113,7 +113,7 @@ describe("loadHDConfig", () => {
         },
       },
     }
-    
+
     writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
 
     const config = loadHDConfig(TEST_CONFIG_PATH)
@@ -122,31 +122,31 @@ describe("loadHDConfig", () => {
     expect(config.agents.HCollector.temperature).toBe(0.5)
     expect(config.agents.HCollector.prompt_append).toBe("Additional instructions")
     expect(config.agents.HCollector.permission).toEqual({ write: "deny" })
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
-  it("defaults workflow to 'traditional' when not specified", () => {
+  it("defaults workflow to 'classic' when not specified", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-    
+
     const testConfig = {
       agents: {},
     }
-    
+
     writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
 
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
-    expect(config.workflow).toBe("traditional")
+    expect(config.workflow).toBe("classic")
   })
 
   it("uses custom workflow when specified", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-    
+
     const testConfig = {
       workflow: "custom",
       agents: {},
     }
-    
+
     writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
 
     const config = loadHDConfig(TEST_CONFIG_PATH)

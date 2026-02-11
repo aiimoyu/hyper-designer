@@ -48,7 +48,7 @@ function readWorkflowStateFile(): WorkflowState | null {
     const data = readFileSync(WORKFLOW_STATE_PATH, "utf-8");
     const parsed = JSON.parse(data);
     return {
-      typeId: parsed.typeId ?? "traditional",
+      typeId: parsed.typeId ?? "classic",
       workflow: parsed.workflow,
       currentStep: parsed.currentStep,
       handoverTo: parsed.handoverTo,
@@ -82,10 +82,21 @@ function ensureWorkflowStateExists(definition?: WorkflowDefinition): WorkflowSta
   if (state !== null) {
     return state;
   }
-  const workflowDef = definition ?? getWorkflowDefinition("traditional");
-  const newState = initializeWorkflowState(workflowDef);
-  writeWorkflowStateFile(newState);
-  return newState;
+  const workflowDef = definition ?? getWorkflowDefinition("classic");
+  if (workflowDef) {
+    const newState = initializeWorkflowState(workflowDef);
+    writeWorkflowStateFile(newState);
+    return newState;
+  }
+  console.error("[ERROR] Failed to get workflow definition for 'classic'");
+  const fallbackState: WorkflowState = {
+    typeId: "classic",
+    workflow: {},
+    currentStep: null,
+    handoverTo: null,
+  };
+  writeWorkflowStateFile(fallbackState);
+  return fallbackState;
 }
 
 export function setWorkflowStage(stage_name: string, is_completed: boolean, definition?: WorkflowDefinition): WorkflowState {
@@ -94,7 +105,8 @@ export function setWorkflowStage(stage_name: string, is_completed: boolean, defi
     state.workflow[stage_name].isCompleted = is_completed;
     writeWorkflowStateFile(state);
   } else {
-    throw new Error(`Invalid workflow stage: ${stage_name}`);
+    console.error(`[ERROR] Invalid workflow stage: ${stage_name}`);
+    console.error(`[ERROR] Available stages: ${Object.keys(state.workflow).join(', ')}`);
   }
   return state;
 }
@@ -105,7 +117,8 @@ export function setWorkflowCurrent(step_name: string | null, definition?: Workfl
     state.currentStep = step_name;
     writeWorkflowStateFile(state);
   } else {
-    throw new Error(`Invalid workflow step: ${step_name}`);
+    console.error(`[ERROR] Invalid workflow step: ${step_name}`);
+    console.error(`[ERROR] Available steps: ${Object.keys(state.workflow).join(', ')}`);
   }
   return state;
 }
@@ -120,7 +133,9 @@ export function setWorkflowHandover(step_name: string | null, definition: Workfl
   }
 
   if (!state.workflow[step_name]) {
-    throw new Error(`Invalid workflow step: ${step_name}`);
+    console.error(`[ERROR] Invalid workflow step: ${step_name}`);
+    console.error(`[ERROR] Available steps: ${Object.keys(state.workflow).join(', ')}`);
+    return state;
   }
 
   const stageOrder = definition.stageOrder;
@@ -131,11 +146,12 @@ export function setWorkflowHandover(step_name: string | null, definition: Workfl
   // If no current step is set, only allow setting handover to the first step
   if (currentIndex === -1) {
     if (targetIndex !== 0) {
-      throw new Error(
-        `Cannot set handover: no current step is set. ` +
+      console.error(
+        `[ERROR] Cannot set handover: no current step is set. ` +
         `You can only set handover to the first step (${stageOrder[0]}). ` +
         `Target step: ${step_name} (index ${targetIndex}).`
       );
+      return state;
     }
   } else {
     // Normal logic: only allow next step or backward steps
@@ -143,12 +159,13 @@ export function setWorkflowHandover(step_name: string | null, definition: Workfl
     const isBackwardStep = targetIndex <= currentIndex;
 
     if (!isNextStep && !isBackwardStep) {
-      throw new Error(
-        `Cannot skip steps when setting handover. ` +
+      console.error(
+        `[ERROR] Cannot skip steps when setting handover. ` +
         `Current step: ${currentStep} (index ${currentIndex}), ` +
         `Target step: ${step_name} (index ${targetIndex}). ` +
         `You can only go to the next step or return to a previous step.`
       );
+      return state;
     }
   }
 
@@ -166,7 +183,8 @@ export function executeWorkflowHandover(definition: WorkflowDefinition): Workflo
   }
 
   if (state.handoverTo === null) {
-    throw new Error("No handover target set. Call setWorkflowHandover first.");
+    console.error("[ERROR] No handover target set. Call setWorkflowHandover first.");
+    return state;
   }
 
   const stageOrder = definition.stageOrder;
@@ -178,10 +196,11 @@ export function executeWorkflowHandover(definition: WorkflowDefinition): Workflo
   // If no current step is set, this is the initial handover to first step
   if (fromIndex === -1) {
     if (toIndex !== 0) {
-      throw new Error(
-        `Cannot execute handover: no current step is set. ` +
+      console.error(
+        `[ERROR] Cannot execute handover: no current step is set. ` +
         `Initial handover can only go to the first step (${stageOrder[0]}).`
       );
+      return state;
     }
   } else if (toIndex > fromIndex) {
     state.workflow[fromStep!].isCompleted = true;
