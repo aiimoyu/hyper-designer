@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnpm/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+temp/
+
+# Test output
+.test-temp/
+
+# OpenCode specific
+.opencode/
+.hyper-designer/
+
+# Lock files (optional - comment out if you want to commit lock files)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
