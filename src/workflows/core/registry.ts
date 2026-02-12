@@ -25,10 +25,11 @@ const workflowRegistry: Record<string, WorkflowDefinition> = {
 export function getWorkflowDefinition(typeId: string): WorkflowDefinition | null {
   const workflow = workflowRegistry[typeId]
   if (!workflow) {
-    HyperDesignerLogger.error("Workflow", `未知的工作流类型`, new Error(`Unknown workflow: ${typeId}`), {
+    HyperDesignerLogger.warn("Workflow", `未知的工作流类型`, {
       workflowId: typeId,
       availableWorkflows: getAvailableWorkflows(),
-      action: "getWorkflowDefinition"
+      action: "getWorkflowDefinition",
+      error: `Unknown workflow: ${typeId}`
     })
     return null
   }

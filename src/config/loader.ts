@@ -83,9 +83,13 @@ function findConfigPath(): string | null {
   // 配置文件搜索路径（按优先级顺序）：
   // 1. 项目目录下的 .hyper-designer 文件夹
   // 2. 用户全局配置目录
+  const projectConfigPath =
+    process.env.HD_PROJECT_CONFIG_PATH ??
+    join(process.cwd(), ".hyper-designer", DEFAULT_CONFIG_PATH)
+  const globalConfigPath = process.env.HD_GLOBAL_CONFIG_PATH ?? GLOBAL_CONFIG_PATH
   const searchPaths = [
-    join(process.cwd(), ".hyper-designer", DEFAULT_CONFIG_PATH),
-    GLOBAL_CONFIG_PATH,
+    projectConfigPath,
+    globalConfigPath,
   ]
 
   HyperDesignerLogger.debug("Config", `搜索配置文件`, { 
@@ -161,10 +165,11 @@ export function loadHDConfig(configPath?: string): HDConfig {
     return mergedConfig
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    HyperDesignerLogger.error("Config", `加载配置文件失败`, err, { 
+    HyperDesignerLogger.warn("Config", `加载配置文件失败`, { 
       path,
       action: "loadConfig",
-      recovery: "usingDefaultConfig"
+      recovery: "usingDefaultConfig",
+      error: err.message
     })
     
     HyperDesignerLogger.warn("Config", `由于错误使用默认配置`, {

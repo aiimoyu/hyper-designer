@@ -72,6 +72,11 @@ function getPrintFromEnv(): boolean {
   return process.env.HYPER_DESIGNER_LOG_PRINT === "true" || process.env.LOG_PRINT === "true";
 }
 
+function getStrictErrorsFromEnv(): boolean {
+  const envValue = process.env.HD_STRICT_ERRORS;
+  return envValue === "1" || envValue === "true";
+}
+
 /**
  * 确保日志目录存在
  */
@@ -291,6 +296,14 @@ export class HyperDesignerLogger {
 
     const formatted = formatLogMessage("ERROR", module, message, contextWithError);
     writeLog("ERROR", formatted);
+
+    // Throw error in strict mode
+    if (getStrictErrorsFromEnv()) {
+      if (error) {
+        throw error;
+      }
+      throw new Error(message);
+    }
   }
 
   /**

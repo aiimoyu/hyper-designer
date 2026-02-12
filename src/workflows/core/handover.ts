@@ -12,10 +12,11 @@ import { HyperDesignerLogger } from "../../utils/logger"
 export function getHandoverAgent(definition: WorkflowDefinition, stage: string): string | null {
   const stageConfig = definition.stages[stage]
   if (!stageConfig) {
-    HyperDesignerLogger.error("Workflow", `未知的工作流阶段`, new Error(`Unknown stage: ${stage}`), {
+    HyperDesignerLogger.warn("Workflow", `未知的工作流阶段`, {
       stage,
       availableStages: Object.keys(definition.stages),
-      action: "getHandoverAgent"
+      action: "getHandoverAgent",
+      error: `Unknown stage: ${stage}`
     })
     return null
   }
@@ -35,18 +36,20 @@ export function getHandoverPrompt(
 ): string | null {
   const stageConfig = definition.stages[nextStep]
   if (!stageConfig) {
-    HyperDesignerLogger.error("Workflow", `未知的工作流阶段`, new Error(`Unknown stage: ${nextStep}`), {
+    HyperDesignerLogger.warn("Workflow", `未知的工作流阶段`, {
       stage: nextStep,
       availableStages: Object.keys(definition.stages),
-      action: "getHandoverPrompt"
+      action: "getHandoverPrompt",
+      error: `Unknown stage: ${nextStep}`
     })
     return null
   }
-  
+
   if (!stageConfig.getHandoverPrompt) {
-    HyperDesignerLogger.error("Workflow", `阶段未定义交接提示词函数`, new Error(`Stage "${nextStep}" does not define getHandoverPrompt function`), {
+    HyperDesignerLogger.warn("Workflow", `阶段未定义交接提示词函数`, {
       stage: nextStep,
-      action: "validateHandoverFunction"
+      action: "validateHandoverFunction",
+      error: `Stage "${nextStep}" does not define getHandoverPrompt function`
     })
     return null
   }

@@ -34,10 +34,11 @@ export function loadWorkflowPrompt(definition: WorkflowDefinition): string {
     try {
       const rawPrompt = readFileSync(workflowPromptPath, "utf-8")
       if (!rawPrompt.trim()) {
-        HyperDesignerLogger.error("Workflow", `工作流提示词文件为空`, new Error("Workflow prompt file is empty"), {
+        HyperDesignerLogger.warn("Workflow", `工作流提示词文件为空`, {
           path: workflowPromptPath,
           workflowId: definition.id,
-          action: "loadWorkflowPrompt"
+          action: "loadWorkflowPrompt",
+          error: "Workflow prompt file is empty"
         })
         return ""
       }
@@ -50,10 +51,11 @@ export function loadWorkflowPrompt(definition: WorkflowDefinition): string {
       return rawPrompt
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      HyperDesignerLogger.error("Workflow", `加载工作流提示词失败`, err, {
+      HyperDesignerLogger.warn("Workflow", `加载工作流提示词失败`, {
         path: workflowPromptPath,
         workflowId: definition.id,
-        action: "loadWorkflowPrompt"
+        action: "loadWorkflowPrompt",
+        error: err.message
       })
       return ""
     }
@@ -79,11 +81,12 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
     })
     
     if (!stageConfig) {
-      HyperDesignerLogger.error("Workflow", `未知的工作流阶段`, new Error(`Unknown stage: ${stage}`), {
+      HyperDesignerLogger.warn("Workflow", `未知的工作流阶段`, {
         workflowId: definition.id,
         stage,
         availableStages: Object.keys(definition.stages),
-        action: "validateStage"
+        action: "validateStage",
+        error: `Unknown stage: ${stage}`
       })
       return ""
     }
@@ -100,11 +103,12 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
       try {
         const rawPrompt = readFileSync(stagePromptPath, "utf-8")
         if (!rawPrompt.trim()) {
-          HyperDesignerLogger.error("Workflow", `阶段提示词文件为空`, new Error("Stage prompt file is empty"), {
+          HyperDesignerLogger.warn("Workflow", `阶段提示词文件为空`, {
             workflowId: definition.id,
             stage,
             path: stagePromptPath,
-            action: "validatePromptContent"
+            action: "validatePromptContent",
+            error: "Stage prompt file is empty"
           })
           return ""
         }
@@ -118,11 +122,12 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
         return rawPrompt
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error))
-        HyperDesignerLogger.error("Workflow", `加载阶段提示词失败`, err, {
+        HyperDesignerLogger.warn("Workflow", `加载阶段提示词失败`, {
           workflowId: definition.id,
           stage,
           path: stagePromptPath,
-          action: "loadStagePrompt"
+          action: "loadStagePrompt",
+          error: err.message
         })
         return ""
       }
@@ -146,11 +151,12 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
     try {
       const rawPrompt = readFileSync(fallbackPromptPath, "utf-8")
       if (!rawPrompt.trim()) {
-        HyperDesignerLogger.error("Workflow", `回退提示词文件为空`, new Error("Stage fallback prompt file is empty"), {
+        HyperDesignerLogger.warn("Workflow", `回退提示词文件为空`, {
           workflowId: definition.id,
           stage,
           path: fallbackPromptPath,
-          action: "validateFallbackContent"
+          action: "validateFallbackContent",
+          error: "Stage fallback prompt file is empty"
         })
         return ""
       }
@@ -164,11 +170,12 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
       return rawPrompt
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      HyperDesignerLogger.error("Workflow", `加载回退提示词失败`, err, {
+      HyperDesignerLogger.warn("Workflow", `加载回退提示词失败`, {
         workflowId: definition.id,
         stage,
         path: fallbackPromptPath,
-        action: "loadFallbackPrompt"
+        action: "loadFallbackPrompt",
+        error: err.message
       })
       return ""
     }

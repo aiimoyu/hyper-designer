@@ -101,9 +101,10 @@ function readWorkflowStateFile(): WorkflowState | null {
     return state;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    HyperDesignerLogger.error("Workflow", `读取工作流状态文件失败`, err, { 
+    HyperDesignerLogger.warn("Workflow", `读取工作流状态文件失败`, {
       path: WORKFLOW_STATE_PATH,
-      action: "readStateFile"
+      action: "readStateFile",
+      error: err.message
     });
     return null;
   }
@@ -169,9 +170,10 @@ function ensureWorkflowStateExists(definition?: WorkflowDefinition): WorkflowSta
     return newState;
   }
   
-  HyperDesignerLogger.error("Workflow", `获取工作流定义失败`, new Error("Workflow definition 'classic' not found"), {
+  HyperDesignerLogger.warn("Workflow", `获取工作流定义失败`, {
     workflowId: "classic",
-    action: "getWorkflowDefinition"
+    action: "getWorkflowDefinition",
+    error: "Workflow definition 'classic' not found"
   });
   
   const fallbackState: WorkflowState = {
@@ -207,9 +209,10 @@ export function setWorkflowStage(stageName: string, isCompleted: boolean, defini
       status: isCompleted 
     });
   } else {
-    HyperDesignerLogger.error("Workflow", `无效的工作流阶段`, new Error(`Invalid workflow stage: ${stageName}`), {
+    HyperDesignerLogger.warn("Workflow", `无效的工作流阶段`, {
       stage: stageName,
-      availableStages: Object.keys(state.workflow)
+      availableStages: Object.keys(state.workflow),
+      error: `Invalid workflow stage: ${stageName}`
     });
   }
   
@@ -232,9 +235,10 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", `当前工作流步骤更新完成`, { step: stepName });
   } else {
-    HyperDesignerLogger.error("Workflow", `无效的工作流步骤`, new Error(`Invalid workflow step: ${stepName}`), {
+    HyperDesignerLogger.warn("Workflow", `无效的工作流步骤`, {
       step: stepName,
-      availableSteps: Object.keys(state.workflow)
+      availableSteps: Object.keys(state.workflow),
+      error: `Invalid workflow step: ${stepName}`
     });
   }
   
@@ -268,9 +272,10 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
 
   // 验证目标步骤是否存在
   if (!state.workflow[stepName]) {
-    HyperDesignerLogger.error("Workflow", `无效的工作流步骤`, new Error(`Invalid workflow step: ${stepName}`), {
+    HyperDesignerLogger.warn("Workflow", `无效的工作流步骤`, {
       targetStep: stepName,
-      availableSteps: Object.keys(state.workflow)
+      availableSteps: Object.keys(state.workflow),
+      error: `Invalid workflow step: ${stepName}`
     });
     return state;
   }
@@ -283,11 +288,12 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
   // 如果没有当前步骤，只能交接给第一个步骤
   if (currentIndex === -1) {
     if (targetIndex !== 0) {
-      HyperDesignerLogger.error("Workflow", `无法设置交接：没有当前步骤`, new Error("No current step set"), {
+      HyperDesignerLogger.warn("Workflow", `无法设置交接：没有当前步骤`, {
         targetStep: stepName,
         targetIndex,
         firstStep: stageOrder[0],
-        validation: "mustBeFirstStep"
+        validation: "mustBeFirstStep",
+        error: "No current step set"
       });
       return state;
     }
@@ -297,12 +303,13 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
     const isBackwardStep = targetIndex <= currentIndex;
 
     if (!isNextStep && !isBackwardStep) {
-      HyperDesignerLogger.error("Workflow", `无法跳过步骤设置交接`, new Error("Cannot skip steps"), {
+      HyperDesignerLogger.warn("Workflow", `无法跳过步骤设置交接`, {
         currentStep,
         currentIndex,
         targetStep: stepName,
         targetIndex,
-        validation: "noStepSkipping"
+        validation: "noStepSkipping",
+        error: "Cannot skip steps"
       });
       return state;
     }
@@ -331,9 +338,10 @@ export function executeWorkflowHandover(definition: WorkflowDefinition): Workflo
   }
 
   if (state.handoverTo === null) {
-    HyperDesignerLogger.error("Workflow", `未设置交接目标`, new Error("No handover target set"), {
+    HyperDesignerLogger.warn("Workflow", `未设置交接目标`, {
       action: "executeHandover",
-      validation: "handoverTargetRequired"
+      validation: "handoverTargetRequired",
+      error: "No handover target set"
     });
     return state;
   }
@@ -354,11 +362,12 @@ export function executeWorkflowHandover(definition: WorkflowDefinition): Workflo
   // 如果没有当前步骤，这是到第一个步骤的初始交接
   if (fromIndex === -1) {
     if (toIndex !== 0) {
-      HyperDesignerLogger.error("Workflow", `无法执行交接：没有当前步骤`, new Error("No current step set"), {
+      HyperDesignerLogger.warn("Workflow", `无法执行交接：没有当前步骤`, {
         toStep,
         toIndex,
         firstStep: stageOrder[0],
-        validation: "initialHandoverMustBeFirstStep"
+        validation: "initialHandoverMustBeFirstStep",
+        error: "No current step set"
       });
       return state;
     }

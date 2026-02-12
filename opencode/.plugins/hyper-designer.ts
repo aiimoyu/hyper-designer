@@ -15,16 +15,16 @@ import { getWorkflowDefinition } from "../../src/workflows";
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
-    model: agent.model,
-    temperature: agent.temperature,
-    maxTokens: agent.maxTokens,
-    variant: agent.variant,
-    prompt: agent.prompt,
-    tools: agent.tools,
-    description: agent.description,
-    mode: agent.mode,
-    color: agent.color,
-    permission: agent.permission,
+    ...(agent.model !== undefined ? { model: agent.model } : {}),
+    ...(agent.temperature !== undefined ? { temperature: agent.temperature } : {}),
+    ...(agent.maxTokens !== undefined ? { maxTokens: agent.maxTokens } : {}),
+    ...(agent.variant !== undefined ? { variant: agent.variant } : {}),
+    ...(agent.prompt !== undefined ? { prompt: agent.prompt } : {}),
+    ...(agent.tools !== undefined ? { tools: agent.tools } : {}),
+    ...(agent.description !== undefined ? { description: agent.description } : {}),
+    ...(agent.mode !== undefined ? { mode: agent.mode } : {}),
+    ...(agent.color !== undefined ? { color: agent.color } : {}),
+    ...(agent.permission !== undefined ? { permission: agent.permission } : {}),
   };
 };
 
@@ -40,8 +40,6 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   const agents = await createBuiltinAgents("opencode");
   const mappedAgents = toOpencodeAgents(agents);
   const agentHandler = async (config: Record<string, unknown>) => {
-    console.error("config", config);
-    // 程序暂停
     config.agent = {
       ...(config.agent ?? {}),
       ...mappedAgents,
@@ -50,6 +48,9 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
 
   const hdConfig = loadHDConfig();
   const workflow = getWorkflowDefinition(hdConfig.workflow || "classic");
+  if (!workflow) {
+    throw new Error("Workflow definition not found");
+  }
 
   const hdWorkflowStateTool = {
     get_hd_workflow_state: tool({

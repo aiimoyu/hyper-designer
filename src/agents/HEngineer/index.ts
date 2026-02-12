@@ -53,12 +53,12 @@ const DEFINITION: AgentDefinition = {
   color: "#31B5C6",
   defaultTemperature: 0.4,
   promptGenerators: [
-    filePrompt(join(__dirname, "identity.md")),
-    filePrompt(join(__dirname, "constraints.md")),
-    filePrompt(join(__dirname, "step.md")),
-    filePrompt(join(__dirname, "workflow.md")),
-    filePrompt(join(__dirname, "standard.md")),
-    filePrompt(join(__dirname, "interview.md")),
+    filePrompt(join(__dirname, "prompts", "identity.md")),
+    filePrompt(join(__dirname, "prompts", "constraints.md")),
+    filePrompt(join(__dirname, "prompts", "step.md")),
+    filePrompt(join(__dirname, "prompts", "workflow.md")),
+    filePrompt(join(__dirname, "prompts", "standard.md")),
+    filePrompt(join(__dirname, "prompts", "interview.md")),
     toolsPrompt(["ask_user", "task"]),
   ],
   defaultPermission: {

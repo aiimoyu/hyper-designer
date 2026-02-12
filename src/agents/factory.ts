@@ -32,9 +32,10 @@ export function filePrompt(filePath: string): PromptGenerator {
       return readFileSync(filePath, "utf-8")
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      HyperDesignerLogger.error("AgentFactory", `加载提示词文件失败`, err, { 
+      HyperDesignerLogger.warn("AgentFactory", `加载提示词文件失败`, {
         filePath,
-        action: "loadPromptFile"
+        action: "loadPromptFile",
+        error: err.message
       })
       return `# Failed to load ${filePath}`
     }
@@ -56,10 +57,11 @@ export function toolsPrompt(toolNames: string[]): PromptGenerator {
       return generateToolsPrompt(runtime, toolNames)
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      HyperDesignerLogger.error("AgentFactory", `生成工具提示词失败`, err, { 
+      HyperDesignerLogger.warn("AgentFactory", `生成工具提示词失败`, {
         runtime,
         tools: toolNames,
-        action: "generateToolsPrompt"
+        action: "generateToolsPrompt",
+        error: err.message
       })
       return `# Failed to generate tools prompt for ${runtime}: ${err.message}`
     }
