@@ -1,11 +1,19 @@
 /**
- * Minimal agent types for a lightweight, HCollector-first project.
- * Keep only fields and concepts needed for prompt/building agents.
+ * 代理类型定义模块
+ * 
+ * 定义 Hyper Designer 代理系统的核心类型，包括：
+ * 1. 代理模式定义
+ * 2. 代理配置接口
+ * 3. 代理工厂类型
+ * 4. 代理提示词元数据
  */
 
 /**
- * Agent mode determines whether the agent follows UI-selected model
- * or uses its own fallback chain.
+ * 代理模式定义
+ * 决定代理是否遵循UI选择的模型或使用自己的回退链
+ * - primary: 主要代理，遵循UI选择的模型
+ * - subagent: 子代理，用于特定任务
+ * - all: 所有模式，具有最大灵活性
  */
 export type AgentMode = "primary" | "subagent" | "all"
 

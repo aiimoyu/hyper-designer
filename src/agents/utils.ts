@@ -1,6 +1,10 @@
 /**
- * Minimal agent registry - only registers the agents your project needs.
- * Returns concrete AgentConfig objects for runtime use.
+ * 代理工具模块
+ * 
+ * 提供代理注册和创建的工具函数，包括：
+ * 1. 内置代理工厂注册表
+ * 2. 内置代理名称列表
+ * 3. 代理创建和验证函数
  */
 
 import type { AgentConfig } from "./types"

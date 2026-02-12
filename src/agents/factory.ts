@@ -1,70 +1,154 @@
+/**
+ * 代理工厂模块
+ * 
+ * 负责创建和管理 AI 代理的配置，包括：
+ * 1. 从文件加载提示词内容
+ * 2. 生成工具相关的提示词
+ * 3. 合并默认配置和覆盖配置
+ * 4. 创建完整的代理配置对象
+ */
+
 import type { AgentConfig, AgentMode } from "./types"
 import type { AgentOverrideConfig } from "../config/loader"
 import { loadHDConfig } from "../config/loader"
 import { generateToolsPrompt, type RuntimeType } from "../tools"
 import { readFileSync } from "fs"
+import { HyperDesignerLogger } from "../utils/logger"
 
+/**
+ * A function that generates a prompt string based on the runtime environment
+ */
 export type PromptGenerator = (runtime: RuntimeType) => string
 
+/**
+ * Creates a PromptGenerator that reads content from a file
+ * @param filePath Path to the file containing the prompt content
+ * @returns PromptGenerator function that reads from the specified file
+ */
 export function filePrompt(filePath: string): PromptGenerator {
   return () => {
     try {
+      HyperDesignerLogger.debug("AgentFactory", `从文件加载提示词`, { filePath })
       return readFileSync(filePath, "utf-8")
-    } catch {
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.error("AgentFactory", `加载提示词文件失败`, err, { 
+        filePath,
+        action: "loadPromptFile"
+      })
       return `# Failed to load ${filePath}`
     }
   }
 }
 
+/**
+ * Creates a PromptGenerator that generates tool-related prompts
+ * @param toolNames Array of tool names to include in the prompt
+ * @returns PromptGenerator function that generates tool prompts
+ */
 export function toolsPrompt(toolNames: string[]): PromptGenerator {
   return (runtime) => {
     try {
+      HyperDesignerLogger.debug("AgentFactory", `生成工具提示词`, { 
+        runtime, 
+        tools: toolNames 
+      })
       return generateToolsPrompt(runtime, toolNames)
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      console.error(`[ERROR] Failed to generate tools prompt for ${runtime}: ${message}`)
-      return `# Failed to generate tools prompt for ${runtime}: ${message}`
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.error("AgentFactory", `生成工具提示词失败`, err, { 
+        runtime,
+        tools: toolNames,
+        action: "generateToolsPrompt"
+      })
+      return `# Failed to generate tools prompt for ${runtime}: ${err.message}`
     }
   }
 }
 
+/**
+ * Creates a PromptGenerator that returns a static string
+ * @param content Static content to return as the prompt
+ * @returns PromptGenerator function that returns the static content
+ */
 export function stringPrompt(content: string): PromptGenerator {
   return () => content
 }
 
+/**
+ * Defines the structure of an agent definition
+ */
 export interface AgentDefinition {
+  /** Unique name of the agent */
   name: string
+  /** Description of the agent's purpose and capabilities */
   description: string
+  /** Mode of operation for the agent */
   mode: AgentMode
+  /** Optional color for the agent in UI representations */
   color?: string
+  /** Default temperature setting for the agent's model */
   defaultTemperature: number
+  /** Optional default maximum tokens for the agent's responses */
   defaultMaxTokens?: number
+  /** Optional default variant for the agent's model */
   defaultVariant?: string
+  /** Array of prompt generators to construct the agent's prompt */
   promptGenerators: PromptGenerator[]
+  /** Optional default permissions for the agent */
   defaultPermission?: Record<string, string>
+  /** Optional default tools configuration for the agent */
   defaultTools?: Record<string, boolean>
 }
 
+/**
+ * Creates an agent configuration based on a definition and optional overrides
+ * @param definition Agent definition containing base configuration
+ * @param model Optional model name to use instead of default
+ * @param runtime Optional runtime environment (defaults to "opencode")
+ * @returns Complete agent configuration object
+ */
 export function createAgent(
   definition: AgentDefinition,
   model?: string,
   runtime?: RuntimeType
 ): AgentConfig {
+  HyperDesignerLogger.info("AgentFactory", `创建代理`, { agent: definition.name })
+  
+  // 加载全局配置
   const config = loadHDConfig()
   const agentConfig = config.agents[definition.name] as AgentOverrideConfig | undefined
 
+  // 解析运行时环境（默认为 opencode）
   const resolvedRuntime = runtime ?? "opencode"
+  HyperDesignerLogger.debug("AgentFactory", `使用运行时环境`, { 
+    runtime: resolvedRuntime,
+    agent: definition.name
+  })
 
+  // 生成提示词各部分
   const promptParts = definition.promptGenerators.map(generator =>
     generator(resolvedRuntime)
   )
 
+  // 追加自定义提示词内容（如果配置中存在）
   if (agentConfig?.prompt_append) {
+    HyperDesignerLogger.debug("AgentFactory", `追加自定义提示词内容`, { 
+      agent: definition.name,
+      contentLength: agentConfig.prompt_append.length
+    })
     promptParts.push(agentConfig.prompt_append)
   }
 
+  // 合并所有提示词部分
   const finalPrompt = promptParts.join("\n\n")
+  HyperDesignerLogger.debug("AgentFactory", `生成最终提示词`, { 
+    agent: definition.name,
+    promptLength: finalPrompt.length,
+    partCount: promptParts.length
+  })
 
+  // 创建基础代理配置
   const result: AgentConfig = {
     name: definition.name,
     description: definition.description,
@@ -73,33 +157,45 @@ export function createAgent(
     prompt: finalPrompt,
   }
 
+  // 合并最大令牌数配置（覆盖配置优先）
   const maxTokensValue = agentConfig?.maxTokens ?? definition.defaultMaxTokens
   if (maxTokensValue !== undefined) {
     result.maxTokens = maxTokensValue
   }
 
+  // 合并权限配置（覆盖配置优先）
   const permissionValue = agentConfig?.permission ?? definition.defaultPermission
   if (permissionValue !== undefined) {
     result.permission = permissionValue
   }
 
+  // 设置代理颜色（如果定义中存在）
   if (definition.color !== undefined) {
     result.color = definition.color
   }
 
+  // 设置默认工具配置（如果定义中存在）
   if (definition.defaultTools !== undefined) {
     result.tools = definition.defaultTools
   }
 
+  // 合并模型配置（覆盖配置优先于参数）
   const modelValue = agentConfig?.model ?? model
   if (modelValue !== undefined) {
     result.model = modelValue
   }
 
+  // 合并变体配置（覆盖配置优先）
   const variantValue = agentConfig?.variant ?? definition.defaultVariant
   if (variantValue !== undefined) {
     result.variant = variantValue
   }
 
+  HyperDesignerLogger.info("AgentFactory", `代理创建成功`, { 
+    agent: definition.name,
+    temperature: result.temperature,
+    hasModel: result.model !== undefined,
+    hasMaxTokens: result.maxTokens !== undefined
+  })
   return result
 }

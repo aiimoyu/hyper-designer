@@ -1,4 +1,13 @@
-// src/index.ts
+/**
+ * Hyper Designer 主入口模块
+ * 
+ * 提供 Hyper Designer 插件的完整 API 导出，包括：
+ * 1. 类型定义：代理配置、工作流状态、配置结构等
+ * 2. 代理创建：所有内置代理的创建函数
+ * 3. 工作流管理：状态管理、阶段管理、交接处理
+ * 4. 配置管理：配置文件加载和解析
+ * 5. 工具函数：提示词生成、工作流注册等
+ */
 
 // Types
 export type { AgentConfig, AgentMode, AgentFactory, AgentPromptMetadata, BuiltinAgentName } from "./agents/types"

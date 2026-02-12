@@ -1,3 +1,13 @@
+/**
+ * HEngineer 代理模块
+ * 
+ * 系统工程师和技术设计专家，负责：
+ * 1. 系统级设计：系统需求分解（SR-AR）和系统功能设计（架构、技术栈、数据模型）
+ * 2. 模块级设计：详细类设计、算法、实现规范
+ * 3. 在 HArchitect 完成功能细化后接管工作
+ * 4. 完成每个设计阶段后必须调用 @HCritic 进行质量门评审
+ */
+
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
 import { filePrompt, toolsPrompt } from "../factory"

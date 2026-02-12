@@ -1,3 +1,13 @@
+/**
+ * HCritic 代理模块
+ * 
+ * 设计质量门和评审代理，负责：
+ * 1. 在 HArchitect/HEngineer 完成任何阶段文档后必须调用
+ * 2. 提供结构化质量评估（完整性、一致性、可行性、符合性）
+ * 3. 使用阶段特定的检查清单进行技能驱动的评审
+ * 4. 在标记工作流阶段完成之前进行只读评审
+ */
+
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
 import { filePrompt, toolsPrompt } from "../factory"

@@ -1,7 +1,17 @@
+/**
+ * 工作流提示词加载模块
+ * 
+ * 负责加载工作流和阶段特定的提示词，包括：
+ * 1. 加载工作流级别的通用提示词
+ * 2. 加载阶段特定的提示词
+ * 3. 提供回退机制（当阶段特定提示词不存在时）
+ */
+
 import { readFileSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 import type { WorkflowDefinition } from "./types"
+import { HyperDesignerLogger } from "../../utils/logger"
 
 // Get the directory of the current module file
 const __filename = fileURLToPath(import.meta.url)
@@ -15,21 +25,45 @@ export function loadWorkflowPrompt(definition: WorkflowDefinition): string {
 
   if (definition.promptFile) {
     const workflowPromptPath = join(workflowDir, definition.promptFile)
-    console.log(`Loading workflow-level prompt from ${workflowPromptPath} for workflow "${definition.id}"`)
+    HyperDesignerLogger.debug("Workflow", `加载工作流级别提示词`, {
+      workflowId: definition.id,
+      promptFile: definition.promptFile,
+      path: workflowPromptPath
+    })
+    
     try {
       const rawPrompt = readFileSync(workflowPromptPath, "utf-8")
       if (!rawPrompt.trim()) {
-        console.error(`[ERROR] Workflow prompt file is empty: ${workflowPromptPath}`)
+        HyperDesignerLogger.error("Workflow", `工作流提示词文件为空`, new Error("Workflow prompt file is empty"), {
+          path: workflowPromptPath,
+          workflowId: definition.id,
+          action: "loadWorkflowPrompt"
+        })
         return ""
       }
+      
+      HyperDesignerLogger.debug("Workflow", `工作流提示词加载成功`, {
+        workflowId: definition.id,
+        promptLength: rawPrompt.length
+      })
+      
       return rawPrompt
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      console.error(`[ERROR] Failed to load workflow prompt: ${message}`)
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.error("Workflow", `加载工作流提示词失败`, err, {
+        path: workflowPromptPath,
+        workflowId: definition.id,
+        action: "loadWorkflowPrompt"
+      })
       return ""
     }
   }
 
+  HyperDesignerLogger.debug("Workflow", `工作流未定义提示词文件`, {
+    workflowId: definition.id,
+    action: "skipWorkflowPrompt"
+  })
+  
   return ""
 }
 
@@ -38,45 +72,114 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
 
   if (stage !== null) {
     const stageConfig = definition.stages[stage]
-    console.log(`Loading prompt for stage "${stage}" in workflow "${definition.id}"`)
+    HyperDesignerLogger.debug("Workflow", `加载阶段提示词`, {
+      workflowId: definition.id,
+      stage,
+      action: "loadStagePrompt"
+    })
+    
     if (!stageConfig) {
-      console.error(`[ERROR] Unknown stage: ${stage}. Available stages: ${Object.keys(definition.stages).join(', ')}`)
+      HyperDesignerLogger.error("Workflow", `未知的工作流阶段`, new Error(`Unknown stage: ${stage}`), {
+        workflowId: definition.id,
+        stage,
+        availableStages: Object.keys(definition.stages),
+        action: "validateStage"
+      })
       return ""
     }
 
     if (stageConfig.promptFile) {
       const stagePromptPath = join(workflowDir, stageConfig.promptFile)
-      console.log(`Loading stage-level prompt from ${stagePromptPath} for stage "${stage}"`)
+      HyperDesignerLogger.debug("Workflow", `加载阶段特定提示词文件`, {
+        workflowId: definition.id,
+        stage,
+        promptFile: stageConfig.promptFile,
+        path: stagePromptPath
+      })
+      
       try {
         const rawPrompt = readFileSync(stagePromptPath, "utf-8")
         if (!rawPrompt.trim()) {
-          console.error(`[ERROR] Stage prompt file is empty: ${stagePromptPath}`)
+          HyperDesignerLogger.error("Workflow", `阶段提示词文件为空`, new Error("Stage prompt file is empty"), {
+            workflowId: definition.id,
+            stage,
+            path: stagePromptPath,
+            action: "validatePromptContent"
+          })
           return ""
         }
+        
+        HyperDesignerLogger.debug("Workflow", `阶段提示词加载成功`, {
+          workflowId: definition.id,
+          stage,
+          promptLength: rawPrompt.length
+        })
+        
         return rawPrompt
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        console.error(`[ERROR] Failed to load prompt for stage "${stage}": ${message}`)
+        const err = error instanceof Error ? error : new Error(String(error))
+        HyperDesignerLogger.error("Workflow", `加载阶段提示词失败`, err, {
+          workflowId: definition.id,
+          stage,
+          path: stagePromptPath,
+          action: "loadStagePrompt"
+        })
         return ""
       }
     }
+    
+    HyperDesignerLogger.debug("Workflow", `阶段未定义提示词文件`, {
+      workflowId: definition.id,
+      stage,
+      action: "skipStagePrompt"
+    })
   } else if (definition.stageFallbackPromptFile) {
     const fallbackPromptPath = join(workflowDir, definition.stageFallbackPromptFile)
-    console.log(`No stage-specific prompt defined for stage "${stage}", loading fallback prompt from ${fallbackPromptPath}`)
+    HyperDesignerLogger.debug("Workflow", `加载回退提示词`, {
+      workflowId: definition.id,
+      stage,
+      fallbackFile: definition.stageFallbackPromptFile,
+      path: fallbackPromptPath,
+      action: "loadFallbackPrompt"
+    })
+    
     try {
       const rawPrompt = readFileSync(fallbackPromptPath, "utf-8")
       if (!rawPrompt.trim()) {
-        console.error(`[ERROR] Stage fallback prompt file is empty: ${fallbackPromptPath}`)
+        HyperDesignerLogger.error("Workflow", `回退提示词文件为空`, new Error("Stage fallback prompt file is empty"), {
+          workflowId: definition.id,
+          stage,
+          path: fallbackPromptPath,
+          action: "validateFallbackContent"
+        })
         return ""
       }
+      
+      HyperDesignerLogger.debug("Workflow", `回退提示词加载成功`, {
+        workflowId: definition.id,
+        stage,
+        promptLength: rawPrompt.length
+      })
+      
       return rawPrompt
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      console.error(`[ERROR] Failed to load fallback prompt for stage "${stage}": ${message}`)
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.error("Workflow", `加载回退提示词失败`, err, {
+        workflowId: definition.id,
+        stage,
+        path: fallbackPromptPath,
+        action: "loadFallbackPrompt"
+      })
       return ""
     }
   }
 
+  HyperDesignerLogger.debug("Workflow", `未找到阶段提示词`, {
+    workflowId: definition.id,
+    stage,
+    action: "noPromptFound"
+  })
+  
   return ""
 }
 

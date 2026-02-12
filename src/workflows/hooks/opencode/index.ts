@@ -1,3 +1,12 @@
+/**
+ * OpenCode 工作流钩子模块
+ * 
+ * 提供与 OpenCode 平台集成的工作流钩子，包括：
+ * 1. 事件处理：监听会话空闲事件，执行工作流交接
+ * 2. 系统消息转换：替换工作流相关的占位符令牌
+ * 3. 与 Hyper Designer 配置和工作流系统集成
+ */
+
 import { PluginInput } from "@opencode-ai/plugin"
 import {
   getWorkflowState,
@@ -7,6 +16,7 @@ import { getHandoverAgent, getHandoverPrompt } from "../../core/handover"
 import { loadWorkflowPrompt, loadStagePrompt } from "../../core/prompts"
 import { loadHDConfig } from "../../../config/loader"
 import { getWorkflowDefinition } from "../../core/registry"
+import { HyperDesignerLogger } from "../../../utils/logger"
 
 type PlaceholderResolver = {
   token: string
@@ -40,7 +50,12 @@ export async function createWorkflowHooks(ctx: PluginInput) {
   const workflow = getWorkflowDefinition(config.workflow || "classic")
 
   if (!workflow) {
-    console.error(`[ERROR] Failed to load workflow: ${config.workflow || "classic"}`)
+    HyperDesignerLogger.error("OpenCode", `加载工作流失败`, new Error(`Failed to load workflow: ${config.workflow || "classic"}`), {
+      workflowId: config.workflow || "classic",
+      action: "loadWorkflowDefinition",
+      recovery: "returnEmptyHooks"
+    })
+    
     return {
       event: async () => { },
       "experimental.chat.system.transform": async () => { },
@@ -75,13 +90,24 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
           const nextAgent = getHandoverAgent(workflow!, handoverPhase)
           if (!nextAgent) {
-            console.error(`[ERROR] Failed to get handover agent for phase: ${handoverPhase}`)
+            HyperDesignerLogger.error("OpenCode", `获取交接代理失败`, new Error(`Failed to get handover agent for phase: ${handoverPhase}`), {
+              phase: handoverPhase,
+              workflowId: workflow!.id,
+              action: "getHandoverAgent",
+              recovery: "skipHandover"
+            })
             return
           }
 
           const handoverContent = getHandoverPrompt(workflow!, currentPhase, handoverPhase)
           if (!handoverContent) {
-            console.error(`[ERROR] Failed to get handover prompt for phase: ${handoverPhase}`)
+            HyperDesignerLogger.error("OpenCode", `获取交接提示词失败`, new Error(`Failed to get handover prompt for phase: ${handoverPhase}`), {
+              phase: handoverPhase,
+              currentPhase,
+              workflowId: workflow!.id,
+              action: "getHandoverPrompt",
+              recovery: "skipHandover"
+            })
             return
           }
 

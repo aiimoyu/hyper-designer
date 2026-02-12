@@ -1,3 +1,14 @@
+/**
+ * HCollector 代理模块
+ * 
+ * 数据收集和需求收集专家，负责：
+ * 1. 在工作流开始时由 @HArchitect 委托进行数据收集
+ * 2. 进行用户访谈以澄清模糊需求
+ * 3. 收集参考资料和现有文档
+ * 4. 研究领域知识和类似系统
+ * 5. 为需求分析准备全面的上下文
+ */
+
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
 import { filePrompt, toolsPrompt } from "../factory"
