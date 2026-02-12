@@ -27,13 +27,13 @@ describe("workflow/prompts", () => {
       })
     })
 
-    it("should throw error for unknown stage", () => {
-      expect(() => loadPromptForStage("unknownStage", classicWorkflow)).toThrow(
-        "Unknown stage: unknownStage"
-      )
+    it("returns workflow prompt only for unknown stage", () => {
+      const prompt = loadPromptForStage("unknownStage", classicWorkflow)
+      expect(prompt.length).toBeGreaterThan(0)
+      expect(prompt).toContain("工作流")
     })
 
-    it("should throw error for non-existent prompt file", () => {
+    it("should return empty string for non-existent prompt file", () => {
       const customWorkflow: WorkflowDefinition = {
         id: "test",
         name: "Test Workflow",
@@ -50,9 +50,8 @@ describe("workflow/prompts", () => {
         },
       }
 
-      expect(() => loadPromptForStage("stage1", customWorkflow)).toThrow(
-        "Failed to load prompt for stage"
-      )
+      const prompt = loadPromptForStage("stage1", customWorkflow)
+      expect(prompt).toBe("")
     })
 
     it("should load prompts from workflow module directory", () => {

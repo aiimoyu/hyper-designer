@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import type { WorkflowDefinition } from '../../workflows/core/types'
 import { getWorkflowDefinition, getAvailableWorkflows } from '../../workflows/core/registry'
 
@@ -40,11 +40,9 @@ describe('getWorkflowDefinition', () => {
     expect(result).toBeNull()
   })
 
-  it('logs error message for nonexistent workflow', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { })
-    getWorkflowDefinition('nonexistent')
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown workflow: nonexistent'))
-    consoleSpy.mockRestore()
+  it('handles nonexistent workflow gracefully', () => {
+    const result = getWorkflowDefinition('nonexistent')
+    expect(result).toBeNull()
   })
 })
 

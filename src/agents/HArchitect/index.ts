@@ -56,13 +56,12 @@ const DEFINITION: AgentDefinition = {
   promptGenerators: [
     filePrompt(join(__dirname,"prompts", "identity.md")),
     filePrompt(join(__dirname, "prompts", "constraints.md")),
+    toolsPrompt(["ask_user", "task"]),
     filePrompt(join(__dirname, "prompts", "step.md")),
-    filePrompt(join(__dirname, "prompts", "workflow.md")),
-    stringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),
-    stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
     filePrompt(join(__dirname, "prompts", "standard.md")),
     filePrompt(join(__dirname, "prompts", "interview.md")),
-    toolsPrompt(["ask_user", "task"]),
+    stringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),
+    stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
   ],
   defaultPermission: {
     bash: "deny",

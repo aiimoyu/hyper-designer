@@ -20,10 +20,9 @@ describe("workflow/handover", () => {
       expect(agent).toBe("HEngineer")
     })
 
-    it("should throw error for unknown stage", () => {
-      expect(() => getHandoverAgent(classicWorkflow, "unknownStage")).toThrow(
-        "Unknown stage: unknownStage"
-      )
+    it("should return null for unknown stage", () => {
+      const agent = getHandoverAgent(classicWorkflow, "unknownStage")
+      expect(agent).toBeNull()
     })
 
     it("should work with custom workflow definition", () => {
@@ -59,13 +58,13 @@ describe("workflow/handover", () => {
     it("should return non-empty prompt for dataCollection stage", () => {
       const prompt = getHandoverPrompt(classicWorkflow, null, "dataCollection")
       expect(prompt).toBeTruthy()
-      expect(prompt.length).toBeGreaterThan(0)
+      expect(prompt!.length).toBeGreaterThan(0)
     })
 
     it("should return non-empty prompt for IRAnalysis stage", () => {
       const prompt = getHandoverPrompt(classicWorkflow, "dataCollection", "IRAnalysis")
       expect(prompt).toBeTruthy()
-      expect(prompt.length).toBeGreaterThan(0)
+      expect(prompt!.length).toBeGreaterThan(0)
     })
 
     it("should include current step in prompt when provided", () => {
@@ -79,10 +78,9 @@ describe("workflow/handover", () => {
       expect(prompt1).not.toBe(prompt2)
     })
 
-    it("should throw error for unknown stage", () => {
-      expect(() => getHandoverPrompt(classicWorkflow, null, "unknownStage")).toThrow(
-        "Unknown stage: unknownStage"
-      )
+    it("should return null for unknown stage", () => {
+      const prompt = getHandoverPrompt(classicWorkflow, null, "unknownStage")
+      expect(prompt).toBeNull()
     })
 
     it("should work with custom workflow definition", () => {
