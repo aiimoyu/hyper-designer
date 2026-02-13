@@ -6,7 +6,9 @@
 
 ### 1. 输入与资料收集
 
-在开始执行前，必须通过 `document-collector` skill 完成以下资料收集。所需的 **4大类资料** 如下：
+**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+
+所需的 **资料类别定义** 如下：
 
 | 资料类别 | 关键内容 | 必需性 | 用途说明 |
 | :--- | :--- | :--- | :--- |
@@ -15,12 +17,29 @@
 | **领域资料**<br>(技术约束) | 部署环境、性能要求 | 必需 | 确定技术边界与设计约束 |
 | **代码库资料**<br>(参考模式) | 参考项目架构模式 | 可选 | 架构参考、最佳实践 |
 
-**收集动作：**
+**资料收集流程**：
 
-1. 读取 functionalRefinement 阶段输出的功能列表，作为分解的权威输入。
-2. 询问并获取现有系统架构文档（若为重构/迁移项目），包含部署拓扑、模块清单与第三方依赖。
-3. 收集技术约束信息：部署环境（云/本地）、性能/并发目标、数据保留/合规性、硬件限制等。
-4. 搜索并参考相似开源/企业项目的架构模式（可选），作为实现参考与最佳实践。
+1. **准备 HCollector 输入**：
+   ```json
+   {
+     "stage": "requirementDecomposition",
+     "status": "init",
+     "required_assets": [
+       { "category": "系统需求分析资料(前阶段输出)", "description": "分解的权威输入，建立SR-AR映射（功能列表）" },
+       { "category": "系统设计资料(现有架构)", "description": "重构/迁移项目的部署拓扑与模块清单（现有系统架构文档）" },
+       { "category": "领域资料(技术约束)", "description": "确定技术边界与设计约束（部署环境、性能要求）" },
+       { "category": "代码库资料(参考模式)", "description": "架构参考、最佳实践（参考项目架构模式）" }
+     ]
+   }
+   ```
+
+2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
+
+3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
+
+4. **收集完成**：HCollector 将自动生成 `.hyper-designer/requirementDecomposition/document/manifest.md` 和 `draft.md`。
+
+详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**（此协议在 HArchitect 提示词中定义，HEngineer 继承相同流程）。
 
 ### 2. 执行规范与 Skill 使用
 

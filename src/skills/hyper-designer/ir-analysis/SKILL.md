@@ -36,12 +36,12 @@ Follow the 4-round questioning framework (see [socratic-guide.md](references/soc
 
 ### 3. Gather Context
 
-Read relevant documents from `.hyper-designer/document/manifest.md` if exists:
+Read relevant documents from `.hyper-designer/{stage}/document/manifest.md` if exists (where `{stage}` is the current stage name, e.g., `dataCollection`):
 
 ```typescript
 // Check for existing documents
 if (documentIndexExists) {
-  Read(".hyper-designer/document/manifest.md");
+  Read(".hyper-designer/{stage}/document/manifest.md");
   // Look for domain information, existing requirements, or context
 }
 ```

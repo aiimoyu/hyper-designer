@@ -11,7 +11,7 @@
 - 系统需求分析资料（场景库、FMEA库、功能库）
 - 系统设计资料（架构图、模块设计、接口文档）
 
-完成后将生成资料索引文档 `.hyper-designer/document/manifest.md`。
+完成后将生成资料索引文档 `.hyper-designer/dataCollection/document/manifest.md`。
 
 ## 质量审核要求
 

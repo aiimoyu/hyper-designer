@@ -100,7 +100,7 @@
 
 | 名称 | 路径/地址 | 描述 | 用途 | 分析结果摘要 |
 | ---- | --------- | ---- | ---- | ------------ |
-| pytorch/torch | .hyper-designer/document/external-projects/pytorch/ | 张量计算库 | 对标实现参考 | autograd 机制基于 DAG，支持动态图 |
+| pytorch/torch | .hyper-designer/{stage}/document/external-projects/pytorch/ | 张量计算库 | 对标实现参考 | autograd 机制基于 DAG，支持动态图 |
 | RESTful API 规范 | https://restfulapi.net/ | API 设计规范 | 接口设计参考 | 核心约束：无状态、统一接口、HATEOAS |
 
 ### {资料类别C}

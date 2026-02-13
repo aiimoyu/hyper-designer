@@ -77,7 +77,7 @@ graph TB
 
     subgraph "持久化层"
         StateFile[.hyper-designer/<br/>workflow_state.json]
-        OutputDoc[.hyper-designer/document/<br/>输出文档]
+        OutputDoc[.hyper-designer/{stage}/document/<br/>阶段文档输出]
     end
 
     User --> OpenCode

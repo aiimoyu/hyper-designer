@@ -6,7 +6,9 @@
 
 ### 1. 输入与资料收集
 
-在开始执行前，必须通过 `document-collector` skill 完成以下资料收集。所需的 **4大类资料** 如下：
+**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+
+所需的 **资料类别定义** 如下：
 
 | 资料类别 | 关键内容 | 必需性 | 用途说明 |
 | :--- | :--- | :--- | :--- |
@@ -15,12 +17,29 @@
 | **代码库资料**<br>(接口规范) | API 设计规范、协议标准 | 可选 | 接口契约定义参考 |
 | **代码库资料**<br>(开源实现) | 开源同类模块实现 | 可选 | 详细设计参考 |
 
-**收集动作：**
+**资料收集流程**：
 
-1. 从工作流状态或阶段输出目录读取 system-design.md 文档（必须）。
-2. 与需求方或接口拥有者确认接口契约（路径、方法、输入输出示例、错误码、版本兼容性）。
-3. 在开源仓库和内部库中搜索参考实现与设计模式，收集有代表性的实现片段和架构决策记录。
-4. 收集并整理测试策略参考（单元/集成/契约测试示例、性能基准、mock 数据模板）。
+1. **准备 HCollector 输入**：
+   ```json
+   {
+     "stage": "moduleFunctionalDesign",
+     "status": "init",
+     "required_assets": [
+       { "category": "系统设计资料(前阶段输出)", "description": "系统架构、模块划分与接口契约（system-design.md）" },
+       { "category": "系统设计资料(模块参考)", "description": "设计模式与最佳实践参考（同类模块设计方案）" },
+       { "category": "代码库资料(接口规范)", "description": "接口契约定义参考（API 设计规范、协议标准）" },
+       { "category": "代码库资料(开源实现)", "description": "详细设计参考（开源同类模块实现）" }
+     ]
+   }
+   ```
+
+2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
+
+3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
+
+4. **收集完成**：HCollector 将自动生成 `.hyper-designer/moduleFunctionalDesign/document/manifest.md` 和 `draft.md`。
+
+详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**（此协议在 HArchitect 提示词中定义，HEngineer 继承相同流程）。
 
 ### 2. 执行规范与 Skill 使用
 

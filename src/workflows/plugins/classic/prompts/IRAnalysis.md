@@ -6,13 +6,38 @@
 
 ### 1. 输入与资料收集
 
-在开始执行前，严格按照 `document-collector` skill 的步骤完成资料索引。所需的 **4大类资料** 如下：
+**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+
+所需的 **资料类别定义** 如下：
 
 | 资料类别 | 关键内容 | 必需性 | 用途说明 |
 | :--- | :--- | :--- | :--- |
 | **Codebase Assets**<br>(代码库资料) | 现有项目源码 (`src/`, `lib/`) | 如有则必需 | 理解现有系统架构与技术栈 |
 | **Domain Knowledge**<br>(领域资料) | 行业标准、合规文档、业务术语表 | 必需 | 确保需求符合行业规范与业务逻辑 |
 | **Reference Projects**<br>(参考资料) | 对标项目链接、开源实现参考 | 可选 | 提供技术选型与功能实现的对标参考 |
+
+**资料收集流程**：
+
+1. **准备 HCollector 输入**：
+   ```json
+   {
+     "stage": "IRAnalysis",
+     "status": "init",
+     "required_assets": [
+       { "category": "Codebase Assets", "description": "理解现有系统架构与技术栈" },
+       { "category": "Domain Knowledge", "description": "确保需求符合行业规范与业务逻辑" },
+       { "category": "Reference Projects", "description": "提供技术选型与功能实现的对标参考" }
+     ]
+   }
+   ```
+
+2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
+
+3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
+
+4. **收集完成**：HCollector 将自动生成 `.hyper-designer/IRAnalysis/document/manifest.md` 和 `draft.md`。
+
+详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**。
 
 ### 2. 执行规范与 Skill 使用
 

@@ -26,24 +26,25 @@ export const HCOLLECTOR_PROMPT_METADATA: AgentPromptMetadata = {
   category: "specialist",
   cost: "EXPENSIVE",
   promptAlias: "HCollector",
-  keyTrigger: "Data collection phase - typically delegated by @HArchitect at workflow start. Gathers reference materials, interviews users, and prepares context for requirements analysis.",
+  keyTrigger: "Workflow initialization phase. Delegated by HArchitect to perform pre-scanning, structured user interviews via I/O protocol, and generate data manifest. Operates strictly as a stateful Subagent.",
   triggers: [
-    { domain: "Data Collection", trigger: "Start of workflow - need to collect reference materials, existing docs, and user context" },
-    { domain: "Requirements Gathering", trigger: "User has vague ideas - need interview mode to extract structured information" },
-    { domain: "Research", trigger: "Need to investigate existing solutions, similar systems, or domain knowledge" },
+    { domain: "Initialization", trigger: "Workflow start - requires pre-scanning codebase and establishing draft state in .hyper-designer" },
+    { domain: "Data Collection", trigger: "Structured interview needed to fill missing gaps in required assets list (Input: status=init)" },
+    { domain: "Indexing", trigger: "Need to finalize collection and generate manifest.md for a specific stage (State: Finalizing)" },
   ],
   useWhen: [
-    "HArchitect delegates data collection phase at workflow start",
-    "User provides vague or incomplete requirements - need interview to clarify",
-    "Need to collect reference materials, existing documentation, or context",
-    "Research phase before formal requirements analysis",
-    "Starting a new project with unclear scope - need discovery phase",
+    "Starting a new workflow stage that requires specific reference materials (assets list provided)",
+    "Need to scan existing project structure for relevant files without executing tasks",
+    "Require stateful, multi-turn interaction to collect missing documents (handles 'ask_user' loops)",
+    "Generating the .hyper-designer/{stage}/document/manifest.md index",
+    "HArchitect explicitly delegates the collection phase with a defined 'required_assets' structure",
   ],
   avoidWhen: [
-    "Requirements are already clear and well-documented",
-    "Data collection already complete (HArchitect takes over)",
-    "Simple feature with explicit specifications",
-    "Mid-workflow stages (IR Analysis onwards - handled by HArchitect/HEngineer)",
+    "Direct conversation with user is needed (HCollector uses structured JSON I/O only, cannot chat freely)",
+    "Execution of coding tasks, building, or deploying (Violates core constraints)",
+    "Simple queries that don't require persistent state or multi-round collection",
+    "Analysis or design phases that follow data collection (handled by HArchitect/HEngineer)",
+    "When no specific 'required assets' list is available for the current stage (Input validation failure)",
   ],
 }
 
@@ -51,16 +52,12 @@ const DEFINITION: AgentDefinition = {
   name: "HCollector",
   description:
     "Data Collection & Requirements Gathering Specialist - Typically delegated by @HArchitect at workflow start. Conducts user interviews to clarify vague requirements, collects reference materials and existing documentation, researches domain knowledge and similar systems. Prepares comprehensive context for requirements analysis. Read-mostly agent focused on discovery and information gathering. (HCollector - OhMyOpenCode)",
-  mode: "all",
+  mode: "subagent",
   color: "#63B232",
   defaultTemperature: 0.3,
   promptGenerators: [
-    filePrompt(join(__dirname, "prompts", "identity.md")),
-    filePrompt(join(__dirname, "prompts", "constraints.md")),
-    filePrompt(join(__dirname, "prompts", "step.md")),
-    filePrompt(join(__dirname, "prompts", "standard.md")),
-    filePrompt(join(__dirname, "prompts", "interview.md")),
-    toolsPrompt(["ask_user", "task"]),
+    filePrompt(join(__dirname, "prompts", "collector.md")),
+    filePrompt(join(__dirname, "prompts", "interview-protocol.md")),
   ],
   defaultPermission: {
     bash: "deny",
@@ -92,7 +89,7 @@ const DEFINITION: AgentDefinition = {
     get_hd_workflow_state: true,
     set_hd_workflow_stage: false,
     set_hd_workflow_current: false,
-    set_hd_workflow_handover: true,
+    set_hd_workflow_handover: false,
   },
 }
 

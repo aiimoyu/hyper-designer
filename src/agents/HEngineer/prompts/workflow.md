@@ -33,7 +33,7 @@ HEngineer管理以下2个核心阶段的工作流：
 3. **阅读资料索引**
 
    ```
-   读取 .hyper-designer/document/manifest.md
+   读取 .hyper-designer/{stage}/document/manifest.md（`{stage}` 为当前阶段名称，如 dataCollection）
    查找该阶段相关的参考资料
    **如果资料索引中有相应步骤的资料，必须使用**
    ```

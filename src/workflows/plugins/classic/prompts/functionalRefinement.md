@@ -6,7 +6,9 @@
 
 ### 1. 输入与资料收集
 
-在开始执行前，必须通过 `document-collector` skill 完成以下资料收集。所需的 **4大类资料** 如下：
+**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+
+所需的 **资料类别定义** 如下：
 
 | 资料类别 | 关键内容 | 必需性 | 用途说明 |
 | :--- | :--- | :--- | :--- |
@@ -14,11 +16,28 @@
 | **系统需求分析资料**<br>(风险参考) | FMEA库、历史故障记录 | 如有则必需 | 风险识别、失效模式分析 |
 | **领域资料**<br>(业务优先级) | 产品经理优先级、商业目标 | 参考用 | 辅助 MoSCoW 排序决策 |
 
-**收集动作：**
+**资料收集流程**：
 
-1. 读取 useCaseAnalysis 阶段输出的用例文档，提取完整功能清单。
-2. 询问用户是否有历史故障记录或FMEA风险分析资料。
-3. 收集业务优先级参考（产品经理、stakeholder提供的优先级、商业目标）。
+1. **准备 HCollector 输入**：
+   ```json
+   {
+     "stage": "functionalRefinement",
+     "status": "init",
+     "required_assets": [
+       { "category": "系统需求分析资料(前阶段输出)", "description": "提取功能清单，建立功能与用例的映射（用例文档）" },
+       { "category": "系统需求分析资料(风险参考)", "description": "风险识别、失效模式分析（FMEA库、历史故障记录）" },
+       { "category": "领域资料(业务优先级)", "description": "辅助 MoSCoW 排序决策（产品经理优先级、商业目标）" }
+     ]
+   }
+   ```
+
+2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
+
+3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
+
+4. **收集完成**：HCollector 将自动生成 `.hyper-designer/functionalRefinement/document/manifest.md` 和 `draft.md`。
+
+详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**。
 
 ### 2. 执行规范与 Skill 使用
 

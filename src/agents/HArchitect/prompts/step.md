@@ -6,7 +6,7 @@
 
 ```
 Step 1: Drafting & Planning (use specific skills)
-Step 2: Interactive Context Collection (use `document-collector` skill)
+Step 2: Interactive Context Collection (delegate to HCollector subagent)
 Step 3: Context Loading
 Step 4: Execution & Interaction -> Loop until done
 Step 5: HCritic Review -> If failed, back to Step 4
@@ -48,27 +48,67 @@ graph TD
 
 ### Step 2: Interactive Context Collection
 
-**🎯 Goal:** 基于 `document-collector` skill，完备本阶段所需的知识库。
+**🎯 Goal:** 通过委托 `HCollector` 设计访谈框架，由你执行访谈以完备阶段所需知识库。
 
-**✅ Actions (Strict Sequence):**
+**🔄 Core Protocol (访谈委托模式)**
 
-1. **Requirement Check**: 读取当前阶段定义，确定 "Required Materials" 清单。
-2. **Project Scan**: 使用 `Glob`/`LS`/`Grep` **预扫描**项目现有文件，列出发现的文档清单。
-3. **Accuracy Confirmation**: **[必须交互]** 使用 `ask_user` 展示预扫描结果，询问用户：“预扫描到的文档是否准确？是否有误识别？”
-4. **Gap Interaction**: **[必须交互]** 根据清单对比结果，**逐项**向用户询问：“当前缺少 [文件名]，是否需要补充？请提供位置或内容。”
-5. **Deep Collection** (若需):
-    * 调用 `explore` agent 分析代码库。
-    * 调用 `librarian` agent 检索外部文档。
-    * 使用 `webfetch/websearch` 获取在线资源。
-6. **Update Manifest**: 汇总资料至 `.hyper-designer/document/manifest.md`。
+遵循“设计-执行-反馈”循环：`HCollector` 负责逻辑设计，你负责用户交互。
 
-**🚫 Prohibitions:**
+**✅ Execution Workflow**
 
-* **严禁**仅执行预扫描而不进行用户交互。
-* **严禁**跳过“确认准确性”或“逐项询问补充”的步骤。
-* 禁止不使用 `document-collector` skill。
-* 禁止假设资料不存在而不询问用户。
-* 禁止收集与当前阶段无关的冗余资料。
+**1. Initiate Delegation**
+调用 `HCollector`，传入当前阶段所需资料：
+
+```json
+{
+  "stage": "{当前阶段}",
+  "status": "init",
+  "required_assets": [{ "category": "名称", "description": "用途" }]
+}
+```
+
+**2. Handle Response Loop**
+根据 `HCollector` 返回的 `action` 执行对应操作：
+
+* **若 `action: "conduct_interview"`**：执行**访谈流程**（见下文）。
+* **若 `action: "finish"`**：资料收集完成（已生成 `manifest.md`），进入 Step 3。
+
+**🎙️ Interview Execution Process**
+
+当收到 `interview_framework` 时，按以下步骤执行：
+
+1. **Initialize**: 设定当前问题ID为 `start_question`。
+2. **Interview Loop**:
+    * **Ask**: 使用 `ask_user` 提问。根据上下文调整措辞，若是选择题列出选项。
+    * **Record**: 记录答案至 `answers` 数组。
+    * **Route**: 解析 `next` 字段确定下一题：
+        * **字符串**: 直接作为下一题ID。
+        * **对象**: 评估 `conditions` (支持 `==`, `includes` 等逻辑)，匹配成功则跳转 `then`，否则走 `default`。
+    * **Check End**: 若下一题ID为 `END` 或 `null`，结束循环；否则更新ID继续。
+3. **Report Results**
+    再次调用 `HCollector`，提交访谈结果：
+
+    ```json
+    {
+      "stage": "{阶段}",
+      "status": "interview_result",
+      "interview_result": {
+        "session_id": "{框架提供的ID}",
+        "completed": true,
+        "answers": [{ "question_id": "Q1", "answer": "用户回答" }],
+        "notes": "记录异常或用户犹豫（可选）"
+      }
+    }
+    ```
+
+    *注意：`HCollector` 可能再次返回 `conduct_interview` 以补充信息，需重复执行此流程。*
+
+**⚠️ Constraints**
+
+* **Must Delegate**: 严禁跳过 `HCollector` 直接收集资料。
+* **Follow Framework**: 必须严格遵循框架提问，不得擅自删减问题或修改跳转逻辑。
+* **Proxy Role**: 你是执行代理，仅负责交互与记录，不要自行决定是否完成收集。
+* **Error Handling**: 若用户拒绝回答必答题，在 `notes` 中记录并继续流程（除非用户要求终止）。
 
 ### Step 3: Context Loading
 
@@ -76,7 +116,7 @@ graph TD
 
 **✅ Actions:**
 
-1. **Read Manifest**: 读取 `.hyper-designer/document/manifest.md` 获取参考资料索引。
+1. **Read Manifest**: 读取 `.hyper-designer/{stage}/document/manifest.md` 获取参考资料索引（`{stage}` 为当前阶段名称）。
 2. **Load History**: 读取上一阶段的输出件，对齐当前状态。
 
 ### Step 4: Execution & Interaction

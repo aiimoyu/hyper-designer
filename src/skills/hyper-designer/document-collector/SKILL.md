@@ -13,7 +13,7 @@ description: |
   - Used when a structured, user-verified inventory of codebases or documents is needed.
 
   **Output**:
-  Produces `.hyper-designer/document/draft.md` (process log) and `.hyper-designer/document/manifest.md` (final index).
+  Produces `.hyper-designer/{stage}/document/draft.md` (process log) and `.hyper-designer/{stage}/document/manifest.md` (final index), where `{stage}` is the current stage name.
 ---
 
 # 资料收集
@@ -51,7 +51,7 @@ description: |
 1.  **加载上下文**：
     - 提取**当前阶段名称**及**本阶段所需资料类别**。
 2.  **复用检查（关键！）**：
-    - 读取 `.hyper-designer/document/manifest.md`（若存在）。
+    - 读取 `.hyper-designer/{stage}/document/manifest.md`（若存在，`{stage}` 为当前阶段名称）。
     - 识别已收集的资料中，哪些是本阶段依赖的（如：通用规范、基础组件文档）。
     - 将这些资料标记为 **[已索引-复用]**，后续步骤跳过收集，仅在草稿中引用。
 3.  **界定扫描范围**：
@@ -135,7 +135,7 @@ description: |
 
 ### Step 5: 生成索引并退出
 
-1.  汇总草稿内容，更新 `manifest.md`。
+1.  汇总草稿内容，更新 `{stage}/document/manifest.md`（`{stage}` 为当前阶段名称）。
 2.  **索引结构**：
     - **当前阶段区块**：包含新收集的资料和复用的资料引用。
     - **复用标记**：明确区分 `[新搜集]` 和 `[复用自XX阶段]`。
@@ -146,7 +146,7 @@ description: |
 ### 目录结构
 
 ```
-.hyper-designer/document/
+.hyper-designer/{stage}/document/  # {stage} 为当前阶段名称
 ├── draft.md                  # 收集过程草稿
 ├── manifest.md               # 最终资料索引
 ├── external-projects/        # 外部参考项目
@@ -164,7 +164,7 @@ description: |
 
 **本次目标**：收集实现 {当前阶段任务} 所需资料。
 
-**复用资产（来自 manifest.md）**：
+**复用资产（来自 {stage}/document/manifest.md，`{stage}` 为资料收集所在阶段）**：
 | 资料名称 | 来源阶段 | 用途 | 状态 |
 | --- | --- | --- | --- |
 | api-spec.md | 需求分析 | 接口定义参考 | [复用] |

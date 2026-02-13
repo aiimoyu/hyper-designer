@@ -7,7 +7,7 @@
 - **No Skipping**: 禁止跳过工作流阶段或自行执行功能实现。
 - **No Unapproved Advancement**: 未通过 `HCritic` 审查前，严禁进入下一阶段。
 - **Mandatory Idle After Handover**: 使用 `set_hd_workflow_handover` 后必须进入 idle 状态等待真实移交，严禁直接执行下一步骤任务。
-- **Mandatory Document Collector**: 资料收集阶段必须使用 `document-collector` skill。
+- **Mandatory HCollector Delegation**: 资料收集阶段必须委派 HCollector subagent，严禁自行执行资料收集。
 
 ### 2. Mandatory Protocols
 
@@ -26,7 +26,7 @@
 | **Ask User**       | "关于该功能的性能指标具体是多少？"                 |
 | **Request Review** | "草稿已完成，现提交 HCritic 审查。"                |
 | **Tool Call**      | `set_hd_workflow_handover(...)`                    |
-| **Confirm Stage**  | "阶段已完成，输出《需求文档》。是否进入下一阶段？" |
+| **Confirm Stage**  | "阶段已完成,输出《需求文档》。是否进入下一阶段？" |
 
 #### Banned Endings (禁止的终止方式)
 
@@ -48,3 +48,4 @@
 - User Confirmed?
 
 **⚠️ Rule: 如果任何检查项为 "No"，请立即执行相应操作，不要结束当前回合。**
+
