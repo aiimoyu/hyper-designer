@@ -93,12 +93,12 @@ IRAnalysis → scenarioAnalysis → useCaseAnalysis → functionalRefinement →
 13. ✅ `src/workflows/plugins/classic/prompts/moduleFunctionalDesign.md` - 添加资料收集说明
 
 ### Definition of Done
-- [ ] 所有文件修改完成
-- [ ] `npm run typecheck` 通过
-- [ ] 工作流定义无 dataCollection 阶段
-- [ ] step.md 包含8个步骤（新增步骤2）
-- [ ] 各阶段提示词包含：收集材料、输出件、skill、审查要点
-- [ ] 首次启动逻辑不再引用 dataCollection
+- [x] 所有文件修改完成
+- [x] `npm run typecheck` 通过
+- [x] 工作流定义无 dataCollection 阶段
+- [x] step.md 包含8个步骤（新增步骤2）
+- [x] 各阶段提示词包含：收集材料、输出件、skill、审查要点
+- [x] 首次启动逻辑不再引用 dataCollection
 
 ### Must Have
 - 删除 dataCollection 阶段定义
@@ -321,7 +321,7 @@ Phase 4: 清理（最后执行）
 
 ### Phase 2: HArchitect 提示词修改
 
-- [ ] 3. 修改 step.md - 插入新的步骤2用于资料收集
+- [x] 3. 修改 step.md - 插入新的步骤2用于资料收集
 
   **What to do**:
   1. 在步骤1和原步骤2之间插入新的步骤2
@@ -407,7 +407,7 @@ Phase 4: 清理（最后执行）
   - Message: `feat(harchitect): add step 2 for document collection in step.md`
   - Files: `src/agents/HArchitect/prompts/step.md`
 
-- [ ] 4. 修改 interview.md - 更新首次启动流程
+- [x] 4. 修改 interview.md - 更新首次启动流程
 
   **What to do**:
   1. 修改"首次启动流程"部分，currentStep === null 时直接启动 IRAnalysis
@@ -441,7 +441,7 @@ Phase 4: 清理（最后执行）
   - Message: `refactor(harchitect): update first-time startup to skip dataCollection`
   - Files: `src/agents/HArchitect/prompts/interview.md`
 
-- [ ] 5. 修改 constraints.md - 更新首次启动检查清单
+- [x] 5. 修改 constraints.md - 更新首次启动检查清单
 
   **What to do**:
   1. 修改"强制检查清单"中关于首次启动的条目
@@ -573,7 +573,7 @@ Phase 4: 清理（最后执行）
 - **代码库资料**：接口定义参考
 - **代码库资料**：参考实现（同类模块的实现方案）
 
-- [ ] 6. 修改 IRAnalysis.md
+- [x] 6. 修改 IRAnalysis.md
 
   **所需资料**（基于 HCollector 4大类）：
   
@@ -611,7 +611,7 @@ Phase 4: 清理（最后执行）
   - Message: `docs(classic): update IRAnalysis.md with document collection requirements`
   - Files: `src/workflows/plugins/classic/prompts/IRAnalysis.md`
 
-- [ ] 7. 修改 scenarioAnalysis.md
+- [x] 7. 修改 scenarioAnalysis.md
 
   **所需资料**（基于 HCollector 4大类）：
   
@@ -649,7 +649,7 @@ Phase 4: 清理（最后执行）
   - Message: `docs(classic): update scenarioAnalysis.md with document collection requirements`
   - Files: `src/workflows/plugins/classic/prompts/scenarioAnalysis.md`
 
-- [ ] 8. 修改 useCaseAnalysis.md
+- [x] 8. 修改 useCaseAnalysis.md
 
   **所需资料**（基于 HCollector 4大类）：
   
@@ -686,7 +686,7 @@ Phase 4: 清理（最后执行）
   - Message: `docs(classic): update useCaseAnalysis.md with document collection requirements`
   - Files: `src/workflows/plugins/classic/prompts/useCaseAnalysis.md`
 
-- [ ] 9. 修改 functionalRefinement.md
+- [x] 9. 修改 functionalRefinement.md
 
   **所需资料**（基于 HCollector 4大类）：
   
@@ -724,7 +724,7 @@ Phase 4: 清理（最后执行）
   - Message: `docs(classic): update functionalRefinement.md with document collection requirements`
   - Files: `src/workflows/plugins/classic/prompts/functionalRefinement.md`
 
-- [ ] 10. 修改 requirementDecomposition.md
+- [x] 10. 修改 requirementDecomposition.md
 
   **所需资料**（基于 HCollector 4大类）：
   
@@ -763,7 +763,7 @@ Phase 4: 清理（最后执行）
   - Message: `docs(classic): update requirementDecomposition.md with document collection requirements`
   - Files: `src/workflows/plugins/classic/prompts/requirementDecomposition.md`
 
-- [ ] 11. 修改 systemFunctionalDesign.md
+- [x] 11. 修改 systemFunctionalDesign.md
 
   **所需资料**（基于 HCollector 4大类）：
 
@@ -802,7 +802,7 @@ Phase 4: 清理（最后执行）
   - Message: `docs(classic): update systemFunctionalDesign.md with document collection requirements`
   - Files: `src/workflows/plugins/classic/prompts/systemFunctionalDesign.md`
 
-- [ ] 12. 修改 moduleFunctionalDesign.md
+- [x] 12. 修改 moduleFunctionalDesign.md
 
   **所需资料**（基于 HCollector 4大类）：
 
@@ -843,7 +843,7 @@ Phase 4: 清理（最后执行）
 
 ### Phase 4: 清理
 
-- [ ] 13. 删除 dataCollection.md 文件
+- [x] 13. 删除 dataCollection.md 文件
 
   **What to do**:
   1. 删除 `src/workflows/plugins/classic/prompts/dataCollection.md` 文件
@@ -922,13 +922,13 @@ grep "stageOrder" src/workflows/plugins/classic/definition.ts -A 10 | grep "IRAn
 ```
 
 ### Final Checklist
-- [ ] dataCollection 从 workflow 定义中完全移除
-- [ ] step.md 包含8个步骤，新步骤2明确定义
-- [ ] 首次启动逻辑指向 IRAnalysis
-- [ ] 各阶段提示词包含：所需资料、输出件、skill、审查要点
-- [ ] dataCollection.md 文件已删除
-- [ ] Type check 通过
-- [ ] 所有修改文件已提交（13个提交）
+- [x] dataCollection 从 workflow 定义中完全移除
+- [x] step.md 包含8个步骤，新步骤2明确定义
+- [x] 首次启动逻辑指向 IRAnalysis
+- [x] 各阶段提示词包含：所需资料、输出件、skill、审查要点
+- [x] dataCollection.md 文件已删除
+- [x] Type check 通过
+- [x] 所有修改文件已提交（13个提交）
 
 ---
 

@@ -18,6 +18,8 @@
 
 **工作流顺序**：草稿规划 → 执行工作 → HCritic审查 → 用户确认 → 阶段交接 → idle等待
 
+**工作交接**：每个阶段结束时，必须调用workflow工具的set_hd_workflow_handover方法，必须直接进入idle。
+
 ### 唯一输出
 
 - 向用户提问、通过explore/librarian研究
@@ -48,7 +50,7 @@
 
 ```
 □ 我是否检查了工作流状态？
-□ 如果 currentStep === null，我是否直接启动dataCollection阶段？
+□ 如果 currentStep === null，我是否直接启动IRAnalysis阶段？
 □ 如果 currentStep === null，我是否避免向用户提出澄清问题？
 □ 我是否确认了当前阶段的skill已加载？
 □ 我是否遵循skill中的指导方法和文档结构？

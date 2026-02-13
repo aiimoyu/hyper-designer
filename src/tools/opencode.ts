@@ -3,55 +3,158 @@ import type { ToolSyntaxRegistry } from "./index";
 export const OPENCODE_TOOL_SYNTAX: ToolSyntaxRegistry = {
   ask_user: {
     uniName: "ask_user",
-    description: "向用户提出问题并获取回答",
-    syntax: "question({questions: [{header, question, multiple, options}]})",
+    description: "Ask the user clarifying questions when you need more information to proceed. Use this tool to present multiple-choice options to the user and get their selection. Each question can have multiple options with labels and descriptions. Supports both single-select and multi-select modes.",
+    syntax: "question({questions: [{header, question, multiple?, options: [{label, description}]}]})",
     example: `question({
   questions: [{
-    header: "确认",
-    question: "请确认以下内容：",
+    header: "Confirmation",
+    question: "Please confirm the following:",
     multiple: false,
     options: [
-      { label: "确认", description: "同意继续" },
-      { label: "取消", description: "不同意" }
+      { label: "Confirm", description: "Agree to proceed" },
+      { label: "Cancel", description: "Do not agree" }
     ]
   }]
 })`,
   },
 
+  skill: {
+    uniName: "skill",
+    description: "Load a specialized skill that provides domain-specific instructions and workflows. When you recognize that a task matches one of the available skills, use this tool to load the full skill instructions. The skill will inject detailed instructions, workflows, and access to bundled resources into the conversation context.",
+    syntax: `skill({
+  name: string                   // The name of the skill from available_skills
+})`,
+    example: `skill({
+  name: "git-master"
+})`,
+  },
+
+  websearch: {
+    uniName: "websearch",
+    description: "Search the web for any topic and get clean, ready-to-use content. Best for: Finding current information, news, facts, or answering questions about any topic. Returns: Clean text content from top search results, ready for LLM use.",
+    syntax: `websearch({
+  query: string,                 // Websearch query
+  numResults?: number,           // Number of search results to return (default: 8)
+  livecrawl?: "fallback" | "preferred",  // Live crawl mode (default: "fallback")
+  type?: "auto" | "fast" | "deep",       // Search type (default: "auto")
+  contextMaxCharacters?: number  // Maximum characters for context (default: 10000)
+})`,
+    example: `websearch({
+  query: "latest React features 2025",
+  numResults: 5,
+  type: "fast"
+})`,
+  },
+
+  webfetch: {
+    uniName: "webfetch",
+    description: "Fetch content from a specific URL. Use this when you need to retrieve and analyze web content, documentation, or articles. Supports converting HTML to markdown or plain text. Can also fetch images and return them as attachments.",
+    syntax: `webfetch({
+  url: string,                   // The URL to fetch content from
+  format?: "text" | "markdown" | "html",  // Format to return (default: "markdown")
+  timeout?: number               // Timeout in seconds (max 120)
+})`,
+    example: `webfetch({
+  url: "https://example.com/docs",
+  format: "markdown"
+})`,
+  },
+
   task: {
     uniName: "task",
-    description: "创建并管理子任务代理以完成特定任务",
+    description: "Spawn a specialized sub-agent to complete a specific task. Use this to delegate work to domain-specific agents like 'explore' (for searching your codebase), 'librarian' (for finding documentation and examples), 'oracle' (for complex problem analysis), or 'metis' (for pre-planning). Supports session continuation via task_id.",
     syntax: `task({
-  category?: string,
-  subagent_type?: string,
-  load_skills?: string[],
-  run_in_background?: boolean,
-  description: string,
-  prompt: string
+  description: string,           // Short (3-5 words) description of the task
+  prompt: string,                // The complete task instructions for the agent
+  subagent_type?: string,        // Agent type: "explore", "librarian", "oracle", "metis", "momus", etc.
+  category?: string,             // Task category: "visual-engineering", "ultrabrain", "deep", "quick", "writing"
+  load_skills?: string[],        // Skills to load for the agent
+  run_in_background?: boolean,   // Run asynchronously (default: false)
+  task_id?: string,              // Resume a previous task (optional)
+  command?: string               // The command that triggered this task (optional)
 })`,
     example: `task({
   subagent_type: "explore",
+  category: "quick",
   load_skills: [],
   run_in_background: false,
-  description: "代码探索",
-  prompt: "请探索代码库中的..."
+  description: "Find auth patterns",
+  prompt: "Search the codebase for authentication implementations in src/api/..."
 })`,
   },
 
   todowrite: {
     uniName: "todowrite",
-    description: "创建或更新待办事项",
-    syntax: `todowrite([{
-  id: string,
-  content: string,
-  status: "pending"|"in_progress"|"completed",
-  priority: "high"|"medium"|"low"
-}])`,
-    example: `todowrite([{
-  id: "task-1",
-  content: "完成需求分析文档",
-  status: "pending",
-  priority: "high"
-}])`,
+    description: "Create and manage a todo list to track progress on multi-step tasks. Use this tool at the start of complex work to plan your approach, mark items as in_progress when working on them, and mark as completed when done. The entire todo list is replaced with each call.",
+    syntax: `todowrite({
+  todos: [{
+    id: string,                  // Unique identifier for the todo item
+    content: string,             // Description of the task
+    status: "pending" | "in_progress" | "completed",
+    priority: "high" | "medium" | "low"
+  }]
+})`,
+    example: `todowrite({
+  todos: [{
+    id: "1",
+    content: "Analyze requirements and create plan",
+    status: "in_progress",
+    priority: "high"
+  }, {
+    id: "2",
+    content: "Implement feature X",
+    status: "pending",
+    priority: "high"
+  }]
+})`,
+  },
+
+  todoread: {
+    uniName: "todoread",
+    description: "Read your current todo list to see what tasks are pending or in progress. Use this to check your progress before starting work.",
+    syntax: "todoread({})",
+    example: "todoread({})",
+  },
+
+  get_hd_workflow_state: {
+    uniName: "get_hd_workflow_state",
+    description: "Get the current workflow state of the Hyper Designer project. Returns information about which stages are completed, current step, and handover state. Returns null if workflow has not been initialized.",
+    syntax: "get_hd_workflow_state()",
+    example: "get_hd_workflow_state()",
+  },
+
+  set_hd_workflow_stage: {
+    uniName: "set_hd_workflow_stage",
+    description: "Update the completion status of a specific workflow stage. Use this to mark a stage as completed after finishing the work for that stage. Only mark stages as completed after they have been properly finished and reviewed.",
+    syntax: `set_hd_workflow_stage({
+  stage_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign",
+  is_completed: boolean
+})`,
+    example: `set_hd_workflow_stage({
+  stage_name: "IRAnalysis",
+  is_completed: true
+})`,
+  },
+
+  set_hd_workflow_current: {
+    uniName: "set_hd_workflow_current",
+    description: "Set the current active workflow step. This defines which stage the workflow is currently working on. Use this when starting work on a new stage or switching between stages.",
+    syntax: `set_hd_workflow_current({
+  step_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign"
+})`,
+    example: `set_hd_workflow_current({
+  step_name: "scenarioAnalysis"
+})`,
+  },
+
+  set_hd_workflow_handover: {
+    uniName: "set_hd_workflow_handover",
+    description: "Set the handover workflow step to transfer control to the next stage. This is used when completing one stage and moving to the next. After calling this, the workflow will transition to the specified stage and idle, waiting for the next agent to take over.",
+    syntax: `set_hd_workflow_handover({
+  step_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign"
+})`,
+    example: `set_hd_workflow_handover({
+  step_name: "functionalRefinement"
+})`,
   },
 };

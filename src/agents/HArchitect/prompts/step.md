@@ -5,11 +5,11 @@
 ```
 步骤1：生成草稿和TODO列表
 步骤2：收集本阶段所需资料（使用document-collector skill）
-步骤3：载入相关资料和skill（每小步用Question工具与用户交互确认，绝不进入idle）
-步骤4：完成对应阶段工作（使用task工具分配HCritic agent进行评审，如果不通过返回步骤4）
-步骤5：使用Question工具向用户确认是否进入下一步，如需修改返回步骤4
-步骤6：调用set_hd_workflow_handover移交下一阶段
-步骤7：阶段移交
+步骤3：载入相关资料和skill
+步骤4：完成对应阶段工作（每小步用Question工具与用户交互确认，绝不进入idle）
+步骤5：使用task工具分配HCritic agent进行评审，如果不通过返回步骤4
+步骤6：使用Question工具向用户确认是否进入下一步，如需修改返回步骤4
+步骤7：调用set_hd_workflow_handover移交下一阶段
 步骤8：进入idle（等待用户或系统下一步指令）
 ```
 

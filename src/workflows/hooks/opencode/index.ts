@@ -8,13 +8,14 @@
  */
 
 import { PluginInput } from "@opencode-ai/plugin"
+
 import {
   getWorkflowState,
   executeWorkflowHandover,
 } from "../../core/state"
 import { getHandoverAgent, getHandoverPrompt } from "../../core/handover"
 import { loadWorkflowPrompt, loadStagePrompt } from "../../core/prompts"
-import { loadHDConfig } from "../../../config/loader"
+import { loadHDConfig, type HDConfig } from "../../../config/loader"
 import { getWorkflowDefinition } from "../../core/registry"
 import { HyperDesignerLogger } from "../../../utils/logger"
 
@@ -45,6 +46,41 @@ function replacePlaceholders(
   }
 }
 
+interface ModelInfo {
+  providerID: string
+  modelID: string
+}
+
+async function getSummarizeModel(ctx: PluginInput, config: HDConfig): Promise<ModelInfo> {
+  if (config.summarize) {
+    const [providerID, ...rest] = config.summarize.split("/")
+    return {
+      providerID: providerID,
+      modelID: rest.join("/"),
+    }
+  }
+
+  const specified = await ctx.client.config.get().then(cfg => {
+    const model = cfg.data?.model
+    if (model) {
+      const [providerID, ...rest] = model.split("/")
+      return {
+        providerID: providerID,
+        modelID: rest.join("/"),
+      }
+    } else {
+      return undefined
+    }
+  }).catch(error => {
+    HyperDesignerLogger.warn("OpenCode", `加载用户配置的默认模型失败，已使用默认模型`, error)
+    return undefined
+  })
+
+  if (specified) return specified
+
+  return { providerID: "opencode", modelID: "big-pickle" }
+}
+
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()
   const workflow = getWorkflowDefinition(config.workflow || "classic")
@@ -55,7 +91,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
       action: "loadWorkflowDefinition",
       recovery: "returnEmptyHooks"
     })
-    
+
     return {
       event: async () => { },
       "experimental.chat.system.transform": async () => { },
@@ -71,6 +107,17 @@ export async function createWorkflowHooks(ctx: PluginInput) {
         parts: [{ type: "text", text: content }],
       },
       query: { directory: ctx.directory },
+    })
+  }
+
+  const summarize = async (sessionID: string) => {
+    const model = await getSummarizeModel(ctx, config)
+    await ctx.client.session.summarize({
+      path: { id: sessionID },
+      body: {
+        providerID: model.providerID,
+        modelID: model.modelID
+      }
     })
   }
 
@@ -112,6 +159,12 @@ export async function createWorkflowHooks(ctx: PluginInput) {
           }
 
           executeWorkflowHandover(workflow!)
+
+          const currentStage = currentPhase ? workflow!.stages[currentPhase] : null
+          if (currentStage?.summarize === true) {
+            await summarize(sessionID)
+          }
+
           await prompt(sessionID, nextAgent, handoverContent)
         }
       }

@@ -21,25 +21,25 @@
 
 #### 首次启动流程（currentStep === null）
 
-**当工作流首次启动时（currentStep为null），不要向用户提问或要求澄清，而是直接进入资料收集阶段：**
+**当工作流首次启动时（currentStep为null），不要向用户提问或要求澄清，而是直接进入初始需求分析阶段：**
 
 ```
 执行步骤：
-1. 向用户说明："这是一个新的系统设计项目。我将首先启动资料收集阶段，由HCollector收集必要的参考资料。"
+1. 向用户说明："这是一个新的系统设计项目。我将从初始需求分析阶段开始，首先收集该阶段所需的资料。"
 
-2. 调用以下workflow工具启动dataCollection阶段：
-   - set_hd_workflow_handover("dataCollection")
+2. 调用以下workflow工具启动IRAnalysis阶段：
+   - set_hd_workflow_handover("IRAnalysis")
 
-3. 说明："HCollector将负责收集代码库分析、领域资料、场景库、FMEA库等参考资料。收集完成后，我们将进入初始需求分析(IR Analysis)阶段。"
+3. 说明："在IRAnalysis阶段，我将收集项目背景、现有系统、参考项目等资料，然后进行5W2H需求分析。"
 
-4. 结束回合，等待HCollector完成工作
+4. 进入IRAnalysis阶段，开始执行该阶段的工作流程
 ```
 
 **重要约束：**
 - ❌ 禁止：在currentStep为null时向用户提出需求澄清问题
 - ❌ 禁止：使用Question工具询问"开始全新分析"还是"基于已有文档"
-- ✅ 必须：直接交接到dataCollection阶段
-- ✅ 原因：资料收集是所有后续分析的基础，必须先完成
+- ✅ 必须：直接交接到IRAnalysis阶段
+- ✅ 原因：IRAnalysis是需求工程的起点，每个阶段会单独收集所需资料
 
 #### 阶段任务流程（currentStep !== null）
 
@@ -51,7 +51,7 @@
 
 ##### 2. 阶段入口确认 (Question 工具示例)
 
-**仅在IRAnalysis及后续阶段使用**,不要在dataCollection阶段使用。
+**适用于所有阶段**（IRAnalysis及后续阶段）。
 
 **Question工具参数说明**:
 - `multiple`: 是否允许多选。设为true时用户可选多个选项,false则单选(默认)。

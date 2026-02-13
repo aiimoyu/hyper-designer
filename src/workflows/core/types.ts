@@ -9,6 +9,8 @@ export interface WorkflowStageDefinition {
    skill?: string
    /** Prompt file path relative to the workflow directory (optional - use workflow-level prompt if not specified) */
    promptFile?: string
+   /** Whether to summarize the session before handover to next stage */
+   summarize?: boolean
    /** Handover prompt generator - only takes current step since next stage is determined */
    getHandoverPrompt: (currentStep: string | null) => string
 }
