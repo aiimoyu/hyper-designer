@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from "vitest"
-import { loadHDConfig, DEFAULT_AGENT_CONFIGS, DEFAULT_CONFIG_PATH } from "../../../config/loader"
+import { loadHDConfig, DEFAULT_AGENT_CONFIGS, DEFAULT_CONFIG_PATH, GLOBAL_CONFIG_PATH } from "../../../config/loader"
 import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "fs"
 import { join, dirname } from "path"
 
@@ -7,8 +7,8 @@ const TEST_CONFIG_DIR = join(process.cwd(), ".test-temp", "config-tests")
 const TEST_CONFIG_PATH = join(TEST_CONFIG_DIR, "hd-config.json")
 const PROJECT_CONFIG_DIR = join(process.cwd(), ".test-temp", "config-tests")
 const PROJECT_CONFIG_PATH = join(PROJECT_CONFIG_DIR, DEFAULT_CONFIG_PATH)
-const GLOBAL_CONFIG_DIR = join(process.cwd(), ".test-temp", "config-tests")
-const GLOBAL_CONFIG_PATH = join(GLOBAL_CONFIG_DIR, "global-hd-config.json")
+const TEST_GLOBAL_CONFIG_DIR = join(process.cwd(), ".test-temp", "config-tests")
+const TEST_GLOBAL_CONFIG_PATH = join(TEST_GLOBAL_CONFIG_DIR, "global-hd-config.json")
 
 let originalGlobalConfig: string | null = null
 let originalProjectConfig: string | null = null
@@ -27,18 +27,18 @@ describe("loadHDConfig", () => {
     }
 
     if (originalGlobalConfig !== null) {
-      mkdirSync(dirname(GLOBAL_CONFIG_PATH), { recursive: true })
-      writeFileSync(GLOBAL_CONFIG_PATH, originalGlobalConfig)
-    } else if (existsSync(GLOBAL_CONFIG_PATH)) {
-      rmSync(GLOBAL_CONFIG_PATH, { force: true })
+      mkdirSync(dirname(TEST_GLOBAL_CONFIG_PATH), { recursive: true })
+      writeFileSync(TEST_GLOBAL_CONFIG_PATH, originalGlobalConfig)
+    } else if (existsSync(TEST_GLOBAL_CONFIG_PATH)) {
+      rmSync(TEST_GLOBAL_CONFIG_PATH, { force: true })
     }
 
     if (existsSync(TEST_CONFIG_DIR)) {
       rmSync(TEST_CONFIG_DIR, { recursive: true, force: true })
     }
 
-    if (existsSync(GLOBAL_CONFIG_DIR) && GLOBAL_CONFIG_DIR !== TEST_CONFIG_DIR) {
-      rmSync(GLOBAL_CONFIG_DIR, { recursive: true, force: true })
+    if (existsSync(TEST_GLOBAL_CONFIG_DIR) && TEST_GLOBAL_CONFIG_DIR !== TEST_CONFIG_DIR) {
+      rmSync(TEST_GLOBAL_CONFIG_DIR, { recursive: true, force: true })
     }
 
     originalProjectConfig = null
@@ -49,8 +49,8 @@ describe("loadHDConfig", () => {
     originalProjectConfig = existsSync(PROJECT_CONFIG_PATH)
       ? readFileSync(PROJECT_CONFIG_PATH, "utf-8")
       : null
-    originalGlobalConfig = existsSync(GLOBAL_CONFIG_PATH)
-      ? readFileSync(GLOBAL_CONFIG_PATH, "utf-8")
+    originalGlobalConfig = existsSync(TEST_GLOBAL_CONFIG_PATH)
+      ? readFileSync(TEST_GLOBAL_CONFIG_PATH, "utf-8")
       : null
   }
 
@@ -208,7 +208,7 @@ describe("loadHDConfig", () => {
       },
       workflow: "global",
     }
-    writeFileSync(GLOBAL_CONFIG_PATH, JSON.stringify(globalConfig, null, 2))
+    writeFileSync(TEST_GLOBAL_CONFIG_PATH, JSON.stringify(globalConfig, null, 2))
 
     // Create project config with different values
     const projectConfig = {
