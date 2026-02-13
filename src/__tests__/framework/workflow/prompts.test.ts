@@ -45,9 +45,9 @@ describe("workflow/prompts", () => {
     })
 
     it("should load prompts from workflow module directory", () => {
-      const prompt = loadPromptForStage("dataCollection", classicWorkflow)
+      const prompt = loadPromptForStage("IRAnalysis", classicWorkflow)
 
-      expect(prompt).toContain("资料收集")
+      expect(prompt).toContain("工作流")
     })
 
     it("should verify all classic workflow prompt files exist and are readable", () => {

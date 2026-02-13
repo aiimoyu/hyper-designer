@@ -100,9 +100,8 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(workflow).not.toBeNull()
       expect(workflow!.id).toBe("classic")
       expect(workflow!.name).toBe("Classic Requirements Engineering")
-      expect(workflow!.stageOrder).toHaveLength(8)
+      expect(workflow!.stageOrder).toHaveLength(7)
       expect(workflow!.stageOrder).toEqual([
-        "dataCollection",
         "IRAnalysis",
         "scenarioAnalysis",
         "useCaseAnalysis",
@@ -123,7 +122,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
     it("should configure plugin agent handler with mapped agents", async () => {
       const mockCtx = {
-        client: { session: { prompt: async () => {} } },
+        client: { session: { prompt: async () => { } } },
         directory: process.cwd(),
       } as unknown as PluginInput
 
@@ -138,7 +137,6 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
       const agentConfig = configInput.agent as Record<string, unknown>
       expect(agentConfig).toHaveProperty("HArchitect")
-      expect(agentConfig).toHaveProperty("HCollector")
       expect(agentConfig).toHaveProperty("HEngineer")
       expect(agentConfig).toHaveProperty("HCritic")
       expect(agentConfig).toHaveProperty("existingAgent")
@@ -158,11 +156,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
       const workflow = getClassicWorkflow()
       const state = initializeWorkflowState(workflow)
 
-      expect(Object.keys(state.workflow)).toHaveLength(8)
+      expect(Object.keys(state.workflow)).toHaveLength(7)
       expect(state.currentStep).toBeNull()
       expect(state.handoverTo).toBeNull()
 
-      expect(state.workflow.dataCollection.isCompleted).toBe(false)
       expect(state.workflow.IRAnalysis.isCompleted).toBe(false)
       expect(state.workflow.scenarioAnalysis.isCompleted).toBe(false)
       expect(state.workflow.useCaseAnalysis.isCompleted).toBe(false)
@@ -175,20 +172,21 @@ describe("Integration Tests: Deep Decoupling System", () => {
     it("should complete stages and persist to disk", () => {
       const workflow = getClassicWorkflow()
 
-      const state = setWorkflowStage("dataCollection", true, workflow)
-      expect(state.workflow.dataCollection?.isCompleted).toBe(true)
+      const state = setWorkflowStage("IRAnalysis", true, workflow)
+      expect(state.workflow.IRAnalysis?.isCompleted).toBe(true)
       expect(existsSync(STATE_FILE)).toBe(true)
     })
 
     it("should transition through multiple stages", () => {
       const workflow = getClassicWorkflow()
 
-      let state = setWorkflowStage("dataCollection", true, workflow)
-      expect(state.workflow.dataCollection.isCompleted).toBe(true)
-
-      state = setWorkflowStage("IRAnalysis", true, workflow)
+      let state = setWorkflowStage("IRAnalysis", true, workflow)
       expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
-      expect(state.workflow.scenarioAnalysis.isCompleted).toBe(false)
+
+      state = setWorkflowStage("scenarioAnalysis", true, workflow)
+      expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
+      expect(state.workflow.scenarioAnalysis.isCompleted).toBe(true)
+      expect(state.workflow.useCaseAnalysis.isCompleted).toBe(false)
     })
   })
 
@@ -199,7 +197,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       const nextAgent = getHandoverAgent(workflow, "IRAnalysis")
       expect(nextAgent).toBe("HArchitect")
 
-      const handoverPrompt = getHandoverPrompt(workflow, "dataCollection", "IRAnalysis")
+      const handoverPrompt = getHandoverPrompt(workflow, null, "IRAnalysis")
       expect(handoverPrompt).toBeTruthy()
       expect(handoverPrompt!.length).toBeGreaterThan(0)
     })
@@ -216,7 +214,6 @@ describe("Integration Tests: Deep Decoupling System", () => {
     it("should get correct agent for each stage", () => {
       const workflow = getClassicWorkflow()
 
-      expect(getHandoverAgent(workflow, "dataCollection")).toBe("HCollector")
       expect(getHandoverAgent(workflow, "IRAnalysis")).toBe("HArchitect")
       expect(getHandoverAgent(workflow, "scenarioAnalysis")).toBe("HArchitect")
       expect(getHandoverAgent(workflow, "useCaseAnalysis")).toBe("HArchitect")
@@ -263,11 +260,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
       const config = loadHDConfig()
 
       expect(config.agents.HArchitect).toBeDefined()
-      expect(config.agents.HCollector).toBeDefined()
       expect(config.agents.HEngineer).toBeDefined()
       expect(config.agents.HCritic).toBeDefined()
 
-      expect(config.agents.HArchitect.temperature).toBe(0.7)
+      expect(config.agents.HArchitect.temperature).toBe(0.6)
       expect(config.agents.HArchitect.maxTokens).toBeUndefined()
     })
   })

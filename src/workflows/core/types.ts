@@ -5,8 +5,6 @@ export interface WorkflowStageDefinition {
    description: string
    /** Which agent handles this stage */
    agent: string
-   /** Skill to load for this stage (skill name, not path) */
-   skill?: string
    /** Prompt file path relative to the workflow directory (optional - use workflow-level prompt if not specified) */
    promptFile?: string
    /** Whether to summarize the session before handover to next stage */

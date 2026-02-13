@@ -173,7 +173,7 @@ describe("createAgent", () => {
         description: "Test",
         mode: "primary" as AgentMode,
         color: "#000000",
-        defaultTemperature: 0.7,
+        defaultTemperature: 0.6,
         defaultMaxTokens: 32000,
         promptGenerators: [
           filePrompt(join(TEST_DIR, "test.md")),
@@ -195,7 +195,7 @@ describe("createAgent", () => {
         description: "Test",
         mode: "primary" as AgentMode,
         color: "#000000",
-        defaultTemperature: 0.7,
+        defaultTemperature: 0.6,
         defaultMaxTokens: 32000,
         promptGenerators: [],
         defaultPermission: {},

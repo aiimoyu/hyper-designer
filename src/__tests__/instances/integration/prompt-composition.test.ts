@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { existsSync, rmSync } from "fs"
 import { join } from "path"
 import { createHArchitectAgent } from "../../../agents/HArchitect"
-import { createHCollectorAgent } from "../../../agents/HCollector"
 import { createHEngineerAgent } from "../../../agents/HEngineer"
 import { createHCriticAgent } from "../../../agents/HCritic"
 import type { RuntimeType } from "../../../tools"
@@ -45,15 +44,6 @@ describe("Integration Tests: Prompt Composition", () => {
     const agent = createHEngineerAgent(undefined, "opencode" as RuntimeType)
 
     expect(agent.name).toBe("HEngineer")
-    expect(agent.prompt).toBeTruthy()
-    expect(agent.prompt!.length).toBeGreaterThan(0)
-    expectNoToolPlaceholders(agent.prompt!)
-  })
-
-  it("creates HCollector agent with valid configuration", () => {
-    const agent = createHCollectorAgent(undefined, "opencode" as RuntimeType)
-
-    expect(agent.name).toBe("HCollector")
     expect(agent.prompt).toBeTruthy()
     expect(agent.prompt!.length).toBeGreaterThan(0)
     expectNoToolPlaceholders(agent.prompt!)

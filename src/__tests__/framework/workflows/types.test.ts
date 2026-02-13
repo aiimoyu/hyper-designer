@@ -14,7 +14,6 @@ describe('WorkflowDefinition', () => {
           name: 'Stage 1',
           description: 'First stage',
           agent: 'test-agent',
-          skill: 'test-skill',
           promptFile: 'stage1.md',
           getHandoverPrompt: (current) => `Handover from ${current ?? 'start'} to stage1`
         },

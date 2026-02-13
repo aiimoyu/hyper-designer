@@ -27,30 +27,29 @@ describe('Classic Workflow', () => {
     it('should have description', () => {
       const workflow = getClassicWorkflow()
       expect(workflow.description).toBeTruthy()
-      expect(workflow.description).toContain('8-stage')
+      expect(workflow.description).toContain('7-stage')
     })
   })
 
   describe('stage order', () => {
-    it('should have exactly 8 stages', () => {
+    it('should have exactly 7 stages', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder).toHaveLength(8)
+      expect(workflow.stageOrder).toHaveLength(7)
     })
 
-    it('should start with dataCollection', () => {
+    it('should start with IRAnalysis', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder[0]).toBe('dataCollection')
+      expect(workflow.stageOrder[0]).toBe('IRAnalysis')
     })
 
     it('should end with moduleFunctionalDesign', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder[7]).toBe('moduleFunctionalDesign')
+      expect(workflow.stageOrder[6]).toBe('moduleFunctionalDesign')
     })
 
     it('should have correct order', () => {
       const workflow = getClassicWorkflow()
       expect(workflow.stageOrder).toEqual([
-        'dataCollection',
         'IRAnalysis',
         'scenarioAnalysis',
         'useCaseAnalysis',
@@ -81,11 +80,6 @@ describe('Classic Workflow', () => {
   })
 
   describe('agent assignments', () => {
-    it('should assign HCollector to dataCollection', () => {
-      const workflow = getClassicWorkflow()
-      expect(workflow.stages.dataCollection.agent).toBe('HCollector')
-    })
-
     it('should assign HArchitect to IR/scenario/useCase/functional stages', () => {
       const workflow = getClassicWorkflow()
       expect(workflow.stages.IRAnalysis.agent).toBe('HArchitect')
@@ -102,28 +96,6 @@ describe('Classic Workflow', () => {
     })
   })
 
-  describe('skill assignments', () => {
-    it('should not assign skill to dataCollection', () => {
-      const workflow = getClassicWorkflow()
-      expect(workflow.stages.dataCollection.skill).toBeUndefined()
-    })
-
-    it('should assign correct skills to analysis stages', () => {
-      const workflow = getClassicWorkflow()
-      expect(workflow.stages.IRAnalysis.skill).toBe('ir-analysis')
-      expect(workflow.stages.scenarioAnalysis.skill).toBe('scenario-analysis')
-      expect(workflow.stages.useCaseAnalysis.skill).toBe('use-case-analysis')
-      expect(workflow.stages.functionalRefinement.skill).toBe('functional-refinement')
-    })
-
-    it('should assign correct skills to decomposition/design stages', () => {
-      const workflow = getClassicWorkflow()
-      expect(workflow.stages.requirementDecomposition.skill).toBe('sr-ar-decomposition')
-      expect(workflow.stages.systemFunctionalDesign.skill).toBe('functional-design')
-      expect(workflow.stages.moduleFunctionalDesign.skill).toBe('functional-design')
-    })
-  })
-
   describe('prompt files', () => {
     it('should have promptFile for all stages', () => {
       const workflow = getClassicWorkflow()
@@ -135,7 +107,6 @@ describe('Classic Workflow', () => {
 
     it('should use correct prompt file names', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stages.dataCollection.promptFile).toBe('prompts/dataCollection.md')
       expect(workflow.stages.IRAnalysis.promptFile).toBe('prompts/IRAnalysis.md')
       expect(workflow.stages.scenarioAnalysis.promptFile).toBe('prompts/scenarioAnalysis.md')
       expect(workflow.stages.useCaseAnalysis.promptFile).toBe('prompts/useCaseAnalysis.md')
@@ -168,7 +139,7 @@ describe('Classic Workflow', () => {
 
     it('should include current step in prompt when provided', () => {
       const workflow = getClassicWorkflow()
-      const promptWithCurrent = workflow.stages.dataCollection.getHandoverPrompt('previousStep')
+      const promptWithCurrent = workflow.stages.IRAnalysis.getHandoverPrompt('previousStep')
       expect(promptWithCurrent).toContain('previousStep')
     })
 
@@ -181,8 +152,8 @@ describe('Classic Workflow', () => {
 
     it('should generate different prompts for different stages', () => {
       const workflow = getClassicWorkflow()
-      const prompt1 = workflow.stages.dataCollection.getHandoverPrompt(null)
-      const prompt2 = workflow.stages.IRAnalysis.getHandoverPrompt(null)
+      const prompt1 = workflow.stages.IRAnalysis.getHandoverPrompt(null)
+      const prompt2 = workflow.stages.scenarioAnalysis.getHandoverPrompt(null)
       expect(prompt1).not.toBe(prompt2)
     })
   })

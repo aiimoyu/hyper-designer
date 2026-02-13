@@ -160,8 +160,9 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
           executeWorkflowHandover(workflow!)
 
-          const currentStage = currentPhase ? workflow!.stages[currentPhase] : null
-          if (currentStage?.summarize === true) {
+          const nextStage = handoverPhase ? workflow!.stages[handoverPhase] : null
+          HyperDesignerLogger.info("OpenCode", `工作流交接：从阶段 ${currentPhase || "无"} 到阶段 ${handoverPhase}，由代理 ${nextAgent} 处理。`)
+          if (nextStage?.summarize === true) {
             await summarize(sessionID)
           }
 

@@ -5,11 +5,6 @@ import type { WorkflowDefinition } from "../../../workflows/core/types"
 
 describe("workflow/handover", () => {
   describe("getHandoverAgent", () => {
-    it("should return the correct agent for dataCollection stage", () => {
-      const agent = getHandoverAgent(classicWorkflow, "dataCollection")
-      expect(agent).toBe("HCollector")
-    })
-
     it("should return the correct agent for IRAnalysis stage", () => {
       const agent = getHandoverAgent(classicWorkflow, "IRAnalysis")
       expect(agent).toBe("HArchitect")
@@ -55,26 +50,20 @@ describe("workflow/handover", () => {
   })
 
   describe("getHandoverPrompt", () => {
-    it("should return non-empty prompt for dataCollection stage", () => {
-      const prompt = getHandoverPrompt(classicWorkflow, null, "dataCollection")
-      expect(prompt).toBeTruthy()
-      expect(prompt!.length).toBeGreaterThan(0)
-    })
-
     it("should return non-empty prompt for IRAnalysis stage", () => {
-      const prompt = getHandoverPrompt(classicWorkflow, "dataCollection", "IRAnalysis")
+      const prompt = getHandoverPrompt(classicWorkflow, null, "IRAnalysis")
       expect(prompt).toBeTruthy()
       expect(prompt!.length).toBeGreaterThan(0)
     })
 
     it("should include current step in prompt when provided", () => {
-      const prompt = getHandoverPrompt(classicWorkflow, "dataCollection", "IRAnalysis")
-      expect(prompt).toContain("dataCollection")
+      const prompt = getHandoverPrompt(classicWorkflow, "IRAnalysis", "scenarioAnalysis")
+      expect(prompt).toContain("IRAnalysis")
     })
 
     it("should generate different prompts for different stages", () => {
-      const prompt1 = getHandoverPrompt(classicWorkflow, null, "dataCollection")
-      const prompt2 = getHandoverPrompt(classicWorkflow, null, "IRAnalysis")
+      const prompt1 = getHandoverPrompt(classicWorkflow, null, "IRAnalysis")
+      const prompt2 = getHandoverPrompt(classicWorkflow, null, "scenarioAnalysis")
       expect(prompt1).not.toBe(prompt2)
     })
 

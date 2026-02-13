@@ -99,7 +99,6 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.agents.HArchitect.temperature).toBe(0.8)
-    expect(config.agents.HCollector).toEqual(DEFAULT_AGENT_CONFIGS.HCollector)
     expect(config.agents.HCritic).toEqual(DEFAULT_AGENT_CONFIGS.HCritic)
     expect(config.agents.HEngineer).toEqual(DEFAULT_AGENT_CONFIGS.HEngineer)
     expect(config.workflow).toBe("classic")
@@ -138,31 +137,6 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.$schema).toBe("https://example.com/schema.json")
-    expect(config.workflow).toBe("classic")
-  })
-
-  it("handles config with additional agent overrides", () => {
-    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-
-    const testConfig = {
-      agents: {
-        HCollector: {
-          model: "gpt-4-turbo",
-          temperature: 0.5,
-          prompt_append: "Additional instructions",
-          permission: { write: "deny" },
-        },
-      },
-    }
-
-    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
-
-    const config = loadHDConfig(TEST_CONFIG_PATH)
-
-    expect(config.agents.HCollector.model).toBe("gpt-4-turbo")
-    expect(config.agents.HCollector.temperature).toBe(0.5)
-    expect(config.agents.HCollector.prompt_append).toBe("Additional instructions")
-    expect(config.agents.HCollector.permission).toEqual({ write: "deny" })
     expect(config.workflow).toBe("classic")
   })
 
@@ -241,7 +215,6 @@ describe("config constants", () => {
   })
 
   it("DEFAULT_AGENT_CONFIGS has all required agents", () => {
-    expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HCollector")
     expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HArchitect")
     expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HCritic")
     expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HEngineer")

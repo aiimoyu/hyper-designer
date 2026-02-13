@@ -8,7 +8,7 @@
  */
 
 import type { AgentConfig } from "./types"
-import { createHCollectorAgent } from "./HCollector"
+// import { createHCollectorAgent } from "./HCollector"
 import { createHArchitectAgent } from "./HArchitect"
 import { createHCriticAgent } from "./HCritic"
 import { createHEngineerAgent } from "./HEngineer"
@@ -17,7 +17,7 @@ import type { RuntimeType } from "../tools"
 
 
 export const BUILTIN_AGENT_FACTORIES = {
-  HCollector: createHCollectorAgent,
+  // HCollector: createHCollectorAgent,
   HArchitect: createHArchitectAgent,
   HCritic: createHCriticAgent,
   HEngineer: createHEngineerAgent,

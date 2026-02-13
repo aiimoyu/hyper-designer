@@ -52,9 +52,9 @@ const DEFINITION: AgentDefinition = {
     "System Architect & Requirements Workflow Coordinator - Manages requirements engineering from data collection (delegates to @HCollector) through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles. (HArchitect - OhMyOpenCode)",
   mode: "primary",
   color: "#C8102E",
-  defaultTemperature: 0.7,
+  defaultTemperature: 0.6,
   promptGenerators: [
-    filePrompt(join(__dirname,"prompts", "identity.md")),
+    filePrompt(join(__dirname, "prompts", "identity.md")),
     filePrompt(join(__dirname, "prompts", "constraints.md")),
     toolsPrompt(["ask_user", "task"]),
     filePrompt(join(__dirname, "prompts", "step.md")),

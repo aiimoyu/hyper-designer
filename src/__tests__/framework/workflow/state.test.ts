@@ -32,7 +32,7 @@ const classicWorkflowDef: WorkflowDefinition = {
     dataCollection: {
       name: "Data Collection",
       description: "Collect initial data",
-      agent: "HCollector",
+      agent: "HArchitect",
       promptFile: "data_collection.md",
       getHandoverPrompt: (from) => `Handover from ${from ?? "start"} to dataCollection`
     },
@@ -325,14 +325,14 @@ describe("workflow state management", () => {
 
     it("executes handover when handover is set", () => {
       initializeWorkflowState(classicWorkflowDef)
-      setWorkflowCurrent("dataCollection", classicWorkflowDef)
-      setWorkflowHandover("IRAnalysis", classicWorkflowDef)
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+      setWorkflowHandover("scenarioAnalysis", classicWorkflowDef)
 
       const state = executeWorkflowHandover(classicWorkflowDef)
 
-      expect(state.currentStep).toBe("IRAnalysis")
+      expect(state.currentStep).toBe("scenarioAnalysis")
       expect(state.handoverTo).toBeNull()
-      expect(state.workflow.dataCollection.isCompleted).toBe(true)
+      expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
     })
   })
 })

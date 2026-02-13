@@ -1,67 +1,169 @@
 ## 工作流各阶段概览
 
-### 阶段范围
+### 角色分工与执行流程
 
-HArchitect管理以下6个阶段的工作流：
+本工作流由 **HArchitect** 与 **HEngineer** 协作完成，严格遵循线性执行顺序。每个阶段必须完成“单阶段处理流程（8-Step Pipeline）”并通过审查后方可进入下一阶段。
 
-1. **IRAnalysis** (初始需求分析) - HArchitect执行
-2. **scenarioAnalysis** (场景分析) - HArchitect执行
-3. **useCaseAnalysis** (用例分析) - HArchitect执行
-4. **functionalRefinement** (功能列表梳理) - HArchitect执行
-5. **systemFunctionalDesign** (系统功能设计) - HEngineer执行
-   - 包含两个子步骤：**系统需求分解** + **系统功能设计**
+**执行链条：**
+`IRAnalysis` → `scenarioAnalysis` → `useCaseAnalysis` → `functionalRefinement` → `systemFunctionalDesign` → `moduleFunctionalDesign`
 
-6. **moduleFunctionalDesign** (模块功能设计) - HEngineer执行
-   - 包含两个子步骤：**活动需求分解** + **模块功能设计**
+### 阶段定义与执行规范
 
+以下定义涵盖所有6个阶段。Agent在执行对应阶段时，必须严格遵循下述的输入、行动指引与输出规范。
 
+#### 阶段 1：IRAnalysis (初始需求分析)
 
-**每个阶段都必须遵循"单个阶段标准执行流程"的7个步骤。**
+**执行者：** HArchitect
+**核心目标：** 将模糊的用户意图转化为结构化的需求文档，明确范围与约束。
 
-### 首次启动特殊规则
+**输入依赖：**
 
-**当 currentStep === null 时：**
+- 用户提供的初始对话或需求描述（通常为 `currentStep === null` 时的首次输入）
 
-直接调用 `set_hd_workflow_handover("IRAnalysis")`，不要询问用户需求。从IRAnalysis阶段开始与用户深度交互。
+**执行行动指引：**
 
-### 各阶段目标
+1. **深度访谈**：采用5W2H框架与用户进行多轮交互。
+    - **What**：明确核心业务功能与痛点。
+    - **Who**：识别用户画像与利益相关者。
+    - **Why**：挖掘项目背景与业务目标。
+    - **Constraints**：确认技术、预算、时间约束。
+2. **范围界定**：明确做什么与不做什么。
+3. **结构化撰写**：按照Skill模板撰写文档，确保需求可追溯。
 
-各阶段目标、用户交互要求、交付物详见下表。文档结构和详细指导由对应skill提供。
+**输出交付物：**
 
-| 阶段 | 目标 | 交互重点 | 交付物 |
-|------|------|---------|--------|
-| **IRAnalysis** | 结构化需求文档 | 5W2H访谈、确认范围目标约束 | `需求信息.md` |
-| **scenarioAnalysis** | 系统使用场景 | 识别主/备选/异常场景、确认触发条件 | `{功能名}场景.md` |
-| **useCaseAnalysis** | 详细用例规格 | 前置条件、主成功场景、扩展场景、验收标准 | `{功能名}用例.md` |
-| **functionalRefinement** | 功能列表+FMEA | 优先级、失效模式、风险应对 | `{功能名}功能列表.md`<br>`{功能名}FMEA.md` |
+- `.hyper-designer/IRAnalysis/需求信息.md`
 
-### 阶段交接
+#### 阶段 2：scenarioAnalysis (场景分析)
 
-**functionalRefinement完成后的交接：**
+**执行者：** HArchitect
+**核心目标：** 识别系统所有可能的业务场景，建立系统全景图。
 
-```
-1. 向用户说明："功能列表梳理已完成。后续将由HEngineer执行系统功能设计和模块功能设计。"
-2. 使用 set_hd_workflow_handover("systemFunctionalDesign") 交接
-```
+**输入依赖：**
 
-### 执行顺序
+- `.hyper-designer/IRAnalysis/需求信息.md`
 
-```
-IRAnalysis (HArchitect)
-    ↓
-scenarioAnalysis (HArchitect)
-    ↓
-useCaseAnalysis (HArchitect)
-    ↓
-functionalRefinement (HArchitect)
-    ↓
-systemFunctionalDesign (HEngineer)
-    ↓
-moduleFunctionalDesign (HEngineer)
-```
+**执行行动指引：**
 
-每个阶段都必须：
-1. 严格遵循7步执行流程
-2. 通过HCritic审查
-3. 获得用户确认
-4. 调用workflow工具交接
+1. **场景识别**：
+    - 提取主成功场景。
+    - 挖掘备选场景与异常场景。
+2. **触发定义**：为每个场景定义明确的触发条件与前置状态。
+3. **用户确认**：与用户验证场景的完整性，确保没有遗漏关键业务流程。
+
+**输出交付物：**
+
+- `.hyper-designer/scenarioAnalysis/{功能名}场景.md`
+
+#### 阶段 3：useCaseAnalysis (用例分析)
+
+**执行者：** HArchitect
+**核心目标：** 将场景细化为可执行的用例规格，定义交互细节与验收标准。
+
+**输入依赖：**
+
+- `.hyper-designer/IRAnalysis/需求信息.md`
+- `.hyper-designer/scenarioAnalysis/{功能名}场景.md`
+
+**执行行动指引：**
+
+1. **用例细化**：针对每个场景展开详细用例。
+2. **流程定义**：
+    - 编写主成功场景流程。
+    - 编写扩展/异常流程。
+3. **标准设定**：定义明确的前置条件、后置条件与验收标准。
+
+**输出交付物：**
+
+- `.hyper-designer/useCaseAnalysis/{功能名}用例.md`
+
+#### 阶段 4：functionalRefinement (功能梳理)
+
+**执行者：** HArchitect
+**核心目标：** 整理功能清单，进行优先级排序与风险预判（FMEA）。
+
+**输入依赖：**
+
+- `.hyper-designer/useCaseAnalysis/{功能名}用例.md`
+
+**执行行动指引：**
+
+1. **功能拆解**：将用例转化为具体的功能点列表。
+2. **优先级评估**：与用户确认核心功能与边缘功能。
+3. **风险分析**：执行FMEA分析，识别潜在的失效模式与应对策略。
+
+**输出交付物：**
+
+- `.hyper-designer/functionalRefinement/{功能名}功能列表.md`
+- `.hyper-designer/functionalRefinement/{功能名}FMEA.md`
+
+#### 阶段 5：systemFunctionalDesign (系统功能设计)
+
+**执行者：** HEngineer
+**核心目标：** 构建系统整体架构，分解模块需求，确定技术蓝图。
+**特殊规则：** 包含两个必须串行执行的子步骤。
+
+**输入依赖：**
+
+- `.hyper-designer/functionalRefinement/{功能名}功能列表.md`
+- `.hyper-designer/functionalRefinement/{功能名}FMEA.md`
+
+**执行行动指引：**
+
+**子步骤 5.1：系统需求分解**
+
+1. **模块划分**：基于功能列表与FMEA，与用户讨论系统模块划分维度（按业务域/技术层次）。
+2. **接口定义**：初步定义模块间的交互边界与接口契约。
+3. **输出生成**：生成系统需求分解文档。
+
+**子步骤 5.2：系统功能设计**
+
+1. **架构设计**：基于分解结果设计系统架构（单体/微服务/分布式）。
+2. **技术选型**：确定框架、数据库、中间件等技术栈。
+3. **模型构建**：定义核心数据模型与交互协议。
+4. **输出生成**：生成系统功能设计文档。
+
+**输出交付物：**
+
+- `.hyper-designer/systemFunctionalDesign/系统需求分解.md`
+- `.hyper-designer/systemFunctionalDesign/系统功能设计.md`
+
+#### 阶段 6：moduleFunctionalDesign (模块功能设计)
+
+**执行者：** HEngineer
+**核心目标：** 将系统设计转化为可开发的详细模块规格与活动计划。
+**特殊规则：** 包含两个必须串行执行的子步骤。
+
+**输入依赖：**
+
+- `.hyper-designer/systemFunctionalDesign/系统功能设计.md`
+- `.hyper-designer/systemFunctionalDesign/系统需求分解.md`
+
+**执行行动指引：**
+
+**子步骤 6.1：活动需求分解**
+
+1. **工作包拆解**：将系统功能转化为可执行的开发任务包。
+2. **计划制定**：与用户确认里程碑节点、工作量估算与优先级。
+3. **输出生成**：生成活动需求分解文档。
+
+**子步骤 6.2：模块功能设计**
+
+1. **详细设计**：针对每个模块输出详细技术规格（职责、接口、内部结构、算法、数据结构）。
+2. **验证确认**：与用户验证设计的可实现性与可测试性。
+3. **循环执行**：对每个模块重复此过程，直至所有模块设计完成。
+
+**输出交付物：**
+
+- `.hyper-designer/moduleFunctionalDesign/活动需求分解.md`
+- `.hyper-designer/moduleFunctionalDesign/{模块名}设计.md` （每个模块独立文件）
+
+### 启动与交接规则
+
+1. **冷启动规则**：
+    - 当检测到 `currentStep === null` 时，**直接调用** `set_hd_workflow_handover("IRAnalysis")`。
+    - **禁止**在此处询问用户需求，直接进入IRAnalysis阶段开始5W2H访谈。
+
+2. **标准执行循环**：
+    - 每个阶段（含子步骤）必须遵循：**执行 -> 内部审查 -> 用户确认 -> 下一阶段**。
+    - 若涉及Skill调用，必须严格遵循Skill内的模板和方法论。

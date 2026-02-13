@@ -58,7 +58,7 @@ export const GLOBAL_CONFIG_PATH = join(GLOBAL_CONFIG_DIR, "hd-config.json")
  * 
  * 温度值选择依据：
  * - HCollector (0.3): 较低温度，确保需求收集的准确性和一致性
- * - HArchitect (0.7): 较高温度，鼓励架构设计的创造性和多样性
+ * - HArchitect (0.6): 较高温度，鼓励架构设计的创造性和多样性
  * - HCritic (0.1): 极低温度，确保评审的严格性和一致性
  * - HEngineer (0.4): 中等温度，平衡技术设计的严谨性和创造性
  */
@@ -67,7 +67,7 @@ export const DEFAULT_AGENT_CONFIGS: Record<string, AgentOverrideConfig> = {
     temperature: 0.3,
   },
   HArchitect: {
-    temperature: 0.7,
+    temperature: 0.6,
   },
   HCritic: {
     temperature: 0.1,
@@ -94,14 +94,14 @@ function findConfigPath(): string | null {
     globalConfigPath,
   ]
 
-  HyperDesignerLogger.debug("Config", `搜索配置文件`, { 
+  HyperDesignerLogger.debug("Config", `搜索配置文件`, {
     searchPaths,
     strategy: "projectFirstThenGlobal"
   })
 
   for (const path of searchPaths) {
     if (existsSync(path)) {
-      HyperDesignerLogger.debug("Config", `找到配置文件`, { 
+      HyperDesignerLogger.debug("Config", `找到配置文件`, {
         path,
         priority: searchPaths.indexOf(path) + 1
       })
@@ -109,7 +109,7 @@ function findConfigPath(): string | null {
     }
   }
 
-  HyperDesignerLogger.debug("Config", `未找到配置文件`, { 
+  HyperDesignerLogger.debug("Config", `未找到配置文件`, {
     searchedLocations: searchPaths.length
   })
   return null
@@ -122,7 +122,7 @@ function findConfigPath(): string | null {
  */
 export function loadHDConfig(configPath?: string): HDConfig {
   HyperDesignerLogger.info("Config", `加载 Hyper Designer 配置`)
-  
+
   const path = configPath ?? findConfigPath()
 
   if (!path) {
@@ -137,11 +137,11 @@ export function loadHDConfig(configPath?: string): HDConfig {
   }
 
   try {
-    HyperDesignerLogger.debug("Config", `读取配置文件`, { 
+    HyperDesignerLogger.debug("Config", `读取配置文件`, {
       path,
       action: "readConfigFile"
     })
-    
+
     const content = readFileSync(path, "utf-8")
     const config = JSON.parse(content) as HDConfig
 
@@ -158,27 +158,27 @@ export function loadHDConfig(configPath?: string): HDConfig {
       mergedConfig.$schema = config.$schema
     }
 
-    HyperDesignerLogger.info("Config", `配置加载成功`, { 
+    HyperDesignerLogger.info("Config", `配置加载成功`, {
       path,
       agentCount: Object.keys(mergedConfig.agents).length,
       hasSchema: mergedConfig.$schema !== undefined
     })
-    
+
     return mergedConfig
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
-    HyperDesignerLogger.warn("Config", `加载配置文件失败`, { 
+    HyperDesignerLogger.warn("Config", `加载配置文件失败`, {
       path,
       action: "loadConfig",
       recovery: "usingDefaultConfig",
       error: err.message
     })
-    
+
     HyperDesignerLogger.warn("Config", `由于错误使用默认配置`, {
       path,
       errorType: err.name
     })
-    
+
     return {
       agents: DEFAULT_AGENT_CONFIGS,
       workflow: "classic",

@@ -1,138 +1,137 @@
-## 单阶段处理步骤
+## 单阶段处理流程
 
-### 🔥 必读：每个阶段都必须严格遵循以下8步流程，不可跳过或简化
+### 🔥 CRITICAL PROTOCOL: 8-Step Pipeline
 
-```
-步骤1：生成草稿和TODO列表
-步骤2：收集本阶段所需资料（使用document-collector skill）
-步骤3：载入相关资料和skill
-步骤4：完成对应阶段工作（每小步用Question工具与用户交互确认，绝不进入idle）
-步骤5：使用task工具分配HCritic agent进行评审，如果不通过返回步骤4
-步骤6：使用Question工具向用户确认是否进入下一步，如需修改返回步骤4
-步骤7：调用set_hd_workflow_handover移交下一阶段
-步骤8：进入idle（等待用户或系统下一步指令）
-```
-
-### 步骤1：生成草稿和TODO列表
-
-**目标：** 在开始实际工作前，先规划清楚整个阶段的工作内容
-
-**执行动作：**
-
-1. 创建或更新 `.hyper-designer/{阶段名}/draft.md`
-2. 使用todowrite工具创建详细的TODO列表，列出该阶段需要完成的所有子任务
-3. 每个TODO项应该是可验证的、原子性的任务
-
-**禁止：**
-
-- ❌ 跳过草稿和TODO，直接开始执行工作
-- ❌ TODO列表过于笼统（如"完成需求分析"）
-- ❌ 不维护TODO状态
-
-### 步骤2：收集本阶段所需资料
-
-**目标：** 在执行阶段工作前，先收集和整理本阶段所需的参考资料
-
-**执行动作：**
-
-1. **读取阶段提示词**：查看当前阶段的"所需资料"部分，了解需要收集的资料类别
-2. **初始化收集**：创建或更新 `.hyper-designer/document/draft.md`
-3. **预扫描项目**：使用 Glob、LS、Grep 扫描项目中的现有资料
-4. **识别缺失资料**：对比所需资料列表，标记缺失项
-5. **与用户确认**：
-   - 确认已发现的资料
-   - 询问缺失资料的位置或补充方式
-   - 确认是否需要下载外部资源
-6. **补充资料**（如需要）：
-   - 使用 `task(subagent_type="explore")` 深度分析代码库
-   - 使用 `task(subagent_type="librarian")` 搜索外部资料
-   - 使用 `webfetch/websearch` 获取公开资料
-7. **生成索引**：汇总收集结果，生成或更新 `.hyper-designer/document/manifest.md`
-
-**禁止：**
-
-- ❌ 跳过资料收集直接进入阶段工作
-- ❌ 假设资料不存在而不询问用户
-- ❌ 收集与本阶段无关的资料
-
-**提示：**
-
-- 使用 `document-collector` skill 指导资料收集流程
-- 每次访谈后立即更新草稿
-- 如果用户表示没有某类资料，标记为[缺失]并评估影响
-
-### 步骤3：载入相关资料和skill
-
-**目标：** 确保拥有完成该阶段所需的所有上下文和工具
-
-**执行动作：**
-
-1. 载入该阶段相关的skill
-2. 读取 `.hyper-designer/document/manifest.md` 使用相关资料
-3. 读取上一工作流阶段形成的草稿和输出件，确保理解当前状态
-
-### 步骤4：完成对应阶段工作（持续用Question工具交互）
-
-**目标：** 与用户深度协作，完成该阶段的所有设计工作
-
-**执行动作：**
-
-1. 按TODO列表逐项执行，遵循skill指导原则
-2. **每完成一小步，用Question工具确认（禁止自动进入下一步）**
-3. 使用explore/librarian研究（如需要）
-4. 持续更新草稿文件
-5. 生成正式交付文档
-
-**Question工具示例：**
+**严令：每个阶段必须严格遵循以下 8 步流程，禁止跳过或合并步骤。**
 
 ```
-向用户提出结构化确认问题，提供清晰选项供用户选择，并允许用户输入自定义答案
+Step 1: Drafting & Planning (use specific skills)
+Step 2: Interactive Context Collection (use `document-collector` skill)
+Step 3: Context Loading
+Step 4: Execution & Interaction -> Loop until done
+Step 5: HCritic Review -> If failed, back to Step 4
+Step 6: User Confirmation -> If modify, back to Step 4
+Step 7: Handover
+Step 8: Idle State
 ```
 
-### 步骤5：使用task工具分配HCritic评审（强制循环）
+**其中强制执行循环**
 
-**目标：** 通过HCritic专业评审，确保输出质量
+```mermaid
+graph TD
+    A[生成文档] --> B[自动触发HCritic审查]
+    B --> C{审核结果}
+    C -- 未通过 --> D[根据反馈修正文档]
+    D --> B
+    C -- 通过 --> E[向用户汇报结果]
+    E --> F{用户确认}
+    F -- 确认 --> G[调用workflow工具进入下一阶段]
+    F -- 需修改 --> D
+```
 
-**执行动作：**
+### Step 1: Drafting & Planning
 
-1. 向用户说明："正在请HCritic审查该阶段设计..."
-2. 使用task工具调用HCritic（见"与HCritic协作"章节的完整格式）
-3. 等待审查结果，分析反馈：
-   - **不通过** → 返回步骤4修改，修改后重新执行步骤5
-   - **轻微问题** → 修改后重新执行步骤5确认
-   - **通过** → 继续步骤6
+**🎯 Goal:** 载入领域skill，明确阶段目标，建立可追踪的任务清单。
 
-### 步骤6：使用Question工具向用户确认（绝不擅自进入下一阶段）
+**✅ Actions:**
 
-**目标：** 获得用户明确授权才能进入下一阶段
+1. **Load Skills**: 载入当前阶段依赖的 specific skills。
+2. **Init Draft**: 创建或更新阶段草稿文件 `.hyper-designer/{stage_name}/draft.md`。
+3. **Create TODO**: 调用 `todowrite` 工具，生成原子化的 TODO 列表。
+    * 要求：每个 TODO 项必须是可验证的、具体的子任务。
+    * 示例：❌ "完成需求分析" -> ✅ "分析用户认证模块的输入输出定义"。
 
-**执行动作：**
+**🚫 Prohibitions:**
 
-1. **仅在HCritic审查通过后执行此步骤**
-2. 使用Question工具（格式见步骤2示例，修改question内容为阶段完成确认）
-3. 等待用户明确回答：
-   - **"继续修改"** → 返回步骤4，修改后重新执行步骤5
-   - **"进入下一阶段"** → 继续步骤7
+* 禁止跳过草稿直接执行。
+* 禁止 TODO 项过于笼统模糊。
 
-### 步骤7：阶段移交
+### Step 2: Interactive Context Collection
 
-**目标：** 正式完成当前阶段，触发下一阶段交接
+**🎯 Goal:** 基于 `document-collector` skill，完备本阶段所需的知识库。
 
-**执行动作：**
+**✅ Actions (Strict Sequence):**
 
-1. 使用工作流移交工具标记下一阶段交接，设置handover状态为下一阶段名称
-2. 向用户说明："已交接到下一阶段 {下一阶段名称}"
+1. **Requirement Check**: 读取当前阶段定义，确定 "Required Materials" 清单。
+2. **Project Scan**: 使用 `Glob`/`LS`/`Grep` **预扫描**项目现有文件，列出发现的文档清单。
+3. **Accuracy Confirmation**: **[必须交互]** 使用 `ask_user` 展示预扫描结果，询问用户：“预扫描到的文档是否准确？是否有误识别？”
+4. **Gap Interaction**: **[必须交互]** 根据清单对比结果，**逐项**向用户询问：“当前缺少 [文件名]，是否需要补充？请提供位置或内容。”
+5. **Deep Collection** (若需):
+    * 调用 `explore` agent 分析代码库。
+    * 调用 `librarian` agent 检索外部文档。
+    * 使用 `webfetch/websearch` 获取在线资源。
+6. **Update Manifest**: 汇总资料至 `.hyper-designer/document/manifest.md`。
 
-### 步骤8：进入idle
+**🚫 Prohibitions:**
 
-**目标：** 等待系统或用户的下一步指令
+* **严禁**仅执行预扫描而不进行用户交互。
+* **严禁**跳过“确认准确性”或“逐项询问补充”的步骤。
+* 禁止不使用 `document-collector` skill。
+* 禁止假设资料不存在而不询问用户。
+* 禁止收集与当前阶段无关的冗余资料。
 
-**执行动作：**
+### Step 3: Context Loading
 
-1. 完成步骤7后，自然结束当前回合
-2. 系统会自动加载下一阶段的skill
-3. 等待下一阶段的工作指令
+**🎯 Goal:** 获取必要的上下文记忆。
 
----
+**✅ Actions:**
 
-**重要提醒：** 每个阶段都必须严格遵循以上8步流程，不可跳过或简化任何步骤。
+1. **Read Manifest**: 读取 `.hyper-designer/document/manifest.md` 获取参考资料索引。
+2. **Load History**: 读取上一阶段的输出件，对齐当前状态。
+
+### Step 4: Execution & Interaction
+
+**🎯 Goal:** 深度协作完成任务，**严格遵守 Human-in-the-Loop 原则**。
+
+**✅ Actions:**
+
+1. **Iterate TODO**: 按清单逐项执行。
+2. **Micro-Confirmation**:
+    * **关键规则**：每完成一个原子步骤，必须使用 `ask_user` 工具确认。
+    * **禁止**：连续执行多个步骤而不交互，或擅自进入 `idle` 状态。
+3. **Research**: 必要时调用 `explore`/`librarian` 进行深度研究。
+4. **Update Draft**: 实时更新草稿文件，记录决策过程。
+5. **Generate Output**: 生成正式交付文档。
+
+### Step 5: HCritic Review
+
+**🎯 Goal:** 强制质量门控，确保输出符合标准。
+
+**✅ Actions:**
+
+1. **Notify User**: "正在提交 HCritic 进行专业审查..."
+2. **Invoke Agent**: 使用 `task` 工具调用 `HCritic` agent (参考 "与 HCritic 协作" 章节)。
+3. **Process Feedback**:
+    * **Status: REJECTED** -> 返回 **Step 4** 修正，修正后重回 **Step 5**。
+    * **Status: MINOR_ISSUES** -> 修正后重回 **Step 5** 确认。
+    * **Status: PASSED** -> 进入 **Step 6**。
+
+### Step 6: User Confirmation
+
+**🎯 Goal:** 获得用户明确授权，作为阶段切换的守门员。
+
+**✅ Actions:**
+
+1. **Prerequisite**: 仅在 HCritic 审查通过后执行。
+2. **Final Check**: 使用 `ask_user` 工具询问：“本阶段工作已完成，是否进入下一阶段？”
+3. **Handle Response**:
+    * **"修改"** -> 返回 **Step 4** 调整，随后重新执行评审流程。
+    * **"确认"** -> 进入 **Step 7**。
+
+### Step 7: Handover
+
+**🎯 Goal:** 触发工作流状态流转。
+
+**✅ Actions:**
+
+1. **Execute Handover**: 调用 `set_hd_workflow_handover`，设置 `handover` 状态为下一阶段名称。
+2. **Notify**: "阶段交接完成，正在激活下一阶段: {Next Stage Name}"。
+
+### Step 8: Idle State
+
+**🎯 Goal:** 结束当前回合，等待系统调度。
+
+**✅ Actions:**
+
+1. **Terminate**: 完成上述步骤后自然结束。
+2. **Wait**: 系统将自动加载下一阶段 Skill，等待新指令。

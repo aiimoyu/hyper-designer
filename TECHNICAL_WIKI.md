@@ -7,6 +7,7 @@
 Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标准化工作流，实现从需求工程到系统设计的全流程智能化。
 
 **核心价值：**
+
 - **工作流标准化**：8 阶段标准化设计流程
 - **AI 能力专业化**：每个阶段通过 Skill 注入专属方法论
 - **输出件规范化**：每个阶段产出结构化设计文档
@@ -106,6 +107,7 @@ graph TB
 #### 2.2.1 Agent 工厂 (`src/agents/factory.ts`)
 
 **职责：**
+
 1. 根据 `AgentDefinition` 创建完整的 Agent 配置
 2. 支持多种提示词生成器（filePrompt, toolsPrompt, stringPrompt）
 3. 合并默认配置和用户覆盖配置
@@ -224,6 +226,7 @@ export function loadPromptForStage(stage: string | null, definition: WorkflowDef
 ### 3.1 Skill 的作用
 
 Skill 是每个阶段的专业能力注入器，为 Agent 提供：
+
 - 方法论指导（如 5W2H 框架）
 - 输出模板（如用例模板）
 - 质量检查清单
@@ -344,7 +347,7 @@ The `ir信息.md` must follow this structure:
 | Agent | Mode | Tool 权限 | 核心能力 | Temperature |
 |-------|------|-----------|---------|-------------|
 | **HCollector** | all | websearch, webfetch, task, edit | 资料收集、文档整理 | 0.3 |
-| **HArchitect** | primary | edit, skill, task, question | 需求分析、流程协调 | 0.7 |
+| **HArchitect** | primary | edit, skill, task, question | 需求分析、流程协调 | 0.6 |
 | **HEngineer** | primary | edit, skill, task, question | 技术设计、需求分解 | 0.4 |
 | **HCritic** | subagent | read, grep, glob | 文档质量检查、一致性验证 | 0.1 |
 
@@ -443,8 +446,7 @@ event: async ({ event }: { event: any }) => {
 ```
 src/workflows/plugins/
 ├── classic/              # 经典需求工程工作流
-│   ├── definition.ts     # 工作流定义
-│   ├── index.ts          # 导出
+│   ├── index.ts          # 工作流定义与导出
 │   └── prompts/          # 阶段提示词
 │       ├── workflow.md
 │       ├── dataCollection.md
@@ -452,15 +454,14 @@ src/workflows/plugins/
 │       └── ...
 │
 └── open-source/          # 开源项目工作流
-    ├── definition.ts
-    ├── index.ts
+    ├── index.ts          # 工作流定义与导出
     └── prompts/
 ```
 
 ### 5.2 工作流定义示例
 
 ```typescript
-// src/workflows/plugins/classic/definition.ts
+// src/workflows/plugins/classic/index.ts
 export const classicWorkflow: WorkflowDefinition = {
   id: 'classic',
   name: 'Classic Requirements Engineering',
@@ -544,6 +545,7 @@ opencode/
 ```
 
 **优势：**
+
 - 核心业务逻辑可复用到其他 AI 框架（Claude Code 等）
 - 通过 `RuntimeType` 支持多运行时
 - 降低框架升级风险
@@ -568,6 +570,7 @@ const DEFINITION: AgentDefinition = {
 ### 6.3 状态持久化与验证
 
 工作流状态持久化到 JSON 文件，支持：
+
 - **进度恢复**：中断后可继续
 - **多用户隔离**：每个工作目录独立状态
 - **交接验证**：防止跳过关键步骤
@@ -603,6 +606,7 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
 ### 6.4 质量保证机制
 
 通过 HCritic Agent 实现自动审查：
+
 - **完整性检查**：确保输出文档包含所有必需章节
 - **一致性验证**：确保阶段间文档逻辑一致
 - **标准符合度**：对照 Skill 中的质量清单验证
@@ -657,7 +661,7 @@ defaultPermission: {
 | Agent | 默认温度 | 理由 |
 |-------|---------|------|
 | HCollector | 0.3 | 较低温度，确保需求收集的准确性和一致性 |
-| HArchitect | 0.7 | 较高温度，鼓励架构设计的创造性和多样性 |
+| HArchitect | 0.6 | 较高温度，鼓励架构设计的创造性和多样性 |
 | HCritic | 0.1 | 极低温度，确保评审的严格性和一致性 |
 | HEngineer | 0.4 | 中等温度，平衡技术设计的严谨性和创造性 |
 
@@ -762,11 +766,13 @@ sequenceDiagram
 **问题：** 如何在不修改 Agent 源码的情况下，动态增强其能力？
 
 **解决方案：**
+
 - OpenCode 提供了 `experimental.chat.system.transform` Hook
 - 在 Agent 执行前拦截，动态向 `system[]` 数组注入内容
 - 根据当前工作流状态加载对应的 Skill
 
 **优势：**
+
 - Agent 专注于自身职责（SOLID 原则）
 - Skill 可独立迭代和更新
 - 支持阶段能力的热插拔
@@ -776,12 +782,14 @@ sequenceDiagram
 **问题：** Agent A 如何将控制权交给 Agent B？
 
 **解决方案：**
+
 - Agent A 设置 `handoverTo` 字段
 - 框架触发 `session.idle` 事件时检测到交接标记
 - Hook 自动向目标 Agent 发送交接 Prompt
 - 目标 Agent 接管工作
 
 **优势：**
+
 - 解耦 Agent 间的直接依赖
 - 支持异步交接
 - 可记录交接历史
@@ -791,11 +799,13 @@ sequenceDiagram
 **问题：** 如何保证工作流的连续性和可追溯性？
 
 **解决方案：**
+
 - 每次状态变更立即写入 JSON 文件
 - 支持 `getWorkflowState()` 读取当前状态
 - 历史状态可用于审计和回溯
 
 **优势：**
+
 - 进度可恢复
 - 多用户隔离
 - 便于调试和问题排查

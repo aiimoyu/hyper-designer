@@ -1,260 +1,156 @@
-## 工作规范
+## Standard
 
-### 草稿管理
+### 1. File Management
 
-#### 草稿位置
-
-**每个阶段都有独立的草稿文件：**
-
-```
-.hyper-designer/{阶段名}/draft.md
-```
-
-#### 草稿内容模板
-
-```markdown
-## {阶段名} 工作草稿
-
-### 用户需求记录
-[原始需求、用户反馈]
-
-### 研究发现
-[explore/librarian发现、资料索引内容]
-
-### 设计思路
-[设计决策、备选方案、选择理由]
-
-### 待确认问题
-[问题列表]
-
-### 文档生成状态
-[已完成/待完成部分]
-
-### HEngineer交接准备
-[交接文档列表、关键上下文]
-```
-
-#### 草稿更新时机
-
-**在以下时机必须更新草稿：**
-
-1. 收到用户反馈后
-2. 研究结果后
-3. 做出决策时
-4. 生成文档前
-5. 准备交接时
-
-#### 草稿管理最佳实践
-
-- **持续更新**：不要等到最后才记录
-- **结构清晰**：使用模板保持一致性
-- **可追溯**：记录设计决策的来龙去脉
-- **用户可见**：草稿是工作透明度的体现
-
-### 目录结构总览
-
-#### 完整工作流目录结构
+#### 📂 标准目录树
 
 ```
 .hyper-designer/
-├── document/                          # 资料收集（HCollector负责）
-│   ├── index.md                       # 资料索引
-│   └── draft.md                       # 收集过程草稿
-├── IRAnalysis/                        # 阶段2
-│   ├── draft.md
-│   └── 需求信息.md
-├── scenarioAnalysis/                  # 阶段3
-│   ├── draft.md
-│   └── {功能名}场景.md
-├── useCaseAnalysis/                   # 阶段4
-│   ├── draft.md
-│   └── {功能名}用例.md
-├── functionalRefinement/              # 阶段5
-│   ├── draft.md
-│   ├── {功能名}功能列表.md
-│   └── {功能名}FMEA.md
-├── systemFunctionalDesign/            # 阶段6-7（由HEngineer负责）
-│   ├── draft.md
-│   ├── 系统需求分解.md
-│   └── 系统功能设计.md
-└── moduleFunctionalDesign/            # 阶段8-9（由HEngineer负责）
-    ├── draft.md
-    ├── 活动需求分解.md
-    └── {模块名}设计.md
+├── document/                  # Global Context
+│   ├── manifest.md            # Material Index
+│   └── draft.md               # Collection Draft
+├── {stage_name}/              # Current Stage
+│   ├── draft.md               # Working Draft
+│   └── {deliverable_name}.md  # Final Output
+└── _traceability/             # (Optional) Traceability Matrix
 ```
 
-#### 目录创建规则
+#### ⚙️ 自动化维护规则
 
-**每个阶段开始时：**
+1. **Initialization**: 阶段开始时，检查并创建 `{stage_name}` 目录。
+2. **Naming Convention**: 正式文档使用 `{功能/模块}_{类型}.md` 格式 (e.g., `用户认证_设计文档.md`)。
+3. **Integrity Check**: 阶段结束前执行 `Checklist` 验证：
+    * [ ] `draft.md` 记录完整。
+    * [ ] 正式文档已生成。
+    * [ ] 文档头部元数据正确。
 
-1. 自动创建 `{阶段名}` 目录（如果不存在）
-2. 创建或更新 `draft.md`
-3. 阶段完成后创建正式文档
+### 2. Draft Management
 
-#### 文档命名规范
+#### 📄 文件路径规范
 
-- **草稿文件**：统一命名为 `draft.md`
-- **正式文档**：使用有意义的中文命名
-- **多文档阶段**：按功能或模块分别命名
-
-#### 文件完整性检查
-
-**每个阶段完成时确保：**
-
-- [ ] 草稿文件存在且完整
-- [ ] 正式文档已生成
-- [ ] 文档内容符合阶段交付物要求
-- [ ] 文档可被下一阶段读取
-
-### 交接准备
-
-#### 交接给HEngineer
-
-**在functionalRefinement完成后：**
-
-1. 确保以下文档完整：
-   - IRAnalysis/需求信息.md
-   - scenarioAnalysis/场景文档（各功能）
-   - useCaseAnalysis/用例文档（各功能）
-   - functionalRefinement/功能列表文档（各功能）
-   - functionalRefinement/FMEA文档（各功能）
-
-2. 更新functionalRefinement/draft.md中的"HEngineer交接准备"部分
-
-3. 清理草稿文件中的临时记录
-
-#### 交接给下一阶段
-
-**每个阶段交接前：**
-
-1. 确认HCritic审查通过
-2. 确认用户同意进入下一阶段
-3. 调用set_hd_workflow_handover工具
-4. 向用户明确说明交接内容
-
-### 文档可追溯性
-
-#### 文档间关系
+每个阶段维护独立草稿，路径遵循以下模式：
 
 ```
-需求信息.md
-    ↓ 指导
-{功能名}场景.md
-    ↓ 细化
-{功能名}用例.md
-    ↓ 分解
-{功能名}功能列表.md + {功能名}FMEA.md
-    ↓ 交接
-系统功能设计（HEngineer）
-    ↓ 分解
-{模块名}设计.md（HEngineer）
+.hyper-designer/{stage_name}/draft.md
 ```
 
-#### 版本管理建议
+#### 📝 草稿内容 Schema
 
-- **草稿频繁更新**：不需要版本控制
-- **正式文档稳定**：重要版本记录变更历史
-- **交接节点**：标注交接时的版本号
+**严令：草稿必须包含以下 Section，不得遗漏。**
 
-### 最佳实践
+```markdown
+# {Stage Name} - Working Draft
 
-#### 文档质量
+## 1. User Requirements Record
+- [原始需求摘要]
+- [关键用户反馈]
 
-- **清晰完整**：确保文档无歧义、无遗漏
-- **格式统一**：遵循各阶段skill的文档结构
-- **用户友好**：使用用户能理解的语言和术语
+## 2. Research Findings
+- **Explore Results**: [代码库发现]
+- **Librarian Results**: [外部资料索引]
 
-#### 工作透明度
+## 3. Design Decisions
+- **Decision**: [设计决策]
+- **Rationale**: [选择理由]
+- **Alternatives**: [备选方案]
 
-- **草稿可见**：让用户随时了解工作进展
-- **变更记录**：记录重要的设计决策和修改
-- **问题追踪**：待确认问题及时反馈给用户
+## 4. Pending Issues
+- [ ] [问题描述] - Status: Pending User Input
 
-#### 效率优化
-
-- **模板复用**：利用skill提供的文档模板
-- **工具支持**：熟练使用Question、Explore、Librarian等工具
-- **阶段聚焦**：不超前、不滞后，专注于当前阶段
-
-### 与HCritic协作
-
-#### HCritic审查流程（每个阶段完成后强制执行）
-
-##### 触发时机
-
-**文档生成完成后，在向用户确认和调用workflow工具之前**
-
-##### 调用格式
-
-```typescript
-task(
-  subagent_type="HCritic",
-  run_in_background=false,
-  load_skills=["ir-sr-ar-traceability"],  // 根据阶段加载相应skill
-  description="审查{阶段名}设计",
-  prompt={`1. TASK: 审查${stageName}阶段的设计文档质量
-
-2. EXPECTED OUTCOME:
-   - 明确的审查结论："通过"或"不通过"
-   - 具体的改进建议（如不通过）
-   - 违反约束的具体位置和原因
-
-3. REQUIRED TOOLS:
-   - Read: 读取${stageName}阶段的输出文档
-   - Grep: 搜索相关模式和数据一致性
-   - 不得使用: Write/Edit工具（HCritic是只读审查者）
-
-4. MUST DO:
-   - 对照identity/absolute-constraints.md中的约束检查
-   - 检查与前一阶段文档的一致性
-   - 验证文档完整性和可追溯性
-   - 如果是functionalRefinement阶段，使用ir-sr-ar-traceability skill进行双向追踪分析
-   - 给出明确的改进建议和具体位置
-
-5. MUST NOT DO:
-   - 修改任何文档文件
-   - 给出模糊的"需要改进"建议（必须具体到内容和位置）
-   - 跳过对identity文件中约束的检查
-   - 省略审查结论（必须明确说"通过"或"不通过"）
-
-6. CONTEXT:
-   - 当前阶段: ${stageName}
-   - 文档路径: ${documentPath}
-   - 上一阶段: ${previousStage}
-   - 上一阶段输出: ${previousOutputPath}
-   - 工作流状态: ${workflowState}
-
-请严格审查，给出明确的结论和具体的改进建议。`
-}
-)
+## 5. Generation Progress
+- [ ] Section 1: Introduction
+- [x] Section 2: Core Logic
 ```
 
-##### 循环机制
+#### 🔄 更新触发器
 
+**基于事件驱动更新，禁止批量延迟记录：**
+
+* `OnUserFeedback` -> 更新 "User Requirements Record"
+* `OnToolResult` (Explore/Librarian) -> 更新 "Research Findings"
+* `OnDecisionMade` -> 更新 "Design Decisions"
+* `OnPhaseComplete` -> 更新 "Generation Progress"
+
+### 3. HCritic Collaboration Protocol
+
+#### 🎯 目标
+
+通过结构化评审闭环，确保文档质量符合 `absolute-constraints.md`。
+
+#### 🚀 调用 HCritic (Implementation)
+
+使用 `task` 工具调用，**必须强制要求 HCritic 输出 JSON 格式结果**以便解析。
+
+**Prompt 模板:**
+
+```markdown
+**CONTEXT**:
+- Current Stage: {stage_name}
+- Document Path: {document_path}
+- Constraints File: identity/absolute-constraints.md
+
+**TASK**:
+Review the document at {document_path}.
+
+**OUTPUT SCHEMA (Strict JSON)**:
+{{
+  "status": "PASS" | "FAIL",
+  "score": 0-100,
+  "issues": [
+    {{
+      "severity": "CRITICAL" | "MINOR",
+      "location": "Section 2.1 / Line 45",
+      "description": "Violates constraint X...",
+      "suggestion": "Rewrite as..."
+    }}
+  ],
+  "summary": "Brief summary of the review."
+}}
+
+**REVIEW CRITERIA**:
+1. **Consistency**: Does it contradict previous stages?
+2. **Completeness**: Are all required sections present?
+3. **Constraint Compliance**: Does it follow `absolute-constraints.md`?
+4. **Traceability**: (If functionalRefinement) Run traceability analysis.
+
+**INSTRUCTIONS**:
+- If status is "FAIL", you MUST provide specific "location" and "suggestion".
+- Do NOT output anything outside the JSON structure.
 ```
-不通过 → 修改文档 → 重新提交 → 直到明确"通过"
-```
 
-##### 审查通过后的操作
+#### 🔄 闭环处理流程
 
-**只有当HCritic明确给出"通过"结论后：**
+**Step A: Invoke & Parse**
+调用 HCritic，解析返回的 JSON。
 
-1. 使用Question工具询问用户
-2. 用户确认后才执行workflow工具进行阶段交接
+* 若解析失败 -> 视为 CRITICAL ERROR，重试。
 
-##### 审查不通过的处理
+**Step B: Decision Gate**
 
-**如果HCritic给出"不通过"结论：**
+* **Status: PASS** -> 进入用户确认环节。
+* **Status: FAIL** -> 进入修复流程 (Step C)。
 
-1. 记录HCritic的所有改进建议
-2. 返回执行流程的步骤3
-3. 修改文档
-4. 重新执行步骤4（再次调用HCritic审查）
-5. 重复直到获得"通过"结论
+**Step C: Iterative Repair (Max Retries: 3)**
 
-##### 重要提醒
+1. 提取 `issues` 列表。
+2. 在 `draft.md` 中记录问题。
+3. 针对每个 `location` 执行 `Edit`/`Rewrite`。
+4. 重新调用 HCritic。
+5. 若超过最大重试次数仍失败 -> `ask_user` 请求人工介入。
 
-- **绝对禁止**使用@HCritic提及方式（已废弃，必须用task工具）
-- **每个阶段**都必须通过HCritic审查，无例外
-- **不通过**时必须修改并重新审查，不得跳过
-- **通过后**必须请求用户确认，然后才能交接
+### 4. Best Practices
+
+#### 📊 质量控制
+
+* **Atomicity**: 每个文档段落应仅属于一个功能模块。
+* **Self-Containment**: 文档应自解释，避免过度依赖外部隐性知识。
+
+#### 🕵️ 可观测性
+
+* **Draft as Log**: 草稿不仅是工作区，也是决策日志。
+* **Tool Transparency**: 调用工具时，向用户简要说明目的。
+
+#### ⚡ 效率优化
+
+* **Context Window Management**: 仅载入当前阶段所需上下文，避免 Token 溢出。
+* **Parallel Execution**: 资料收集阶段并行调用 `explore` 和 `librarian`。

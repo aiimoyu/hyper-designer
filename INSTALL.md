@@ -33,13 +33,7 @@ An OpenCode plugin that implements specialized agents and workflow management fo
    ln -s ~/.config/opencode/hyper-designer/opencode/.plugins/hyper-designer.ts ~/.config/opencode/plugins/hyper-designer.ts
 
    # Create skill symbolic links
-   ln -s ~/.config/opencode/hyper-designer/src/skills/ir-analysis ~/.config/opencode/skills/ir-analysis
-   ln -s ~/.config/opencode/hyper-designer/src/skills/scenario-analysis ~/.config/opencode/skills/scenario-analysis
-   ln -s ~/.config/opencode/hyper-designer/src/skills/use-case-analysis ~/.config/opencode/skills/use-case-analysis
-   ln -s ~/.config/opencode/hyper-designer/src/skills/functional-refinement ~/.config/opencode/skills/functional-refinement
-   ln -s ~/.config/opencode/hyper-designer/src/skills/sr-ar-decomposition ~/.config/opencode/skills/sr-ar-decomposition
-   ln -s ~/.config/opencode/hyper-designer/src/skills/functional-design ~/.config/opencode/skills/functional-design
-   ln -s ~/.config/opencode/hyper-designer/src/skills/ir-sr-ar-traceability ~/.config/opencode/skills/ir-sr-ar-traceability
+   ln -s ~/.config/opencode/hyper-designer/src/skills/hyper-designer ~/.config/opencode/skills/hyper-designer
    ```
 
    - To force overwrite existing links: use `ln -sf ...` for files and `ln -sfn ...` for directories
@@ -59,13 +53,7 @@ mkdir "%USERPROFILE%\.config\opencode\skills"
 
 mklink "%USERPROFILE%\.config\opencode\plugins\hyper-designer.ts" "%USERPROFILE%\.config\opencode\hyper-designer\opencode\.plugins\hyper-designer.ts"
 
-mklink /J "%USERPROFILE%\.config\opencode\skills\ir-analysis" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\ir-analysis"
-mklink /J "%USERPROFILE%\.config\opencode\skills\scenario-analysis" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\scenario-analysis"
-mklink /J "%USERPROFILE%\.config\opencode\skills\use-case-analysis" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\use-case-analysis"
-mklink /J "%USERPROFILE%\.config\opencode\skills\functional-refinement" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\functional-refinement"
-mklink /J "%USERPROFILE%\.config\opencode\skills\sr-ar-decomposition" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\sr-ar-decomposition"
-mklink /J "%USERPROFILE%\.config\opencode\skills\functional-design" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\functional-design"
-mklink /J "%USERPROFILE%\.config\opencode\skills\ir-sr-ar-traceability" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\ir-sr-ar-traceability"
+mklink /J "%USERPROFILE%\.config\opencode\skills\hyper-designer" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\hyper-designer"
 ```
 
 **PowerShell (Administrator):**
@@ -77,13 +65,7 @@ New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\ski
 
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins\hyper-designer.ts" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\opencode\.plugins\hyper-designer.ts"
 
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\ir-analysis" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\ir-analysis"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\scenario-analysis" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\scenario-analysis"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\use-case-analysis" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\use-case-analysis"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\functional-refinement" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\functional-refinement"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\sr-ar-decomposition" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\sr-ar-decomposition"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\functional-design" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\functional-design"
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\ir-sr-ar-traceability" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\ir-sr-ar-traceability"
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\hyper-designer" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\hyper-designer"
 ```
 
 ---
@@ -132,26 +114,14 @@ If you used copies instead of symbolic links, you will need to re-copy the files
 
      ```bash
      rm ~/.config/opencode/plugins/hyper-designer.ts
-     rm -rf ~/.config/opencode/skills/ir-analysis
-     rm -rf ~/.config/opencode/skills/scenario-analysis
-     rm -rf ~/.config/opencode/skills/use-case-analysis
-     rm -rf ~/.config/opencode/skills/functional-refinement
-     rm -rf ~/.config/opencode/skills/sr-ar-decomposition
-     rm -rf ~/.config/opencode/skills/functional-design
-     rm -rf ~/.config/opencode/skills/ir-sr-ar-traceability
+     rm -rf ~/.config/opencode/skills/hyper-designer
      ```
 
    - Windows (Administrator CMD):
 
      ```cmd
      del "%USERPROFILE%\.config\opencode\plugins\hyper-designer.ts"
-     rmdir "%USERPROFILE%\.config\opencode\skills\ir-analysis"
-     rmdir "%USERPROFILE%\.config\opencode\skills\scenario-analysis"
-     rmdir "%USERPROFILE%\.config\opencode\skills\use-case-analysis"
-     rmdir "%USERPROFILE%\.config\opencode\skills\functional-refinement"
-     rmdir "%USERPROFILE%\.config\opencode\skills\sr-ar-decomposition"
-     rmdir "%USERPROFILE%\.config\opencode\skills\functional-design"
-     rmdir "%USERPROFILE%\.config\opencode\skills\ir-sr-ar-traceability"
+     rmdir "%USERPROFILE%\.config\opencode\skills\hyper-designer"
      ```
 
 2. (Optional) Remove the repository:

@@ -1,33 +1,21 @@
 {
   "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
   "workflow": "classic",
+  "summarize": "opencode/minimax-m2.5-free",
   "agents": {
-    "HCollector": {
-      // "model": "zhipuai-coding-plan/glm-4.7",
-      "temperature": 0.3,
-      "maxTokens": 32000,
-      "variant": "medium",
-      "prompt_append": null,
-      "permission": {
-        "edit": "allow",
-        "bash": "deny",
-        "webfetch": "allow",
-        "question": "allow"
-      }
-    },
     "HArchitect": {
-      // "model": "zhipuai-coding-plan/glm-4.7",
-      "temperature": 0.7,
+      "model": "opencode/minimax-m2.5-free",
+      "temperature": 0.6,
       "maxTokens": 32000,
       "variant": "high"
     },
     "HCritic": {
-      // "model": "zhipuai-coding-plan/glm-4.7",
+      "model": "opencode/minimax-m2.5-free",
       "temperature": 0.1,
       "maxTokens": 32000
     },
     "HEngineer": {
-      // "model": "zhipuai-coding-plan/glm-4.7",
+      "model": "opencode/minimax-m2.5-free",
       "temperature": 0.4,
       "maxTokens": 32000
     }

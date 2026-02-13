@@ -5,9 +5,10 @@
 **Hard Rule**: Each AR must be ≤ 0.5K workload units
 
 **Definition of 0.5K**:
+
 - K = 1000 person-hours (行业标准: 1K = 1000工时)
 - 0.5K = 500 person-hours
-- Typical conversion: 
+- Typical conversion:
   - 500 hours ≈ 62.5 person-days (8h/day)
   - For a team of 2: ~6 weeks
   - For a single developer: ~3 months
@@ -23,6 +24,7 @@
 ## Estimation Techniques
 
 ### Bottom-Up Estimation
+
 Break AR into tasks and sum:
 
 ```markdown
@@ -39,6 +41,7 @@ Total: 7.2 days × 8h = 57.6 hours = 0.058K ✅
 ```
 
 ### Comparison Estimation
+
 Compare to previously completed similar work:
 
 ```markdown
@@ -51,6 +54,7 @@ Similar to: AR-历史-05 (Session验证中间件)
 ```
 
 ### Three-Point Estimation
+
 Use optimistic/most-likely/pessimistic:
 
 ```markdown
@@ -67,14 +71,17 @@ E = (0.1 + 4×0.2 + 0.4) / 6 = 0.217K ✅
 ## AR Splitting Strategies
 
 ### Strategy 1: By Layer
+
 Split vertically through architecture layers:
 
 **Original AR (0.8K - TOO LARGE)**:
+
 ```
 AR-001-01: 用户注册功能 (0.8K) ❌
 ```
 
 **Split By Layer**:
+
 ```
 AR-001-01: 注册表单UI (0.15K) ✅
 AR-001-02: 注册接口实现 (0.2K) ✅
@@ -85,14 +92,17 @@ Total: 0.8K ✅
 ```
 
 ### Strategy 2: By Scenario
+
 Split by different usage scenarios:
 
 **Original AR (0.9K - TOO LARGE)**:
+
 ```
 AR-002-01: 订单支付处理 (0.9K) ❌
 ```
 
 **Split By Scenario**:
+
 ```
 AR-002-01: 支付宝支付流程 (0.3K) ✅
 AR-002-02: 微信支付流程 (0.3K) ✅
@@ -102,14 +112,17 @@ Total: 0.9K ✅
 ```
 
 ### Strategy 3: By Feature Slice
+
 Split horizontally by feature completeness:
 
 **Original AR (1.2K - TOO LARGE)**:
+
 ```
 AR-003-01: 订单查询功能 (1.2K) ❌
 ```
 
 **Split By Feature Slice**:
+
 ```
 AR-003-01: 基础订单列表查询 (0.3K) ✅
 AR-003-02: 查询条件过滤 (0.2K) ✅
@@ -120,30 +133,36 @@ Total: 1.2K ✅
 ```
 
 ### Strategy 4: By Complexity
+
 Split complex logic from simple CRUD:
 
-**Original AR (0.7K - TOO LARGE)**:
+**Original AR (0.6K - TOO LARGE)**:
+
 ```
-AR-004-01: 库存扣减逻辑 (0.7K) ❌
+AR-004-01: 库存扣减逻辑 (0.6K) ❌
 ```
 
 **Split By Complexity**:
+
 ```
 AR-004-01: 简单库存扣减API (0.2K) ✅
 AR-004-02: 并发扣减锁机制 (0.3K) ✅
 AR-004-03: 分布式库存同步 (0.2K) ✅
-Total: 0.7K ✅
+Total: 0.6K ✅
 ```
 
 ### Strategy 5: By Technology
+
 Split by different technologies or integrations:
 
 **Original AR (0.8K - TOO LARGE)**:
+
 ```
 AR-005-01: 文件上传功能 (0.8K) ❌
 ```
 
 **Split By Technology**:
+
 ```
 AR-005-01: 本地存储上传 (0.2K) ✅
 AR-005-02: OSS云存储上传 (0.25K) ✅
@@ -245,12 +264,15 @@ Total: 1.5K ✅ (matches original, but now properly decomposed)
 ## Common Estimation Mistakes
 
 ### Mistake 1: Forgetting Testing Effort
+
 ❌ Bad:
+
 ```
 工作量估算: 0.2K (开发时间)
 ```
 
 ✅ Good:
+
 ```
 工作量估算: 0.3K
   - 开发: 0.2K
@@ -260,12 +282,15 @@ Total: 1.5K ✅ (matches original, but now properly decomposed)
 ```
 
 ### Mistake 2: Not Accounting for Uncertainty
+
 ❌ Bad:
+
 ```
 工作量估算: 0.25K (理想情况)
 ```
 
 ✅ Good:
+
 ```
 工作量估算: 0.3K
   - 基础估算: 0.25K
@@ -273,13 +298,16 @@ Total: 1.5K ✅ (matches original, but now properly decomposed)
 ```
 
 ### Mistake 3: Double-Counting Dependencies
+
 ❌ Bad:
+
 ```
 AR-001: 登录功能 (0.3K - 包含JWT库集成)
 AR-002: Token验证 (0.2K - 包含JWT库集成)
 ```
 
 ✅ Good:
+
 ```
 AR-000: JWT库集成 (0.1K - 一次性)
 AR-001: 登录功能 (0.25K - 使用AR-000)
@@ -287,13 +315,16 @@ AR-002: Token验证 (0.15K - 使用AR-000)
 ```
 
 ### Mistake 4: Vague Scope Leading to Under-Estimation
+
 ❌ Bad:
+
 ```
 AR-003: 数据同步功能 (0.2K)
 [没有说明同步什么数据、频率、错误处理]
 ```
 
 ✅ Good:
+
 ```
 AR-003: 用户订单数据每日增量同步到数据仓库 (0.35K)
   - 增量识别逻辑: 0.1K
