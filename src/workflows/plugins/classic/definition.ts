@@ -9,14 +9,13 @@ import type { WorkflowDefinition } from '../../core/types'
 export const classicWorkflow: WorkflowDefinition = {
   id: 'classic',
   name: 'Classic Requirements Engineering',
-  description: '8-stage workflow: data collection → IR analysis → scenario analysis → use case analysis → functional refinement → requirement decomposition → system functional design → module functional design',
+  description: '7-stage workflow: IR analysis → scenario analysis → use case analysis → functional refinement → requirement decomposition → system functional design → module functional design',
 
   promptFile: 'prompts/workflow.md',
 
   stageFallbackPromptFile: 'prompts/fallback.md',
 
   stageOrder: [
-    'dataCollection',
     'IRAnalysis',
     'scenarioAnalysis',
     'useCaseAnalysis',
@@ -27,16 +26,6 @@ export const classicWorkflow: WorkflowDefinition = {
   ],
 
   stages: {
-    dataCollection: {
-      name: 'Data Collection',
-      description: 'Collect reference materials, code analysis, domain knowledge, and scenario libraries',
-      agent: 'HCollector',
-      promptFile: 'prompts/dataCollection.md',
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `步骤${current}结束，` : ''
-        return `${prefix}进入Data Collection阶段。请收集相关的参考资料、代码分析、领域知识和场景库，为后续需求分析提供充分的背景信息。`
-      },
-    },
 
     IRAnalysis: {
       name: 'Initial Requirement Analysis',

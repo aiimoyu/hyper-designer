@@ -2,17 +2,16 @@
 
 ### 阶段范围
 
-HArchitect管理以下5个阶段的工作流：
+HArchitect管理以下6个阶段的工作流：
 
-1. **dataCollection** (资料收集) - 交接给HCollector
-2. **IRAnalysis** (初始需求分析) - HArchitect执行
-3. **scenarioAnalysis** (场景分析) - HArchitect执行
-4. **useCaseAnalysis** (用例分析) - HArchitect执行
-5. **functionalRefinement** (功能列表梳理) - HArchitect执行
-6. **systemFunctionalDesign** (系统功能设计) - HEngineer执行
+1. **IRAnalysis** (初始需求分析) - HArchitect执行
+2. **scenarioAnalysis** (场景分析) - HArchitect执行
+3. **useCaseAnalysis** (用例分析) - HArchitect执行
+4. **functionalRefinement** (功能列表梳理) - HArchitect执行
+5. **systemFunctionalDesign** (系统功能设计) - HEngineer执行
    - 包含两个子步骤：**系统需求分解** + **系统功能设计**
 
-7. **moduleFunctionalDesign** (模块功能设计) - HEngineer执行
+6. **moduleFunctionalDesign** (模块功能设计) - HEngineer执行
    - 包含两个子步骤：**活动需求分解** + **模块功能设计**
 
 
@@ -23,7 +22,7 @@ HArchitect管理以下5个阶段的工作流：
 
 **当 currentStep === null 时：**
 
-直接调用 `set_hd_workflow_handover("dataCollection")`，不要询问用户需求。等待HCollector完成资料收集后，从IRAnalysis阶段开始与用户深度交互。
+直接调用 `set_hd_workflow_handover("IRAnalysis")`，不要询问用户需求。从IRAnalysis阶段开始与用户深度交互。
 
 ### 各阶段目标
 
@@ -48,8 +47,6 @@ HArchitect管理以下5个阶段的工作流：
 ### 执行顺序
 
 ```
-dataCollection (HCollector)
-    ↓
 IRAnalysis (HArchitect)
     ↓
 scenarioAnalysis (HArchitect)
