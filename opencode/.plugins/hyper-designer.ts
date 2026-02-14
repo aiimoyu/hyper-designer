@@ -67,16 +67,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     set_hd_workflow_stage: tool({
       description: "Update the completion status of a specific workflow stage of the Hyper Designer project",
       args: {
-        stage_name: tool.schema.enum([
-          "dataCollection",
-          "IRAnalysis",
-          "scenarioAnalysis",
-          "useCaseAnalysis",
-          "functionalRefinement",
-          "requirementDecomposition",
-          "systemFunctionalDesign",
-          "moduleFunctionalDesign",
-        ]).describe("The name of the workflow stage to update"),
+        stage_name: tool.schema.enum(workflow.stageOrder).describe("The name of the workflow stage to update"),
         is_completed: tool.schema.boolean().describe("Whether the stage is completed"),
       },
       async execute(params: { stage_name: string; is_completed: boolean }) {
@@ -87,16 +78,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     set_hd_workflow_current: tool({
       description: "Set the current workflow step of the Hyper Designer project",
       args: {
-        step_name: tool.schema.enum([
-          "dataCollection",
-          "IRAnalysis",
-          "scenarioAnalysis",
-          "useCaseAnalysis",
-          "functionalRefinement",
-          "requirementDecomposition",
-          "systemFunctionalDesign",
-          "moduleFunctionalDesign",
-        ]).describe("The name of the workflow step to set as current"),
+        step_name: tool.schema.enum(workflow.stageOrder).describe("The name of the workflow step to set as current"),
       },
       async execute(params: { step_name: string }) {
         const state = setWorkflowCurrent(params.step_name);
@@ -104,22 +86,18 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
       },
     }),
     set_hd_workflow_handover: tool({
-      description: "Set the handover workflow step of the Hyper Designer project",
+      description: "Set the handover workflow step of the Hyper Designer project. IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.",
       args: {
-        step_name: tool.schema.enum([
-          "dataCollection",
-          "IRAnalysis",
-          "scenarioAnalysis",
-          "useCaseAnalysis",
-          "functionalRefinement",
-          "requirementDecomposition",
-          "systemFunctionalDesign",
-          "moduleFunctionalDesign",
-        ]).describe("The name of the workflow step to set as handover"),
+        step_name: tool.schema.enum(workflow.stageOrder).describe("The name of the workflow step to set as handover"),
       },
       async execute(params: { step_name: string }) {
         const state = setWorkflowHandover(params.step_name, workflow);
-        return JSON.stringify(state, null, 2);
+        return JSON.stringify({
+          success: true,
+          handover_to: params.step_name,
+          message: "Handover scheduled. STOP now - do not continue working. The system will process the handover automatically when this session ends.",
+          state,
+        }, null, 2);
       },
     }),
   }

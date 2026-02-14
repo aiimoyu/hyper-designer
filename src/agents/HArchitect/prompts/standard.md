@@ -26,6 +26,8 @@
 
 ### 2. Draft Management
 
+草稿不仅是临时工作区，必须同时作为结构化的决策日志以便多 Agent 读写与审计。每次修改应生成可机器解析的决策条目，保证可追溯、可合并、可回溯。
+
 #### 📄 文件路径规范
 
 每个阶段维护独立草稿，路径遵循以下模式：
@@ -137,20 +139,3 @@ Review the document at {document_path}.
 3. 针对每个 `location` 执行 `Edit`/`Rewrite`。
 4. 重新调用 HCritic。
 5. 若超过最大重试次数仍失败 -> `ask_user` 请求人工介入。
-
-### 4. Best Practices
-
-#### 📊 质量控制
-
-* **Atomicity**: 每个文档段落应仅属于一个功能模块。
-* **Self-Containment**: 文档应自解释，避免过度依赖外部隐性知识。
-
-#### 🕵️ 可观测性
-
-* **Draft as Log**: 草稿不仅是工作区，也是决策日志。
-* **Tool Transparency**: 调用工具时，向用户简要说明目的。
-
-#### ⚡ 效率优化
-
-* **Context Window Management**: 仅载入当前阶段所需上下文，避免 Token 溢出。
-* **Parallel Execution**: 资料收集阶段并行调用 `explore` 和 `librarian`。
