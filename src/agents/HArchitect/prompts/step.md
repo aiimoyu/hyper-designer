@@ -48,7 +48,7 @@ graph TD
 
 ### Step 2: Interactive Context Collection
 
-**🎯 Goal:** 通过委托 `HCollector` 设计访谈框架，由你执行访谈以完备阶段所需知识库。
+**🎯 Goal:** 通过 `Task` 委托 `HCollector` Agent 设计访谈框架，由你执行访谈以完备阶段所需知识库。
 
 **🔄 Core Protocol (访谈委托模式)**
 
@@ -66,6 +66,8 @@ graph TD
   "required_assets": [{ "category": "名称", "description": "用途" }]
 }
 ```
+
+**重要**：告诉`HCollector`，当需要访谈时可返回委托指令，你会负责执行访谈，并在访谈完成后再次调用`HCollector`。
 
 **2. Handle Response Loop**
 根据 `HCollector` 返回的 `action` 执行对应操作：
@@ -105,10 +107,11 @@ graph TD
 
 **⚠️ Constraints**
 
-* **Must Delegate**: 严禁跳过 `HCollector` 直接收集资料。
+* **Must Delegate**: 严禁跳过 `HCollector` 自行直接收集资料。
 * **Follow Framework**: 必须严格遵循框架提问，不得擅自删减问题或修改跳转逻辑。
 * **Proxy Role**: 你是执行代理，仅负责交互与记录，不要自行决定是否完成收集。
 * **Error Handling**: 若用户拒绝回答必答题，在 `notes` 中记录并继续流程（除非用户要求终止）。
+* **Loop Control**: 严禁在完成 HCollector 委派的访谈任务后，擅自判断“收集完成”并进入下一阶段。必须重新调用 `HCollector`，由其验证收集结果并决定下一步行动。
 
 ### Step 3: Context Loading
 

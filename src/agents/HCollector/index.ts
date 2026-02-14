@@ -57,7 +57,6 @@ const DEFINITION: AgentDefinition = {
   defaultTemperature: 0.3,
   promptGenerators: [
     filePrompt(join(__dirname, "prompts", "collector.md")),
-    filePrompt(join(__dirname, "prompts", "interview-protocol.md")),
   ],
   defaultPermission: {
     bash: "deny",
