@@ -48,13 +48,13 @@ graph TD
 * 禁止跳过草稿直接执行。
 * 禁止 TODO 项过于笼统模糊。
 
-### Step 2: Materials Collection (委派 HCollector)
+### Step 2: Materials Collection（系统自动执行）
 
-**🎯 Goal:** 委派 HCollector 完成资料收集，确保必需资料完备。
+**🎯 Goal:** 资料收集由系统自动执行（beforeStage hooks），确保必需资料完备。
 
 **✅ Actions:**
 
-1. **调用 HCollector**: 使用 `task` 工具委派 HCollector，传入当前阶段名和所需资料类别。
+1. **等待自动收集完成**: 系统通过 beforeStage hooks 自动触发 HCollector 进行资料收集。
 2. **状态循环**: 根据 HCollector 返回状态进行交互处理。
 3. **确认完成**: 当 HCollector 返回 `COMPLETED` 状态，确认资料已就绪，进入 Step 3。
 
@@ -88,11 +88,11 @@ graph TD
 **✅ Actions:**
 
 1. **Notify User**: "正在提交 HCritic 进行专业审查..."
-2. **Invoke Agent**: 使用 `task` 工具调用 `HCritic` agent (参考 "与 HCritic 协作" 章节)。
+2. **调用 hd_submit**: 调用 `hd_submit` 工具提交当前阶段文档进行 HCritic 审查。
 3. **Process Feedback**:
-    * **Status: REJECTED** -> 返回 **Step 4** 修正，修正后重回 **Step 5**。
-    * **Status: MINOR_ISSUES** -> 修正后重回 **Step 5** 确认。
-    * **Status: PASSED** -> 进入 **Step 6**。
+   * **Status: FAIL** → 返回 **Step 4** 修正，修正后重回 **Step 5**。
+   * **Status: PASS** → 进入 **Step 6**。
+    4. **重试上限**: 最多 3 次提交。若仍未通过，使用 `ask_user` 请求人工介入。
 
 ### Step 6: User Confirmation
 

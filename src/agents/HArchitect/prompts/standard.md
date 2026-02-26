@@ -112,72 +112,23 @@
 * `OnDecisionMade` -> 更新 "Design Decisions"
 * `OnPhaseComplete` -> 更新 "Generation Progress"
 
-### 3. HCritic Collaboration Protocol
+### 3. HCritic 协作协议
 
 #### 🎯 目标
 
-通过结构化评审闭环，确保文档质量符合 `absolute-constraints.md`。
+通过 `hd_submit` 工具实现自动化评审闭环，确保文档质量符合 `absolute-constraints.md`。
 
-#### 🚀 调用 HCritic (Implementation)
+#### 🚀 调用方式
 
-使用 `task` 工具调用，**必须强制要求 HCritic 输出 JSON 格式结果**以便解析。
-
-**Prompt 模板:**
-
-```markdown
-**CONTEXT**:
-- Current Stage: {stage_name}
-- Document Path: {document_path}
-- Constraints File: identity/absolute-constraints.md
-
-**TASK**:
-Review the document at {document_path}.
-
-**OUTPUT SCHEMA (Strict JSON)**:
-{{
-  "status": "PASS" | "FAIL",
-  "score": 0-100,
-  "issues": [
-    {{
-      "severity": "CRITICAL" | "MINOR",
-      "location": "Section 2.1 / Line 45",
-      "description": "Violates constraint X...",
-      "suggestion": "Rewrite as..."
-    }}
-  ],
-  "summary": "Brief summary of the review."
-}}
-
-**REVIEW CRITERIA**:
-1. **Consistency**: Does it contradict previous stages?
-2. **Completeness**: Are all required sections present?
-3. **Constraint Compliance**: Does it follow `absolute-constraints.md`?
-4. **Traceability**: (If functionalRefinement) Run traceability analysis.
-
-**INSTRUCTIONS**:
-- If status is "FAIL", you MUST provide specific "location" and "suggestion".
-- Do NOT output anything outside the JSON structure.
-```
+完成阶段文档后，调用 `hd_submit()` 工具提交 HCritic 审查。工具自动完成文档定位、评审触发和结果返回。
 
 #### 🔄 闭环处理流程
 
-**Step A: Invoke & Parse**
-调用 HCritic，解析返回的 JSON。
-
-* 若解析失败 -> 视为 CRITICAL ERROR，重试。
-
-**Step B: Decision Gate**
-
-* **Status: PASS** -> 进入用户确认环节。
-* **Status: FAIL** -> 进入修复流程 (Step C)。
-
-**Step C: Iterative Repair (Max Retries: 3)**
-
-1. 提取 `issues` 列表。
-2. 在 `draft.md` 中记录问题。
-3. 针对每个 `location` 执行 `Edit`/`Rewrite`。
-4. 重新调用 HCritic。
-5. 若超过最大重试次数仍失败 -> `ask_user` 请求人工介入。
+1. **提交审查**: 调用 `hd_submit()`，系统自动将当前阶段文档提交给 HCritic。
+2. **处理结果**:
+   * **PASS** → 进入用户确认环节（Step 6）。
+   * **FAIL** → 根据返回的问题描述修正文档，重新调用 `hd_submit()`。
+3. **重试上限**: 最多 3 次提交。若仍未通过，使用 `ask_user` 请求人工介入。
 
 ### 4. HCollector 协作协议
 
