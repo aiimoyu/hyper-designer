@@ -50,14 +50,11 @@
 - [ ] 1.2 创建/更新阶段草稿文件
 - [ ] 1.3 生成原子化 TODO 列表
 
-### Step 2: Materials Collection
-- [ ] 2.1 读取项目根目录 `资料清单.md` 当前阶段 Section
-- [ ] 2.2 检查必需资料完整性，警告缺失项
-- [ ] 2.3 向用户汇报资料状态，询问是否补充
-- [ ] 2.4 用户确认继续 / 重新加载
-- [ ] 2.5 读取用户提供的本地文件/URL
-- [ ] 2.6 使用 explore/librarian 自主搜集补充资料
-- [ ] 2.7 生成 manifest.md 资料索引
+### Step 2: Materials Collection (委派 HCollector)
+- [ ] 2.1 调用 HCollector (action=CONTINUE_RESEARCH)
+- [ ] 2.2 处理 HCollector 返回状态循环 (GATHERING → NEEDS_CLARIFICATION → COMPLETED)
+- [ ] 2.3 确认 draft.md 和 manifest.md 已生成
+
 
 ### Step 3: Context Loading
 - [ ] 3.1 读取 manifest.md 获取参考资料索引

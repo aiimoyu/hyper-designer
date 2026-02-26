@@ -48,54 +48,33 @@ graph TD
 * 禁止跳过草稿直接执行。
 * 禁止 TODO 项过于笼统模糊。
 
-### Step 2: Materials Collection (资料收集)
+### Step 2: Materials Collection (委派 HCollector)
 
-**🎯 Goal:** 读取用户填写的资料清单，确认资料完整性，自主搜集并解析参考资料，生成 manifest.md。
+**🎯 Goal:** 委派 HCollector 完成资料收集，通过状态循环协调交互。
 
-**✅ Sub-Steps (严令：必须逐步执行，每步完成后更新草稿)**
+**✅ Actions:**
 
-#### Step 2.1: 读取资料清单
+1. **首次调用 HCollector**: 使用 `task` 工具调用 HCollector，传入:
+   - stage: 当前阶段名
+   - action: "CONTINUE_RESEARCH"
+   - required_assets: 当前阶段需要采集的资料列表
 
-1. **Read Form**: 读取项目根目录的 `资料清单.md` 文件，定位当前阶段对应的 Section。
-2. **Parse Content**: 解析该阶段的资料清单格，提取用户填写的资料信息（路径、链接、描述）。
-3. **Check Completeness**: 检查"必需"类资料是否已填写。
-   * 如有空白的必需项：**警告用户**，列出缺失项，但**不阻塞流程**。
-4. **Update Draft**: 在草稿中记录读取结果（✅ 已填写 / ⚠️ 缺失）。
+2. **处理 HCollector 返回状态**:
+   - **GATHERING**: 资料搜集进行中。可告知用户"正在搜集资料..."，再次调用 HCollector (action=CONTINUE_RESEARCH)。
+   - **NEEDS_CLARIFICATION**: 读取 `question_for_user`，使用 `ask_user` 向用户提问，收到回答后再次调用 HCollector (action=USER_ANSWERED, user_feedback=用户回答)。
+   - **COMPLETED**: 读取 `.hyper-designer/{stage}/document/draft.md` 确认结果，进入 Step 3。
 
-#### Step 2.2: 确认与补充
-
-1. **Present Summary**: 向用户汇报资料状态：
-   * 已填写的资料项
-   * 缺失的资料项（如有）
-2. **Ask Confirmation**: 使用 `ask_user` 询问用户：
-   * "是否需要补充资料？您可以现在修改 `资料清单.md` 文件，然后选择重新加载。"
-   * 选项：继续 / 重新加载资料清单
-3. **Handle Response**:
-   * 若用户选择"重新加载"：回到 Step 2.1 重新读取
-   * 若用户选择"继续"：进入 Step 2.3
-4. **Update Draft**: 记录用户确认决定。
+3. **防御性措施**:
+   - NEEDS_CLARIFICATION 最多 3 轮，超过则警告用户并以当前资料继续。
+   - 连续 2 次 GATHERING 但 draft.md 无变化 → 视为卡死，升级到用户。
+   - HCollector 输出解析失败 → 重试 1 次，仍失败则 ask_user 请求介入。
 
 **🚫 Prohibitions:**
+- 严禁主 Agent 自行执行资料搜集 (必须委派 HCollector)。
+- 严禁跳过 Step 2 直接进入 Step 3。
+- 严禁忽略 HCollector 返回的 NEEDS_CLARIFICATION 状态。
 
-* 严禁委派 HCollector subagent 进行资料收集。
-* 严禁跳过 Step 2.1/2.2 直接进入 Step 2.3。
-* 严禁在缺失必需资料时阻塞用户（只警告，不阻塞）。
-
-#### Step 2.3: 资料搜集与解析
-
-1. **Collect User Materials**: 根据资料清单中用户填写的路径/链接，使用工具读取或获取：
-   * 本地文件：使用 `Read` 工具读取
-   * URL链接：使用 `webfetch` 工具获取
-   * 文字描述：直接记录
-2. **Self-Collect Supplementary**: 使用 `explore`/`librarian` 工具主动搜集本阶段可能需要的额外资料：
-   * 代码库结构和模式（如适用）
-   * 相关文档和最佳实践
-3. **Parse & Organize**: 整理所有收集到的资料，分类归档。
-4. **Generate Manifest**: 在 `.hyper-designer/{stage_name}/document/manifest.md` 生成资料索引文件，包含：
-   * 资料来源（用户提供 / 自主收集）
-   * 资料类型与内容摘要
-   * 文件路径或引用链接
-5. **Update Draft**: 记录收集结果和 manifest 路径.
+### Step 3: Context Loading
 
 **🎯 Goal:** 获取必要的上下文记忆。
 
