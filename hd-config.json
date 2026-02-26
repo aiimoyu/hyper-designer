@@ -1,21 +1,21 @@
 {
   "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
   "workflow": "classic",
-  "summarize": "opencode/minimax-m2.5-free",
+  "summarize": "openrouter/stepfun/step-3.5-flash:free",
   "agents": {
     "HArchitect": {
-      "model": "opencode/minimax-m2.5-free",
+      "model": "openrouter/stepfun/step-3.5-flash:free",
       "temperature": 0.6,
       "maxTokens": 32000,
       "variant": "high"
     },
     "HCritic": {
-      "model": "opencode/minimax-m2.5-free",
+      "model": "openrouter/stepfun/step-3.5-flash:free",
       "temperature": 0.1,
       "maxTokens": 32000
     },
     "HEngineer": {
-      "model": "opencode/minimax-m2.5-free",
+      "model": "openrouter/stepfun/step-3.5-flash:free",
       "temperature": 0.4,
       "maxTokens": 32000
     }

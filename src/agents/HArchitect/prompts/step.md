@@ -6,7 +6,7 @@
 
 ```
 Step 1: Drafting & Planning (use specific skills)
-Step 2: Materials Collection (read form, confirm, self-collect)
+Step 2: Materials Collection (delegate to HCollector)
 Step 3: Context Loading
 Step 4: Execution & Interaction -> Loop until done
 Step 5: HCritic Review -> If failed, back to Step 4
@@ -50,29 +50,13 @@ graph TD
 
 ### Step 2: Materials Collection (委派 HCollector)
 
-**🎯 Goal:** 委派 HCollector 完成资料收集，通过状态循环协调交互。
+**🎯 Goal:** 委派 HCollector 完成资料收集，确保必需资料完备。
 
 **✅ Actions:**
 
-1. **首次调用 HCollector**: 使用 `task` 工具调用 HCollector，传入:
-   - stage: 当前阶段名
-   - action: "CONTINUE_RESEARCH"
-   - required_assets: 当前阶段需要采集的资料列表
-
-2. **处理 HCollector 返回状态**:
-   - **GATHERING**: 资料搜集进行中。可告知用户"正在搜集资料..."，再次调用 HCollector (action=CONTINUE_RESEARCH)。
-   - **NEEDS_CLARIFICATION**: 读取 `question_for_user`，使用 `ask_user` 向用户提问，收到回答后再次调用 HCollector (action=USER_ANSWERED, user_feedback=用户回答)。
-   - **COMPLETED**: 读取 `.hyper-designer/{stage}/document/draft.md` 确认结果，进入 Step 3。
-
-3. **防御性措施**:
-   - NEEDS_CLARIFICATION 最多 3 轮，超过则警告用户并以当前资料继续。
-   - 连续 2 次 GATHERING 但 draft.md 无变化 → 视为卡死，升级到用户。
-   - HCollector 输出解析失败 → 重试 1 次，仍失败则 ask_user 请求介入。
-
-**🚫 Prohibitions:**
-- 严禁主 Agent 自行执行资料搜集 (必须委派 HCollector)。
-- 严禁跳过 Step 2 直接进入 Step 3。
-- 严禁忽略 HCollector 返回的 NEEDS_CLARIFICATION 状态。
+1. **调用 HCollector**: 使用 `task` 工具委派 HCollector，传入当前阶段名和所需资料类别。
+2. **状态循环**: 根据 HCollector 返回状态进行交互处理。
+3. **确认完成**: 当 HCollector 返回 `COMPLETED` 状态，确认资料已就绪，进入 Step 3。
 
 ### Step 3: Context Loading
 

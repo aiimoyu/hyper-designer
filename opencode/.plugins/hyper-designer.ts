@@ -95,7 +95,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         return JSON.stringify({
           success: true,
           handover_to: params.step_name,
-          message: "Handover scheduled. STOP now - do not continue working. The system will process the handover automatically when this session ends.",
+          instruction: "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
           state,
         }, null, 2);
       },
