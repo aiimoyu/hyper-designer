@@ -1,3 +1,5 @@
+export type StageHookFn = (ctx: { stageName: string; workflow: WorkflowDefinition }) => Promise<void>
+
 export interface WorkflowStageDefinition {
    /** Display name for this stage */
    name: string
@@ -9,6 +11,10 @@ export interface WorkflowStageDefinition {
    promptFile?: string
    /** Whether to summarize the session before handover to next stage */
    summarize?: boolean
+   /** Hooks to run before the stage's primary agent starts */
+   beforeStage?: StageHookFn[]
+   /** Hooks to run after the stage completes (future use) */
+   afterStage?: StageHookFn[]
    /** Handover prompt generator - only takes current step since next stage is determined */
    getHandoverPrompt: (currentStep: string | null) => string
 }
