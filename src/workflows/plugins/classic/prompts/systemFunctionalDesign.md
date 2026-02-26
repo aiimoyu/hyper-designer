@@ -6,7 +6,7 @@
 
 ### 1. 输入与资料收集
 
-**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+**在开始执行前，必须通过读取资料清单和自主搜集完成资料收集。**
 
 所需的 **资料类别定义** 如下：
 
@@ -17,29 +17,11 @@
 | **代码库资料**<br>(技术栈参考) | 技术选型对比、最佳实践 | 可选 | 技术决策支撑 |
 | **代码库资料**<br>(开源参考) | 同类开源系统实现 | 可选 | 架构模式参考 |
 
-**资料收集流程**：
+**资料收集流程**（详见"单阶段处理流程 Step 2"）：
 
-1. **准备 HCollector 输入**：
-   ```json
-   {
-     "stage": "systemFunctionalDesign",
-     "status": "init",
-     "required_assets": [
-       { "category": "系统需求分析资料(前阶段输出)", "description": "功能实现需求与模块划分基础（SR-AR分解文档）" },
-       { "category": "系统设计资料(架构参考)", "description": "架构设计参考（系统架构模式、设计原则）" },
-       { "category": "代码库资料(技术栈参考)", "description": "技术决策支撑（技术选型对比、最佳实践）" },
-       { "category": "代码库资料(开源参考)", "description": "架构模式参考（同类开源系统实现）" }
-     ]
-   }
-   ```
-
-2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
-
-3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
-
-4. **收集完成**：HCollector 将自动生成 `.hyper-designer/systemFunctionalDesign/document/manifest.md` 和 `draft.md`。
-
-详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**（此协议在 HArchitect 提示词中定义，HEngineer 继承相同流程）。
+1. **读取资料清单**：读取项目根目录 `资料清单.md` 中 "系统功能设计 (systemFunctionalDesign)" Section，解析用户填写的资料信息。
+2. **确认完整性**：检查必需资料是否已填写，向用户汇报状态并确认是否需要补充。
+3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料，生成 `.hyper-designer/systemFunctionalDesign/document/manifest.md`。
 
 ### 2. 执行规范与 Skill 使用
 

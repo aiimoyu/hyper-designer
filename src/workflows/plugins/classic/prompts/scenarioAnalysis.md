@@ -6,7 +6,7 @@
 
 ### 1. 输入与资料收集
 
-**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+**在开始执行前，必须通过读取资料清单和自主搜集完成资料收集。**
 
 所需的 **资料类别定义** 如下：
 
@@ -17,29 +17,11 @@
 | **系统需求分析资料**<br>(场景参考) | 用户场景、使用案例 | 可选 | 参考类似系统的场景描述 |
 | **领域资料**<br>(用户角色) | 用户画像、角色权限定义 | 必需 | 识别Actor及其职责边界 |
 
-**资料收集流程**：
+**资料收集流程**（详见"单阶段处理流程 Step 2"）：
 
-1. **准备 HCollector 输入**：
-   ```json
-   {
-     "stage": "scenarioAnalysis",
-     "status": "init",
-     "required_assets": [
-       { "category": "系统需求分析资料", "description": "理解需求背景、目标与约束（前阶段输出：需求信息.md）" },
-       { "category": "领域资料(业务流程)", "description": "理解现有业务场景与操作流程（业务流程图、操作手册）" },
-       { "category": "系统需求分析资料(场景参考)", "description": "参考类似系统的场景描述（用户场景、使用案例）" },
-       { "category": "领域资料(用户角色)", "description": "识别Actor及其职责边界（用户画像、角色权限定义）" }
-     ]
-   }
-   ```
-
-2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
-
-3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
-
-4. **收集完成**：HCollector 将自动生成 `.hyper-designer/scenarioAnalysis/document/manifest.md` 和 `draft.md`。
-
-详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**。
+1. **读取资料清单**：读取项目根目录 `资料清单.md` 中 "场景分析 (scenarioAnalysis)" Section，解析用户填写的资料信息。
+2. **确认完整性**：检查必需资料是否已填写，向用户汇报状态并确认是否需要补充。
+3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料，生成 `.hyper-designer/scenarioAnalysis/document/manifest.md`。
 
 ### 2. 执行规范与 Skill 使用
 

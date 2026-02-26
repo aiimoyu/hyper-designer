@@ -6,7 +6,7 @@
 
 ```
 Step 1: Drafting & Planning (use specific skills)
-Step 2: Interactive Context Collection (delegate to HCollector subagent)
+Step 2: Materials Collection (read form, confirm, self-collect)
 Step 3: Context Loading
 Step 4: Execution & Interaction -> Loop until done
 Step 5: HCritic Review -> If failed, back to Step 4
@@ -16,6 +16,8 @@ Step 8: Idle State
 ```
 
 **其中强制执行循环**
+
+**强制规则：每完成一项 TODO 子任务后，必须同时更新 TODO 列表和阶段草稿文件。**
 
 ```mermaid
 graph TD
@@ -46,74 +48,54 @@ graph TD
 * 禁止跳过草稿直接执行。
 * 禁止 TODO 项过于笼统模糊。
 
-### Step 2: Interactive Context Collection
+### Step 2: Materials Collection (资料收集)
 
-**🎯 Goal:** 通过 `Task` 委托 `HCollector` Agent 设计访谈框架，由你执行访谈以完备阶段所需知识库。
+**🎯 Goal:** 读取用户填写的资料清单，确认资料完整性，自主搜集并解析参考资料，生成 manifest.md。
 
-**🔄 Core Protocol (访谈委托模式)**
+**✅ Sub-Steps (严令：必须逐步执行，每步完成后更新草稿)**
 
-遵循“设计-执行-反馈”循环：`HCollector` 负责逻辑设计，你负责用户交互。
+#### Step 2.1: 读取资料清单
 
-**✅ Execution Workflow**
+1. **Read Form**: 读取项目根目录的 `资料清单.md` 文件，定位当前阶段对应的 Section。
+2. **Parse Content**: 解析该阶段的资料清单格，提取用户填写的资料信息（路径、链接、描述）。
+3. **Check Completeness**: 检查"必需"类资料是否已填写。
+   * 如有空白的必需项：**警告用户**，列出缺失项，但**不阻塞流程**。
+4. **Update Draft**: 在草稿中记录读取结果（✅ 已填写 / ⚠️ 缺失）。
 
-**1. Initiate Delegation**
-调用 `HCollector`，传入当前阶段所需资料：
+#### Step 2.2: 确认与补充
 
-```json
-{
-  "stage": "{当前阶段}",
-  "status": "init",
-  "required_assets": [{ "category": "名称", "description": "用途" }]
-}
-```
+1. **Present Summary**: 向用户汇报资料状态：
+   * 已填写的资料项
+   * 缺失的资料项（如有）
+2. **Ask Confirmation**: 使用 `ask_user` 询问用户：
+   * "是否需要补充资料？您可以现在修改 `资料清单.md` 文件，然后选择重新加载。"
+   * 选项：继续 / 重新加载资料清单
+3. **Handle Response**:
+   * 若用户选择"重新加载"：回到 Step 2.1 重新读取
+   * 若用户选择"继续"：进入 Step 2.3
+4. **Update Draft**: 记录用户确认决定。
 
-**重要**：告诉`HCollector`，当需要访谈时可返回委托指令，你会负责执行访谈，并在访谈完成后再次调用`HCollector`。
+**🚫 Prohibitions:**
 
-**2. Handle Response Loop**
-根据 `HCollector` 返回的 `action` 执行对应操作：
+* 严禁委派 HCollector subagent 进行资料收集。
+* 严禁跳过 Step 2.1/2.2 直接进入 Step 2.3。
+* 严禁在缺失必需资料时阻塞用户（只警告，不阻塞）。
 
-* **若 `action: "conduct_interview"`**：执行**访谈流程**（见下文）。
-* **若 `action: "finish"`**：资料收集完成（已生成 `manifest.md`），进入 Step 3。
+#### Step 2.3: 资料搜集与解析
 
-**🎙️ Interview Execution Process**
-
-当收到 `interview_framework` 时，按以下步骤执行：
-
-1. **Initialize**: 设定当前问题ID为 `start_question`。
-2. **Interview Loop**:
-    * **Ask**: 使用 `ask_user` 提问。根据上下文调整措辞，若是选择题列出选项。
-    * **Record**: 记录答案至 `answers` 数组。
-    * **Route**: 解析 `next` 字段确定下一题：
-        * **字符串**: 直接作为下一题ID。
-        * **对象**: 评估 `conditions` (支持 `==`, `includes` 等逻辑)，匹配成功则跳转 `then`，否则走 `default`。
-    * **Check End**: 若下一题ID为 `END` 或 `null`，结束循环；否则更新ID继续。
-3. **Report Results**
-    再次调用 `HCollector`，提交访谈结果：
-
-    ```json
-    {
-      "stage": "{阶段}",
-      "status": "interview_result",
-      "interview_result": {
-        "session_id": "{框架提供的ID}",
-        "completed": true,
-        "answers": [{ "question_id": "Q1", "answer": "用户回答" }],
-        "notes": "记录异常或用户犹豫（可选）"
-      }
-    }
-    ```
-
-    *注意：`HCollector` 可能再次返回 `conduct_interview` 以补充信息，需重复执行此流程。*
-
-**⚠️ Constraints**
-
-* **Must Delegate**: 严禁跳过 `HCollector` 自行直接收集资料。
-* **Follow Framework**: 必须严格遵循框架提问，不得擅自删减问题或修改跳转逻辑。
-* **Proxy Role**: 你是执行代理，仅负责交互与记录，不要自行决定是否完成收集。
-* **Error Handling**: 若用户拒绝回答必答题，在 `notes` 中记录并继续流程（除非用户要求终止）。
-* **Loop Control**: 严禁在完成 HCollector 委派的访谈任务后，擅自判断“收集完成”并进入下一阶段。必须重新调用 `HCollector`，由其验证收集结果并决定下一步行动。
-
-### Step 3: Context Loading
+1. **Collect User Materials**: 根据资料清单中用户填写的路径/链接，使用工具读取或获取：
+   * 本地文件：使用 `Read` 工具读取
+   * URL链接：使用 `webfetch` 工具获取
+   * 文字描述：直接记录
+2. **Self-Collect Supplementary**: 使用 `explore`/`librarian` 工具主动搜集本阶段可能需要的额外资料：
+   * 代码库结构和模式（如适用）
+   * 相关文档和最佳实践
+3. **Parse & Organize**: 整理所有收集到的资料，分类归档。
+4. **Generate Manifest**: 在 `.hyper-designer/{stage_name}/document/manifest.md` 生成资料索引文件，包含：
+   * 资料来源（用户提供 / 自主收集）
+   * 资料类型与内容摘要
+   * 文件路径或引用链接
+5. **Update Draft**: 记录收集结果和 manifest 路径.
 
 **🎯 Goal:** 获取必要的上下文记忆。
 

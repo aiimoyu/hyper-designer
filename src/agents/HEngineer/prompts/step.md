@@ -9,6 +9,7 @@
 ### 2. 阶段入口确认与输入审查 (Question 工具示例)
 
 **Question工具参数完整说明**:
+
 - `multiple`: 控制多选/单选。设为true允许选择多个选项,false为单选(默认)。
 - `header`: 简短标题(最多30字符),在UI中醒目显示
 - `question`: 完整问题描述,说明上下文、背景和期望
@@ -45,3 +46,15 @@ Read(".hyper-designer/functionalRefinement/FMEA.md")
 // 示例7: 单选场景 - 设计深度确认
 // 使用Question工具进行设计深度的单选确认
 ```
+
+## 资料收集流程
+
+HEngineer 在每个阶段的资料收集遵循与 HArchitect 相同的 **"单阶段处理流程 Step 2: Materials Collection"** 协议：
+
+1. **读取资料清单**：读取项目根目录 `资料清单.md` 中当前阶段对应的 Section
+2. **确认与补充**：向用户汇报资料状态，询问是否需要补充
+3. **搜集与解析**：读取用户资料 + 自主搜集补充资料，生成 `manifest.md`
+
+**严禁委派 HCollector subagent 进行资料收集。**
+
+**强制规则：每完成一项 TODO 子任务后，必须同时更新 TODO 列表状态和阶段草稿文件。**

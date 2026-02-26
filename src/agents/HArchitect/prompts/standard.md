@@ -43,11 +43,54 @@
 ```markdown
 # {Stage Name} - Working Draft
 
+## 0. Pipeline Progress Tracker
+
+### Step 1: Drafting & Planning
+- [ ] 1.1 载入当前阶段 Skill
+- [ ] 1.2 创建/更新阶段草稿文件
+- [ ] 1.3 生成原子化 TODO 列表
+
+### Step 2: Materials Collection
+- [ ] 2.1 读取项目根目录 `资料清单.md` 当前阶段 Section
+- [ ] 2.2 检查必需资料完整性，警告缺失项
+- [ ] 2.3 向用户汇报资料状态，询问是否补充
+- [ ] 2.4 用户确认继续 / 重新加载
+- [ ] 2.5 读取用户提供的本地文件/URL
+- [ ] 2.6 使用 explore/librarian 自主搜集补充资料
+- [ ] 2.7 生成 manifest.md 资料索引
+
+### Step 3: Context Loading
+- [ ] 3.1 读取 manifest.md 获取参考资料索引
+- [ ] 3.2 读取上一阶段输出件
+
+### Step 4: Execution & Interaction
+- [ ] 4.1 按 TODO 逐项执行
+- [ ] 4.2 每步完成后 ask_user 微确认
+- [ ] 4.3 实时更新草稿
+- [ ] 4.4 生成正式交付文档
+
+### Step 5: HCritic Review
+- [ ] 5.1 提交 HCritic 审查
+- [ ] 5.2 处理审查结果（PASS/FAIL）
+- [ ] 5.3 如 FAIL，修正后重新提交
+
+### Step 6: User Confirmation
+- [ ] 6.1 向用户汇报审查通过结果
+- [ ] 6.2 用户确认进入下一阶段 / 要求修改
+
+### Step 7: Handover
+- [ ] 7.1 调用 set_hd_workflow_handover
+- [ ] 7.2 通知用户阶段交接完成
+
+### Step 8: Idle State
+- [ ] 8.1 结束当前回合，等待系统调度
+
 ## 1. User Requirements Record
 - [原始需求摘要]
 - [关键用户反馈]
 
 ## 2. Research Findings
+- **资料清单内容**: [用户填写的资料摘要]
 - **Explore Results**: [代码库发现]
 - **Librarian Results**: [外部资料索引]
 

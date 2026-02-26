@@ -6,7 +6,7 @@
 
 ### 1. 输入与资料收集
 
-**在开始执行前，必须通过委派 HCollector subagent 完成资料收集。**
+**在开始执行前，必须通过读取资料清单和自主搜集完成资料收集。**
 
 所需的 **资料类别定义** 如下：
 
@@ -16,35 +16,17 @@
 | **Domain Knowledge**<br>(领域资料) | 行业标准、合规文档、业务术语表 | 必需 | 确保需求符合行业规范与业务逻辑 |
 | **Reference Projects**<br>(参考资料) | 对标项目链接、开源实现参考 | 可选 | 提供技术选型与功能实现的对标参考 |
 
-**资料收集流程**：
+**资料收集流程**（详见"单阶段处理流程 Step 2"）：
 
-1. **准备 HCollector 输入**：
-   ```json
-   {
-     "stage": "IRAnalysis",
-     "status": "init",
-     "required_assets": [
-       { "category": "Codebase Assets", "description": "理解现有系统架构与技术栈" },
-       { "category": "Domain Knowledge", "description": "确保需求符合行业规范与业务逻辑" },
-       { "category": "Reference Projects", "description": "提供技术选型与功能实现的对标参考" }
-     ]
-   }
-   ```
-
-2. **委派 HCollector**：使用 `task` 工具调用 HCollector subagent 进行资料收集。
-
-3. **多轮交互**：HCollector 将通过 JSON 响应请求与用户交互，你需要作为中继代理传递问答，直到 HCollector 返回 `action="finish"`。
-
-4. **收集完成**：HCollector 将自动生成 `.hyper-designer/IRAnalysis/document/manifest.md` 和 `draft.md`。
-
-详细的委派和交互协议请参见 **"单阶段处理流程 Step 2"**。
+1. **读取资料清单**：读取项目根目录 `资料清单.md` 中 "初始需求分析 (IRAnalysis)" Section，解析用户填写的资料信息。
+2. **确认完整性**：检查必需资料是否已填写，向用户汇报状态并确认是否需要补充。
+3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料，生成 `.hyper-designer/IRAnalysis/document/manifest.md`。
 
 ### 2. 执行规范与 Skill 使用
 
 **核心 Skill**: `ir-analysis`
 
 此 Skill 提供了需求分析的方法论（5W2H框架、苏格拉底式提问）。Agent 必须严格遵循 Skill 内部的模板结构。
-
 
 ### 3. 阶段交付物
 

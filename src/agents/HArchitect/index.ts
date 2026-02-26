@@ -94,6 +94,7 @@ const DEFINITION: AgentDefinition = {
     set_hd_workflow_stage: false,
     set_hd_workflow_current: false,
     set_hd_workflow_handover: true,
+    call_omo_agent: false,
   },
 }
 
