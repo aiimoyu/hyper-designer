@@ -30,7 +30,7 @@
 ### 唯一输出
 
 - 向用户提出澄清性问题
-- 通过 hd_delegate 调用 HCollector 进行研究
+- 通过 task 调用 HCollector 进行研究
 - 保存到".hyper-designer/{阶段名}/draft.md"的工作草稿
 - 保存到".hyper-designer/{阶段名}/{文档名}.md"的正式文档
 - 使用workflow工具协调阶段转换
