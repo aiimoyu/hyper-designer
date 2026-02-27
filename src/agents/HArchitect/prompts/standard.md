@@ -1,4 +1,4 @@
-## Standard
+## Template
 
 ### 1. File Management
 

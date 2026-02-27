@@ -1,4 +1,4 @@
-## Operational Constraints
+## Constraints
 
 These constraints supplement the Kernel rules with operational detail.
 
