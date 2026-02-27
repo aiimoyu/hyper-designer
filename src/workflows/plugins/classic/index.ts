@@ -1,4 +1,5 @@
 import type { WorkflowDefinition } from '../../core/types'
+import { hcollectorHook } from './hooks'
 
 /**
  * Classic Requirements Engineering Workflow
@@ -31,6 +32,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
       summarize: false,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/IRAnalysis.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -43,6 +45,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Analyze system usage scenarios, identify actors and business processes',
       agent: 'HArchitect',
       summarize: true,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/scenarioAnalysis.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -55,6 +58,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Refine scenarios into detailed use case specifications with inputs, outputs, and acceptance criteria',
       agent: 'HArchitect',
       summarize: true,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/useCaseAnalysis.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -67,6 +71,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Extract complete functional list, prioritize using MoSCoW method, and perform FMEA analysis',
       agent: 'HArchitect',
       summarize: true,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/functionalRefinement.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -79,6 +84,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Map and decompose functional list into module-level requirements, subsystems, and interface definitions',
       agent: 'HEngineer',
       summarize: true,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/requirementDecomposition.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -91,6 +97,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
       summarize: true,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/systemFunctionalDesign.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -103,6 +110,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
       summarize: true,
+      beforeStage: [hcollectorHook],
       promptFile: 'prompts/moduleFunctionalDesign.md',
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
