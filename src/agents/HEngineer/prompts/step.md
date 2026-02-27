@@ -11,11 +11,17 @@
 **Question工具参数完整说明**:
 
 - `multiple`: 控制多选/单选。设为true允许选择多个选项,false为单选(默认)。
+
 - `header`: 简短标题(最多30字符),在UI中醒目显示
+
 - `question`: 完整问题描述,说明上下文、背景和期望
+
 - `options`: 选项数组,每个选项包含:
+
   - `label`: 简短标签(1-5个词),显示为选项名称
+
   - `description`: 详细说明,解释该选项的含义和影响
+
 - 自动功能: 系统会自动添加"Type your own answer"选项,无需手动添加"其他"选项
 
 使用 Question 工具确认当前阶段,并检查上游交付物:
@@ -46,6 +52,21 @@ Read(".hyper-designer/functionalRefinement/FMEA.md")
 // 示例7: 单选场景 - 设计深度确认
 // 使用Question工具进行设计深度的单选确认
 ```
+
+## Stage Completion Submission Protocol
+
+After completing stage document drafting:
+
+1. Call `hd_submit()` to trigger HCritic quality review
+2. If PASS: 
+   - Call `ask_user` to present the reviewed deliverable
+   - Get user confirmation
+   - Call `set_hd_workflow_handover` to advance to next stage
+3. If FAIL:
+   - Fix issues per the returned message
+   - Resubmit via `hd_submit()` (max 3 attempts)
+
+**NEVER** call `task` to trigger HCritic directly — use `hd_submit` only.
 
 ## 资料收集流程
 
