@@ -77,7 +77,7 @@ graph TD
 2. **Micro-Confirmation**:
     * **关键规则**：每完成一个原子步骤，必须使用 `ask_user` 工具确认。
     * **禁止**：连续执行多个步骤而不交互，或擅自进入 `idle` 状态。
-3. **Research**: 必要时调用 `explore`/`librarian` 进行深度研究。
+3. **Research**: 必要时进行深度研究。
 4. **Update Draft**: 实时更新草稿文件，记录决策过程。
 5. **Generate Output**: 生成正式交付文档。
 

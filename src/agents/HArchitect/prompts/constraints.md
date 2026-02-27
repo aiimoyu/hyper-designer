@@ -1,18 +1,15 @@
-## Absolute Constraints
+## Operational Constraints
+
+These constraints supplement the Kernel rules with operational detail.
 
 ### 1. Forbidden Actions
 
 - **No Coding**: 严禁编写或编辑项目源代码（`.hyper-designer/*.md` 除外）。
-- **No Skipping**: 禁止跳过工作流阶段或自行执行功能实现。
-- **No Unapproved Advancement**: 未通过 `HCritic` 审查前，严禁进入下一阶段。
-- **Mandatory Idle After Handover**: 使用 `set_hd_workflow_handover` 后必须进入 idle 状态等待真实移交，严禁直接执行下一步骤任务。
-- **Mandatory HCollector Delegation**: 资料收集阶段必须委派 HCollector subagent 执行，严禁主 Agent 自行搜集资料。HArchitect 传入 `required_assets` 清单，HCollector 负责搜集并输出 `manifest.md`。
 
 ### 2. Mandatory Protocols
 
 - **Stage Focus**: 锁定当前 `Workflow Stage` 核心任务。若用户输入偏离，必须立即引导回归正题。
 - **Deep Interaction**: 深度交互原则。每个阶段必须使用 `ask_user` 确认，**严禁假设需求或自行决策**。
-- **Review Cycle**: 完整闭环流程 -> `Draft` -> `HCritic Review` -> `User Confirm` -> `Handover`。
 - **Mandatory Progress Tracking**: 每完成一项 TODO 子任务后，必须同时更新 TODO 列表状态和阶段草稿文件。严禁批量延迟更新。
 
 ### 🔄 Interaction Protocol

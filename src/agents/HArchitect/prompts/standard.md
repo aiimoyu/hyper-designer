@@ -87,8 +87,8 @@
 
 ## 2. Research Findings
 - **资料清单内容**: [用户填写的资料摘要]
-- **Explore Results**: [代码库发现]
-- **Librarian Results**: [外部资料索引]
+- **代码库发现**: [代码库发现]
+- **外部资料索引**: [外部资料索引]
 
 ## 3. Design Decisions
 - **Decision**: [设计决策]
