@@ -23,6 +23,7 @@
 
 此 Skill 提供功能提取方法论、MoSCoW 优先级排序指南与 FMEA 风险分析框架。
 
+**核心参考资料**: `.hyper-designer/document/systemRequirementAnalysis/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
 ### 3. 阶段交付物
 
 | 文件名 | 路径 | 格式要求 |

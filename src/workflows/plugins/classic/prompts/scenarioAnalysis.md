@@ -24,6 +24,7 @@
 
 此 Skill 提供场景识别方法论、参与者分析指南，帮助系统化地识别和分析主场景、备选场景与异常场景。
 
+**核心参考资料**: `.hyper-designer/document/systemRequirementAnalysis/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
 ### 3. 阶段交付物
 
 | 文件名 | 路径 | 格式要求 |

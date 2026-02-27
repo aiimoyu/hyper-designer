@@ -23,7 +23,7 @@
 
 加载此 Skill 获取需求分析方法论（5W2H 框架、苏格拉底式提问）。Agent 必须严格遵循 Skill 内部的模板结构。
 
-**核心参考资料**: `.hyper-designer/IRAnalysis/document/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
+**核心参考资料**: `.hyper-designer/document/domainAnalysis/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
 
 ### 3. 阶段交付物
 

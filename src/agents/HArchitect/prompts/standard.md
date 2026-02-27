@@ -110,7 +110,7 @@
 
 #### 核心机制
 
-HCollector 是唯一负责资料收集的 Subagent。通过**状态机协议**交互，以 `.hyper-designer/{stage}/document/draft.md` 作为共享记忆。
+HCollector 是唯一负责资料收集的 Subagent。通过**状态机协议**交互，以 `.hyper-designer/document/{domain}/draft.md` 作为共享记忆（`{domain}` 为当前阶段对应的资料领域）。
 
 **禁止**：自行执行资料搜集、使用 explore/librarian 收集资料、跳过资料收集、忽略 NEEDS_CLARIFICATION。
 
@@ -149,7 +149,10 @@ HCollector 每次退出时返回 JSON，包含 `status`、`next_instruction` 等
 │    → 再次调用 HCollector (action=USER_ANSWERED,           │
 │       user_feedback=用户回答)                              │
 │                                                          │
-│  COMPLETED:                                              │
+│    → 读取 .hyper-designer/document/{domain}/draft.md      │
+│      确认 status=COMPLETED                               │
+│    → 读取 .hyper-designer/document/{domain}/manifest.md   │
+│    → 进入 Step 3: Context Loading                        │
 │    → 读取 .hyper-designer/{stage}/document/draft.md      │
 │      确认 status=COMPLETED                               │
 │    → 读取 .hyper-designer/{stage}/document/manifest.md   │

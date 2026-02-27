@@ -19,7 +19,7 @@
 
 **资料收集流程**（详见"单阶段处理流程 Step 2"）：
 
-1. **读取资料清单**：读取项目根目录 `资料清单.md` 中 "模块功能设计 (moduleFunctionalDesign)" Section，解析用户填写的资料信息。
+1. **读取资料清单**：读取项目根目录 `REFERENCE.md` 中相关 Section，解析用户填写的资料信息。n2. **确认完整性**：检查必需资料是否已填写，向用户汇报状态并确认是否需要补充。n3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料。nn**核心参考资料**: `.hyper-designer/document/systemDesign/manifest.md` 和 `.hyper-designer/document/codebase/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。nn### 2. 执行规范与 Skill 使用
 2. **确认完整性**：检查必需资料是否已填写，向用户汇报状态并确认是否需要补充。
 3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料，生成 `.hyper-designer/moduleFunctionalDesign/document/manifest.md`。
 

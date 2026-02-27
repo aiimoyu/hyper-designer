@@ -64,7 +64,7 @@ graph TD
 
 **✅ Actions:**
 
-1. **Read Manifest**: 读取 `.hyper-designer/{stage}/document/manifest.md` 获取参考资料索引（`{stage}` 为当前阶段名称）。
+1. **Read Manifest**: 读取 `.hyper-designer/document/{domain}/manifest.md` 获取参考资料索引（`{domain}` 为当前阶段对应的资料领域，如 domainAnalysis、systemRequirementAnalysis、systemDesign、codebase）。
 2. **Load History**: 读取上一阶段的输出件，对齐当前状态。
 
 ### Step 4: Execution & Interaction
