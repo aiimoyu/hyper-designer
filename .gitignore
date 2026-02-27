@@ -46,6 +46,7 @@ temp/
 # OpenCode specific
 .opencode/
 .hyper-designer/
+.sisyphus/
 
 # Lock files (optional - comment out if you want to commit lock files)
 # package-lock.json

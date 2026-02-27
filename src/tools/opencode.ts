@@ -157,4 +157,11 @@ export const OPENCODE_TOOL_SYNTAX: ToolSyntaxRegistry = {
   step_name: "functionalRefinement"
 })`,
   },
+
+  hd_submit: {
+    uniName: "hd_submit",
+    description: "Submit current stage work for HCritic quality review. Call this when you have completed the stage document and are ready for review. Returns PASS (proceed to user confirmation) or FAIL (fix issues and resubmit).",
+    syntax: "hd_submit()",
+    example: "hd_submit()"
+  },
 };

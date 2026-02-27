@@ -1,4 +1,18 @@
-export type StageHookFn = (ctx: { stageName: string; workflow: WorkflowDefinition }) => Promise<void>
+export interface StageHookCapabilities {
+  /** 向指定 agent 发送 prompt（平台注入） */
+  prompt?: (agent: string, text: string) => Promise<void>
+  /** 压缩当前会话上下文（平台注入） */
+  summarize?: () => Promise<void>
+}
+
+export type StageHookFn = (ctx: {
+  /** 阶段 key，如 "IRAnalysis" */
+  stageKey: string
+  stageName: string
+  workflow: WorkflowDefinition
+  sessionID?: string
+  capabilities?: StageHookCapabilities
+}) => Promise<void>
 
 export interface WorkflowStageDefinition {
    /** Display name for this stage */
@@ -9,8 +23,6 @@ export interface WorkflowStageDefinition {
    agent: string
    /** Prompt file path relative to the workflow directory (optional - use workflow-level prompt if not specified) */
    promptFile?: string
-   /** Whether to summarize the session before handover to next stage */
-   summarize?: boolean
    /** Hooks to run before the stage's primary agent starts */
    beforeStage?: StageHookFn[]
    /** Hooks to run after the stage completes (future use) */

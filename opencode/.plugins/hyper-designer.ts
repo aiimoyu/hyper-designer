@@ -100,6 +100,61 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         }, null, 2);
       },
     }),
+    hd_submit: tool({
+      description: "Submit current stage work for HCritic quality review. Call this when you have completed the stage document and are ready for review. Returns PASS (proceed to user confirmation) or FAIL (fix issues and resubmit).",
+      args: {},
+      async execute(_args: Record<string, never>, context) {
+        // 1. Get current stage
+        const state = getWorkflowState()
+        if (!state?.currentStep) {
+          return JSON.stringify({ status: "ERROR", message: "No active workflow stage. Set a current stage before submitting for review." })
+        }
+
+        try {
+          // 2. Call HCritic via session.prompt (Task 0: REENTRANCE_OK)
+          const reviewPrompt = `Review the ${state.currentStep} stage output. Evaluate completeness, consistency, and quality. If the stage passes review, include the word "PASS" in your response. If it fails, include "FAIL" and describe the issues.`
+          const response = await ctx.client.session.prompt({
+            path: { id: context.sessionID },
+            body: {
+              agent: "HCritic",
+              noReply: false,
+              parts: [{ type: "text", text: reviewPrompt }],
+            },
+            query: { directory: ctx.directory },
+          })
+
+          // 3. Parse HCritic response - filter for text parts
+          const parts = response.data?.parts ?? []
+          const textParts = parts.filter((p): p is typeof p & { type: "text"; text: string } => p.type === "text")
+          const reviewText = textParts.map(p => p.text).join("\n")
+
+          // 4. Determine verdict - search for pass/fail keywords
+          const isPass = reviewText.includes("通过") || reviewText.includes("PASS") || reviewText.toLowerCase().includes("approved")
+
+          // 5. Return structured result
+          if (isPass) {
+            setWorkflowStage(state.currentStep, true)
+            return JSON.stringify({
+              status: "PASS",
+              message: reviewText,
+              instruction: "Call ask_user to present the reviewed deliverable and get user confirmation. After user confirms, call set_hd_workflow_handover.",
+            })
+          } else {
+            return JSON.stringify({
+              status: "FAIL",
+              message: reviewText,
+              instruction: "Fix the issues identified in the review message and call hd_submit again to resubmit.",
+            })
+          }
+        } catch (error) {
+          const errMsg = error instanceof Error ? error.message : String(error)
+          return JSON.stringify({
+            status: "ERROR",
+            message: `HCritic review failed: ${errMsg}`,
+          })
+        }
+      },
+    }),
   }
 
   const workflowHooks = await createWorkflowHooks(ctx);

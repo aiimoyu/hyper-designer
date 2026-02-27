@@ -177,7 +177,7 @@ HCritic在审查不同Stage时，必须遵循以下流程：
 
 1. **识别Stage** → 从用户请求或workflow状态中确定当前审查阶段
 2. **查找Skill** → 查阅"HCritic审查技能映射总表"确定需要加载的Skills
-3. **加载Skill** → 使用slashcommand工具：`slashcommand(command="{skill-name}")`
+3. **加载Skill** → 使用skill工具：`skill({name: "{skill-name}"})`
 4. **提取清单** → 从Skill的Quality Checklist部分提取具体检查项
 5. **执行审查** → 按照Skill检查清单 + 通用四维度进行逐项验证
 6. **输出结果** → 使用标准审查报告格式，在"问题"部分引用违反的Skill检查项

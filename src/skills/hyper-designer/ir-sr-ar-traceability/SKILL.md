@@ -41,7 +41,7 @@ Read("ir信息.md")
 Read("SR-AR分解分配表.md")
 
 // Optional: Gather code context
-delegate_task(
+task(
   subagent_type="explore",
   run_in_background=true,
   load_skills=[],
@@ -104,7 +104,7 @@ grep(pattern="function proposedFunctionName", include="*.ts")
 
 If no LSP, use explore agent:
 ```typescript
-delegate_task(
+task(
   subagent_type="explore",
   run_in_background=true,
   load_skills=[],
@@ -357,7 +357,7 @@ This skill is designed for use by the **HCritic agent** during `functionalRefine
 **Typical invocation**:
 ```typescript
 // HCritic uses this skill when reviewing SR-AR decomposition
-delegate_task(
+task(
   category="unspecified-high",
   load_skills=["ir-sr-ar-traceability"],
   description="Validate SR-AR decomposition traceability",

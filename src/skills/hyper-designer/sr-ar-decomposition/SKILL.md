@@ -157,7 +157,7 @@ Read: [功能列表文件路径]
 **Step 3: Analyze codebase structure**
 ```typescript
 // Use explore agent for codebase pattern discovery
-delegate_task(
+task(
   subagent_type="explore",
   run_in_background=true,
   load_skills=[],

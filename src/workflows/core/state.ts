@@ -7,7 +7,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
-import type { WorkflowDefinition } from "./types";
+import type { WorkflowDefinition, StageHookCapabilities } from "./types";
 import { getWorkflowDefinition } from "./registry";
 import { HyperDesignerLogger } from "../../utils/logger";
 
@@ -326,7 +326,7 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
  * @param definition Workflow definition
  * @returns Updated workflow state
  */
-export function executeWorkflowHandover(definition: WorkflowDefinition): WorkflowState {
+export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, capabilities?: StageHookCapabilities): Promise<WorkflowState> {
   HyperDesignerLogger.info("Workflow", `执行工作流交接`);
   
   let state = readWorkflowStateFile();
@@ -394,5 +394,24 @@ export function executeWorkflowHandover(definition: WorkflowDefinition): Workflo
     workflowId: state.typeId
   });
   
+  // 状态转换完成后执行生命周期钩子
+  // afterStage：离开阶段时执行（在状态更新之后，针对已离开的阶段）
+  const departingStage = fromStep ? definition.stages[fromStep] : null
+  if (departingStage?.afterStage && departingStage.afterStage.length > 0) {
+    HyperDesignerLogger.debug('Workflow', `执行 afterStage 钩子`, { step: fromStep, hookCount: departingStage.afterStage.length })
+    for (const hook of departingStage.afterStage) {
+      await hook({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(capabilities !== undefined && { capabilities }) })
+    }
+  }
+
+  // beforeStage：进入新阶段时执行（在状态更新之后，针对即将进入的阶段）
+  const incomingStage = definition.stages[toStep]
+  if (incomingStage?.beforeStage && incomingStage.beforeStage.length > 0) {
+    HyperDesignerLogger.debug('Workflow', `执行 beforeStage 钩子`, { step: toStep, hookCount: incomingStage.beforeStage.length })
+    for (const hook of incomingStage.beforeStage) {
+      await hook({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(capabilities !== undefined && { capabilities }) })
+    }
+  }
+
   return state;
 }

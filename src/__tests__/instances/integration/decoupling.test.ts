@@ -202,10 +202,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(handoverPrompt!.length).toBeGreaterThan(0)
     })
 
-    it("should initialize state for handover execution", () => {
+    it("should initialize state for handover execution", async () => {
       const workflow = getClassicWorkflow()
 
-      const state = executeWorkflowHandover(workflow)
+      const state = await executeWorkflowHandover(workflow)
       expect(state).toHaveProperty("workflow")
       expect(state).toHaveProperty("currentStep")
       expect(state.handoverTo).toBeNull()

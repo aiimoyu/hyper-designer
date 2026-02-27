@@ -315,20 +315,20 @@ describe("workflow state management", () => {
   })
 
   describe("executeWorkflowHandover", () => {
-    it("returns state when handover is not set", () => {
+    it("returns state when handover is not set", async () => {
       initializeWorkflowState(classicWorkflowDef)
-      const state = executeWorkflowHandover(classicWorkflowDef)
+      const state = await executeWorkflowHandover(classicWorkflowDef)
       expect(state).toHaveProperty("workflow")
       expect(state).toHaveProperty("currentStep")
       expect(state).toHaveProperty("handoverTo")
     })
 
-    it("executes handover when handover is set", () => {
+    it("executes handover when handover is set", async () => {
       initializeWorkflowState(classicWorkflowDef)
       setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
       setWorkflowHandover("scenarioAnalysis", classicWorkflowDef)
 
-      const state = executeWorkflowHandover(classicWorkflowDef)
+      const state = await executeWorkflowHandover(classicWorkflowDef)
 
       expect(state.currentStep).toBe("scenarioAnalysis")
       expect(state.handoverTo).toBeNull()
