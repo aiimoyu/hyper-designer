@@ -84,11 +84,12 @@ const DEFINITION: AgentDefinition = {
     webfetch: true,
     websearch: true,
     question: false,
-    task: true,
+    task: false,
     get_hd_workflow_state: false,
     set_hd_workflow_stage: false,
     set_hd_workflow_current: false,
     set_hd_workflow_handover: false,
+    hd_submit: false,
   },
 }
 

@@ -90,6 +90,7 @@ const DEFINITION: AgentDefinition = {
     task: true,
     get_hd_workflow_state: true,
     set_hd_workflow_stage: false,
+    hd_submit: true,
     set_hd_workflow_current: false,
     set_hd_workflow_handover: true,
   },
