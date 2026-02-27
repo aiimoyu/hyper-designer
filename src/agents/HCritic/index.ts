@@ -56,7 +56,7 @@ const DEFINITION: AgentDefinition = {
     filePrompt(join(__dirname, "prompts", "step.md")),
     filePrompt(join(__dirname, "prompts", "standard.md")),
     filePrompt(join(__dirname, "prompts", "interview.md")),
-    toolsPrompt(["ask_user", "task"]),
+    toolsPrompt(["ask_user"]),
   ],
   defaultPermission: {
     bash: "deny",
@@ -66,7 +66,7 @@ const DEFINITION: AgentDefinition = {
     webfetch: "deny",
     websearch: "deny",
     question: "deny",
-    task: "allow",
+    task: "deny",
     external_directory: "deny",
   },
   defaultTools: {

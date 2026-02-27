@@ -59,7 +59,7 @@ const DEFINITION: AgentDefinition = {
     filePrompt(join(__dirname, "prompts", "workflow.md")),
     filePrompt(join(__dirname, "prompts", "standard.md")),
     filePrompt(join(__dirname, "prompts", "interview.md")),
-    toolsPrompt(["ask_user", "task"]),
+    toolsPrompt(["ask_user", "hd_submit", "task"]),
   ],
   defaultPermission: {
     bash: "deny",
