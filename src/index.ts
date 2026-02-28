@@ -28,7 +28,6 @@ export { createHEngineerAgent } from "./agents/HEngineer"
 
 // Workflow state management
 export {
-  getWorkflowState,
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,

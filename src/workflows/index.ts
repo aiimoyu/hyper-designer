@@ -18,11 +18,9 @@ export {
 } from "./core/registry"
 
 export {
-  getWorkflowState,
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
-  setWorkflowGatePassed,
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder,
