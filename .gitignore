@@ -52,3 +52,6 @@ temp/
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# Git worktrees
+.worktrees/
