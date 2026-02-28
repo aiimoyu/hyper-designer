@@ -37,3 +37,5 @@ export { loadPromptForStage } from "./core/prompts"
 
 export { classicWorkflow } from "./plugins/classic"
 export { openSourceWorkflow } from "./plugins/open-source"
+
+export { WorkflowService, workflowService } from "./core/WorkflowService"

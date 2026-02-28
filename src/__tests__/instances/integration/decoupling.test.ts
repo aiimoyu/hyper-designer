@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { loadHDConfig, DEFAULT_CONFIG_PATH, GLOBAL_CONFIG_PATH } from "../../../config/loader"
-import { getWorkflowDefinition } from "../../../workflows/core/registry"
+import { getWorkflowDefinition } from "../../../workflows"
 import { createHArchitectAgent } from "../../../agents/HArchitect"
 import { HyperDesignerPlugin } from "../../../../opencode/.plugins/hyper-designer"
 
@@ -14,15 +14,13 @@ vi.mock("@opencode-ai/plugin", () => {
   }
   return { tool }
 })
-import type { WorkflowDefinition } from "../../../workflows/core/types"
+import type { WorkflowDefinition } from "../../../workflows"
 
 import {
   initializeWorkflowState,
-  setWorkflowStage,
-  executeWorkflowHandover,
-} from "../../../workflows/core/state"
-import { getHandoverAgent, getHandoverPrompt } from "../../../workflows/core/handover"
-import { loadPromptForStage } from "../../../workflows/core/prompts"
+  loadPromptForStage,
+  workflowService,
+} from "../../../workflows"
 import { rmSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "fs"
 import { join, dirname } from "path"
 
@@ -170,20 +168,18 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should complete stages and persist to disk", () => {
-      const workflow = getClassicWorkflow()
 
-      const state = setWorkflowStage("IRAnalysis", true, workflow)
+      const state = workflowService.setStage("IRAnalysis", true)
       expect(state.workflow.IRAnalysis?.isCompleted).toBe(true)
       expect(existsSync(STATE_FILE)).toBe(true)
     })
 
     it("should transition through multiple stages", () => {
-      const workflow = getClassicWorkflow()
 
-      let state = setWorkflowStage("IRAnalysis", true, workflow)
+      let state = workflowService.setStage("IRAnalysis", true)
       expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
 
-      state = setWorkflowStage("scenarioAnalysis", true, workflow)
+      state = workflowService.setStage("scenarioAnalysis", true)
       expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
       expect(state.workflow.scenarioAnalysis.isCompleted).toBe(true)
       expect(state.workflow.useCaseAnalysis.isCompleted).toBe(false)
@@ -192,35 +188,32 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
   describe("Handover End-to-End Integration", () => {
     it("should get correct handover agent and prompt", () => {
-      const workflow = getClassicWorkflow()
 
-      const nextAgent = getHandoverAgent(workflow, "IRAnalysis")
+      const nextAgent = workflowService.getHandoverAgent("IRAnalysis")
       expect(nextAgent).toBe("HArchitect")
 
-      const handoverPrompt = getHandoverPrompt(workflow, null, "IRAnalysis")
+      const handoverPrompt = workflowService.getHandoverPrompt(null, "IRAnalysis")
       expect(handoverPrompt).toBeTruthy()
       expect(handoverPrompt!.length).toBeGreaterThan(0)
     })
 
     it("should initialize state for handover execution", async () => {
-      const workflow = getClassicWorkflow()
 
-      const state = await executeWorkflowHandover(workflow)
+      const state = await workflowService.executeHandover()
       expect(state).toHaveProperty("workflow")
       expect(state).toHaveProperty("currentStep")
       expect(state.handoverTo).toBeNull()
     })
 
     it("should get correct agent for each stage", () => {
-      const workflow = getClassicWorkflow()
 
-      expect(getHandoverAgent(workflow, "IRAnalysis")).toBe("HArchitect")
-      expect(getHandoverAgent(workflow, "scenarioAnalysis")).toBe("HArchitect")
-      expect(getHandoverAgent(workflow, "useCaseAnalysis")).toBe("HArchitect")
-      expect(getHandoverAgent(workflow, "functionalRefinement")).toBe("HArchitect")
-      expect(getHandoverAgent(workflow, "requirementDecomposition")).toBe("HEngineer")
-      expect(getHandoverAgent(workflow, "systemFunctionalDesign")).toBe("HEngineer")
-      expect(getHandoverAgent(workflow, "moduleFunctionalDesign")).toBe("HEngineer")
+      expect(workflowService.getHandoverAgent("IRAnalysis")).toBe("HArchitect")
+      expect(workflowService.getHandoverAgent("scenarioAnalysis")).toBe("HArchitect")
+      expect(workflowService.getHandoverAgent("useCaseAnalysis")).toBe("HArchitect")
+      expect(workflowService.getHandoverAgent("functionalRefinement")).toBe("HArchitect")
+      expect(workflowService.getHandoverAgent("requirementDecomposition")).toBe("HEngineer")
+      expect(workflowService.getHandoverAgent("systemFunctionalDesign")).toBe("HEngineer")
+      expect(workflowService.getHandoverAgent("moduleFunctionalDesign")).toBe("HEngineer")
     })
   })
 

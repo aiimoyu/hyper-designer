@@ -37,6 +37,9 @@ export {
   getStageOrder,
 } from "./workflows"
 
+// Workflow service (primary interface)
+export { workflowService } from "./workflows"
+
 // Workflow registry
 export { getWorkflowDefinition, getAvailableWorkflows } from "./workflows"
 
