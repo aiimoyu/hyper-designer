@@ -21,7 +21,7 @@ import { loadHDConfig } from "../../../config/loader"
 import { getWorkflowDefinition } from "../../core/registry"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { replacePlaceholders, type PlaceholderResolver } from "./utils"
-import { createCapabilities } from "./platform-hooks"
+import { createCapabilities } from "../../../adapters/opencode"
 
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()

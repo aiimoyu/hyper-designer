@@ -13,6 +13,7 @@
 import { HyperDesignerLogger } from "../../utils/logger"
 import { getWorkflowState, setWorkflowGatePassed } from "./state"
 import type { WorkflowDefinition, StageHookCapabilities } from "./types"
+import { parseReviewResult } from "./reviewParser"
 
 export interface QualityGateResult {
   ok: boolean
@@ -45,52 +46,7 @@ export const DEFAULT_REVIEW_SCHEMA: Record<string, unknown> = {
 /** 评审响应的归一化形式（由 capabilities.session.prompt 返回） */
 type ReviewResponse = { structuredOutput?: unknown; text: string }
 
-// ─── 工具函数 ──────────────────────────────────────────────────────────────────
 
-const isRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === "object" && value !== null
-}
-
-const inferPassFromText = (text: string): boolean => {
-  const lower = text.toLowerCase()
-  if (lower.includes("fail") || text.includes("未通过") || text.includes("不通过")) {
-    return false
-  }
-  return lower.includes("pass") || text.includes("通过") || lower.includes("approved")
-}
-
-const parseReviewResult = (structuredOutput: unknown, reviewText: string): {
-  passed: boolean
-  summary: string
-  issues: string[]
-  score?: number
-} => {
-  if (!isRecord(structuredOutput)) {
-    return {
-      passed: inferPassFromText(reviewText),
-      summary: reviewText || "HCritic 未返回结构化结论。",
-      issues: [],
-    }
-  }
-
-  const issues = Array.isArray(structuredOutput.issues)
-    ? structuredOutput.issues.filter((item): item is string => typeof item === "string")
-    : []
-  const passed = typeof structuredOutput.passed === "boolean"
-    ? structuredOutput.passed
-    : inferPassFromText(reviewText)
-  const summary = typeof structuredOutput.summary === "string"
-    ? structuredOutput.summary
-    : reviewText || (passed ? "评审通过" : "评审未通过")
-  const score = typeof structuredOutput.score === "number" ? structuredOutput.score : undefined
-
-  return {
-    passed,
-    summary,
-    issues,
-    ...(score !== undefined ? { score } : {}),
-  }
-}
 
 // ─── 内部门禁评审器 ────────────────────────────────────────────────────────────
 

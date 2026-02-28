@@ -2,7 +2,7 @@
  * OpenCode 工作流钩子工具函数
  *
  * 提供占位符替换和模型解析等通用工具函数，
- * 供 platform-hooks 和 index 模块共享使用。
+ #HJ| * 供 capabilities 和 index 模块共享使用。
  */
 
 import type { PluginInput } from "@opencode-ai/plugin"
