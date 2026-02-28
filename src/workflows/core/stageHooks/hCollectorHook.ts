@@ -1,5 +1,5 @@
 /**
- * Classic workflow stage hooks (framework-agnostic)
+ * HCollector 资料收集钩子
  *
  * 预设的 beforeStage/afterStage 钩子，通过 ctx.capabilities 获取平台能力，
  * 与具体 AI 框架（OpenCode 等）解耦，可在不同平台实现中复用。
@@ -48,7 +48,6 @@ export function createHCollectorHook(options: HCollectorHookOptions): StageHookF
     }
 
     const { domains } = options
-    const domainLabels = domains.map((d) => DOMAIN_LABELS[d]).join('、')
 
     const completedFilePaths = domains.map((domain) =>
       join(process.cwd(), '.hyper-designer', 'document', domain, 'completed'),
@@ -65,16 +64,63 @@ export function createHCollectorHook(options: HCollectorHookOptions): StageHookF
 
       let text: string
       if (attempt === 0) {
-        text = `进入 ${stageName} 阶段前，需要收集以下领域的资料：${domainLabels}\n\n`
-          + '请按照 HCollector 的工作流程，依次收集各领域资料：\n'
-          + incompleteDomains.map((d) => `- ${DOMAIN_LABELS[d]}：.hyper-designer/document/${d}/completed`).join('\n')
-          + '\n\n完成资料收集后，请在对应领域目录下创建 completed 标记文件。'
+        const domainItems = incompleteDomains
+          .map((d) => `- **${DOMAIN_LABELS[d]}** \`[domain: ${d}]\``)
+          .join('\n')
+        const outputRequirements = incompleteDomains
+          .flatMap((d) => [
+            `2. Maintain \`.hyper-designer/document/${d}/draft.md\` in real-time.`,
+            `3. Generate \`.hyper-designer/document/${d}/manifest.md\` upon completion.`,
+            `4. Create the \`.hyper-designer/document/${d}/completed\` marker file only after confirming that \`manifest.md\` has been successfully written.`,
+          ])
+          .join('\n')
+        const domainNames = incompleteDomains.map((d) => `\`${d}\``).join(', ')
+        text = [
+          '## Task Directive',
+          '',
+          'Initiate the resource collection workflow. The target domain is as follows:',
+          '',
+          domainItems,
+          '',
+          '## Output Requirements',
+          '',
+          '1. Execute sequentially according to the standard workflow.',
+          outputRequirements,
+          '',
+          '## Constraint Reminders',
+          '',
+          `- Strictly prohibited from expanding to domains other than ${domainNames}.`,
+          '- Strictly prohibited from writing any business code.',
+        ].join('\n')
       } else {
-        const incompleteLabels = incompleteDomains.map((d) => DOMAIN_LABELS[d]).join('、')
-        text = `错误：以下领域资料收集尚未完成：${incompleteLabels}\n\n`
-          + '未找到的完成标记文件：\n'
-          + incompleteDomains.map((d) => `- .hyper-designer/document/${d}/completed`).join('\n')
-          + `\n\n这是第 ${attempt + 1} 次重试，请继续收集缺失的资料。`
+        const domainItems = incompleteDomains
+          .map((d) => `- **${DOMAIN_LABELS[d]}** \`[domain: ${d}]\``)
+          .join('\n')
+        const domainNames = incompleteDomains.map((d) => `\`${d}\``).join(', ')
+        text = [
+          `## ⚠️ Task Resumption Instruction (Retry #${attempt})`,
+          '',
+          'The previous execution was interrupted unexpectedly. Please resume from the interruption point; **do not restart**.',
+          '',
+          '## Task Directive',
+          '',
+          'Initiate the resource collection workflow. The target domain is as follows:',
+          '',
+          domainItems,
+          '',
+          '## Resumption Execution Strategy',
+          '',
+          'Please diagnose and resume execution in the following order:',
+          '',
+          '1. **Check Current Progress**',
+          '2. **Proceed to Completion**: Continue the standard workflow from the interruption point until `manifest.md` is output and the `completed` marker file is created.',
+          '',
+          '## Constraint Reminders',
+          '',
+          '- This is a resumption execution; strictly prohibited from asking the user repeated questions about already confirmed resources.',
+          '- Assets already in `✅ Ready` status must be reused directly; do not re-collect them.',
+          `- Strictly prohibited from expanding to domains other than ${domainNames}.`,
+        ].join('\n')
       }
 
       HyperDesignerLogger.info('ClassicHooks', '调用 HCollector 收集资料', { stageKey, stageName, domains, attempt })
@@ -97,28 +143,3 @@ export function createHCollectorHook(options: HCollectorHookOptions): StageHookF
     })
   }
 }
-
-/**
- * 上下文压缩钩子（afterStage）
- *
- * 离开阶段时压缩会话上下文，避免历史消息过长影响后续阶段的推理质量。
- * 通过 capabilities.summarize 执行，若平台未提供则静默跳过。
- */
-export const summarizeHook: StageHookFn = async ({ stageKey, stageName, capabilities }) => {
-  if (!capabilities?.summarize) {
-    HyperDesignerLogger.debug('ClassicHooks', 'summarizeHook: 缺少 capabilities.summarize，跳过压缩', { stageKey, stageName })
-    return
-  }
-
-  HyperDesignerLogger.info('ClassicHooks', '执行上下文压缩', { stageKey, stageName })
-  await capabilities.summarize()
-}
-
-/** IR分析阶段：收集领域分析资料 */
-export const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })
-
-/** 场景分析阶段：收集系统需求分析资料 */
-export const scenarioAnalysisCollectorHook = createHCollectorHook({ domains: ['systemRequirementAnalysis'] })
-
-/** 系统功能设计阶段：收集系统设计和代码库资料 */
-export const systemDesignCollectorHook = createHCollectorHook({ domains: ['systemDesign', 'codebase'] })
