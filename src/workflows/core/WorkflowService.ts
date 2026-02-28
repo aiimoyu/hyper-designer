@@ -13,6 +13,7 @@ import {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowGatePassed,
+  setWorkflowHandover,
 } from "./state";
 import { getWorkflowDefinition } from "./registry";
 
@@ -95,7 +96,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setHandover(stepName: string | null): WorkflowState {
-    throw new Error("Not implemented");
+    return setWorkflowHandover(stepName, this.definition);
   }
 
   /**

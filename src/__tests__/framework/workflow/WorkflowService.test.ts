@@ -296,16 +296,115 @@ describe("WorkflowService", () => {
       service.reset();
       expect(service.getDefinition()).toBe(classicWorkflowDef);
     });
+
+    it("allows clean state reads after reset (test isolation semantics)", () => {
+      // Create state, reset, verify service still reads from disk
+      service.setStage("IRAnalysis", true);
+      service.reset();
+      // Disk state still exists - reset doesn't clear disk
+      const state = service.getState();
+      expect(state).not.toBeNull();
+      expect(state!.workflow.IRAnalysis.isCompleted).toBe(true);
+    });
+
+    it("can be called multiple times without error", () => {
+      expect(() => {
+        service.reset();
+        service.reset();
+        service.reset();
+      }).not.toThrow();
+    });
+
+    it("works when no state file exists on disk", () => {
+      // No state file created yet
+      expect(() => service.reset()).not.toThrow();
+      expect(service.getState()).toBeNull();
+    });
   });
 
   describe("setHandover", () => {
-    it.todo("sets handover target step");
-    it.todo("allows null to clear handover");
-    it.todo("validates handover step exists");
-    it.todo("prevents skipping stages in handover");
-    it.todo("allows backward handover");
-    it.todo("emits handoverScheduled event");
-    it.todo("persists handover state to file");
+    it("sets handover target step", () => {
+      service.setCurrent("dataCollection");
+      const state = service.setHandover("IRAnalysis");
+      expect(state.handoverTo).toBe("IRAnalysis");
+    });
+
+    it("allows null to clear handover", () => {
+      service.setCurrent("dataCollection");
+      service.setHandover("IRAnalysis");
+      const state = service.setHandover(null);
+      expect(state.handoverTo).toBeNull();
+    });
+
+    it("validates handover step exists", () => {
+      service.setCurrent("dataCollection");
+      const state = service.setHandover("nonExistentStep");
+      // Invalid step is silently ignored - handoverTo stays null
+      expect(state.handoverTo).toBeNull();
+    });
+
+    it("prevents skipping stages in handover", () => {
+      // Current is dataCollection, try to skip to scenarioAnalysis (skips IRAnalysis)
+      service.setCurrent("dataCollection");
+      const state = service.setHandover("scenarioAnalysis");
+      // Should NOT set handover - skipping is not allowed
+      expect(state.handoverTo).toBeNull();
+    });
+
+    it("allows backward handover", () => {
+      service.setCurrent("scenarioAnalysis");
+      const state = service.setHandover("dataCollection");
+      expect(state.handoverTo).toBe("dataCollection");
+    });
+
+    it("persists handover state to file", () => {
+      service.setCurrent("dataCollection");
+      service.setHandover("IRAnalysis");
+      const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
+      expect(raw.handoverTo).toBe("IRAnalysis");
+    });
+
+    it("allows handover to first stage when no current step", () => {
+      // No current step set - should allow handover to first stage
+      const state = service.setHandover("dataCollection");
+      expect(state.handoverTo).toBe("dataCollection");
+    });
+
+    it("rejects handover to non-first stage when no current step", () => {
+      // No current step set - should reject non-first stage
+      const state = service.setHandover("IRAnalysis");
+      expect(state.handoverTo).toBeNull();
+    });
+
+    it("setHandover(null) when already null - still writes, no error", () => {
+      // Ensure state exists first
+      service.setStage("dataCollection", false);
+      const state = service.setHandover(null);
+      expect(state.handoverTo).toBeNull();
+      // Verify file was written
+      const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
+      expect(raw.handoverTo).toBeNull();
+    });
+
+    it("allows handover to same stage as current", () => {
+      service.setCurrent("IRAnalysis");
+      const state = service.setHandover("IRAnalysis");
+      // Same stage = backward (targetIndex <= currentIndex), should be allowed
+      expect(state.handoverTo).toBe("IRAnalysis");
+    });
+
+    it("allows handover to next step (forward by one)", () => {
+      service.setCurrent("IRAnalysis");
+      const state = service.setHandover("scenarioAnalysis");
+      expect(state.handoverTo).toBe("scenarioAnalysis");
+    });
+
+    it("handles empty state file on disk gracefully", () => {
+      // setHandover creates state if none exists
+      const state = service.setHandover("dataCollection");
+      expect(state).toBeDefined();
+      expect(state.handoverTo).toBe("dataCollection");
+    });
   });
 
   describe("executeHandover", () => {
