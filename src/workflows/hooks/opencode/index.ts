@@ -10,22 +10,18 @@
 
 import { PluginInput } from "@opencode-ai/plugin"
 
-import {
-  getWorkflowState,
-  executeWorkflowHandover,
-} from "../../core/state"
+import { workflowService } from "../../core/WorkflowService"
 import { createWorkflowQualityGate } from "../../core/gate"
 import { getHandoverAgent, getHandoverPrompt } from "../../core/handover"
 import { loadWorkflowPrompt, loadStagePrompt } from "../../core/prompts"
 import { loadHDConfig } from "../../../config/loader"
-import { getWorkflowDefinition } from "../../core/registry"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { replacePlaceholders, type PlaceholderResolver } from "./utils"
 import { createCapabilities } from "../../../adapters/opencode"
 
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()
-  const workflow = getWorkflowDefinition(config.workflow || "classic")
+  const workflow = workflowService.getDefinition()
 
   if (!workflow) {
     HyperDesignerLogger.error("OpenCode", `加载工作流失败`, new Error(`Failed to load workflow: ${config.workflow || "classic"}`), {
@@ -68,7 +64,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
       if (!sessionID) return
 
       if (event.type === "session.idle") {
-        const workflowState = getWorkflowState()
+        const workflowState = workflowService.getState()
 
         if (workflowState && workflowState.handoverTo !== null) {
           const handoverPhase = workflowState.handoverTo
@@ -99,11 +95,11 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
           HyperDesignerLogger.info("OpenCode", `工作流交接：从阶段 ${currentPhase || "无"} 到阶段 ${handoverPhase}，由代理 ${nextAgent} 处理。`)
 
-          // 创建平台能力对象，注入到 executeWorkflowHandover
+          // 创建平台能力对象，注入到 workflowService.executeHandover
           const capabilities = createCapabilities(ctx, config, sessionID)
 
           try {
-            await executeWorkflowHandover(workflow, sessionID, capabilities)
+            await workflowService.executeHandover(sessionID, capabilities)
           } catch (error) {
             const err = error instanceof Error ? error : new Error(String(error))
             HyperDesignerLogger.error("OpenCode", `工作流交接执行失败`, err, {
@@ -122,7 +118,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     },
     "experimental.chat.system.transform": async (_input: unknown, output: { system: string[] }) => {
 
-      const workflowState = getWorkflowState()
+      const workflowState = workflowService.getState()
       const placeholderResolvers: PlaceholderResolver[] = [
         {
           token: "{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}",
