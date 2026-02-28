@@ -1,5 +1,10 @@
 import type { WorkflowDefinition } from '../../core/types'
-import { irAnalysisCollectorHook, scenarioAnalysisCollectorHook, systemDesignCollectorHook, summarizeHook } from './stage-hooks'
+import { createHCollectorHook, summarizeHook } from '../../core/stageHooks'
+
+/** 阶段钩子定义 */
+const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })
+const scenarioAnalysisCollectorHook = createHCollectorHook({ domains: ['systemRequirementAnalysis'] })
+const systemDesignCollectorHook = createHCollectorHook({ domains: ['systemDesign', 'codebase'] })
 
 /**
  * Classic Requirements Engineering Workflow
