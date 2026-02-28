@@ -659,6 +659,106 @@ describe("WorkflowService", () => {
     });
   });
 
+  describe("executeQualityGate", () => {
+    it("returns passed result when review passes", async () => {
+      service.setCurrent("IRAnalysis");
+
+      const mockSession = {
+        create: vi.fn().mockResolvedValue("review-session-1"),
+        prompt: vi.fn().mockResolvedValue({
+          structuredOutput: { passed: true, summary: "评审通过", issues: [], score: 95 },
+          text: "Review passed",
+        }),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+
+      const result = await service.executeQualityGate({ session: mockSession });
+
+      expect(result.ok).toBe(true);
+      expect(result.reason).toBe("approved");
+      expect(result.passed).toBe(true);
+      expect(result.stage).toBe("IRAnalysis");
+      expect(result.summary).toBe("评审通过");
+      expect(result.issues).toEqual([]);
+      expect(result.score).toBe(95);
+      expect(service.isGatePassed()).toBe(true);
+    });
+
+    it("returns failed result when review fails", async () => {
+      service.setCurrent("IRAnalysis");
+
+      const mockSession = {
+        create: vi.fn().mockResolvedValue("review-session-2"),
+        prompt: vi.fn().mockResolvedValue({
+          structuredOutput: { passed: false, summary: "缺少关键信息", issues: ["缺少约束条件", "用户角色不完整"] },
+          text: "Review failed",
+        }),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+
+      const result = await service.executeQualityGate({ session: mockSession });
+
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe("review_failed");
+      expect(result.passed).toBe(false);
+      expect(result.stage).toBe("IRAnalysis");
+      expect(result.issues).toEqual(["缺少约束条件", "用户角色不完整"]);
+      expect(service.isGatePassed()).toBe(false);
+    });
+
+    it("returns pass with disabled reason when stage has no qualityGate", async () => {
+      // scenarioAnalysis has no qualityGate defined in classicWorkflowDef
+      service.setCurrent("scenarioAnalysis");
+
+      const mockSession = {
+        create: vi.fn(),
+        prompt: vi.fn(),
+        delete: vi.fn(),
+      };
+
+      const result = await service.executeQualityGate({ session: mockSession });
+
+      expect(result.ok).toBe(true);
+      expect(result.reason).toBe("disabled");
+      expect(result.passed).toBe(true);
+      expect(result.stage).toBe("scenarioAnalysis");
+      // Session should NOT have been called at all
+      expect(mockSession.create).not.toHaveBeenCalled();
+    });
+
+    it("returns no_active_stage when no current step is set", async () => {
+      // Don't set any current step
+      const mockSession = {
+        create: vi.fn(),
+        prompt: vi.fn(),
+        delete: vi.fn(),
+      };
+
+      const result = await service.executeQualityGate({ session: mockSession });
+
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe("no_active_stage");
+      expect(mockSession.create).not.toHaveBeenCalled();
+    });
+
+    it("cleans up session even when prompt fails", async () => {
+      service.setCurrent("IRAnalysis");
+
+      const mockSession = {
+        create: vi.fn().mockResolvedValue("review-session-3"),
+        prompt: vi.fn().mockRejectedValue(new Error("Session prompt failed")),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+
+      const result = await service.executeQualityGate({ session: mockSession });
+
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe("runtime_error");
+      expect(mockSession.delete).toHaveBeenCalledWith("review-session-3");
+      expect(service.isGatePassed()).toBe(false);
+    });
+  });
+
   describe("event emission", () => {
     it.todo("emits stageCompleted when stage status changes");
     it.todo("emits currentChanged when current step changes");

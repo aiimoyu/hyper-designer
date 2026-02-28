@@ -17,6 +17,10 @@ import {
   executeWorkflowHandover,
 } from "./state";
 import { getWorkflowDefinition } from "./registry";
+import type { QualityGateResult } from "./gate";
+import { DEFAULT_REVIEW_SCHEMA } from "./gate";
+import { parseReviewResult } from "./reviewParser";
+import { HyperDesignerLogger } from "../../utils/logger";
 
 /**
  * WorkflowService 事件类型映射
@@ -126,6 +130,117 @@ export class WorkflowService extends EventEmitter {
    */
   setGatePassed(passed: boolean): WorkflowState {
     return setWorkflowGatePassed(passed);
+  }
+
+  /**
+   * 执行当前阶段的质量门禁评审
+   * @param capabilities 平台能力对象（必须包含 session 原语）
+   * @returns 结构化门禁结果
+   */
+  async executeQualityGate(capabilities: StageHookCapabilities): Promise<QualityGateResult> {
+    const state = getWorkflowState();
+    if (!state?.currentStep) {
+      setWorkflowGatePassed(false);
+      return {
+        ok: false,
+        reason: "no_active_stage",
+        message: "No active workflow stage. Use set_hd_workflow_current before calling hd_submit.",
+      };
+    }
+
+    const stageKey = state.currentStep;
+    const stage = this.definition.stages[stageKey];
+    if (!stage) {
+      setWorkflowGatePassed(false);
+      return {
+        ok: false,
+        reason: "invalid_stage",
+        stage: stageKey,
+        message: `Stage definition not found: ${stageKey}`,
+      };
+    }
+
+    // 无提示词则跳过门禁（自动通过）
+    if (!stage.qualityGate) {
+      setWorkflowGatePassed(true);
+      return {
+        ok: true,
+        reason: "disabled",
+        stage: stageKey,
+        passed: true,
+        summary: "Quality gate disabled for this stage.",
+        issues: [],
+        message: "Quality gate is disabled for this stage.",
+      };
+    }
+
+    const prompt = stage.qualityGate;
+    const session = capabilities.session;
+    if (!session) {
+      setWorkflowGatePassed(false);
+      return {
+        ok: false,
+        reason: "runtime_error",
+        stage: stageKey,
+        message: "capabilities.session is required for quality gate review",
+      };
+    }
+
+    try {
+      const sessionId = await session.create(`HCritic Review: ${stageKey}`);
+      let reviewResponse: { structuredOutput?: unknown; text: string };
+      try {
+        reviewResponse = await session.prompt({ sessionId, agent: "HCritic", text: prompt, schema: DEFAULT_REVIEW_SCHEMA });
+      } finally {
+        await session.delete(sessionId).catch(() => {
+          // ignore cleanup failure
+        });
+      }
+
+      const parsed = parseReviewResult(reviewResponse.structuredOutput, reviewResponse.text);
+
+      setWorkflowGatePassed(parsed.passed);
+      if (!parsed.passed) {
+        return {
+          ok: false,
+          reason: "review_failed",
+          stage: stageKey,
+          passed: false,
+          summary: parsed.summary,
+          issues: parsed.issues,
+          ...(parsed.score !== undefined ? { score: parsed.score } : {}),
+          message: "HCritic review failed. Fix issues and resubmit.",
+        };
+      }
+
+      return {
+        ok: true,
+        reason: "approved",
+        stage: stageKey,
+        passed: true,
+        summary: parsed.summary,
+        issues: parsed.issues,
+        ...(parsed.score !== undefined ? { score: parsed.score } : {}),
+        message: "HCritic review passed.",
+      };
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      try {
+        HyperDesignerLogger.error("WorkflowService", "执行门禁失败", err, {
+          stageKey,
+          action: "executeQualityGate",
+        });
+      } catch {
+        // Strict mode re-throws; swallow to return structured result
+      }
+      setWorkflowGatePassed(false);
+      return {
+        ok: false,
+        reason: "runtime_error",
+        stage: stageKey,
+        message: `Quality gate failed: ${err.message}`,
+      };
+    }
   }
 
   /**
