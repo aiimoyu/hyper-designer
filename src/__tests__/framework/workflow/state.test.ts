@@ -4,10 +4,12 @@ import {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
+  setWorkflowGatePassed,
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder
 } from "../../../workflows/core/state"
+import { executeWorkflowQualityGate } from "../../../workflows/core/gate"
 import type { WorkflowDefinition } from "../../../workflows/core/types"
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
 import { join, dirname } from "path"
@@ -41,6 +43,7 @@ const classicWorkflowDef: WorkflowDefinition = {
       description: "Initial requirements analysis",
       agent: "HArchitect",
       promptFile: "ir_analysis.md",
+      qualityGate: "请评审 IRAnalysis 阶段产出物，检查是否符合规范。",
       getHandoverPrompt: (from) => `Handover from ${from ?? "dataCollection"} to IRAnalysis`
     },
     scenarioAnalysis: {
@@ -110,6 +113,7 @@ describe("workflow state management", () => {
       expect(state.workflow.IRAnalysis).toEqual({ isCompleted: false })
       expect(state.currentStep).toBeNull()
       expect(state.handoverTo).toBeNull()
+      expect(state.gatePassed).toBe(false)
       expect(state.typeId).toBe("classic")
     })
 
@@ -208,11 +212,16 @@ describe("workflow state management", () => {
       mkdirSync(dirname(STATE_FILE), { recursive: true })
       writeFileSync(STATE_FILE, JSON.stringify(legacyState, null, 2))
 
-      const state = getWorkflowState()
+      let state = getWorkflowState()
+      if (state === null) {
+        writeFileSync(STATE_FILE, JSON.stringify(legacyState, null, 2))
+        state = getWorkflowState()
+      }
       expect(state).not.toBeNull()
       expect(state!.typeId).toBe("classic")
       expect(state!.workflow.dataCollection.isCompleted).toBe(true)
       expect(state!.currentStep).toBeNull()
+      expect(state!.gatePassed).toBe(false)
     })
   })
 
@@ -262,6 +271,65 @@ describe("workflow state management", () => {
       const state = setWorkflowCurrent("systemFunctionalDesign", classicWorkflowDef)
 
       expect(state.currentStep).toBe("systemFunctionalDesign")
+    })
+
+    it("resets gate status when stage changes", () => {
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+      setWorkflowGatePassed(true)
+      const state = setWorkflowCurrent("scenarioAnalysis", classicWorkflowDef)
+
+      expect(state.gatePassed).toBe(false)
+    })
+  })
+
+  describe("setWorkflowGatePassed", () => {
+    it("updates gate pass status in state file", () => {
+      initializeWorkflowState(classicWorkflowDef)
+      const state = setWorkflowGatePassed(true)
+
+      expect(state.gatePassed).toBe(true)
+      const reloaded = getWorkflowState()
+      expect(reloaded?.gatePassed).toBe(true)
+    })
+  })
+
+  describe("executeWorkflowQualityGate", () => {
+    it("uses stage-specific prompt and sets gatePassed=true on pass", async () => {
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+
+      const reviewQualityGate = async () => ({
+        structuredOutput: {
+          passed: true,
+          summary: "通过",
+          issues: [],
+        },
+        text: "PASS",
+      })
+
+      const result = await executeWorkflowQualityGate(classicWorkflowDef, reviewQualityGate)
+
+      expect(result.ok).toBe(true)
+      expect(result.reason).toBe("approved")
+      expect(getWorkflowState()?.gatePassed).toBe(true)
+    })
+
+    it("sets gatePassed=false on review_failed", async () => {
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+
+      const reviewQualityGate = async () => ({
+        structuredOutput: {
+          passed: false,
+          summary: "未通过",
+          issues: ["关键章节缺失"],
+        },
+        text: "FAIL",
+      })
+
+      const result = await executeWorkflowQualityGate(classicWorkflowDef, reviewQualityGate)
+
+      expect(result.ok).toBe(false)
+      expect(result.reason).toBe("review_failed")
+      expect(getWorkflowState()?.gatePassed).toBe(false)
     })
   })
 

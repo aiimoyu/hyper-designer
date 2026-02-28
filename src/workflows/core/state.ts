@@ -31,6 +31,8 @@ export interface WorkflowState {
   currentStep: string | null;
   /** Step that the workflow is being handed over to, or null if no handover is pending */
   handoverTo: string | null;
+  /** Whether the current stage passed quality gate */
+  gatePassed: boolean;
 }
 
 /** Path to the workflow state file */
@@ -63,6 +65,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
     workflow,
     currentStep: null,
     handoverTo: null,
+    gatePassed: false,
   };
   
   HyperDesignerLogger.debug("Workflow", `工作流状态初始化完成`, { 
@@ -92,6 +95,7 @@ function readWorkflowStateFile(): WorkflowState | null {
       workflow: parsed.workflow,
       currentStep: parsed.currentStep,
       handoverTo: parsed.handoverTo,
+      gatePassed: parsed.gatePassed ?? false,
     };
     
     HyperDesignerLogger.debug("Workflow", `工作流状态读取完成`, { 
@@ -181,6 +185,7 @@ function ensureWorkflowStateExists(definition?: WorkflowDefinition): WorkflowSta
     workflow: {},
     currentStep: null,
     handoverTo: null,
+    gatePassed: false,
   };
   writeWorkflowStateFile(fallbackState);
   return fallbackState;
@@ -231,7 +236,12 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
   const state = ensureWorkflowStateExists(definition);
   
   if (stepName === null || state.workflow[stepName]) {
+    const previousStep = state.currentStep
     state.currentStep = stepName;
+    // 进入新阶段时重置门禁状态，避免沿用上阶段结果
+    if (previousStep !== stepName) {
+      state.gatePassed = false;
+    }
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", `当前工作流步骤更新完成`, { step: stepName });
   } else {
@@ -318,6 +328,19 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
   state.handoverTo = stepName;
   writeWorkflowStateFile(state);
   HyperDesignerLogger.debug("Workflow", `工作流交接目标设置完成`, { targetStep: stepName });
+  return state;
+}
+
+/**
+ * Sets the workflow quality gate pass status
+ * @param isPassed Whether quality gate is passed
+ * @returns Updated workflow state
+ */
+export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
+  HyperDesignerLogger.info("Workflow", `设置门禁状态`, { gatePassed: isPassed });
+  const state = ensureWorkflowStateExists();
+  state.gatePassed = isPassed;
+  writeWorkflowStateFile(state);
   return state;
 }
 

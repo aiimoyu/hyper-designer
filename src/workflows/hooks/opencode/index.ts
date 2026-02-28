@@ -4,8 +4,9 @@
  * 提供与 OpenCode 平台集成的工作流钩子，包括：
  * 1. 事件处理：监听会话空闲事件，执行工作流交接
  * 2. 系统消息转换：替换工作流相关的占位符令牌
- * 3. 平台能力注入：通过 createCapabilities 创建能力对象，
- *    传入 executeWorkflowHandover，核心层保持框架无关
+ * 3. 平台能力注入：通过 createCapabilities 创建基础能力，
+ *    通过 createQualityGateReviewer 创建质量门评审函数，
+ *    传入各自的核心函数，核心层保持框架无关
  */
 
 import { PluginInput } from "@opencode-ai/plugin"
@@ -14,13 +15,14 @@ import {
   getWorkflowState,
   executeWorkflowHandover,
 } from "../../core/state"
+import { executeWorkflowQualityGate as coreExecuteWorkflowQualityGate } from "../../core/gate"
 import { getHandoverAgent, getHandoverPrompt } from "../../core/handover"
 import { loadWorkflowPrompt, loadStagePrompt } from "../../core/prompts"
 import { loadHDConfig } from "../../../config/loader"
 import { getWorkflowDefinition } from "../../core/registry"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { replacePlaceholders, type PlaceholderResolver } from "./utils"
-import { createCapabilities } from "./platform-hooks"
+import { createCapabilities, createQualityGateReviewer } from "./platform-hooks"
 
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()
@@ -36,6 +38,11 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     return {
       event: async () => { },
       "experimental.chat.system.transform": async () => { },
+      executeWorkflowQualityGate: async () => ({
+        ok: false as const,
+        reason: "runtime_error" as const,
+        message: "Workflow definition not found.",
+      }),
     }
   }
 
@@ -50,6 +57,9 @@ export async function createWorkflowHooks(ctx: PluginInput) {
       query: { directory: ctx.directory },
     })
   }
+
+  // 质量门评审函数：封装 session.create / prompt / delete（基础能力的组合）
+  const reviewFn = createQualityGateReviewer(ctx)
 
   return {
     event: async ({ event }: { event: any }) => {
@@ -132,5 +142,8 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
       replacePlaceholders(output.system, placeholderResolvers)
     },
+
+    /** 执行当前阶段质量门（无参数，workflow 和 reviewFn 已在此处绑定） */
+    executeWorkflowQualityGate: () => coreExecuteWorkflowQualityGate(workflow, reviewFn),
   }
 }

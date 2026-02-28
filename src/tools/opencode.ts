@@ -160,7 +160,7 @@ export const OPENCODE_TOOL_SYNTAX: ToolSyntaxRegistry = {
 
   hd_submit: {
     uniName: "hd_submit",
-    description: "Submit current stage work for HCritic quality review. Call this when you have completed the stage document and are ready for review. Returns PASS (proceed to user confirmation) or FAIL (fix issues and resubmit).",
+    description: "Submit current stage work for HCritic quality gate review. Returns structured JSON result and updates workflow gate status.",
     syntax: "hd_submit()",
     example: "hd_submit()"
   },

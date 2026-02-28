@@ -5,6 +5,7 @@ export interface StageHookCapabilities {
   summarize?: () => Promise<void>
 }
 
+
 export type StageHookFn = (ctx: {
   /** 阶段 key，如 "IRAnalysis" */
   stageKey: string
@@ -27,7 +28,9 @@ export interface WorkflowStageDefinition {
    beforeStage?: StageHookFn[]
    /** Hooks to run after the stage completes (future use) */
    afterStage?: StageHookFn[]
-   /** Handover prompt generator - only takes current step since next stage is determined */
+   /** Stage-level quality gate config */
+   /** Stage-level quality gate prompt. If set, HCritic review is run; if undefined, gate is skipped. */
+   qualityGate?: string
    getHandoverPrompt: (currentStep: string | null) => string
 }
 

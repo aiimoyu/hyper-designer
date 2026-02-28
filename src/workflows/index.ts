@@ -22,10 +22,15 @@ export {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
+  setWorkflowGatePassed,
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder,
 } from "./core/state"
+
+export type { QualityGateResult, QualityGateReviewFn } from "./core/gate"
+
+export { executeWorkflowQualityGate } from "./core/gate"
 
 export { getHandoverAgent, getHandoverPrompt } from "./core/handover"
 export { loadPromptForStage } from "./core/prompts"
