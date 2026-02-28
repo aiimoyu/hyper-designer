@@ -1,5 +1,5 @@
 import type { WorkflowDefinition } from '../../core/types'
-import { irAnalysisCollectorHook, scenarioAnalysisCollectorHook, systemDesignCollectorHook, summarizeHook } from './hooks'
+import { irAnalysisCollectorHook, scenarioAnalysisCollectorHook, systemDesignCollectorHook, summarizeHook } from './stage-hooks'
 
 /**
  * Classic Requirements Engineering Workflow

@@ -6,27 +6,27 @@
  * 2. 生成阶段间的交接提示词
  */
 
-import type { WorkflowDefinition } from "./types"
-import { HyperDesignerLogger } from "../../utils/logger"
+import type { WorkflowDefinition } from "../types";
+import { HyperDesignerLogger } from "../../../utils/logger";
 
 export function getHandoverAgent(definition: WorkflowDefinition, stage: string): string | null {
-  const stageConfig = definition.stages[stage]
+  const stageConfig = definition.stages[stage];
   if (!stageConfig) {
     HyperDesignerLogger.warn("Workflow", `未知的工作流阶段`, {
       stage,
       availableStages: Object.keys(definition.stages),
       action: "getHandoverAgent",
       error: `Unknown stage: ${stage}`
-    })
-    return null
+    });
+    return null;
   }
   
   HyperDesignerLogger.debug("Workflow", `获取交接代理`, {
     stage,
     agent: stageConfig.agent
-  })
+  });
   
-  return stageConfig.agent
+  return stageConfig.agent;
 }
 
 export function getHandoverPrompt(
@@ -34,15 +34,15 @@ export function getHandoverPrompt(
   currentStep: string | null,
   nextStep: string
 ): string | null {
-  const stageConfig = definition.stages[nextStep]
+  const stageConfig = definition.stages[nextStep];
   if (!stageConfig) {
     HyperDesignerLogger.warn("Workflow", `未知的工作流阶段`, {
       stage: nextStep,
       availableStages: Object.keys(definition.stages),
       action: "getHandoverPrompt",
       error: `Unknown stage: ${nextStep}`
-    })
-    return null
+    });
+    return null;
   }
 
   if (!stageConfig.getHandoverPrompt) {
@@ -50,15 +50,15 @@ export function getHandoverPrompt(
       stage: nextStep,
       action: "validateHandoverFunction",
       error: `Stage "${nextStep}" does not define getHandoverPrompt function`
-    })
-    return null
+    });
+    return null;
   }
   
   HyperDesignerLogger.debug("Workflow", `生成交接提示词`, {
     currentStep,
     nextStep,
     action: "generateHandoverPrompt"
-  })
+  });
   
-  return stageConfig.getHandoverPrompt(currentStep)
+  return stageConfig.getHandoverPrompt(currentStep);
 }

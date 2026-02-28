@@ -1,49 +1,17 @@
 /**
- * OpenCode 工作流钩子工具函数
+ * OpenCode 模型工具函数
  *
- * 提供占位符替换和模型解析等通用工具函数，
- #HJ| * 供 capabilities 和 index 模块共享使用。
+ * 提供模型解析和配置获取功能，用于上下文压缩等平台能力。
+ * 移动到 adapters 层避免循环依赖（原位置：workflows/hooks/opencode/utils.ts）
  */
 
 import type { PluginInput } from "@opencode-ai/plugin"
-import type { HDConfig } from "../../../config/loader"
-import { HyperDesignerLogger } from "../../../utils/logger"
-
-export type PlaceholderResolver = {
-  token: string
-  resolve: () => string | null
-}
+import type { HDConfig } from "../../config/loader"
+import { HyperDesignerLogger } from "../../utils/logger"
 
 export interface ModelInfo {
   providerID: string
   modelID: string
-}
-
-/**
- * 替换系统消息数组中的占位符令牌
- * @param systemMessages 系统消息数组（原地修改）
- * @param resolvers 占位符解析器列表
- */
-export function replacePlaceholders(
-  systemMessages: string[],
-  resolvers: PlaceholderResolver[]
-): void {
-  for (const resolver of resolvers) {
-    const needsReplacement = systemMessages.some(message => message.includes(resolver.token))
-    if (!needsReplacement) {
-      continue
-    }
-
-    const replacement = resolver.resolve()
-    const safeReplacement = replacement ?? ""
-
-    for (let index = 0; index < systemMessages.length; index += 1) {
-      const message = systemMessages[index]
-      if (message.includes(resolver.token)) {
-        systemMessages[index] = message.split(resolver.token).join(safeReplacement)
-      }
-    }
-  }
 }
 
 /**

@@ -65,3 +65,10 @@ export interface WorkflowDefinition {
    /** Stage definitions keyed by stage name */
    stages: Record<string, WorkflowStageDefinition>
 }
+export interface WorkflowStateAccessor {
+  /** 获取当前工作流状态 */
+  getState: () => { currentStep?: string | null } | null
+  /** 写回门禁通过状态 */
+  setGatePassed: (passed: boolean) => unknown
+}
+

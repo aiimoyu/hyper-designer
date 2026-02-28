@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { WorkflowDefinition } from '../../../workflows/core/types'
-import { getWorkflowDefinition, getAvailableWorkflows } from '../../../workflows/core/registry'
+import type { WorkflowDefinition } from '../../../workflows/core'
+import { getWorkflowDefinition, getAvailableWorkflows } from '../../../workflows/core'
 
 describe('WorkflowDefinition', () => {
   it('can be constructed with valid data', () => {

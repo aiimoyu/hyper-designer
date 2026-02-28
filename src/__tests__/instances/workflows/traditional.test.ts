@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { loadPromptForStage } from '../../../workflows/core/prompts'
-import { getWorkflowDefinition, getAvailableWorkflows } from '../../../workflows/core/registry'
+import { loadPromptForStage, getWorkflowDefinition, getAvailableWorkflows } from '../../../workflows/core'
+
 import { classicWorkflow } from '../../../workflows/plugins/classic'
-import type { WorkflowDefinition } from '../../../workflows/core/types'
+import type { WorkflowDefinition } from '../../../workflows/core'
 
 function getClassicWorkflow(): WorkflowDefinition {
   const workflow = getWorkflowDefinition('classic')

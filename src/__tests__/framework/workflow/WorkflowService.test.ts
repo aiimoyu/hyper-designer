@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { WorkflowService } from "../../../workflows/core/WorkflowService";
-import type { WorkflowDefinition, StageHookFn } from "../../../workflows/core/types";
+import { WorkflowService } from '../../../workflows/core'
+import type { WorkflowDefinition, StageHookFn } from '../../../workflows/core'
 import { rmSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json");

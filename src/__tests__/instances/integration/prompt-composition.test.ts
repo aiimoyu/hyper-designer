@@ -5,9 +5,7 @@ import { createHArchitectAgent } from "../../../agents/HArchitect"
 import { createHEngineerAgent } from "../../../agents/HEngineer"
 import { createHCriticAgent } from "../../../agents/HCritic"
 import type { RuntimeType } from "../../../tools"
-import { loadPromptForStage } from "../../../workflows/core/prompts"
-import { getWorkflowDefinition } from "../../../workflows/core/registry"
-import { initializeWorkflowState } from "../../../workflows/core/state"
+import { loadPromptForStage, getWorkflowDefinition, initializeWorkflowState } from '../../../workflows/core'
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 

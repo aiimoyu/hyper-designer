@@ -7,10 +7,11 @@ import {
   setWorkflowGatePassed,
   executeWorkflowHandover,
   initializeWorkflowState,
-  getStageOrder
-} from "../../../workflows/core/state"
-import { createWorkflowQualityGate } from "../../../workflows/core/gate"
-import type { WorkflowDefinition } from "../../../workflows/core/types"
+  getStageOrder,
+  createWorkflowQualityGate,
+} from '../../../workflows/core'
+
+import type { WorkflowDefinition } from '../../../workflows/core'
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
 import { join, dirname } from "path"
 

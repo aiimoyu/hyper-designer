@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { inferPassFromText, parseReviewResult } from "../../../workflows/core/reviewParser"
+import { inferPassFromText, parseReviewResult } from '../../../workflows/core'
 
 describe("reviewParser", () => {
   describe("inferPassFromText", () => {

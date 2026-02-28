@@ -3,9 +3,8 @@ import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
 import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
 import { createBuiltinAgents } from "../../src/agents/utils"
-import { workflowService } from "../../src/workflows/core/WorkflowService"
-import { createWorkflowHooks } from "../../src/workflows/hooks/opencode"
-import { loadHDConfig } from "../../src/config/loader"
+import { workflowService } from "../../src/workflows/core/service"
+import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
@@ -40,8 +39,6 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     }
   }
 
-  const hdConfig = loadHDConfig()
-  const workflow = workflowService.getDefinition()
 
   const workflowHooks = await createWorkflowHooks(ctx)
 

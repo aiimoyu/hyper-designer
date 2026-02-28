@@ -9,10 +9,10 @@
  */
 
 import type { PluginInput } from "@opencode-ai/plugin"
-import type { StageHookCapabilities } from "../../workflows/core/types"
+import type { StageHookCapabilities } from '../../workflows/core'
 import type { SessionPromptData } from "@opencode-ai/sdk"
 import type { HDConfig } from "../../config/loader"
-import { getDefaultModel } from "../../workflows/hooks/opencode/utils"
+import { getDefaultModel } from "./model-utils"
 import { HyperDesignerLogger } from "../../utils/logger"
 
 type JsonSchema = {

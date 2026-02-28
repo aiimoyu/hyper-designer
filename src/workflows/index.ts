@@ -30,10 +30,10 @@ export type { QualityGateResult } from "./core/gate"
 
 export { createWorkflowQualityGate } from "./core/gate"
 
-export { getHandoverAgent, getHandoverPrompt } from "./core/handover"
-export { loadPromptForStage } from "./core/prompts"
+export { getHandoverAgent, getHandoverPrompt } from "./core/runtime"
+export { loadPromptForStage } from "./core/runtime"
 
 export { classicWorkflow } from "./plugins/classic"
 export { openSourceWorkflow } from "./plugins/open-source"
 
-export { WorkflowService, workflowService } from "./core/WorkflowService"
+export { WorkflowService, workflowService } from "./core/service"

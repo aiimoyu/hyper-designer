@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest"
 import { existsSync, readFileSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
-import { loadPromptForStage } from "../../../workflows/core/prompts"
+import { loadPromptForStage } from '../../../workflows/core'
 import { classicWorkflow } from "../../../workflows/plugins/classic"
-import type { WorkflowDefinition } from "../../../workflows/core/types"
+import type { WorkflowDefinition } from '../../../workflows/core'
 
 describe("workflow/prompts", () => {
   describe("loadPromptForStage", () => {

@@ -1,29 +1,28 @@
 /**
- * 工作流门禁模块
+ * 工作流质量门（qualityGate）模块
  *
  * 负责执行阶段质量门（HCritic 审查）：
- * 1工作流阶段
-. 读取当前 * 2. 加载阶段门禁提示词
+ * 1. 读取当前工作流阶段
+ * 2. 加载阶段门禁提示词
  * 3. 通过 capabilities.session 创建隔离会话执行评审
  * 4. 写回 gatePassed 状态到 workflow_state.json
  *
  * 所有门禁逻辑集中于此模块，对外提供 createWorkflowQualityGate 门禁 creator。
  */
 
-import { HyperDesignerLogger } from "../../utils/logger"
-import { workflowService } from "./WorkflowService"
-import type { WorkflowDefinition, StageHookCapabilities } from "./types"
-import { parseReviewResult } from "./reviewParser"
+import { HyperDesignerLogger } from "../../../utils/logger";
+import type { WorkflowDefinition, StageHookCapabilities, WorkflowStateAccessor } from "../types";
+import { parseReviewResult } from "./reviewParser";
 
 export interface QualityGateResult {
-  ok: boolean
-  reason: "approved" | "review_failed" | "no_active_stage" | "invalid_stage" | "runtime_error" | "disabled"
-  stage?: string
-  passed?: boolean
-  summary?: string
-  issues?: string[]
-  score?: number
-  message: string
+  ok: boolean;
+  reason: "approved" | "review_failed" | "no_active_stage" | "invalid_stage" | "runtime_error" | "disabled";
+  stage?: string;
+  passed?: boolean;
+  summary?: string;
+  issues?: string[];
+  score?: number;
+  message: string;
 }
 
 export const DEFAULT_REVIEW_SCHEMA: Record<string, unknown> = {
@@ -39,14 +38,12 @@ export const DEFAULT_REVIEW_SCHEMA: Record<string, unknown> = {
     score: { type: "number", description: "Optional quality score from 0 to 100." },
   },
   required: ["passed", "summary", "issues"],
-}
+};
 
 // ─── 内部类型 ──────────────────────────────────────────────────────────────────
 
 /** 评审响应的归一化形式（由 capabilities.session.prompt 返回） */
-type ReviewResponse = { structuredOutput?: unknown; text: string }
-
-
+type ReviewResponse = { structuredOutput?: unknown; text: string };
 
 // ─── 内部门禁评审器 ────────────────────────────────────────────────────────────
 
@@ -58,20 +55,20 @@ function createQualityGateReviewer(
   capabilities: StageHookCapabilities,
 ): (params: { stageKey: string; prompt: string; schema: Record<string, unknown> }) => Promise<ReviewResponse> {
   return async ({ stageKey, prompt, schema }) => {
-    const session = capabilities.session
+    const session = capabilities.session;
     if (!session) {
-      throw new Error("capabilities.session is required for quality gate review")
+      throw new Error("capabilities.session is required for quality gate review");
     }
 
-    const sessionId = await session.create(`HCritic Review: ${stageKey}`)
+    const sessionId = await session.create(`HCritic Review: ${stageKey}`);
     try {
-      return await session.prompt({ sessionId, agent: "HCritic", text: prompt, schema })
+      return await session.prompt({ sessionId, agent: "HCritic", text: prompt, schema });
     } finally {
       await session.delete(sessionId).catch(() => {
         // ignore cleanup failure
-      })
+      });
     }
-  }
+  };
 }
 
 // ─── 门禁 Creator ──────────────────────────────────────────────────────────────
@@ -86,32 +83,35 @@ function createQualityGateReviewer(
 export async function createWorkflowQualityGate(
   workflow: WorkflowDefinition,
   capabilities: StageHookCapabilities,
+  serviceInstance?: WorkflowStateAccessor,
 ): Promise<QualityGateResult> {
-  const state = workflowService.getState()
+  // 延迟加载默认 service，避免循环依赖导致模块初始化时 workflowService 为 undefined
+  const svc: WorkflowStateAccessor = serviceInstance ?? (await import("../service")).workflowService;
+  const state = svc.getState();
   if (!state?.currentStep) {
-    workflowService.setGatePassed(false)
+    svc.setGatePassed(false);
     return {
       ok: false,
       reason: "no_active_stage",
       message: "No active workflow stage. Use set_hd_workflow_current before calling hd_submit.",
-    }
+    };
   }
 
-  const stageKey = state.currentStep
-  const stage = workflow.stages[stageKey]
+  const stageKey = state.currentStep;
+  const stage = workflow.stages[stageKey];
   if (!stage) {
-    workflowService.setGatePassed(false)
+    svc.setGatePassed(false);
     return {
       ok: false,
       reason: "invalid_stage",
       stage: stageKey,
       message: `Stage definition not found: ${stageKey}`,
-    }
+    };
   }
 
   // 无提示词则跳过门禁（自动通过）
   if (!stage.qualityGate) {
-    workflowService.setGatePassed(true)
+    svc.setGatePassed(true);
     return {
       ok: true,
       reason: "disabled",
@@ -120,17 +120,17 @@ export async function createWorkflowQualityGate(
       summary: "Quality gate disabled for this stage.",
       issues: [],
       message: "Quality gate is disabled for this stage.",
-    }
+    };
   }
 
-  const prompt = stage.qualityGate
-  const reviewFn = createQualityGateReviewer(capabilities)
+  const prompt = stage.qualityGate;
+  const reviewFn = createQualityGateReviewer(capabilities);
 
   try {
-    const reviewResponse = await reviewFn({ stageKey, prompt, schema: DEFAULT_REVIEW_SCHEMA })
-    const parsed = parseReviewResult(reviewResponse.structuredOutput, reviewResponse.text)
+    const reviewResponse = await reviewFn({ stageKey, prompt, schema: DEFAULT_REVIEW_SCHEMA });
+    const parsed = parseReviewResult(reviewResponse.structuredOutput, reviewResponse.text);
 
-    workflowService.setGatePassed(parsed.passed)
+    svc.setGatePassed(parsed.passed);
     if (!parsed.passed) {
       return {
         ok: false,
@@ -141,7 +141,7 @@ export async function createWorkflowQualityGate(
         issues: parsed.issues,
         ...(parsed.score !== undefined ? { score: parsed.score } : {}),
         message: "HCritic review failed. Fix issues and resubmit.",
-      }
+      };
     }
 
     return {
@@ -153,19 +153,23 @@ export async function createWorkflowQualityGate(
       issues: parsed.issues,
       ...(parsed.score !== undefined ? { score: parsed.score } : {}),
       message: "HCritic review passed.",
-    }
+    };
   } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-    HyperDesignerLogger.error("WorkflowGate", "执行门禁失败", err, {
-      stageKey,
-      action: "createWorkflowQualityGate",
-    })
-    workflowService.setGatePassed(false)
+    const err = error instanceof Error ? error : new Error(String(error));
+    try {
+      HyperDesignerLogger.error("WorkflowGate", "执行门禁失败", err, {
+        stageKey,
+        action: "createWorkflowQualityGate",
+      });
+    } catch {
+      // 严格模式下 logger 会重新抛出错误，在此吞噬以确保返回结构化结果
+    }
+    svc.setGatePassed(false);
     return {
       ok: false,
       reason: "runtime_error",
       stage: stageKey,
       message: `Quality gate failed: ${err.message}`,
-    }
+    };
   }
 }

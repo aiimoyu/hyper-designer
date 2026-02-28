@@ -1,0 +1,75 @@
+/**
+ * OpenCode 平台集成模块
+ *
+ * 提供与 OpenCode 平台的完整集成，包括：
+ * 1. 事件处理：监听会话空闲事件，执行工作流交接
+ * 2. 系统消息转换：替换工作流相关的占位符令牌
+ * 3. 质量门禁执行：通过 HCritic 执行阶段评审
+ *
+ * 架构说明：
+ * - adapters/opencode/ 提供 platform primitives（session, prompt, summarize）
+ * - integrations/opencode/ 组合 primitives 实现工作流集成逻辑
+ */
+
+import type { PluginInput } from "@opencode-ai/plugin"
+
+import { workflowService } from "../../core/service"
+import { loadHDConfig } from "../../../config/loader"
+import { createCapabilities } from "../../../adapters/opencode"
+import { HyperDesignerLogger } from "../../../utils/logger"
+import { createEventHandler } from "./event-handler"
+import { createSystemTransformer } from "./system-transform"
+
+export { replacePlaceholders, type PlaceholderResolver } from "./utils"
+
+/**
+ * 创建 OpenCode 平台集成钩子
+ *
+ * @param ctx OpenCode 插件上下文
+ * @returns 平台集成钩子对象
+ */
+export async function createWorkflowHooks(ctx: PluginInput) {
+  const config = loadHDConfig()
+  const workflow = workflowService.getDefinition()
+
+  if (!workflow) {
+    HyperDesignerLogger.error("OpenCode", `加载工作流失败`, new Error(`Failed to load workflow: ${config.workflow || "classic"}`), {
+      workflowId: config.workflow || "classic",
+      action: "loadWorkflowDefinition",
+      recovery: "returnEmptyHooks"
+    })
+
+    return {
+      event: async () => { },
+      "experimental.chat.system.transform": async () => { },
+      executeWorkflowQualityGate: async () => ({
+        ok: false as const,
+        reason: "runtime_error" as const,
+        message: "Workflow definition not found.",
+      }),
+    }
+  }
+
+  // 注册 WorkflowService 事件监听器（用于可观测性）
+  workflowService.on('handoverExecuted', ({ fromStep, toStep }: { fromStep: string; toStep: string }) => {
+    HyperDesignerLogger.info('Integrations', `Handover completed: ${fromStep || '(none)'} → ${toStep}`)
+  })
+
+  workflowService.on('stageCompleted', ({ stageName, isCompleted }: { stageName: string; isCompleted: boolean }) => {
+    HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
+  })
+
+  // 门禁所需的平台能力（不含 sessionID）
+  const gateCapabilities = createCapabilities(ctx, config)
+
+  return {
+    /** 事件处理器：监听 session.idle 触发工作流交接 */
+    event: createEventHandler(ctx, config),
+
+    /** 系统消息转换器：注入工作流提示词 */
+    "experimental.chat.system.transform": createSystemTransformer(),
+
+    /** 执行当前阶段质量门禁 */
+    executeWorkflowQualityGate: () => workflowService.executeQualityGate(gateCapabilities),
+  }
+}
