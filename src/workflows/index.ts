@@ -28,9 +28,9 @@ export {
   getStageOrder,
 } from "./core/state"
 
-export type { QualityGateResult, QualityGateReviewFn } from "./core/gate"
+export type { QualityGateResult } from "./core/gate"
 
-export { executeWorkflowQualityGate } from "./core/gate"
+export { createWorkflowQualityGate } from "./core/gate"
 
 export { getHandoverAgent, getHandoverPrompt } from "./core/handover"
 export { loadPromptForStage } from "./core/prompts"

@@ -9,7 +9,7 @@ import {
   initializeWorkflowState,
   getStageOrder
 } from "../../../workflows/core/state"
-import { executeWorkflowQualityGate } from "../../../workflows/core/gate"
+import { createWorkflowQualityGate } from "../../../workflows/core/gate"
 import type { WorkflowDefinition } from "../../../workflows/core/types"
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
 import { join, dirname } from "path"
@@ -297,16 +297,20 @@ describe("workflow state management", () => {
     it("uses stage-specific prompt and sets gatePassed=true on pass", async () => {
       setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
 
-      const reviewQualityGate = async () => ({
-        structuredOutput: {
-          passed: true,
-          summary: "通过",
-          issues: [],
+      const result = await createWorkflowQualityGate(classicWorkflowDef, {
+        session: {
+          create: async (_title: string) => "mock-session-id",
+          prompt: async (_params: unknown) => ({
+            structuredOutput: {
+              passed: true,
+              summary: "通过",
+              issues: [],
+            },
+            text: "PASS",
+          }),
+          delete: async (_sessionId: string) => {},
         },
-        text: "PASS",
       })
-
-      const result = await executeWorkflowQualityGate(classicWorkflowDef, reviewQualityGate)
 
       expect(result.ok).toBe(true)
       expect(result.reason).toBe("approved")
@@ -316,16 +320,20 @@ describe("workflow state management", () => {
     it("sets gatePassed=false on review_failed", async () => {
       setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
 
-      const reviewQualityGate = async () => ({
-        structuredOutput: {
-          passed: false,
-          summary: "未通过",
-          issues: ["关键章节缺失"],
+      const result = await createWorkflowQualityGate(classicWorkflowDef, {
+        session: {
+          create: async (_title: string) => "mock-session-id",
+          prompt: async (_params: unknown) => ({
+            structuredOutput: {
+              passed: false,
+              summary: "未通过",
+              issues: ["关键章节缺失"],
+            },
+            text: "FAIL",
+          }),
+          delete: async (_sessionId: string) => {},
         },
-        text: "FAIL",
       })
-
-      const result = await executeWorkflowQualityGate(classicWorkflowDef, reviewQualityGate)
 
       expect(result.ok).toBe(false)
       expect(result.reason).toBe("review_failed")

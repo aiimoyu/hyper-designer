@@ -1,8 +1,24 @@
+export interface SessionCapabilities {
+  /** 创建隔离评审会话，返回会话 ID */
+  create: (title: string) => Promise<string>
+  /** 向指定会话发送结构化 prompt，返回归一化结果 */
+  prompt: (params: {
+    sessionId: string
+    agent: string
+    text: string
+    schema?: Record<string, unknown>
+  }) => Promise<{ structuredOutput?: unknown; text: string }>
+  /** 删除隔离会话（清理资源） */
+  delete: (sessionId: string) => Promise<void>
+}
+
 export interface StageHookCapabilities {
-  /** 向指定 agent 发送 prompt（平台注入） */
+  /** 向指定 agent 发送 prompt（平台注入，绑定当前会话） */
   prompt?: (agent: string, text: string) => Promise<void>
   /** 压缩当前会话上下文（平台注入） */
   summarize?: () => Promise<void>
+  /** session 原语（平台注入），供门禁评审使用 */
+  session?: SessionCapabilities
 }
 
 

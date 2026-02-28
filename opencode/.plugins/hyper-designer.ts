@@ -105,7 +105,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         }, null, 2)
       },
     }),
-    hd_quality_gate: tool({
+    hd_submit: tool({
       description: "Run stage quality gate with HCritic in isolated context and return structured JSON result.",
       args: {},
       async execute() {

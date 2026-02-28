@@ -1,21 +1,17 @@
 /**
- * OpenCode 平台能力对象工厂
+ * OpenCode 平台基础能力工厂
  *
- * 提供两类创建函数：
- * 1. createCapabilities — 基础能力（prompt / summarize），供 workflow hooks 使用
- * 2. createQualityGateReviewer — 质量门评审执行函数，封装 session.create / prompt / delete，
- *    属于基础能力的组合，供 executeWorkflowQualityGate 调用
+ * 提供 createCapabilities，封装所有 OpenCode 平台原语：
+ * - prompt / summarize：操作当前（已绑定）会话
+ * - session.create / session.prompt / session.delete：session 原语，供门禁等组合使用
  *
- * 通过能力注入（capabilities injection）保持核心 hooks 框架无关，
- * 平台相关代码集中在此模块，便于后续扩展到其他 AI 框架。
+ * 仅包含基础能力，门禁逻辑等组合能力不在此处定义（见 core/gate.ts）。
  */
 
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { StageHookCapabilities } from "../../core/types"
-import type { QualityGateReviewFn } from "../../core/gate"
 import type { SessionPromptData } from "@opencode-ai/sdk"
 import type { HDConfig } from "../../../config/loader"
-import { DEFAULT_REVIEW_SCHEMA } from "../../core/gate"
 import { getDefaultModel } from "./utils"
 import { HyperDesignerLogger } from "../../../utils/logger"
 
@@ -59,21 +55,65 @@ const extractTextFromParts = (parts: unknown): string => {
 /**
  * 创建 OpenCode 平台基础能力对象
  *
- * 仅封装基础操作：向当前会话发送 prompt、压缩会话上下文。
- * 质量门评审（reviewQualityGate）不属于基础能力，见 createQualityGateReviewer。
+ * 包含两类原语：
+ * 1. prompt / summarize：绑定到 sessionID 的当前会话操作（sessionID 可选）
+ * 2. session.create / session.prompt / session.delete：非绑定 session 原语，
+ *    供门禁等需要创建隔离会话的场景使用
  *
  * @param ctx OpenCode 插件上下文
  * @param config Hyper Designer 配置
- * @param sessionID 当前会话 ID
+ * @param sessionID 当前会话 ID（可选；提供时才注入 prompt / summarize）
  * @returns StageHookCapabilities 基础能力对象
  */
 export function createCapabilities(
   ctx: PluginInput,
   config: HDConfig,
-  sessionID: string
+  sessionID?: string,
 ): StageHookCapabilities {
-  return {
-    prompt: async (agent: string, text: string) => {
+  const capabilities: StageHookCapabilities = {
+    // ── session 原语（非绑定） ────────────────────────────────────────────────
+    session: {
+      create: async (title: string) => {
+        const result = await ctx.client.session.create({
+          body: { title },
+          query: { directory: ctx.directory },
+        })
+        const id = result.data?.id
+        if (!id) {
+          throw new Error(`Failed to create isolated session: ${title}`)
+        }
+        return id
+      },
+
+      prompt: async ({ sessionId, agent, text, schema }) => {
+        const response = await ctx.client.session.prompt({
+          path: { id: sessionId },
+          body: {
+            agent,
+            noReply: false,
+            parts: [{ type: "text", text }],
+            ...(schema !== undefined ? { format: { type: "json_schema", schema } } : {}),
+          } as PromptBodyWithFormat,
+          query: { directory: ctx.directory },
+        })
+        return {
+          structuredOutput: getStructuredOutput(response),
+          text: extractTextFromParts(response.data?.parts),
+        }
+      },
+
+      delete: async (sessionId: string) => {
+        await ctx.client.session.delete({
+          path: { id: sessionId },
+          query: { directory: ctx.directory },
+        })
+      },
+    },
+  }
+
+  // ── 绑定会话操作（仅在提供 sessionID 时注入） ──────────────────────────────
+  if (sessionID !== undefined) {
+    capabilities.prompt = async (agent: string, text: string) => {
       await ctx.client.session.prompt({
         path: { id: sessionID },
         body: {
@@ -83,9 +123,9 @@ export function createCapabilities(
         },
         query: { directory: ctx.directory },
       })
-    },
+    }
 
-    summarize: async () => {
+    capabilities.summarize = async () => {
       HyperDesignerLogger.info("OpenCode", `执行上下文压缩`, { sessionID })
 
       try {
@@ -107,61 +147,8 @@ export function createCapabilities(
         })
         // 压缩失败不中断工作流，继续执行
       }
-    },
-  }
-}
-
-/**
- * 创建质量门评审执行函数
- *
- * 封装 session.create / session.prompt / session.delete 的完整流程，
- * 在隔离会话中调用 HCritic 执行阶段评审并返回结构化结果。
- *
- * @param ctx OpenCode 插件上下文
- * @returns QualityGateReviewFn 评审函数
- */
-export function createQualityGateReviewer(ctx: PluginInput): QualityGateReviewFn {
-  return async ({ stageKey, prompt, schema }) => {
-    let reviewSessionID: string | undefined
-    try {
-      const reviewSession = await ctx.client.session.create({
-        body: { title: `HCritic Review: ${stageKey}` },
-        query: { directory: ctx.directory },
-      })
-      reviewSessionID = reviewSession.data?.id
-      if (!reviewSessionID) {
-        throw new Error("Failed to create isolated review session")
-      }
-
-      const reviewResponse = await ctx.client.session.prompt({
-        path: { id: reviewSessionID },
-        body: {
-          agent: "HCritic",
-          noReply: false,
-          parts: [{ type: "text", text: prompt }],
-          format: {
-            type: "json_schema",
-            schema: schema ?? DEFAULT_REVIEW_SCHEMA,
-          },
-        } as PromptBodyWithFormat,
-        query: { directory: ctx.directory },
-      })
-
-      return {
-        structuredOutput: getStructuredOutput(reviewResponse),
-        text: extractTextFromParts(reviewResponse.data?.parts),
-      }
-    } finally {
-      if (reviewSessionID) {
-        try {
-          await ctx.client.session.delete({
-            path: { id: reviewSessionID },
-            query: { directory: ctx.directory },
-          })
-        } catch {
-          // ignore cleanup failure
-        }
-      }
     }
   }
+
+  return capabilities
 }
