@@ -2,8 +2,8 @@
  * 工作流门禁模块
  *
  * 负责执行阶段质量门（HCritic 审查）：
- * 1. 读取当前工作流阶段
- * 2. 加载阶段门禁提示词
+ * 1工作流阶段
+. 读取当前 * 2. 加载阶段门禁提示词
  * 3. 通过 capabilities.session 创建隔离会话执行评审
  * 4. 写回 gatePassed 状态到 workflow_state.json
  *
@@ -11,7 +11,7 @@
  */
 
 import { HyperDesignerLogger } from "../../utils/logger"
-import { getWorkflowState, setWorkflowGatePassed } from "./state"
+import { workflowService } from "./WorkflowService"
 import type { WorkflowDefinition, StageHookCapabilities } from "./types"
 import { parseReviewResult } from "./reviewParser"
 
@@ -87,9 +87,9 @@ export async function createWorkflowQualityGate(
   workflow: WorkflowDefinition,
   capabilities: StageHookCapabilities,
 ): Promise<QualityGateResult> {
-  const state = getWorkflowState()
+  const state = workflowService.getState()
   if (!state?.currentStep) {
-    setWorkflowGatePassed(false)
+    workflowService.setGatePassed(false)
     return {
       ok: false,
       reason: "no_active_stage",
@@ -100,7 +100,7 @@ export async function createWorkflowQualityGate(
   const stageKey = state.currentStep
   const stage = workflow.stages[stageKey]
   if (!stage) {
-    setWorkflowGatePassed(false)
+    workflowService.setGatePassed(false)
     return {
       ok: false,
       reason: "invalid_stage",
@@ -111,7 +111,7 @@ export async function createWorkflowQualityGate(
 
   // 无提示词则跳过门禁（自动通过）
   if (!stage.qualityGate) {
-    setWorkflowGatePassed(true)
+    workflowService.setGatePassed(true)
     return {
       ok: true,
       reason: "disabled",
@@ -130,7 +130,7 @@ export async function createWorkflowQualityGate(
     const reviewResponse = await reviewFn({ stageKey, prompt, schema: DEFAULT_REVIEW_SCHEMA })
     const parsed = parseReviewResult(reviewResponse.structuredOutput, reviewResponse.text)
 
-    setWorkflowGatePassed(parsed.passed)
+    workflowService.setGatePassed(parsed.passed)
     if (!parsed.passed) {
       return {
         ok: false,
@@ -160,7 +160,7 @@ export async function createWorkflowQualityGate(
       stageKey,
       action: "createWorkflowQualityGate",
     })
-    setWorkflowGatePassed(false)
+    workflowService.setGatePassed(false)
     return {
       ok: false,
       reason: "runtime_error",
