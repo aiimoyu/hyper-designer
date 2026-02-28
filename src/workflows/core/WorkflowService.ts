@@ -83,7 +83,11 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setStage(stageName: string, isCompleted: boolean): WorkflowState {
-    return setWorkflowStage(stageName, isCompleted, this.definition);
+    const state = setWorkflowStage(stageName, isCompleted, this.definition);
+    if (state.workflow[stageName]) {
+      this.emit('stageCompleted', { stageName, isCompleted });
+    }
+    return state;
   }
 
   /**
@@ -92,7 +96,12 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setCurrent(stepName: string): WorkflowState {
-    return setWorkflowCurrent(stepName, this.definition);
+    const previousStep = this.getCurrentStage();
+    const state = setWorkflowCurrent(stepName, this.definition);
+    if (state.currentStep === stepName) {
+      this.emit('currentChanged', { previousStep, newStep: stepName });
+    }
+    return state;
   }
 
   /**
@@ -101,7 +110,11 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setHandover(stepName: string | null): WorkflowState {
-    return setWorkflowHandover(stepName, this.definition);
+    const state = setWorkflowHandover(stepName, this.definition);
+    if (stepName !== null && state.handoverTo === stepName) {
+      this.emit('handoverScheduled', { targetStep: stepName });
+    }
+    return state;
   }
 
   /**
@@ -111,7 +124,14 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   async executeHandover(sessionID?: string, capabilities?: StageHookCapabilities): Promise<WorkflowState> {
-    return executeWorkflowHandover(this.definition, sessionID, capabilities);
+    const fromStep = this.getCurrentStage();
+    const preState = this.getState();
+    const toStep = preState?.handoverTo ?? null;
+    const state = await executeWorkflowHandover(this.definition, sessionID, capabilities);
+    if (toStep !== null && state.currentStep === toStep) {
+      this.emit('handoverExecuted', { fromStep: fromStep ?? '', toStep });
+    }
+    return state;
   }
 
   /**
@@ -129,7 +149,9 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setGatePassed(passed: boolean): WorkflowState {
-    return setWorkflowGatePassed(passed);
+    const state = setWorkflowGatePassed(passed);
+    this.emit('gateChanged', { passed });
+    return state;
   }
 
   /**

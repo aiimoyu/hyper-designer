@@ -760,12 +760,140 @@ describe("WorkflowService", () => {
   });
 
   describe("event emission", () => {
-    it.todo("emits stageCompleted when stage status changes");
-    it.todo("emits currentChanged when current step changes");
-    it.todo("emits handoverScheduled when handover is set");
-    it.todo("emits handoverExecuted when handover completes");
-    it.todo("emits gateChanged when gate status changes");
-    it.todo("provides correct event payload data");
+    it("emits stageCompleted with correct payload after setStage", () => {
+      const handler = vi.fn();
+      service.on("stageCompleted", handler);
+
+      service.setStage("IRAnalysis", true);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith({ stageName: "IRAnalysis", isCompleted: true });
+    });
+
+    it("emits stageCompleted with isCompleted false", () => {
+      const handler = vi.fn();
+      service.setStage("IRAnalysis", true);
+      service.on("stageCompleted", handler);
+
+      service.setStage("IRAnalysis", false);
+
+      expect(handler).toHaveBeenCalledWith({ stageName: "IRAnalysis", isCompleted: false });
+    });
+
+    it("emits currentChanged with previousStep and newStep", () => {
+      const handler = vi.fn();
+      service.on("currentChanged", handler);
+
+      service.setCurrent("IRAnalysis");
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith({ previousStep: null, newStep: "IRAnalysis" });
+    });
+
+    it("emits currentChanged with correct previousStep on step change", () => {
+      service.setCurrent("IRAnalysis");
+      const handler = vi.fn();
+      service.on("currentChanged", handler);
+
+      service.setCurrent("scenarioAnalysis");
+
+      expect(handler).toHaveBeenCalledWith({ previousStep: "IRAnalysis", newStep: "scenarioAnalysis" });
+    });
+
+    it("emits handoverScheduled when handover target is set", () => {
+      const handler = vi.fn();
+      service.on("handoverScheduled", handler);
+      service.setCurrent("IRAnalysis");
+
+      service.setHandover("scenarioAnalysis");
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith({ targetStep: "scenarioAnalysis" });
+    });
+
+    it("does not emit handoverScheduled when target is null", () => {
+      const handler = vi.fn();
+      service.on("handoverScheduled", handler);
+
+      service.setHandover(null);
+
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("emits handoverExecuted with fromStep and toStep", async () => {
+      const handler = vi.fn();
+      service.on("handoverExecuted", handler);
+      service.setCurrent("dataCollection");
+      service.setHandover("IRAnalysis");
+
+      await service.executeHandover();
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith({ fromStep: "dataCollection", toStep: "IRAnalysis" });
+    });
+
+    it("emits gateChanged with correct passed value", () => {
+      const handler = vi.fn();
+      service.on("gateChanged", handler);
+      service.setCurrent("IRAnalysis");
+
+      service.setGatePassed(true);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith({ passed: true });
+    });
+
+    it("fires stageCompleted AFTER state is written (state readable in listener)", () => {
+      let stateInListener: boolean | undefined;
+      service.on("stageCompleted", () => {
+        const state = service.getState();
+        stateInListener = state?.workflow.IRAnalysis.isCompleted;
+      });
+
+      service.setStage("IRAnalysis", true);
+
+      expect(stateInListener).toBe(true);
+    });
+
+    it("fires currentChanged AFTER state is written (state readable in listener)", () => {
+      let stepInListener: string | null | undefined;
+      service.on("currentChanged", () => {
+        const state = service.getState();
+        stepInListener = state?.currentStep;
+      });
+
+      service.setCurrent("IRAnalysis");
+
+      expect(stepInListener).toBe("IRAnalysis");
+    });
+
+    it("unsubscribe via off prevents handler from being called", () => {
+      const handler = vi.fn();
+      service.on("stageCompleted", handler);
+      service.off("stageCompleted", handler);
+
+      service.setStage("IRAnalysis", true);
+
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("does not emit stageCompleted for invalid stage names", () => {
+      const handler = vi.fn();
+      service.on("stageCompleted", handler);
+
+      service.setStage("invalidStage", true);
+
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it("does not emit currentChanged for invalid step names", () => {
+      const handler = vi.fn();
+      service.on("currentChanged", handler);
+
+      service.setCurrent("invalidStep");
+
+      expect(handler).not.toHaveBeenCalled();
+    });
   });
 
   describe("singleton usage", () => {
