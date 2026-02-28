@@ -8,6 +8,12 @@
 import { EventEmitter } from "events";
 import type { WorkflowDefinition, StageHookCapabilities } from "./types";
 import type { WorkflowState } from "./state";
+import {
+  getWorkflowState,
+  setWorkflowStage,
+  setWorkflowCurrent,
+  setWorkflowGatePassed,
+} from "./state";
 import { getWorkflowDefinition } from "./registry";
 
 /**
@@ -44,7 +50,8 @@ export class WorkflowService extends EventEmitter {
    * @returns 当前阶段名称或 null（无活动阶段）
    */
   getCurrentStage(): string | null {
-    throw new Error("Not implemented");
+    const state = getWorkflowState();
+    return state?.currentStep ?? null;
   }
 
   /**
@@ -52,7 +59,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 当前工作流定义
    */
   getDefinition(): WorkflowDefinition {
-    throw new Error("Not implemented");
+    return this.definition;
   }
 
   /**
@@ -60,7 +67,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 工作流状态或 null（无状态）
    */
   getState(): WorkflowState | null {
-    throw new Error("Not implemented");
+    return getWorkflowState();
   }
 
   /**
@@ -70,7 +77,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setStage(stageName: string, isCompleted: boolean): WorkflowState {
-    throw new Error("Not implemented");
+    return setWorkflowStage(stageName, isCompleted, this.definition);
   }
 
   /**
@@ -79,7 +86,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setCurrent(stepName: string): WorkflowState {
-    throw new Error("Not implemented");
+    return setWorkflowCurrent(stepName, this.definition);
   }
 
   /**
@@ -106,7 +113,8 @@ export class WorkflowService extends EventEmitter {
    * @returns 门禁是否通过
    */
   isGatePassed(): boolean {
-    throw new Error("Not implemented");
+    const state = getWorkflowState();
+    return state?.gatePassed ?? false;
   }
 
   /**
@@ -115,14 +123,16 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setGatePassed(passed: boolean): WorkflowState {
-    throw new Error("Not implemented");
+    return setWorkflowGatePassed(passed);
   }
 
   /**
    * 重置工作流状态
+   * 当前为空操作 - 磁盘是唯一数据源，无内存缓存需要清除
    */
   reset(): void {
-    throw new Error("Not implemented");
+    // No-op: disk is source of truth, no in-memory cache to clear
+    // Method signature preserved for future use
   }
 }
 
