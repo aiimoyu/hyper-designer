@@ -14,6 +14,7 @@ import {
   setWorkflowCurrent,
   setWorkflowGatePassed,
   setWorkflowHandover,
+  executeWorkflowHandover,
 } from "./state";
 import { getWorkflowDefinition } from "./registry";
 
@@ -105,8 +106,8 @@ export class WorkflowService extends EventEmitter {
    * @param capabilities 可选的阶段钩子能力
    * @returns 更新后的工作流状态
    */
-  executeHandover(sessionID?: string, capabilities?: StageHookCapabilities): Promise<WorkflowState> {
-    throw new Error("Not implemented");
+  async executeHandover(sessionID?: string, capabilities?: StageHookCapabilities): Promise<WorkflowState> {
+    return executeWorkflowHandover(this.definition, sessionID, capabilities);
   }
 
   /**
