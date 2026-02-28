@@ -3,15 +3,9 @@ import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
 import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
 import { createBuiltinAgents } from "../../src/agents/utils"
-import {
-  getWorkflowState,
-  setWorkflowStage,
-  setWorkflowCurrent,
-  setWorkflowHandover,
-} from "../../src/workflows"
+import { workflowService } from "../../src/workflows/core/WorkflowService"
 import { createWorkflowHooks } from "../../src/workflows/hooks/opencode"
 import { loadHDConfig } from "../../src/config/loader"
-import { getWorkflowDefinition } from "../../src/workflows"
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
@@ -47,10 +41,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   }
 
   const hdConfig = loadHDConfig()
-  const workflow = getWorkflowDefinition(hdConfig.workflow || "classic")
-  if (!workflow) {
-    throw new Error("Workflow definition not found")
-  }
+  const workflow = workflowService.getDefinition()
 
   const workflowHooks = await createWorkflowHooks(ctx)
 
@@ -59,7 +50,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
       description: "Get the current workflow state of the Hyper Designer project. Returns null if workflow has not been initialized.",
       args: {},
       async execute() {
-        const state = getWorkflowState()
+        const state = workflowService.getState()
         if (state === null) {
           return JSON.stringify({
             initialized: false,
@@ -72,31 +63,31 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     set_hd_workflow_stage: tool({
       description: "Update the completion status of a specific workflow stage of the Hyper Designer project",
       args: {
-        stage_name: tool.schema.enum(workflow.stageOrder).describe("The name of the workflow stage to update"),
+        stage_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow stage to update"),
         is_completed: tool.schema.boolean().describe("Whether the stage is completed"),
       },
       async execute(params: { stage_name: string; is_completed: boolean }) {
-        const state = setWorkflowStage(params.stage_name, params.is_completed)
+        const state = workflowService.setStage(params.stage_name, params.is_completed)
         return JSON.stringify(state, null, 2)
       },
     }),
     set_hd_workflow_current: tool({
       description: "Set the current workflow step of the Hyper Designer project",
       args: {
-        step_name: tool.schema.enum(workflow.stageOrder).describe("The name of the workflow step to set as current"),
+        step_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow step to set as current"),
       },
       async execute(params: { step_name: string }) {
-        const state = setWorkflowCurrent(params.step_name)
+        const state = workflowService.setCurrent(params.step_name)
         return JSON.stringify(state, null, 2)
       },
     }),
     set_hd_workflow_handover: tool({
       description: "Set the handover workflow step of the Hyper Designer project. IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.",
       args: {
-        step_name: tool.schema.enum(workflow.stageOrder).describe("The name of the workflow step to set as handover"),
+        step_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow step to set as handover"),
       },
       async execute(params: { step_name: string }) {
-        const state = setWorkflowHandover(params.step_name, workflow)
+        const state = workflowService.setHandover(params.step_name)
         return JSON.stringify({
           success: true,
           handover_to: params.step_name,
