@@ -11,8 +11,6 @@
 import { PluginInput } from "@opencode-ai/plugin"
 
 import { workflowService } from "../../core/WorkflowService"
-import { createWorkflowQualityGate } from "../../core/gate"
-import { getHandoverAgent, getHandoverPrompt } from "../../core/handover"
 import { loadWorkflowPrompt, loadStagePrompt } from "../../core/prompts"
 import { loadHDConfig } from "../../../config/loader"
 import { HyperDesignerLogger } from "../../../utils/logger"
@@ -56,6 +54,16 @@ export async function createWorkflowHooks(ctx: PluginInput) {
   // 门禁所需的平台能力（不含 sessionID）
   const gateCapabilities = createCapabilities(ctx, config)
 
+  // 注册 WorkflowService 事件监听器（用于可观测性）
+  workflowService.on('handoverExecuted', ({ fromStep, toStep }: { fromStep: string; toStep: string }) => {
+    HyperDesignerLogger.info('Hooks', `Handover completed: ${fromStep || '(none)'} → ${toStep}`)
+  })
+
+  workflowService.on('stageCompleted', ({ stageName, isCompleted }: { stageName: string; isCompleted: boolean }) => {
+    HyperDesignerLogger.info('Hooks', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
+  })
+
+
   return {
     event: async ({ event }: { event: any }) => {
       const props = event.properties as Record<string, unknown> | undefined
@@ -70,7 +78,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
           const handoverPhase = workflowState.handoverTo
           const currentPhase = workflowState.currentStep
 
-          const nextAgent = getHandoverAgent(workflow, handoverPhase)
+          const nextAgent = workflowService.getHandoverAgent(handoverPhase)
           if (!nextAgent) {
             HyperDesignerLogger.error("OpenCode", `获取交接代理失败`, new Error(`Failed to get handover agent for phase: ${handoverPhase}`), {
               phase: handoverPhase,
@@ -81,7 +89,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
             return
           }
 
-          const handoverContent = getHandoverPrompt(workflow, currentPhase, handoverPhase)
+          const handoverContent = workflowService.getHandoverPrompt(currentPhase, handoverPhase)
           if (!handoverContent) {
             HyperDesignerLogger.error("OpenCode", `获取交接提示词失败`, new Error(`Failed to get handover prompt for phase: ${handoverPhase}`), {
               phase: handoverPhase,
@@ -138,7 +146,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
       replacePlaceholders(output.system, placeholderResolvers)
     },
 
-    /** 执行当前阶段质量门（无参数，workflow 和 capabilities 已在此处绑定） */
-    executeWorkflowQualityGate: () => createWorkflowQualityGate(workflow, gateCapabilities),
+    /** 执行当前阶段质量门（无参数，capabilities 已在此处绑定） */
+    executeWorkflowQualityGate: () => workflowService.executeQualityGate(gateCapabilities),
   }
 }

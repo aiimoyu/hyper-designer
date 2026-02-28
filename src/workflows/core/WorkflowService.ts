@@ -17,6 +17,7 @@ import {
   executeWorkflowHandover,
 } from "./state";
 import { getWorkflowDefinition } from "./registry";
+import { getHandoverAgent, getHandoverPrompt } from "./handover";
 import type { QualityGateResult } from "./gate";
 import { DEFAULT_REVIEW_SCHEMA } from "./gate";
 import { parseReviewResult } from "./reviewParser";
@@ -263,6 +264,24 @@ export class WorkflowService extends EventEmitter {
         message: `Quality gate failed: ${err.message}`,
       };
     }
+  }
+  /**
+   * 获取指定阶段的交接代理名称
+   * @param stage 阶段名称
+   * @returns 代理名称或 null（阶段不存在时）
+   */
+  getHandoverAgent(stage: string): string | null {
+    return getHandoverAgent(this.definition, stage);
+  }
+
+  /**
+   * 获取阶段间交接提示词
+   * @param currentStep 当前阶段名称
+   * @param nextStep 目标阶段名称
+   * @returns 交接提示词或 null
+   */
+  getHandoverPrompt(currentStep: string | null, nextStep: string): string | null {
+    return getHandoverPrompt(this.definition, currentStep, nextStep);
   }
 
   /**
