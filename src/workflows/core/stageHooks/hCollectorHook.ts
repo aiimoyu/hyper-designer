@@ -1,7 +1,7 @@
 /**
  * HCollector 资料收集钩子
  *
- * 预设的 beforeStage/afterStage 钩子，通过 ctx.capabilities 获取平台能力，
+ * 预设的 beforeStage/afterStage 钩子，通过 ctx.adapter 获取平台能力，
  * 与具体 AI 框架（OpenCode 等）解耦，可在不同平台实现中复用。
  */
 
@@ -37,9 +37,9 @@ const DOMAIN_LABELS: Record<CollectionDomain, string> = {
  * @returns StageHookFn
  */
 export function createHCollectorHook(options: HCollectorHookOptions): StageHookFn {
-  return async ({ stageKey, stageName, capabilities }) => {
-    if (!capabilities?.prompt) {
-      HyperDesignerLogger.warn('ClassicHooks', 'createHCollectorHook: 缺少 capabilities.prompt，跳过资料收集', {
+  return async ({ stageKey, stageName, sessionID, adapter }) => {
+    if (!adapter || !sessionID) {
+      HyperDesignerLogger.warn('ClassicHooks', 'createHCollectorHook: 缺少 adapter 或 sessionID，跳过资料收集', {
         stageKey,
         stageName,
         domains: options.domains,
@@ -124,7 +124,7 @@ export function createHCollectorHook(options: HCollectorHookOptions): StageHookF
       }
 
       HyperDesignerLogger.info('ClassicHooks', '调用 HCollector 收集资料', { stageKey, stageName, domains, attempt })
-      await capabilities.prompt('HCollector', text)
+      await adapter.sendPrompt({ sessionId: sessionID, agent: 'HCollector', text })
     }
 
     const allCompleted = completedFilePaths.every((path) => existsSync(path))

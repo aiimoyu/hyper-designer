@@ -7,7 +7,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import type { HDConfig } from "../../../config/loader"
 import { workflowService } from "../../core/service"
-import { createCapabilities } from "../../../adapters/opencode"
+import { createOpenCodeAdapter } from "../../../adapters/opencode"
 import { HyperDesignerLogger } from "../../../utils/logger"
 
 /**
@@ -57,11 +57,11 @@ export function createEventHandler(ctx: PluginInput, config: HDConfig) {
 
         HyperDesignerLogger.info("OpenCode", `工作流交接：从阶段 ${currentPhase || "无"} 到阶段 ${handoverPhase}，由代理 ${nextAgent} 处理。`)
 
-        // 创建平台能力对象，注入到 workflowService.executeHandover
-        const capabilities = createCapabilities(ctx, config, sessionID)
+        // 创建平台适配器，注入到 workflowService.executeHandover
+        const adapter = createOpenCodeAdapter(ctx, config)
 
         try {
-          await workflowService.executeHandover(sessionID, capabilities)
+          await workflowService.executeHandover(sessionID, adapter)
         } catch (error) {
           const err = error instanceof Error ? error : new Error(String(error))
           HyperDesignerLogger.error("OpenCode", `工作流交接执行失败`, err, {
@@ -75,15 +75,7 @@ export function createEventHandler(ctx: PluginInput, config: HDConfig) {
         }
 
         // 发送交接提示词
-        await ctx.client.session.prompt({
-          path: { id: sessionID },
-          body: {
-            agent: nextAgent,
-            noReply: false,
-            parts: [{ type: "text", text: handoverContent }],
-          },
-          query: { directory: ctx.directory },
-        })
+        await adapter.sendPrompt({ sessionId: sessionID, agent: nextAgent, text: handoverContent })
       }
     }
   }

@@ -1,26 +1,7 @@
-export interface SessionCapabilities {
-  /** 创建隔离评审会话，返回会话 ID */
-  create: (title: string) => Promise<string>
-  /** 向指定会话发送结构化 prompt，返回归一化结果 */
-  prompt: (params: {
-    sessionId: string
-    agent: string
-    text: string
-    schema?: Record<string, unknown>
-  }) => Promise<{ structuredOutput?: unknown; text: string }>
-  /** 删除隔离会话（清理资源） */
-  delete: (sessionId: string) => Promise<void>
-}
+import type { PlatformAdapter } from '../../adapters/types'
 
-export interface StageHookCapabilities {
-  /** 向指定 agent 发送 prompt（平台注入，绑定当前会话） */
-  prompt?: (agent: string, text: string) => Promise<void>
-  /** 压缩当前会话上下文（平台注入） */
-  summarize?: () => Promise<void>
-  /** session 原语（平台注入），供门禁评审使用 */
-  session?: SessionCapabilities
-}
-
+// 重新导出供上层直接使用
+export type { PlatformAdapter } from '../../adapters/types'
 
 export type StageHookFn = (ctx: {
   /** 阶段 key，如 "IRAnalysis" */
@@ -28,7 +9,8 @@ export type StageHookFn = (ctx: {
   stageName: string
   workflow: WorkflowDefinition
   sessionID?: string
-  capabilities?: StageHookCapabilities
+  /** 平台适配器（平台注入），提供会话管理与 prompt 能力 */
+  adapter?: PlatformAdapter
 }) => Promise<void>
 
 export interface WorkflowStageDefinition {
@@ -65,10 +47,10 @@ export interface WorkflowDefinition {
    /** Stage definitions keyed by stage name */
    stages: Record<string, WorkflowStageDefinition>
 }
+
 export interface WorkflowStateAccessor {
   /** 获取当前工作流状态 */
   getState: () => { currentStep?: string | null } | null
   /** 写回门禁通过状态 */
   setGatePassed: (passed: boolean) => unknown
 }
-

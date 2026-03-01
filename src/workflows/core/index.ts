@@ -2,7 +2,7 @@
  * 工作流核心模块
  *
  * 统一导出所有子模块的公开接口。
- * 
+ *
  * 模块结构：
  * - types: 核心类型定义
  * - registry: 工作流注册表
@@ -14,8 +14,7 @@
 
 // Core types
 export type {
-  SessionCapabilities,
-  StageHookCapabilities,
+  PlatformAdapter,
   StageHookFn,
   WorkflowStageDefinition,
   WorkflowDefinition,

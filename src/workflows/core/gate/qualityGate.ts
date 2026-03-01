@@ -4,14 +4,14 @@
  * 负责执行阶段质量门（HCritic 审查）：
  * 1. 读取当前工作流阶段
  * 2. 加载阶段门禁提示词
- * 3. 通过 capabilities.session 创建隔离会话执行评审
+ * 3. 通过 PlatformAdapter 创建隔离会话执行评审
  * 4. 写回 gatePassed 状态到 workflow_state.json
  *
  * 所有门禁逻辑集中于此模块，对外提供 createWorkflowQualityGate 门禁 creator。
  */
 
 import { HyperDesignerLogger } from "../../../utils/logger";
-import type { WorkflowDefinition, StageHookCapabilities, WorkflowStateAccessor } from "../types";
+import type { PlatformAdapter, WorkflowDefinition, WorkflowStateAccessor } from "../types";
 import { parseReviewResult } from "./reviewParser";
 
 export interface QualityGateResult {
@@ -42,29 +42,24 @@ export const DEFAULT_REVIEW_SCHEMA: Record<string, unknown> = {
 
 // ─── 内部类型 ──────────────────────────────────────────────────────────────────
 
-/** 评审响应的归一化形式（由 capabilities.session.prompt 返回） */
+/** 评审响应的归一化形式（由 adapter.sendPrompt 返回） */
 type ReviewResponse = { structuredOutput?: unknown; text: string };
 
 // ─── 内部门禁评审器 ────────────────────────────────────────────────────────────
 
 /**
- * 通过 capabilities.session 原语创建门禁评审执行函数
- * 封装 session.create / session.prompt / session.delete 的完整流程
+ * 通过 PlatformAdapter 创建门禁评审执行函数
+ * 封装 createSession / sendPrompt / deleteSession 的完整流程
  */
 function createQualityGateReviewer(
-  capabilities: StageHookCapabilities,
+  adapter: PlatformAdapter,
 ): (params: { stageKey: string; prompt: string; schema: Record<string, unknown> }) => Promise<ReviewResponse> {
   return async ({ stageKey, prompt, schema }) => {
-    const session = capabilities.session;
-    if (!session) {
-      throw new Error("capabilities.session is required for quality gate review");
-    }
-
-    const sessionId = await session.create(`HCritic Review: ${stageKey}`);
+    const sessionId = await adapter.createSession(`HCritic Review: ${stageKey}`);
     try {
-      return await session.prompt({ sessionId, agent: "HCritic", text: prompt, schema });
+      return await adapter.sendPrompt({ sessionId, agent: "HCritic", text: prompt, schema });
     } finally {
-      await session.delete(sessionId).catch(() => {
+      await adapter.deleteSession(sessionId).catch(() => {
         // ignore cleanup failure
       });
     }
@@ -74,15 +69,15 @@ function createQualityGateReviewer(
 // ─── 门禁 Creator ──────────────────────────────────────────────────────────────
 
 /**
- * 门禁 Creator：组合 capabilities，执行当前阶段质量门
+ * 门禁 Creator：组合 PlatformAdapter，执行当前阶段质量门
  *
  * @param workflow 工作流定义
- * @param capabilities 平台能力对象（必须包含 session 原语）
+ * @param adapter 平台适配器（必须实现 createSession / sendPrompt / deleteSession）
  * @returns 结构化门禁结果
  */
 export async function createWorkflowQualityGate(
   workflow: WorkflowDefinition,
-  capabilities: StageHookCapabilities,
+  adapter: PlatformAdapter,
   serviceInstance?: WorkflowStateAccessor,
 ): Promise<QualityGateResult> {
   // 延迟加载默认 service，避免循环依赖导致模块初始化时 workflowService 为 undefined
@@ -124,7 +119,7 @@ export async function createWorkflowQualityGate(
   }
 
   const prompt = stage.qualityGate;
-  const reviewFn = createQualityGateReviewer(capabilities);
+  const reviewFn = createQualityGateReviewer(adapter);
 
   try {
     const reviewResponse = await reviewFn({ stageKey, prompt, schema: DEFAULT_REVIEW_SCHEMA });

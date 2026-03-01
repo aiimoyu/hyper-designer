@@ -9,7 +9,7 @@
  * 5. 执行交接
  */
 
-import type { WorkflowDefinition, StageHookCapabilities } from "../types";
+import type { WorkflowDefinition, PlatformAdapter } from "../types";
 import type { WorkflowState } from "./types";
 import { readWorkflowStateFile, writeWorkflowStateFile } from "./persistence";
 import { getWorkflowDefinition } from "../registry";
@@ -259,7 +259,7 @@ export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
  * @param definition Workflow definition
  * @returns Updated workflow state
  */
-export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, capabilities?: StageHookCapabilities): Promise<WorkflowState> {
+export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
   HyperDesignerLogger.info("Workflow", "执行工作流交接");
   
   let state = readWorkflowStateFile();
@@ -333,7 +333,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   if (departingStage?.afterStage && departingStage.afterStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 afterStage 钩子", { step: fromStep, hookCount: departingStage.afterStage.length });
     for (const hook of departingStage.afterStage) {
-      await hook({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(capabilities !== undefined && { capabilities }) });
+      await hook({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
     }
   }
 
@@ -342,7 +342,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   if (incomingStage?.beforeStage && incomingStage.beforeStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 beforeStage 钩子", { step: toStep, hookCount: incomingStage.beforeStage.length });
     for (const hook of incomingStage.beforeStage) {
-      await hook({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(capabilities !== undefined && { capabilities }) });
+      await hook({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
     }
   }
 

@@ -299,18 +299,17 @@ describe("workflow state management", () => {
       setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
 
       const result = await createWorkflowQualityGate(classicWorkflowDef, {
-        session: {
-          create: async (_title: string) => "mock-session-id",
-          prompt: async (_params: unknown) => ({
-            structuredOutput: {
-              passed: true,
-              summary: "通过",
-              issues: [],
-            },
-            text: "PASS",
-          }),
-          delete: async (_sessionId: string) => {},
-        },
+        createSession: async (_title: string) => "mock-session-id",
+        sendPrompt: async (_params: unknown) => ({
+          structuredOutput: {
+            passed: true,
+            summary: "通过",
+            issues: [],
+          },
+          text: "PASS",
+        }),
+        deleteSession: async (_sessionId: string) => {},
+        summarizeSession: async (_sessionId: string) => {},
       })
 
       expect(result.ok).toBe(true)
@@ -322,18 +321,17 @@ describe("workflow state management", () => {
       setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
 
       const result = await createWorkflowQualityGate(classicWorkflowDef, {
-        session: {
-          create: async (_title: string) => "mock-session-id",
-          prompt: async (_params: unknown) => ({
-            structuredOutput: {
-              passed: false,
-              summary: "未通过",
-              issues: ["关键章节缺失"],
-            },
-            text: "FAIL",
-          }),
-          delete: async (_sessionId: string) => {},
-        },
+        createSession: async (_title: string) => "mock-session-id",
+        sendPrompt: async (_params: unknown) => ({
+          structuredOutput: {
+            passed: false,
+            summary: "未通过",
+            issues: ["关键章节缺失"],
+          },
+          text: "FAIL",
+        }),
+        deleteSession: async (_sessionId: string) => {},
+        summarizeSession: async (_sessionId: string) => {},
       })
 
       expect(result.ok).toBe(false)

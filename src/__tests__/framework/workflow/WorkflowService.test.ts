@@ -551,11 +551,11 @@ describe("WorkflowService", () => {
       ]);
     });
 
-    it("passes capabilities to hooks", async () => {
-      let receivedCapabilities: unknown = undefined;
+    it("passes adapter to hooks", async () => {
+      let receivedAdapter: unknown = undefined;
 
       const beforeHook: StageHookFn = async (ctx) => {
-        receivedCapabilities = ctx.capabilities;
+        receivedAdapter = ctx.adapter;
       };
 
       const defWithHook: WorkflowDefinition = {
@@ -573,14 +573,16 @@ describe("WorkflowService", () => {
       svc.setCurrent("dataCollection");
       svc.setHandover("IRAnalysis");
 
-      const mockCapabilities = {
-        prompt: vi.fn(),
-        summarize: vi.fn(),
+      const mockAdapter = {
+        createSession: vi.fn().mockResolvedValue('mock-session-id'),
+        sendPrompt: vi.fn(),
+        deleteSession: vi.fn().mockResolvedValue(undefined),
+        summarizeSession: vi.fn().mockResolvedValue(undefined),
       };
 
-      await svc.executeHandover("test-session", mockCapabilities);
+      await svc.executeHandover("test-session", mockAdapter);
 
-      expect(receivedCapabilities).toBe(mockCapabilities);
+      expect(receivedAdapter).toBe(mockAdapter);
     });
 
     it("passes sessionID to hooks", async () => {
@@ -663,16 +665,17 @@ describe("WorkflowService", () => {
     it("returns passed result when review passes", async () => {
       service.setCurrent("IRAnalysis");
 
-      const mockSession = {
-        create: vi.fn().mockResolvedValue("review-session-1"),
-        prompt: vi.fn().mockResolvedValue({
+      const mockAdapter = {
+        createSession: vi.fn().mockResolvedValue('review-session-1'),
+        sendPrompt: vi.fn().mockResolvedValue({
           structuredOutput: { passed: true, summary: "评审通过", issues: [], score: 95 },
-          text: "Review passed",
+          text: 'Review passed',
         }),
-        delete: vi.fn().mockResolvedValue(undefined),
+        deleteSession: vi.fn().mockResolvedValue(undefined),
+        summarizeSession: vi.fn().mockResolvedValue(undefined),
       };
 
-      const result = await service.executeQualityGate({ session: mockSession });
+      const result = await service.executeQualityGate(mockAdapter);
 
       expect(result.ok).toBe(true);
       expect(result.reason).toBe("approved");
@@ -687,16 +690,17 @@ describe("WorkflowService", () => {
     it("returns failed result when review fails", async () => {
       service.setCurrent("IRAnalysis");
 
-      const mockSession = {
-        create: vi.fn().mockResolvedValue("review-session-2"),
-        prompt: vi.fn().mockResolvedValue({
+      const mockAdapter = {
+        createSession: vi.fn().mockResolvedValue('review-session-2'),
+        sendPrompt: vi.fn().mockResolvedValue({
           structuredOutput: { passed: false, summary: "缺少关键信息", issues: ["缺少约束条件", "用户角色不完整"] },
-          text: "Review failed",
+          text: 'Review failed',
         }),
-        delete: vi.fn().mockResolvedValue(undefined),
+        deleteSession: vi.fn().mockResolvedValue(undefined),
+        summarizeSession: vi.fn().mockResolvedValue(undefined),
       };
 
-      const result = await service.executeQualityGate({ session: mockSession });
+      const result = await service.executeQualityGate(mockAdapter);
 
       expect(result.ok).toBe(false);
       expect(result.reason).toBe("review_failed");
@@ -710,51 +714,54 @@ describe("WorkflowService", () => {
       // scenarioAnalysis has no qualityGate defined in classicWorkflowDef
       service.setCurrent("scenarioAnalysis");
 
-      const mockSession = {
-        create: vi.fn(),
-        prompt: vi.fn(),
-        delete: vi.fn(),
+      const mockAdapter = {
+        createSession: vi.fn(),
+        sendPrompt: vi.fn(),
+        deleteSession: vi.fn(),
+        summarizeSession: vi.fn(),
       };
 
-      const result = await service.executeQualityGate({ session: mockSession });
+      const result = await service.executeQualityGate(mockAdapter);
 
       expect(result.ok).toBe(true);
       expect(result.reason).toBe("disabled");
       expect(result.passed).toBe(true);
       expect(result.stage).toBe("scenarioAnalysis");
       // Session should NOT have been called at all
-      expect(mockSession.create).not.toHaveBeenCalled();
+      expect(mockAdapter.createSession).not.toHaveBeenCalled();
     });
 
     it("returns no_active_stage when no current step is set", async () => {
       // Don't set any current step
-      const mockSession = {
-        create: vi.fn(),
-        prompt: vi.fn(),
-        delete: vi.fn(),
+      const mockAdapter = {
+        createSession: vi.fn(),
+        sendPrompt: vi.fn(),
+        deleteSession: vi.fn(),
+        summarizeSession: vi.fn(),
       };
 
-      const result = await service.executeQualityGate({ session: mockSession });
+      const result = await service.executeQualityGate(mockAdapter);
 
       expect(result.ok).toBe(false);
       expect(result.reason).toBe("no_active_stage");
-      expect(mockSession.create).not.toHaveBeenCalled();
+      expect(mockAdapter.createSession).not.toHaveBeenCalled();
     });
 
     it("cleans up session even when prompt fails", async () => {
       service.setCurrent("IRAnalysis");
 
-      const mockSession = {
-        create: vi.fn().mockResolvedValue("review-session-3"),
-        prompt: vi.fn().mockRejectedValue(new Error("Session prompt failed")),
-        delete: vi.fn().mockResolvedValue(undefined),
+      const mockAdapter = {
+        createSession: vi.fn().mockResolvedValue('review-session-3'),
+        sendPrompt: vi.fn().mockRejectedValue(new Error('Session prompt failed')),
+        deleteSession: vi.fn().mockResolvedValue(undefined),
+        summarizeSession: vi.fn().mockResolvedValue(undefined),
       };
 
-      const result = await service.executeQualityGate({ session: mockSession });
+      const result = await service.executeQualityGate(mockAdapter);
 
       expect(result.ok).toBe(false);
       expect(result.reason).toBe("runtime_error");
-      expect(mockSession.delete).toHaveBeenCalledWith("review-session-3");
+      expect(mockAdapter.deleteSession).toHaveBeenCalledWith("review-session-3");
       expect(service.isGatePassed()).toBe(false);
     });
   });

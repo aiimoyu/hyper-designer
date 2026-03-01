@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from "events";
-import type { WorkflowDefinition, StageHookCapabilities } from "../types";
+import type { WorkflowDefinition, PlatformAdapter } from "../types";
 import type { WorkflowState } from "../state/types";
 import type { QualityGateResult } from "../gate/types";
 import {
@@ -132,11 +132,11 @@ export class WorkflowService extends EventEmitter {
    * @param capabilities 可选的阶段钩子能力
    * @returns 更新后的工作流状态
    */
-  async executeHandover(sessionID?: string, capabilities?: StageHookCapabilities): Promise<WorkflowState> {
+  async executeHandover(sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
     const fromStep = this.getCurrentStage();
     const preState = this.getState();
     const toStep = preState?.handoverTo ?? null;
-    const state = await executeWorkflowHandover(this.definition, sessionID, capabilities);
+    const state = await executeWorkflowHandover(this.definition, sessionID, adapter);
     if (toStep !== null && state.currentStep === toStep) {
       this.emit('handoverExecuted', { fromStep: fromStep ?? '', toStep });
     }
@@ -168,8 +168,8 @@ export class WorkflowService extends EventEmitter {
    * @param capabilities 平台能力对象（必须包含 session 原语）
    * @returns 结构化门禁结果
    */
-  async executeQualityGate(capabilities: StageHookCapabilities): Promise<QualityGateResult> {
-    return createWorkflowQualityGate(this.definition, capabilities, this);
+  async executeQualityGate(adapter: PlatformAdapter): Promise<QualityGateResult> {
+    return createWorkflowQualityGate(this.definition, adapter, this);
   }
 
   /**

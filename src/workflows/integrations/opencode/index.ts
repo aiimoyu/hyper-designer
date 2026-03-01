@@ -7,15 +7,16 @@
  * 3. 质量门禁执行：通过 HCritic 执行阶段评审
  *
  * 架构说明：
- * - adapters/opencode/ 提供 platform primitives（session, prompt, summarize）
- * - integrations/opencode/ 组合 primitives 实现工作流集成逻辑
+ * - adapters/types.ts 定义平台无关的 PlatformAdapter 接口
+ * - adapters/opencode/ 提供 OpenCode 的 PlatformAdapter 实现
+ * - integrations/opencode/ 组合 adapter 实现工作流集成逻辑
  */
 
 import type { PluginInput } from "@opencode-ai/plugin"
 
 import { workflowService } from "../../core/service"
 import { loadHDConfig } from "../../../config/loader"
-import { createCapabilities } from "../../../adapters/opencode"
+import { createOpenCodeAdapter } from "../../../adapters/opencode"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { createEventHandler } from "./event-handler"
 import { createSystemTransformer } from "./system-transform"
@@ -59,8 +60,8 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
   })
 
-  // 门禁所需的平台能力（不含 sessionID）
-  const gateCapabilities = createCapabilities(ctx, config)
+  // 门禁所需的平台适配器
+  const gateAdapter = createOpenCodeAdapter(ctx, config)
 
   return {
     /** 事件处理器：监听 session.idle 触发工作流交接 */
@@ -70,6 +71,6 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     "experimental.chat.system.transform": createSystemTransformer(),
 
     /** 执行当前阶段质量门禁 */
-    executeWorkflowQualityGate: () => workflowService.executeQualityGate(gateCapabilities),
+    executeWorkflowQualityGate: () => workflowService.executeQualityGate(gateAdapter),
   }
 }
