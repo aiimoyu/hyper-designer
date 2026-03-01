@@ -1,23 +1,24 @@
 ## 当前阶段：工作流初始化
 
-**阶段状态**: 未初始化
-**触发条件**: `currentStep === null` 或 首次启动
+**Phase State**: Uninitialized  
+**Trigger**: `currentStep === null` or first launch
 
-### 1. 阶段目标
+### Objective
 
-完成工作流的冷启动，生成资料收集表单并引导用户填写参考资料，然后将控制权移交给第一个阶段（初始需求分析 IRAnalysis）。
+Cold-start the workflow: generate a reference materials form, guide the user to fill it in, then hand off to the first phase (`IRAnalysis`).
 
-### 2. 执行规范
+---
 
-**行动路径：**
+### Execution Steps
 
-1. **检查资料清单存在性**：
-   - 检查项目根目录是否存在 `REFERENCE.md` 文件
-   - 如果存在：告知用户资料清单已存在，跳过生成步骤，直接进入用户确认环节
+**Step 1 — Check for existing checklist**
 
-2. **生成资料收集表单**（如果不存在）：
-   - 在项目根目录创建 `REFERENCE.md` 文件
-   - 使用以下模板内容：
+- If `REFERENCE.md` exists in the project root → skip creation, go to Step 3
+- If not → proceed to Step 2
+
+**Step 2 — Create `REFERENCE.md`**
+
+Write the following to the project root immediately, no commentary:
 
 ```markdown
 # 项目资料清单
@@ -63,12 +64,23 @@
 | 模块功能设计说明书 | 详细模块设计、接口、数据结构 | |
 ```
 
-3. **用户确认环节**：
-   - 使用 `question` 工具询问用户：
-   - 问题：`资料清单已生成到项目根目录 \`REFERENCE.md\`。请填写您手头已有的参考资料信息。提示：每个阶段只需在该阶段开始前完成对应部分即可，不必一次性全部填写。填写完成后请选择「已完成，进入下一步」。`
-     - 选项：`已完成，进入下一步` | `查看资料清单`
-   - 若用户选择「已完成，进入下一步」，进入状态交接步骤
+**Step 3 — User confirmation**
 
-4. **状态交接**：
-   - 用户确认后，立即调用工具 `set_hd_workflow_handover("IRAnalysis")`
-   - 工具调用完成后，进入 Idle 状态，等待系统自动触发下一阶段
+Prompt the user once, directly:
+
+> `REFERENCE.md` is ready. Fill in whatever reference materials you have on hand — you don't need to complete everything now, only the relevant section is needed before each phase starts. Select **"Done, proceed"** when ready.
+
+Options: **`Done, proceed`** | **`View checklist`**
+
+**Step 4 — Hand off**
+
+Upon "Done, proceed": call `set_hd_workflow_handover("IRAnalysis")` immediately, then enter Idle state.
+
+---
+
+### Behavioral Rules
+
+- No explanations, no summaries — execute steps in sequence
+- Do not ask clarifying questions
+- Do not repeat or confirm file contents back to the user unless they select "View checklist"
+- Minimize turns: this phase should complete in **1–2 interactions**
