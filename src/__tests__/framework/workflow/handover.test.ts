@@ -56,9 +56,10 @@ describe("workflow/handover", () => {
       expect(prompt!.length).toBeGreaterThan(0)
     })
 
-    it("should include current step in prompt when provided", () => {
+    it("should include current step display name in prompt when provided", () => {
       const prompt = getHandoverPrompt(classicWorkflow, "IRAnalysis", "scenarioAnalysis")
-      expect(prompt).toContain("IRAnalysis")
+      // handover.ts resolves key "IRAnalysis" → name "Initial Requirement Analysis" → uppercased in prompt
+      expect(prompt).toContain("INITIAL REQUIREMENT ANALYSIS")
     })
 
     it("should generate different prompts for different stages", () => {

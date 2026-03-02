@@ -7,6 +7,33 @@ const scenarioAnalysisCollectorHook = createHCollectorHook({ domains: ['systemRe
 const systemDesignCollectorHook = createHCollectorHook({ domains: ['systemDesign', 'codebase'] })
 
 /**
+ * 生成阶段移交提示词
+ *
+ * 使用 stage.name（显示名称）直接构造英文模板，无需维护独立的映射表。
+ * 由 handover.ts 负责将 currentStep key 解析为 stage name 后传入。
+ *
+ * @param thisName    目标阶段显示名称（来自 stageConfig.name）
+ * @param stageTask   阶段任务描述（动词短语）
+ * @param currentName 来源阶段显示名称（来自 handover.ts 解析，可选）
+ */
+function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: string | null): string {
+  const thisDisplay = thisName.toUpperCase()
+  const fromDisplay = currentName ? currentName.toUpperCase() : null
+  const phaseHeader = fromDisplay
+    ? `[ PHASE: ${fromDisplay} \u2192 ${thisDisplay} ]`
+    : `[ PHASE: ${thisDisplay} ]`
+  const switchMsg = fromDisplay
+    ? `Workflow switched from \`${fromDisplay}\` to \`${thisDisplay}\`.`
+    : `Workflow switched to \`${thisDisplay}\`.`
+  return (
+    `${phaseHeader}\n\n` +
+    `${switchMsg} Based on the Context, Collected Data, and Previous Outputs, ` +
+    `${stageTask} to generate the required outputs for this stage.\n\n` +
+    `Please adhere to the Single-Stage Processing Pipeline and commence work immediately.`
+  )
+}
+
+/**
  * Classic Requirements Engineering Workflow
  *
  * An 8-stage workflow for comprehensive requirements engineering and system design.
@@ -39,10 +66,8 @@ export const classicWorkflow: WorkflowDefinition = {
       promptFile: 'prompts/IRAnalysis.md',
       gate: true,
       beforeStage: [irAnalysisCollectorHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入Initial Requirement Analysis阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，进行初始需求分析，输出需求信息文档。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'perform a rigorous requirement analysis', currentName),
     },
 
     scenarioAnalysis: {
@@ -53,10 +78,8 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       beforeStage: [scenarioAnalysisCollectorHook],
       afterStage: [summarizeHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入Scenario Analysis阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，分析系统的各种使用场景，识别主要参与者和业务流程。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'analyze system usage scenarios and identify actors and business processes', currentName),
     },
 
     useCaseAnalysis: {
@@ -66,10 +89,8 @@ export const classicWorkflow: WorkflowDefinition = {
       promptFile: 'prompts/useCaseAnalysis.md',
       gate: true,
       afterStage: [summarizeHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入Use Case Analysis阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，将场景细化为详细的用例规格，明确输入输出和验收标准。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'refine scenarios into detailed use case specifications with clear inputs, outputs, and acceptance criteria', currentName),
     },
 
     functionalRefinement: {
@@ -79,10 +100,8 @@ export const classicWorkflow: WorkflowDefinition = {
       promptFile: 'prompts/functionalRefinement.md',
       gate: true,
       afterStage: [summarizeHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入Functional Refinement阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，整理完整功能列表，进行优先级排序和FMEA分析。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'extract the complete functional list, prioritize requirements using MoSCoW, and perform FMEA analysis', currentName),
     },
 
     requirementDecomposition: {
@@ -92,10 +111,8 @@ export const classicWorkflow: WorkflowDefinition = {
       promptFile: 'prompts/requirementDecomposition.md',
       gate: true,
       afterStage: [summarizeHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入Requirement Decomposition阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，将功能列表映射并分解为模块级需求、子系统和接口定义。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'map and decompose the functional list into module-level requirements, subsystems, and interface definitions', currentName),
     },
 
     systemFunctionalDesign: {
@@ -106,10 +123,8 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       beforeStage: [systemDesignCollectorHook],
       afterStage: [summarizeHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入System Functional Design阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，基于需求分解结果，设计系统架构、选择技术栈、定义数据模型与交互协议。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'design the system architecture, select the technology stack, and define data models and interaction protocols based on the decomposed requirements', currentName),
     },
 
     moduleFunctionalDesign: {
@@ -119,10 +134,8 @@ export const classicWorkflow: WorkflowDefinition = {
       promptFile: 'prompts/moduleFunctionalDesign.md',
       gate: true,
       afterStage: [summarizeHook],
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `从${current}阶段移交` : ''
-        return `${prefix}进入Module Functional Design阶段。请根据单阶段处理流程 (8-Step Pipeline)，采集必要资料，为每个模块输出详细的技术规格。下面请开始你的工作。`
-      },
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, 'output detailed technical specifications for each module including responsibilities, interfaces, internal structure, algorithms, data structures, and test strategies', currentName),
     },
   },
 }

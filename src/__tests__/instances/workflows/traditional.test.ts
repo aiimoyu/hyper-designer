@@ -130,31 +130,63 @@ describe('Classic Workflow', () => {
     it('should generate handover prompts for all stages', () => {
       const workflow = getClassicWorkflow()
       workflow.stageOrder.forEach((stageName) => {
-        const prompt = workflow.stages[stageName].getHandoverPrompt(null)
+        const stage = workflow.stages[stageName]
+        const prompt = stage.getHandoverPrompt(null, stage.name)
         expect(prompt).toBeTruthy()
         expect(typeof prompt).toBe('string')
         expect(prompt.length).toBeGreaterThan(0)
       })
     })
 
-    it('should include current step in prompt when provided', () => {
+    it('should include current step display name in prompt when provided', () => {
       const workflow = getClassicWorkflow()
-      const promptWithCurrent = workflow.stages.IRAnalysis.getHandoverPrompt('previousStep')
-      expect(promptWithCurrent).toContain('previousStep')
+      // 直接调用时传入显示名称（实际运行时由 handover.ts 将 key 转换为 name）
+      const promptWithCurrent = workflow.stages.IRAnalysis.getHandoverPrompt('Previous Stage', workflow.stages.IRAnalysis.name)
+      expect(promptWithCurrent).toContain('PREVIOUS STAGE')
     })
 
-    it('should include next step name in prompt', () => {
+    it('should include stage display name in prompt', () => {
       const workflow = getClassicWorkflow()
-      const prompt = workflow.stages.IRAnalysis.getHandoverPrompt(null)
+      const stage = workflow.stages.IRAnalysis
+      const prompt = stage.getHandoverPrompt(null, stage.name)
       expect(prompt.length).toBeGreaterThan(0)
-      expect(prompt).toContain('Initial Requirement Analysis')
+      expect(prompt).toContain('INITIAL REQUIREMENT ANALYSIS')
     })
 
     it('should generate different prompts for different stages', () => {
       const workflow = getClassicWorkflow()
-      const prompt1 = workflow.stages.IRAnalysis.getHandoverPrompt(null)
-      const prompt2 = workflow.stages.scenarioAnalysis.getHandoverPrompt(null)
+      const prompt1 = workflow.stages.IRAnalysis.getHandoverPrompt(null, workflow.stages.IRAnalysis.name)
+      const prompt2 = workflow.stages.scenarioAnalysis.getHandoverPrompt(null, workflow.stages.scenarioAnalysis.name)
       expect(prompt1).not.toBe(prompt2)
+    })
+
+    it('should include [ PHASE: header in prompt', () => {
+      const workflow = getClassicWorkflow()
+      const stage = workflow.stages.IRAnalysis
+      const prompt = stage.getHandoverPrompt(null, stage.name)
+      expect(prompt).toContain('[ PHASE:')
+    })
+
+    it('should show transition arrow when current stage provided', () => {
+      const workflow = getClassicWorkflow()
+      const stage = workflow.stages.scenarioAnalysis
+      const prompt = stage.getHandoverPrompt('Initial Requirement Analysis', stage.name)
+      expect(prompt).toContain('INITIAL REQUIREMENT ANALYSIS → SCENARIO ANALYSIS')
+      expect(prompt).toContain('Workflow switched from')
+    })
+
+    it('should use "Workflow switched to" when no current stage', () => {
+      const workflow = getClassicWorkflow()
+      const stage = workflow.stages.IRAnalysis
+      const prompt = stage.getHandoverPrompt(null, stage.name)
+      expect(prompt).toContain('Workflow switched to `INITIAL REQUIREMENT ANALYSIS`.')
+    })
+
+    it('should include Single-Stage Processing Pipeline instruction', () => {
+      const workflow = getClassicWorkflow()
+      const stage = workflow.stages.IRAnalysis
+      const prompt = stage.getHandoverPrompt(null, stage.name)
+      expect(prompt).toContain('Single-Stage Processing Pipeline')
     })
   })
 

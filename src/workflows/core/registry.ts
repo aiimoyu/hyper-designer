@@ -9,12 +9,10 @@
 
 import type { WorkflowDefinition } from './types'
 import { classicWorkflow } from '../plugins/classic'
-import { openSourceWorkflow } from '../plugins/open-source'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 const workflowRegistry: Record<string, WorkflowDefinition> = {
   classic: classicWorkflow,
-  "open-source": openSourceWorkflow,
 }
 
 /**

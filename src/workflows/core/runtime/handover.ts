@@ -60,5 +60,7 @@ export function getHandoverPrompt(
     action: "generateHandoverPrompt"
   });
   
-  return stageConfig.getHandoverPrompt(currentStep);
+  // 将 currentStep key 解析为阶段显示名称，传入 getHandoverPrompt 而非原始 key
+  const currentStageName = currentStep ? (definition.stages[currentStep]?.name ?? currentStep) : null
+  return stageConfig.getHandoverPrompt(currentStageName, stageConfig.name);
 }
