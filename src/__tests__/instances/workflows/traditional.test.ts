@@ -172,14 +172,14 @@ describe('Classic Workflow', () => {
       const stage = workflow.stages.scenarioAnalysis
       const prompt = stage.getHandoverPrompt('Initial Requirement Analysis', stage.name)
       expect(prompt).toContain('INITIAL REQUIREMENT ANALYSIS → SCENARIO ANALYSIS')
-      expect(prompt).toContain('Workflow switched from')
+      expect(prompt).toContain('工作流已从')
     })
 
     it('should use "Workflow switched to" when no current stage', () => {
       const workflow = getClassicWorkflow()
       const stage = workflow.stages.IRAnalysis
       const prompt = stage.getHandoverPrompt(null, stage.name)
-      expect(prompt).toContain('Workflow switched to `INITIAL REQUIREMENT ANALYSIS`.')
+      expect(prompt).toContain('工作流已切换至 `INITIAL REQUIREMENT ANALYSIS`。')
     })
 
     it('should include Single-Stage Processing Pipeline instruction', () => {

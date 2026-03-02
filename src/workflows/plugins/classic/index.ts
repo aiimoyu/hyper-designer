@@ -23,13 +23,13 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
     ? `[ PHASE: ${fromDisplay} \u2192 ${thisDisplay} ]`
     : `[ PHASE: ${thisDisplay} ]`
   const switchMsg = fromDisplay
-    ? `Workflow switched from \`${fromDisplay}\` to \`${thisDisplay}\`.`
-    : `Workflow switched to \`${thisDisplay}\`.`
+    ? `工作流已从 \`${fromDisplay}\` 切换至 \`${thisDisplay}\`。`
+    : `工作流已切换至 \`${thisDisplay}\`。`
   return (
     `${phaseHeader}\n\n` +
-    `${switchMsg} Based on the Context, Collected Data, and Previous Outputs, ` +
-    `${stageTask} to generate the required outputs for this stage.\n\n` +
-    `Please adhere to the Single-Stage Processing Pipeline and commence work immediately.`
+    `${switchMsg} 请基于上下文、已收集数据及前期输出，` +
+    `${stageTask}，以生成本阶段所需输出。\n\n` +
+    `请遵循 Single-Stage Processing Pipeline，立即开始工作。`
   )
 }
 
@@ -67,7 +67,7 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       beforeStage: [irAnalysisCollectorHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'perform a rigorous requirement analysis', currentName),
+        buildHandoverPrompt(thisName, '执行严格的需求分析', currentName),
     },
 
     scenarioAnalysis: {
@@ -79,7 +79,7 @@ export const classicWorkflow: WorkflowDefinition = {
       beforeStage: [scenarioAnalysisCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'analyze system usage scenarios and identify actors and business processes', currentName),
+        buildHandoverPrompt(thisName, '分析系统使用场景，识别参与者与业务流程', currentName),
     },
 
     useCaseAnalysis: {
@@ -90,7 +90,7 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'refine scenarios into detailed use case specifications with clear inputs, outputs, and acceptance criteria', currentName),
+        buildHandoverPrompt(thisName, '将场景细化为详细的用例规格说明，明确输入、输出与验收标准', currentName),
     },
 
     functionalRefinement: {
@@ -101,7 +101,7 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'extract the complete functional list, prioritize requirements using MoSCoW, and perform FMEA analysis', currentName),
+        buildHandoverPrompt(thisName, '提取完整功能列表，使用 MoSCoW 方法进行优先级排序，并执行 FMEA 分析', currentName),
     },
 
     requirementDecomposition: {
@@ -112,7 +112,7 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'map and decompose the functional list into module-level requirements, subsystems, and interface definitions', currentName),
+        buildHandoverPrompt(thisName, '将功能列表映射并分解为模块级需求、子系统及接口定义', currentName),
     },
 
     systemFunctionalDesign: {
@@ -124,7 +124,7 @@ export const classicWorkflow: WorkflowDefinition = {
       beforeStage: [systemDesignCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'design the system architecture, select the technology stack, and define data models and interaction protocols based on the decomposed requirements', currentName),
+        buildHandoverPrompt(thisName, '基于已分解的需求，设计系统架构、选择技术栈，并定义数据模型与交互协议', currentName),
     },
 
     moduleFunctionalDesign: {
@@ -135,7 +135,7 @@ export const classicWorkflow: WorkflowDefinition = {
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, 'output detailed technical specifications for each module including responsibilities, interfaces, internal structure, algorithms, data structures, and test strategies', currentName),
+        buildHandoverPrompt(thisName, '为各模块输出详细技术规格说明，涵盖职责、接口、内部结构、算法、数据结构及测试策略', currentName),
     },
   },
 }
