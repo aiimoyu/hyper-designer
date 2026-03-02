@@ -70,7 +70,7 @@ Prompt the user once, directly:
 
 > `REFERENCE.md` is ready. Fill in whatever reference materials you have on hand — you don't need to complete everything now, only the relevant section is needed before each phase starts. Select **"Done, proceed"** when ready.
 
-Options: **`Done, proceed`** | **`View checklist`**
+Options: `已完成，进入下一步` | `查看资料清单`
 
 **Step 4 — Hand off**
 
