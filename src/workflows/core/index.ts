@@ -9,7 +9,6 @@
  * - state: 状态管理（持久化、操作）
  * - service: 工作流服务层（WorkflowService）
  * - runtime: 运行时（交接、提示词加载）
- * - gate: 质量门（HCritic 评审）
  */
 
 // Core types
