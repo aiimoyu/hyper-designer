@@ -2,7 +2,7 @@
 
 ### 角色分工与执行流程
 
-本工作流由 **HArchitect** 与 **HEngineer** 协作完成，严格遵循线性执行顺序。每个阶段必须完成“单阶段处理流程（8-Step Pipeline）”并通过审查后方可进入下一阶段。
+本工作流由 **HArchitect** 与 **HEngineer** 协作完成，严格遵循线性执行顺序。每个阶段必须按照 `Single-Stage Processing Pipeline` 执行后方可进入下一阶段。
 
 **执行链条：**
 `IRAnalysis` → `scenarioAnalysis` → `useCaseAnalysis` → `functionalRefinement` → `systemFunctionalDesign` → `moduleFunctionalDesign`
@@ -18,7 +18,7 @@
 
 **输入依赖：**
 
-- 用户提供的初始对话或需求描述（通常为 `currentStep === null` 时的首次输入）
+- 用户提供的初始对话或需求描述（通常为首次输入）
 
 **执行行动指引：**
 
@@ -157,13 +157,3 @@
 
 - `.hyper-designer/moduleFunctionalDesign/活动需求分解.md`
 - `.hyper-designer/moduleFunctionalDesign/{模块名}设计.md` （每个模块独立文件）
-
-### 启动与交接规则
-
-1. **冷启动规则**：
-    - 当检测到 `currentStep === null` 时，**直接调用** `set_hd_workflow_handover("IRAnalysis")`。
-    - **禁止**在此处询问用户需求，直接进入IRAnalysis阶段开始5W2H访谈。
-
-2. **标准执行循环**：
-    - 每个阶段（含子步骤）必须遵循：**执行 -> 内部审查 -> 用户确认 -> 下一阶段**。
-    - 若涉及Skill调用，必须严格遵循Skill内的模板和方法论。

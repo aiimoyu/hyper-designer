@@ -7,19 +7,20 @@
 
 import { EventEmitter } from "events";
 import type { WorkflowDefinition, PlatformAdapter } from "../types";
-import type { WorkflowState } from "../state/types";
-import type { QualityGateResult } from "../gate/types";
+import type { WorkflowState, GateResult } from "../state/types";
 import {
   getWorkflowState,
   setWorkflowStage,
   setWorkflowCurrent,
-  setWorkflowGatePassed,
+  setWorkflowGateResult,
   setWorkflowHandover,
   executeWorkflowHandover,
 } from "../state";
 import { getWorkflowDefinition } from "../registry";
 import { getHandoverAgent, getHandoverPrompt } from "../runtime/handover";
-import { createWorkflowQualityGate } from "../gate";
+
+/** 质量门通过分数阈值 */
+const GATE_PASS_THRESHOLD = 75;
 
 /**
  * WorkflowService 事件类型映射
@@ -29,7 +30,18 @@ export interface WorkflowServiceEvents {
   currentChanged: { previousStep: string | null; newStep: string };
   handoverScheduled: { targetStep: string };
   handoverExecuted: { fromStep: string; toStep: string };
-  gateChanged: { passed: boolean };
+  gateChanged: { score: number | null; comment?: string | null; stage?: string | null };
+}
+
+/**
+ * hdScheduleHandover 返回值类型
+ */
+export interface HandoverResult {
+  success: boolean;
+  handover_to?: string;
+  instruction?: string;
+  error?: string;
+  state?: WorkflowState;
 }
 
 /**
@@ -143,34 +155,115 @@ export class WorkflowService extends EventEmitter {
     return state;
   }
 
+  // ─── 质量门 API ──────────────────────────────────────────────────────────────
+
   /**
-   * 检查质量门禁是否通过
+   * 检查质量门是否通过（score > 75）
    * @returns 门禁是否通过
    */
-  isGatePassed(): boolean {
+  isGateApproved(): boolean {
     const state = getWorkflowState();
-    return state?.gatePassed ?? false;
+    const score = state?.gateResult?.score;
+    return typeof score === 'number' && score > GATE_PASS_THRESHOLD;
   }
 
   /**
-   * 设置质量门禁通过状态
-   * @param passed 是否通过
+   * @deprecated 使用 isGateApproved() 替代。保留以兼容旧代码。
+   */
+  isGatePassed(): boolean {
+    return this.isGateApproved();
+  }
+
+  /**
+   * 设置质量门结果（score + comment）
+   * 仅供 HCritic 调用。
+   * @param params 质量门结果参数
    * @returns 更新后的工作流状态
    */
-  setGatePassed(passed: boolean): WorkflowState {
-    const state = setWorkflowGatePassed(passed);
-    this.emit('gateChanged', { passed });
+  setGateResult(params: { score: number | null; comment?: string | null; stage?: string | null }): WorkflowState {
+    const currentStep = this.getCurrentStage();
+    const gateResult: GateResult = {
+      score: params.score,
+      comment: params.comment ?? null,
+      stage: params.stage ?? currentStep,
+    };
+    const state = setWorkflowGateResult(gateResult);
+    this.emit('gateChanged', { score: gateResult.score, comment: gateResult.comment, stage: gateResult.stage });
     return state;
   }
 
   /**
-   * 执行当前阶段的质量门禁评审
-   * @param capabilities 平台能力对象（必须包含 session 原语）
-   * @returns 结构化门禁结果
+   * @deprecated 使用 setGateResult 替代。保留以兼容旧代码。
+   * 将 boolean 转换为 score（true=100，false=0）后调用 setGateResult。
    */
-  async executeQualityGate(adapter: PlatformAdapter): Promise<QualityGateResult> {
-    return createWorkflowQualityGate(this.definition, adapter, this);
+  setGatePassed(passed: boolean): WorkflowState {
+    return this.setGateResult({
+      score: passed ? 100 : 0,
+      comment: passed ? 'Passed (legacy)' : 'Failed (legacy)',
+    });
   }
+
+  // ─── 平台无关工具方法（供 plugin 工具直接调用）─────────────────────────────────
+
+  /**
+   * 获取完整工作流状态（供 hd_workflow_state 工具使用）
+   * @returns 工作流状态或未初始化信息对象
+   */
+  hdGetWorkflowState(): WorkflowState | { initialized: false; message: string } {
+    const state = getWorkflowState();
+    if (state === null) {
+      return {
+        initialized: false,
+        message: "Workflow not initialized. Use hd_handover to start a workflow stage.",
+      };
+    }
+    return state;
+  }
+
+  /**
+   * 调度工作流交接（供 hd_handover 工具使用）
+   *
+   * 在调度交接前验证质量门是否通过（score > 75）。
+   * 成功时返回包含 instruction 的对象，要求 Agent 立即停止所有工作。
+   *
+   * @param stepName 目标步骤名称
+   * @returns 结构化结果对象
+   */
+  hdScheduleHandover(stepName: string): HandoverResult {
+    // 仅当当前阶段配置了质量门禁时才验证分数
+    const currentStage = this.getCurrentStage();
+    const stageDefinition = currentStage ? this.definition.stages[currentStage] : undefined;
+    const hasGate = Boolean(stageDefinition?.gate);
+
+    if (hasGate && !this.isGateApproved()) {
+      const state = getWorkflowState();
+      const score = state?.gateResult?.score;
+      return {
+        success: false,
+        error: `质量门未通过。当前得分：${score !== null && score !== undefined ? score : '未评分'}（需要 > ${GATE_PASS_THRESHOLD}）。请先请求 HCritic 完成评审并调用 hd_submit_evaluation 记录得分，然后再进行工作流交接。`,
+      };
+    }
+
+    // 调度交接
+    const state = this.setHandover(stepName);
+
+    // 如果 handoverTo 没有设置成功（被验证逻辑拒绝），返回错误
+    if (state.handoverTo !== stepName) {
+      return {
+        success: false,
+        error: `无法设置交接目标 "${stepName}"。请检查目标步骤是否有效，或是否试图跳过步骤。`,
+      };
+    }
+
+    return {
+      success: true,
+      handover_to: stepName,
+      instruction:
+        "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
+      state,
+    };
+  }
+
 
   /**
    * 获取指定阶段的交接代理名称

@@ -1,86 +1,93 @@
-
 ## Interview Techniques
 
-### 核心原则
+### Core Principles
 
-1. **结构化交互**：关键决策点（如范围界定、优先级排序）必须使用结构化选项提问，避免模糊的开放式对话。
-2. **渐进式深入**：由宏观概念逐层深入至细节规格，避免信息过载。
-3. **行动优于询问**：在项目启动或缺乏上下文时，优先调用工具获取信息或提出假设，而非直接向用户索要答案。
+1. **Structured Interaction**: All key decision points (e.g., scope definition, prioritization) must use structured-option questioning. Avoid vague, open-ended exchanges.
+2. **Progressive Depth**: Move from macro concepts down to detailed specifications layer by layer. Avoid information overload.
+3. **Action Over Inquiry**: At project kickoff or when context is lacking, prioritize calling tools or proposing assumptions rather than prompting the user for answers directly.
 
-### 通用访谈技巧库
+---
 
-以下技巧可灵活组合应用于任何阶段。
+### General Interview Technique Library
 
-#### 1. 结构化确认法
+The following techniques can be flexibly combined and applied at any phase.
 
-**场景**：需要从有限选项中决策，或确认分类/优先级。
-**实施**：
+#### 1. Structured Confirmation
 
-- 提供带描述的选项列表。
-- 允许用户单选或多选，并提供"其他"选项以收集未预见情况。
-- **应用**：业务目标分类、优先级（P0-P3）、场景覆盖策略。
+**When to use**: A decision must be made from a finite set of options, or a classification / priority needs confirming.
+**How to apply**:
 
-#### 2. 范围边界法
+- Present a labeled option list with brief descriptions.
+- Allow single or multi-select; always include an "Other" option to capture unanticipated cases.
+- **Applies to**: Business objective classification, priority tiers (P0–P3), scenario coverage strategy.
 
-**场景**：明确系统边界，防止需求蔓延。
-**实施**：
+#### 2. Scope Boundary Definition
 
-- 明确列出 **In-scope**（包含）与 **Out-of-scope**（排除）。
-- 对排除项说明原因（如成本、技术限制）。
-- **应用**：MVP定义、用例边界、模块裁剪。
+**When to use**: Establishing system boundaries to prevent scope creep.
+**How to apply**:
 
-#### 3. 渐进细化法
+- Explicitly list **In-Scope** (included) and **Out-of-Scope** (excluded) items.
+- Provide a rationale for each exclusion (e.g., cost, technical constraints).
+- **Applies to**: MVP definition, use-case boundaries, module scoping.
 
-**场景**：引导用户从模糊概念走向具体实现。
-**话术模板**：
+#### 3. Progressive Refinement
 
-- **Level 1 (概念层)**: "用一句话描述，这个系统核心解决什么问题？"
-- **Level 2 (功能层)**: "用户主要通过它完成哪些业务场景？"
-- **Level 3 (细节层)**: "在[某场景]中，具体的操作步骤和数据流向是什么？"
-- **Level 4 (规格层)**: "针对[某功能]，其输入输出约束和异常处理规则是什么？"
+**When to use**: Guiding the user from a vague concept toward a concrete implementation.
+**Prompt templates**:
 
-#### 4. 假设驱动法
+- **Level 1 – Concept**: "In one sentence, what core problem does this system solve?"
+- **Level 2 – Function**: "What are the primary business scenarios users accomplish with it?"
+- **Level 3 – Detail**: "In [scenario X], what are the specific steps and data flows involved?"
+- **Level 4 – Specification**: "For [feature Y], what are the input/output constraints and error-handling rules?"
 
-**场景**：信息缺失或用户不确定时，推进访谈进程。
-**实施**：提出基于经验的合理假设，引导用户修正或确认。
-**话术**：
-> "基于现状，我假设系统主要用户是[角色]，核心痛点是[问题]。如果假设成立，我们需要[功能]；如果不成立，实际情况是？"
+#### 4. Assumption-Driven Inquiry
 
-#### 5. 反向验证法
+**When to use**: Information is missing or the user is uncertain; the interview must keep moving.
+**How to apply**: Propose a reasonable, experience-based assumption and invite the user to correct or confirm it.
+**Template**:
+> "Based on what we know, I'm assuming the primary users are [role] and the core pain point is [problem]. If that holds, we'll need [feature]. If not — what's the actual situation?"
 
-**场景**：确保理解与用户意图一致，避免偏差。
-**话术**：
-> "基于刚才的沟通，我总结如下：[核心目标/流程/约束]。请问是否有偏差？"
+#### 5. Reverse Validation
 
-### 高效话术库
+**When to use**: Verifying that your understanding aligns with user intent before proceeding.
+**Template**:
+> "Let me summarize our discussion so far: [core objective / process / constraints]. Does anything need correcting?"
 
-#### 推进与澄清
+---
 
-- **开启话题**："让我们聚焦于[模块/阶段]。首先，您期望它解决的最核心问题是什么？"
-- **处理模糊信息**："您提到的[概念]比较宽泛，具体是指[选项A]还是[选项B]？或者有其他定义？"
-- **信息过载时**："信息很有价值。为了聚焦，我们能否先确定最重要的三个核心点？"
-- **处理不确定**："这点可以先标记为'待定'。我们可以基于[假设]继续推进，稍后再确认。"
+### High-Efficiency Phrasing Library
 
-#### 结束与交付
+#### Advancing & Clarifying
 
-- **阶段收尾**：
-  > "我已完成本阶段的访谈整理。请确认是**进入下一阶段**，还是**继续修正当前内容**？"
-- **交付提示**：每阶段结束后，自动生成摘要文档，包含：关键决策、待确认事项列表、下阶段预览。
+| Situation | Suggested Phrasing |
+|-----------|-------------------|
+| **Opening a topic** | "Let's focus on [module / phase]. What is the single most important problem you need it to solve?" |
+| **Handling vague input** | "The term '[concept]' is fairly broad — do you mean [Option A] or [Option B]? Or would you define it differently?" |
+| **When overloaded with information** | "This is all valuable. To stay focused, can we identify the three most critical points first?" |
+| **Handling uncertainty** | "Let's mark this as 'TBD' for now. We can proceed under the assumption that [X] and revisit it later." |
 
-### 输出记录规范
+#### Closing & Delivering
 
-访谈记录应结构化存储，避免冗余流水账：
+- **Phase wrap-up**:
+  > "I've completed the interview synthesis for this phase. Should we **proceed to the next phase** or **continue refining the current output**?"
+- **Delivery note**: At the end of each phase, auto-generate a summary document containing: key decisions made, open items list, and a preview of the next phase.
+
+---
+
+### Output Record Specification
+
+Interview records must be stored in structured form. Avoid verbose, chronological logs.
 
 ```markdown
-## {阶段名} 访谈摘要
+## {Phase Name} — Interview Summary
 
-### 关键决策
-- **决策点**: [决策内容] -> **理由**: [依据]
-- **决策点**: [决策内容] -> **理由**: [依据]
+### Key Decisions
+- **Decision**: [outcome] → **Rationale**: [basis]
+- **Decision**: [outcome] → **Rationale**: [basis]
 
-### 待确认事项
-- [ ] [问题描述] (状态: 待定/假设中)
+### Open Items
+- [ ] [Issue description]  (Status: TBD / Under assumption)
 
-### 阶段产出
-- 产出物: [文件路径/内容摘要]
+### Phase Deliverables
+- Artifact: [file path / content summary]
 ```

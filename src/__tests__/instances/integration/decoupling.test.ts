@@ -7,10 +7,19 @@ import { HyperDesignerPlugin } from "../../../../opencode/.plugins/hyper-designe
 
 vi.mock("@opencode-ai/plugin", () => {
   const tool = (definition: Record<string, unknown>) => definition
-  const chainable = { describe: () => ({}) }
+  // Chainable Zod-like stub: every method returns itself so .string().optional().describe() works
+  const chainable: Record<string, unknown> = {}
+  const chainFn = () => chainable
+  chainable.describe = chainFn
+  chainable.optional = chainFn
+  chainable.nullable = chainFn
+  chainable.min = chainFn
+  chainable.max = chainFn
   tool.schema = {
     enum: () => chainable,
     boolean: () => chainable,
+    number: () => chainable,
+    string: () => chainable,
   }
   return { tool }
 })

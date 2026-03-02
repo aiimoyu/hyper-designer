@@ -10,7 +10,7 @@
 
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
-import { filePrompt, stringPrompt, toolsPrompt } from "../factory"
+import { filePrompt, stringPrompt } from "../factory"
 import type { RuntimeType } from "../../tools"
 import { createAgent } from "../factory"
 import { join } from "path"
@@ -54,14 +54,12 @@ const DEFINITION: AgentDefinition = {
   color: "#C8102E",
   defaultTemperature: 0.6,
   promptGenerators: [
-    filePrompt(join(__dirname, "prompts", "kernel.md")),
     filePrompt(join(__dirname, "prompts", "identity.md")),
-    filePrompt(join(__dirname, "prompts", "constraints.md")),
-    toolsPrompt(["ask_user", "hd_submit", "task"]),
-    filePrompt(join(__dirname, "prompts", "step.md")),
-    filePrompt(join(__dirname, "prompts", "standard.md")),
-    filePrompt(join(__dirname, "prompts", "interview.md")),
     stringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),
+    filePrompt(join(__dirname, "prompts", "step.md")),
+    filePrompt(join(__dirname, "prompts", "file.md")),
+    filePrompt(join(__dirname, "prompts", "interview.md")),
+    filePrompt(join(__dirname, "prompts", "constraints.md")),
     stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
   ],
   defaultPermission: {
@@ -91,12 +89,9 @@ const DEFINITION: AgentDefinition = {
     websearch: false,
     question: true,
     task: true,
-    get_hd_workflow_state: true,
-    set_hd_workflow_stage: false,
-    hd_submit: true,
-    set_hd_workflow_current: false,
-    set_hd_workflow_handover: true,
-    call_omo_agent: false,
+    hd_workflow_state: true,
+    hd_handover: true,
+    hd_submit_evaluation: false,
   },
 }
 

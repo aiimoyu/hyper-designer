@@ -20,5 +20,6 @@ export {
   setWorkflowCurrent,
   setWorkflowHandover,
   setWorkflowGatePassed,
+  setWorkflowGateResult,
   executeWorkflowHandover,
 } from "./operations";

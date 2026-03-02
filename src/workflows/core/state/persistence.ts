@@ -43,7 +43,12 @@ export function readWorkflowStateFile(): WorkflowState | null {
       workflow: parsed.workflow,
       currentStep: parsed.currentStep,
       handoverTo: parsed.handoverTo,
-      gatePassed: parsed.gatePassed ?? false,
+      // 优先读取新的 gateResult 字段；若不存在则兼容旧的 gatePassed boolean
+      gateResult: parsed.gateResult !== undefined
+        ? parsed.gateResult
+        : typeof parsed.gatePassed === 'boolean'
+          ? { score: parsed.gatePassed ? 100 : 0, comment: parsed.gatePassed ? 'Passed (legacy)' : 'Failed (legacy)' }
+          : null,
     };
     
     HyperDesignerLogger.debug("Workflow", `工作流状态读取完成`, { 

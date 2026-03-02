@@ -5,7 +5,7 @@
  * 1. 读取当前工作流阶段
  * 2. 加载阶段门禁提示词
  * 3. 通过 PlatformAdapter 创建隔离会话执行评审
- * 4. 写回 gatePassed 状态到 workflow_state.json
+ * 4. 写回 gateResult 状态到 workflow_state.json
  *
  * 所有门禁逻辑集中于此模块，对外提供 createWorkflowQualityGate 门禁 creator。
  */
@@ -68,7 +68,7 @@ function createQualityGateReviewer(
 
 // ─── 门禁 Creator ──────────────────────────────────────────────────────────────
 
-/**
+/**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
  * 门禁 Creator：组合 PlatformAdapter，执行当前阶段质量门
  *
  * @param workflow 工作流定义
@@ -84,18 +84,18 @@ export async function createWorkflowQualityGate(
   const svc: WorkflowStateAccessor = serviceInstance ?? (await import("../service")).workflowService;
   const state = svc.getState();
   if (!state?.currentStep) {
-    svc.setGatePassed(false);
+    svc.setGateResult({ score: 0, comment: 'No active stage' });
     return {
       ok: false,
       reason: "no_active_stage",
-      message: "No active workflow stage. Use set_hd_workflow_current before calling hd_submit.",
+      message: "No active workflow stage. Ensure the workflow is initialized before calling hd_submit_evaluation.",
     };
   }
 
   const stageKey = state.currentStep;
   const stage = workflow.stages[stageKey];
   if (!stage) {
-    svc.setGatePassed(false);
+    svc.setGateResult({ score: 0, comment: `Invalid stage: ${stageKey}` });
     return {
       ok: false,
       reason: "invalid_stage",
@@ -104,9 +104,9 @@ export async function createWorkflowQualityGate(
     };
   }
 
-  // 无提示词则跳过门禁（自动通过）
-  if (!stage.qualityGate) {
-    svc.setGatePassed(true);
+  // 无门禁标志则跳过（自动通过）
+  if (!stage.gate) {
+    svc.setGateResult({ score: 100, comment: 'Quality gate disabled for this stage.' });
     return {
       ok: true,
       reason: "disabled",
@@ -114,57 +114,18 @@ export async function createWorkflowQualityGate(
       passed: true,
       summary: "Quality gate disabled for this stage.",
       issues: [],
-      message: "Quality gate is disabled for this stage.",
+      message: "Quality gate is disabled for this stage."
     };
   }
 
-  const prompt = stage.qualityGate;
-  const reviewFn = createQualityGateReviewer(adapter);
-
-  try {
-    const reviewResponse = await reviewFn({ stageKey, prompt, schema: DEFAULT_REVIEW_SCHEMA });
-    const parsed = parseReviewResult(reviewResponse.structuredOutput, reviewResponse.text);
-
-    svc.setGatePassed(parsed.passed);
-    if (!parsed.passed) {
-      return {
-        ok: false,
-        reason: "review_failed",
-        stage: stageKey,
-        passed: false,
-        summary: parsed.summary,
-        issues: parsed.issues,
-        ...(parsed.score !== undefined ? { score: parsed.score } : {}),
-        message: "HCritic review failed. Fix issues and resubmit.",
-      };
-    }
-
-    return {
-      ok: true,
-      reason: "approved",
-      stage: stageKey,
-      passed: true,
-      summary: parsed.summary,
-      issues: parsed.issues,
-      ...(parsed.score !== undefined ? { score: parsed.score } : {}),
-      message: "HCritic review passed.",
-    };
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    try {
-      HyperDesignerLogger.error("WorkflowGate", "执行门禁失败", err, {
-        stageKey,
-        action: "createWorkflowQualityGate",
-      });
-    } catch {
-      // 严格模式下 logger 会重新抛出错误，在此吞噬以确保返回结构化结果
-    }
-    svc.setGatePassed(false);
-    return {
-      ok: false,
-      reason: "runtime_error",
-      stage: stageKey,
-      message: `Quality gate failed: ${err.message}`,
-    };
-  }
+  // 门禁已启用，但此函数已弃用 - HCritic 现通过 task(subagent=HCritic) 调用
+  // 返回提示信息，实际评审由 HCritic 独立执行
+  return {
+    ok: true,
+    reason: "approved",
+    stage: stageKey,
+    passed: true,
+    summary: "Gate is enabled. Use task(subagent=HCritic) to invoke HCritic for quality review.",
+    message: "Quality gate is enabled. Invoke HCritic via task tool for review."
+  };
 }

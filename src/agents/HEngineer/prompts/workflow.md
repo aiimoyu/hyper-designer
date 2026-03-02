@@ -53,9 +53,9 @@ HEngineer管理以下2个核心阶段的工作流：
     
     【关键规则】在询问用户是否能进入下一阶段之前，必须先通过HCritic审查
     
-    a. 向用户说明："正在请@HCritic审查该阶段设计..."
-    b. 【强制】使用 @HCritic 提及方式调用HCritic进行审查
-       - 明确说明："@HCritic 请审查 {阶段名} 的输出文档：{文档路径列表}"
+    a. 向用户说明："正在通过task工具调用HCritic审查该阶段设计..."
+    b. 【强制】使用 `task` 工具调用 HCritic 子代理进行审查
+       - 明确提供内容："请审查 {stage_name} 的输出文档：{document_path_list}"
        - 【强制】必须等待审查结果返回（不要假设审查会通过）
     c. 【强制】分析HCritic反馈：
        - 如果标记为"不通过"：必须根据反馈意见修改文档，然后重新提交审查（回到第4步）
@@ -99,8 +99,8 @@ HEngineer管理以下2个核心阶段的工作流：
 
      ```
      a. 【强制】使用workflow交接工具将当前阶段交接到下一阶段
-        - 【重要】不是 set_hd_workflow_stage
-        - 必须使用workflow交接工具完成阶段交接
+        - 【重要】使用 `hd_handover` 工具完成阶段交接
+        - 必须使用 `hd_handover` 完成阶段交接，禁止使用其他工具
      b. hook会自动注入下一阶段的skill
      ```
 
@@ -112,10 +112,10 @@ HEngineer管理以下2个核心阶段的工作流：
    - ❌ 用户选择"进入下一阶段"，但你未经过HCritic审查就执行
    - ❌ HCritic说"不通过"，你忽略意见直接进入下一阶段
    - ❌ 认为修改"很小"，不需要重新提交HCritic审查
-   - ❌ 使用 set_hd_workflow_stage 代替 set_hd_workflow_handover
+   - ❌ 使用 `hd_workflow_state` 查询状态代替 `hd_handover`（前者只读）
 
    【正确流程】每次修改后必须：
-   ✅ 修改文档 → 重新提交HCritic审查 → 等待明确"通过" → 使用Question工具询问用户 → 用户选择"进入下一阶段" → 使用workflow交接工具完成交接
+   ✅ 修改文档 → 重新请求HCritic审查 → 等待明确“通过” → 使用Question工具询问用户 → 用户选择“进入下一阶段” → 调用 `hd_handover` 完成交接
    ```
 
 ### 阶段1：系统功能设计 (systemFunctionalDesign)

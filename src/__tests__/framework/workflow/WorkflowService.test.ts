@@ -32,7 +32,7 @@ const classicWorkflowDef: WorkflowDefinition = {
       description: "Initial requirements analysis",
       agent: "HArchitect",
       promptFile: "ir_analysis.md",
-      qualityGate: "请评审 IRAnalysis 阶段产出物，检查是否符合规范。",
+      gate: true,
       getHandoverPrompt: (from) => `Handover from ${from ?? "dataCollection"} to IRAnalysis`
     },
     scenarioAnalysis: {
@@ -223,7 +223,7 @@ describe("WorkflowService", () => {
       expect(service.isGatePassed()).toBe(true);
 
       const state = service.setCurrent("scenarioAnalysis");
-      expect(state.gatePassed).toBe(false);
+      expect(state.gateResult).toBeNull();
     });
 
     it("does NOT reset gatePassed when setCurrent with same step", () => {
@@ -232,7 +232,7 @@ describe("WorkflowService", () => {
 
       // Set to the same step again
       const state = service.setCurrent("IRAnalysis");
-      expect(state.gatePassed).toBe(true);
+      expect(state.gateResult?.score).toBe(100);
     });
   });
 
@@ -240,14 +240,14 @@ describe("WorkflowService", () => {
     it("updates gate pass status", () => {
       service.setCurrent("IRAnalysis");
       const state = service.setGatePassed(true);
-      expect(state.gatePassed).toBe(true);
+      expect(state.gateResult?.score).toBe(100);
     });
 
     it("persists gate status to file", () => {
       service.setCurrent("IRAnalysis");
       service.setGatePassed(true);
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.gatePassed).toBe(true);
+      expect(raw.gateResult?.score).toBe(100);
     });
 
     it("handles boolean parameter correctly", () => {
@@ -661,110 +661,6 @@ describe("WorkflowService", () => {
     });
   });
 
-  describe("executeQualityGate", () => {
-    it("returns passed result when review passes", async () => {
-      service.setCurrent("IRAnalysis");
-
-      const mockAdapter = {
-        createSession: vi.fn().mockResolvedValue('review-session-1'),
-        sendPrompt: vi.fn().mockResolvedValue({
-          structuredOutput: { passed: true, summary: "评审通过", issues: [], score: 95 },
-          text: 'Review passed',
-        }),
-        deleteSession: vi.fn().mockResolvedValue(undefined),
-        summarizeSession: vi.fn().mockResolvedValue(undefined),
-      };
-
-      const result = await service.executeQualityGate(mockAdapter);
-
-      expect(result.ok).toBe(true);
-      expect(result.reason).toBe("approved");
-      expect(result.passed).toBe(true);
-      expect(result.stage).toBe("IRAnalysis");
-      expect(result.summary).toBe("评审通过");
-      expect(result.issues).toEqual([]);
-      expect(result.score).toBe(95);
-      expect(service.isGatePassed()).toBe(true);
-    });
-
-    it("returns failed result when review fails", async () => {
-      service.setCurrent("IRAnalysis");
-
-      const mockAdapter = {
-        createSession: vi.fn().mockResolvedValue('review-session-2'),
-        sendPrompt: vi.fn().mockResolvedValue({
-          structuredOutput: { passed: false, summary: "缺少关键信息", issues: ["缺少约束条件", "用户角色不完整"] },
-          text: 'Review failed',
-        }),
-        deleteSession: vi.fn().mockResolvedValue(undefined),
-        summarizeSession: vi.fn().mockResolvedValue(undefined),
-      };
-
-      const result = await service.executeQualityGate(mockAdapter);
-
-      expect(result.ok).toBe(false);
-      expect(result.reason).toBe("review_failed");
-      expect(result.passed).toBe(false);
-      expect(result.stage).toBe("IRAnalysis");
-      expect(result.issues).toEqual(["缺少约束条件", "用户角色不完整"]);
-      expect(service.isGatePassed()).toBe(false);
-    });
-
-    it("returns pass with disabled reason when stage has no qualityGate", async () => {
-      // scenarioAnalysis has no qualityGate defined in classicWorkflowDef
-      service.setCurrent("scenarioAnalysis");
-
-      const mockAdapter = {
-        createSession: vi.fn(),
-        sendPrompt: vi.fn(),
-        deleteSession: vi.fn(),
-        summarizeSession: vi.fn(),
-      };
-
-      const result = await service.executeQualityGate(mockAdapter);
-
-      expect(result.ok).toBe(true);
-      expect(result.reason).toBe("disabled");
-      expect(result.passed).toBe(true);
-      expect(result.stage).toBe("scenarioAnalysis");
-      // Session should NOT have been called at all
-      expect(mockAdapter.createSession).not.toHaveBeenCalled();
-    });
-
-    it("returns no_active_stage when no current step is set", async () => {
-      // Don't set any current step
-      const mockAdapter = {
-        createSession: vi.fn(),
-        sendPrompt: vi.fn(),
-        deleteSession: vi.fn(),
-        summarizeSession: vi.fn(),
-      };
-
-      const result = await service.executeQualityGate(mockAdapter);
-
-      expect(result.ok).toBe(false);
-      expect(result.reason).toBe("no_active_stage");
-      expect(mockAdapter.createSession).not.toHaveBeenCalled();
-    });
-
-    it("cleans up session even when prompt fails", async () => {
-      service.setCurrent("IRAnalysis");
-
-      const mockAdapter = {
-        createSession: vi.fn().mockResolvedValue('review-session-3'),
-        sendPrompt: vi.fn().mockRejectedValue(new Error('Session prompt failed')),
-        deleteSession: vi.fn().mockResolvedValue(undefined),
-        summarizeSession: vi.fn().mockResolvedValue(undefined),
-      };
-
-      const result = await service.executeQualityGate(mockAdapter);
-
-      expect(result.ok).toBe(false);
-      expect(result.reason).toBe("runtime_error");
-      expect(mockAdapter.deleteSession).toHaveBeenCalledWith("review-session-3");
-      expect(service.isGatePassed()).toBe(false);
-    });
-  });
 
   describe("event emission", () => {
     it("emits stageCompleted with correct payload after setStage", () => {
@@ -847,7 +743,7 @@ describe("WorkflowService", () => {
       service.setGatePassed(true);
 
       expect(handler).toHaveBeenCalledTimes(1);
-      expect(handler).toHaveBeenCalledWith({ passed: true });
+      expect(handler).toHaveBeenCalledWith({ score: 100, comment: 'Passed (legacy)', stage: 'IRAnalysis' });
     });
 
     it("fires stageCompleted AFTER state is written (state readable in listener)", () => {

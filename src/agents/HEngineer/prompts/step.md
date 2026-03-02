@@ -57,16 +57,16 @@ Read(".hyper-designer/functionalRefinement/FMEA.md")
 
 After completing stage document drafting:
 
-1. Call `hd_submit()` to trigger HCritic quality review
-2. If PASS: 
+1. Call `task` tool with HCritic as subagent to trigger quality review and wait for the result.
+2. If PASS:
    - Call `ask_user` to present the reviewed deliverable
    - Get user confirmation
-   - Call `set_hd_workflow_handover` to advance to next stage
+   - Call `hd_handover` to advance to next stage
 3. If FAIL:
    - Fix issues per the returned message
-   - Resubmit via `hd_submit()` (max 3 attempts)
+   - Re-invoke HCritic via `task` (max 3 attempts)
 
-**NEVER** call `task` to trigger HCritic directly — use `hd_submit` only.
+**NEVER** trigger HCritic via `@HCritic` mention — always use the `task` tool to invoke HCritic as a subagent.
 
 ## 资料收集流程
 

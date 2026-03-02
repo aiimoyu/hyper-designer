@@ -39,11 +39,27 @@
 | **sr-ar-decomposition.md** | `.hyper-designer/requirementDecomposition/sr-ar-decomposition.md` | Markdown，包含 SR 列表、对应 AR、模块接口定义、依赖矩阵与优先级 |
 | **traceability-report.md** | `.hyper-designer/requirementDecomposition/traceability-report.md` | Markdown，IR→SR→AR 追溯链验证报告 |
 
-### 4. 质量审查
+#### 审查提示词
 
-**审核标准:**
+```
+# 文档审核任务
+## 📁 审核目标
+请对以下文档进行全面的质量审核：
+**文件路径**: `.hyper-designer/requirementDecomposition/sr-ar-decomposition.md` 和 `.hyper-designer/requirementDecomposition/traceability-report.md`
+---
+## 🔍 审核维度
+**参考规范**：请读取 `sr-ar-decomposition` 和 `ir-sr-ar-traceability` skill 文件，理解该文档的撰写规范与模板要求。
+在执行标准评审框架（完整性 / 准确性 / 清晰度 / 可行性 / 规范性）的基础上，**重点核查**以下维度：
 
-1. **SR-AR 分解合理性**: 每个 SR 是否被完整且恰当地映射为一个或多个 AR，且无明显遗漏？
-2. **模块边界清晰性**: 模块职责、接口与依赖是否明确，是否遵循低耦合高内聚原则？
-3. **追溯链完整性**: 从 IR → SR → AR 的追溯链是否完整、可验证，并记录了来源与决策理由？
-4. **规范性**: 文档结构是否符合 `sr-ar-decomposition` skill 定义的模板？
+| 维度 | 检查标准 | 违反等级 |
+| --- | --- | --- |
+| **SR-AR 分解合理性** | 每个 SR 是否被完整且恰当地映射为一个或多个 AR，且无明显遗漏？ | 🔴 Critical |
+| **模块边界清晰性** | 模块职责、接口与依赖是否明确，是否遵循低耦合高内聚原则？ | 🟡 Major |
+| **追溯链完整性** | 从 IR → SR → AR 的追溯链是否完整、可验证，并记录了来源与决策理由？ | 🟡 Major |
+| **规范性** | 文档结构是否符合 `sr-ar-decomposition` skill 定义的模板？ | 🟡 Major |
+
+## 📋 输出要求
+- 严格遵循审核报告格式输出
+- 在输出报告前调用 `hd_submit_evaluation` 工具提交评分
+- 专项维度中发现的问题须在最终报告的 Recommendations 中**明确标注所违反的专项维度名称**
+```

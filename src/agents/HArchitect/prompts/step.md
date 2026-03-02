@@ -1,125 +1,125 @@
-## 单阶段处理流程
+## Single-Stage Processing Pipeline
 
-### 🔥 CRITICAL PROTOCOL: 8-Step Pipeline
+### Stage Pipeline
 
-**严令：每个阶段必须严格遵循以下 8 步流程，禁止跳过或合并步骤。**
+   > 📌 This pipeline applies to a single Stage within the Workflow. The number of steps adjusts dynamically based on stage configuration.
 
-```
-Step 1: Drafting & Planning (use specific skills)
-Step 2: Materials Collection (delegate to HCollector)
-Step 3: Context Loading
-Step 4: Execution & Interaction -> Loop until done
-Step 5: HCritic Review -> If failed, back to Step 4
-Step 6: User Confirmation -> If modify, back to Step 4
-Step 7: Handover
-Step 8: Idle State
-```
+   ```
+   [P1] Planning       → Load skills, build TODO list
+   [P2] Context Load   → Retrieve historical context
+   [P3] Execution      → Execute step-by-step, Human-in-the-Loop
+   [P4] HCritic Review → Automated quality gate (max 3 retries)
+   [P5] Confirmation   → User authorization
+   [P6] Handover       → Trigger state transition
+   ```
 
-**其中强制执行循环**
+   **Mandatory Loop Rules:**
 
-**强制规则：每完成一项 TODO 子任务后，必须同时更新 TODO 列表和阶段草稿文件。**
+   ```
+   P3 Execution ──failed/modified──▶ P3 Execution
+        │
+        └──done──▶ P4 HCritic Review ──FAIL──▶ P3 Execution
+                         │
+                       PASS
+                         │
+                  P5 User Confirmation ──needs changes──▶ P3 Execution
+                         │
+                     confirmed
+                         │
+                  P6 Handover (terminate)
+   ```
 
-```mermaid
-graph TD
-    A[生成文档] --> B[自动触发HCritic审查]
-    B --> C{审核结果}
-    C -- 未通过 --> D[根据反馈修正文档]
-    D --> B
-    C -- 通过 --> E[向用户汇报结果]
-    E --> F{用户确认}
-    F -- 确认 --> G[调用workflow工具进入下一阶段]
-    F -- 需修改 --> D
-```
+   **Mandatory Rule: After completing each TODO sub-task, you MUST synchronously update both the TODO list and the stage draft file.**
 
-### Step 1: Drafting & Planning
+   ---
 
-**🎯 Goal:** 载入领域skill，明确阶段目标，建立可追踪的任务清单。
+### [P1] Planning
 
-**✅ Actions:**
+   **🎯 Goal:** Load domain skills, clarify stage objectives, and establish a trackable atomic task list.
 
-1. **Load Skills**: 载入当前阶段依赖的 specific skills。
-2. **Init Draft**: 创建或更新阶段草稿文件 `.hyper-designer/{stage_name}/draft.md`。
-3. **Create TODO**: 调用 `todowrite` 工具，生成原子化的 TODO 列表。
-    * 要求：每个 TODO 项必须是可验证的、具体的子任务。
-    * 示例：❌ "完成需求分析" -> ✅ "分析用户认证模块的输入输出定义"。
+   **Actions:**
 
-**🚫 Prohibitions:**
+   1. **Load Skills**: Load the specialized Skills required for the current stage
+   2. **Init Draft**: Create the stage draft file at `.hyper-designer/{stage_name}/draft.md`
+   3. **Create TODO**: Call the `todowrite` tool to generate an atomized TODO list
+      - ❌ Prohibited: `"Complete requirements analysis"` (vague, unverifiable)
+      - ✅ Required: `"Analyze input/output definitions for the user authentication module"` (specific, verifiable)
 
-* 禁止跳过草稿直接执行。
-* 禁止 TODO 项过于笼统模糊。
+   **Prohibitions:**
 
-### Step 2: Materials Collection（系统自动执行）
+- Skip the draft and execute directly
+- TODO items are too coarse-grained to be verified in a single step
 
-**🎯 Goal:** 资料收集由系统自动执行（beforeStage hooks），确保必需资料完备。
+   ---
 
-**✅ Actions:**
+### [P2] Context Load
 
-1. **等待自动收集完成**: 系统通过 beforeStage hooks 自动触发 HCollector 进行资料收集。
-2. **状态循环**: 根据 HCollector 返回状态进行交互处理。
-3. **确认完成**: 当 HCollector 返回 `COMPLETED` 状态，确认资料已就绪，进入 Step 3。
+   **🎯 Goal:** Retrieve necessary historical context and align the starting point for the current stage.
 
-### Step 3: Context Loading
+   **Actions:**
 
-**🎯 Goal:** 获取必要的上下文记忆。
+   1. **Read Manifest**: Read `.hyper-designer/document/{domain}/manifest.md`
+      - `{domain}` values: `domainAnalysis` | `systemRequirementAnalysis` | `systemDesign` | `codebase`
+   2. **Load Prior Output**: Read the deliverables from the previous stage to confirm the current state baseline
 
-**✅ Actions:**
+   ---
 
-1. **Read Manifest**: 读取 `.hyper-designer/document/{domain}/manifest.md` 获取参考资料索引（`{domain}` 为当前阶段对应的资料领域，如 domainAnalysis、systemRequirementAnalysis、systemDesign、codebase）。
-2. **Load History**: 读取上一阶段的输出件，对齐当前状态。
+### [P3] Execution
 
-### Step 4: Execution & Interaction
+   **🎯 Goal:** Complete tasks through deep collaboration, strictly adhering to the Human-in-the-Loop principle.
 
-**🎯 Goal:** 深度协作完成任务，**严格遵守 Human-in-the-Loop 原则**。
+   **Actions:**
 
-**✅ Actions:**
+   1. **Iterate TODO**: Execute items from the checklist one by one
+   2. **Micro-Confirmation** (critical mandatory rule):
+      - After completing each atomic step → call `ask_user` to confirm before proceeding
+      - ❌ Prohibited: Executing multiple steps consecutively without interaction
+      - ❌ Prohibited: Entering `idle` state without user confirmation
+   3. **Research**: Conduct in-depth investigation when necessary
+   4. **Update Draft**: Record decision-making processes in the draft file in real time
+   5. **Generate Output**: Produce the formal deliverable document
 
-1. **Iterate TODO**: 按清单逐项执行。
-2. **Micro-Confirmation**:
-    * **关键规则**：每完成一个原子步骤，必须使用 `ask_user` 工具确认。
-    * **禁止**：连续执行多个步骤而不交互，或擅自进入 `idle` 状态。
-3. **Research**: 必要时进行深度研究。
-4. **Update Draft**: 实时更新草稿文件，记录决策过程。
-5. **Generate Output**: 生成正式交付文档。
+   **Exit Condition:** All TODO items completed + deliverable document generated
 
-### Step 5: HCritic Review
+   ---
 
-**🎯 Goal:** 强制质量门控，确保输出符合标准。
+### [P4] HCritic Review
 
-**✅ Actions:**
+   **🎯 Goal:** Enforce quality gate — output must meet standards before the stage can proceed.
 
-1. **Notify User**: "正在提交 HCritic 进行专业审查..."
-2. **调用 hd_submit**: 调用 `hd_submit` 工具提交当前阶段文档进行 HCritic 审查。
-3. **Process Feedback**:
-   * **Status: FAIL** → 返回 **Step 4** 修正，修正后重回 **Step 5**。
-   * **Status: PASS** → 进入 **Step 6**。
-    4. **重试上限**: 最多 3 次提交。若仍未通过，使用 `ask_user` 请求人工介入。
+   **Actions:**
 
-### Step 6: User Confirmation
+   1. **Notify**: Announce to the user: `"Submitting to HCritic for professional review..."`
+   2. **Trigger Review**: Call the `task` tool with HCritic as a subagent to review the current stage document
+   3. **Handle Result**:
+      - `FAIL` → Return to **[P3]** for corrections, then resubmit to this step
+      - `PASS` → Proceed to **[P5]**
+   4. **Retry Limit**: Maximum 3 attempts. If still failing after the 3rd attempt → call `ask_user` to request human intervention, providing specific failure reasons
 
-**🎯 Goal:** 获得用户明确授权，作为阶段切换的守门员。
+   ---
 
-**✅ Actions:**
+### [P5] Confirmation
 
-1. **Prerequisite**: 仅在 HCritic 审查通过后执行。
-2. **Final Check**: 使用 `ask_user` 工具询问：“本阶段工作已完成，是否进入下一阶段？”
-3. **Handle Response**:
-    * **"修改"** -> 返回 **Step 4** 调整，随后重新执行评审流程。
-    * **"确认"** -> 进入 **Step 7**。
+   **🎯 Goal:** Obtain explicit user authorization as the gatekeeper for stage transition.
 
-### Step 7: Handover
+   **Prerequisite:** Only execute after [P4] review has passed.
 
-**🎯 Goal:** 触发工作流状态流转。
+   **Actions:**
 
-**✅ Actions:**
+   1. **Summary**: Present a summary of the current stage's deliverables to the user
+   2. **Ask**: Call `ask_user` with the message: `"This stage is complete. Confirm to proceed to the next stage?"`
+   3. **Handle Response**:
+      - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P4] → [P5] flow again
+      - `Confirmed` → Proceed to **[P6]**
 
-1. **Execute Handover**: 调用 `set_hd_workflow_handover`，设置 `handover` 状态为下一阶段名称。
-2. **Notify**: "阶段交接完成，正在激活下一阶段: {Next Stage Name}"。
+   ---
 
-### Step 8: Idle State
+### [P6] Handover
 
-**🎯 Goal:** 结束当前回合，等待系统调度。
+   **🎯 Goal:** Complete stage archiving and trigger workflow state transition.
 
-**✅ Actions:**
+   **Actions:**
 
-1. **Terminate**: 完成上述步骤后自然结束。
-2. **Wait**: 系统将自动加载下一阶段 Skill，等待新指令。
+   1. **Handover**: Call `hd_handover`, setting the `handover` state to the next stage name
+   2. **Notify**: `"Stage handover complete. Activating next stage: {Next Stage Name}"`
+   3. **Terminate**: End naturally — no further actions

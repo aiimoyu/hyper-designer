@@ -31,11 +31,27 @@
 | **{功能名}功能列表.md** | `.hyper-designer/functionalRefinement/{功能名}功能列表.md` | Markdown，按 MoSCoW 分类，包含每项功能描述、验收标准、关联用例 |
 | **{功能名}FMEA.md** | `.hyper-designer/functionalRefinement/{功能名}FMEA.md` | Markdown，FMEA 风险矩阵（失效模式、影响、严重性、发生度、检测度、RPN 与对策） |
 
-### 4. 质量审查
+#### 审查提示词
 
-**审核标准:**
+```
+# 文档审核任务
+## 📁 审核目标
+请对以下文档进行全面的质量审核：
+**文件路径**: `.hyper-designer/functionalRefinement/{功能名}功能列表.md` 和 `.hyper-designer/functionalRefinement/{功能名}FMEA.md`
+---
+## 🔍 审核维度
+**参考规范**：请读取 `functional-refinement` skill 文件，理解该文档的撰写规范与模板要求。
+在执行标准评审框架（完整性 / 准确性 / 清晰度 / 可行性 / 规范性）的基础上，**重点核查**以下维度：
 
-1. **功能列表完整性**: 每个用例是否被映射到至少一个功能？是否存在用例覆盖盲区？
-2. **优先级合理性**: MoSCoW 分类是否有业务依据？关键路径功能是否位于 Must / Should？
-3. **FMEA 风险识别全面性**: 主要失效模式是否列出？RPN 计算是否合理且提出对应缓解措施？
-4. **规范性**: 文档结构是否符合 `functional-refinement` skill 定义的模板？
+| 维度 | 检查标准 | 违反等级 |
+| --- | --- | --- |
+| **功能列表完整性** | 每个用例是否被映射到至少一个功能？是否存在用例覆盖盲区？ | 🔴 Critical |
+| **优先级合理性** | MoSCoW 分类是否有业务依据？关键路径功能是否位于 Must / Should？ | 🟡 Major |
+| **FMEA 风险识别全面性** | 主要失效模式是否列出？RPN 计算是否合理且提出对应缓解措施？ | 🟡 Major |
+| **规范性** | 文档结构是否符合 `functional-refinement` skill 定义的模板？ | 🟡 Major |
+
+## 📋 输出要求
+- 严格遵循审核报告格式输出
+- 在输出报告前调用 `hd_submit_evaluation` 工具提交评分
+- 专项维度中发现的问题须在最终报告的 Recommendations 中**明确标注所违反的专项维度名称**
+```

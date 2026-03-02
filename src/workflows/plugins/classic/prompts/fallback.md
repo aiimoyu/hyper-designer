@@ -74,7 +74,7 @@ Options: `已完成，进入下一步` | `查看资料清单`
 
 **Step 4 — Hand off**
 
-Upon "Done, proceed": call `set_hd_workflow_handover("IRAnalysis")` immediately, then enter Idle state.
+Upon "Done, proceed": call `hd_handover("IRAnalysis")` immediately, then enter Idle state.
 
 ---
 

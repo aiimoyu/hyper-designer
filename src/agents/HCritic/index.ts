@@ -10,7 +10,7 @@
 
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
-import { filePrompt, toolsPrompt } from "../factory"
+import { filePrompt } from "../factory"
 import type { RuntimeType } from "../../tools"
 import { createAgent } from "../factory"
 import { join } from "path"
@@ -31,7 +31,7 @@ export const HCRITIC_PROMPT_METADATA: AgentPromptMetadata = {
   ],
   useWhen: [
     "HArchitect/HEngineer just finished writing IR信息.md, 功能场景.md, 用例.md, etc.",
-    "About to mark a workflow stage as complete (set_hd_workflow_stage)",
+    "About to mark a workflow stage as complete (hd_handover)",
     "Need structured feedback on document completeness, consistency, feasibility, and conformance",
     "Document previously failed review and has been revised",
     "Want to ensure document quality meets standards before next stage",
@@ -63,6 +63,7 @@ const DEFINITION: AgentDefinition = {
     question: "deny",
     task: "deny",
     external_directory: "deny",
+    hd_submit_evaluation: "allow",
   },
   defaultTools: {
     bash: false,
@@ -80,11 +81,9 @@ const DEFINITION: AgentDefinition = {
     websearch: true,
     question: false,
     task: false,
-    get_hd_workflow_state: false,
-    set_hd_workflow_stage: false,
-    set_hd_workflow_current: false,
-    set_hd_workflow_handover: false,
-    hd_submit: false,
+    hd_workflow_state: true,
+    hd_handover: false,
+    hd_submit_evaluation: true,
   },
 }
 

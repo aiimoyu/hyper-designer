@@ -7,10 +7,11 @@
  * 3. 设置当前步骤
  * 4. 设置交接目标
  * 5. 执行交接
+ * 6. 设置质量门结果（替代旧的 setWorkflowGatePassed）
  */
 
 import type { WorkflowDefinition, PlatformAdapter } from "../types";
-import type { WorkflowState } from "./types";
+import type { WorkflowState, GateResult } from "./types";
 import { readWorkflowStateFile, writeWorkflowStateFile } from "./persistence";
 import { getWorkflowDefinition } from "../registry";
 import { HyperDesignerLogger } from "../../../utils/logger";
@@ -32,7 +33,7 @@ export function getStageOrder(definition: WorkflowDefinition): string[] {
 export function initializeWorkflowState(definition: WorkflowDefinition): WorkflowState {
   HyperDesignerLogger.debug("Workflow", "初始化工作流状态", { workflowId: definition.id });
   
-  const workflow: Record<string, { isCompleted: boolean }> = {};
+  const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null }> = {};
   for (const stage of definition.stageOrder) {
     workflow[stage] = { isCompleted: false };
   }
@@ -42,7 +43,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
     workflow,
     currentStep: null,
     handoverTo: null,
-    gatePassed: false,
+    gateResult: null,
   };
   
   HyperDesignerLogger.debug("Workflow", "工作流状态初始化完成", { 
@@ -95,7 +96,7 @@ export function ensureWorkflowStateExists(definition?: WorkflowDefinition): Work
     workflow: {},
     currentStep: null,
     handoverTo: null,
-    gatePassed: false,
+    gateResult: null,
   };
   writeWorkflowStateFile(fallbackState);
   return fallbackState;
@@ -150,7 +151,7 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
     state.currentStep = stepName;
     // 进入新阶段时重置门禁状态，避免沿用上阶段结果
     if (previousStep !== stepName) {
-      state.gatePassed = false;
+      state.gateResult = null;
     }
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", "当前工作流步骤更新完成", { step: stepName });
@@ -242,16 +243,39 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
 }
 
 /**
- * Sets the workflow quality gate pass status
- * @param isPassed Whether quality gate is passed
+ * Sets the workflow quality gate result (score + comment)
+ * 替代旧的 setWorkflowGatePassed(boolean)
+ *
+ * @param gateResult 质量门结果，包含 score 和可选的 comment/stage
  * @returns Updated workflow state
  */
-export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
-  HyperDesignerLogger.info("Workflow", "设置门禁状态", { gatePassed: isPassed });
+export function setWorkflowGateResult(gateResult: GateResult): WorkflowState {
+  HyperDesignerLogger.info("Workflow", "设置门禁结果", { score: gateResult.score, stage: gateResult.stage });
   const state = ensureWorkflowStateExists();
-  state.gatePassed = isPassed;
+  state.gateResult = gateResult;
+
+  // 同步更新当前阶段的 score/comment 字段（按阶段持久化评审历史）
+  const stageKey = gateResult.stage ?? state.currentStep;
+  if (stageKey && state.workflow[stageKey]) {
+    state.workflow[stageKey].score = gateResult.score;
+    state.workflow[stageKey].comment = gateResult.comment ?? null;
+  }
+
   writeWorkflowStateFile(state);
   return state;
+}
+
+/**
+ * @deprecated 使用 setWorkflowGateResult 替代。
+ * 兼容层：将旧的 boolean 参数转换为 GateResult。
+ * true => score: 100；false => score: 0
+ */
+export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
+  HyperDesignerLogger.info("Workflow", "[deprecated] 设置门禁状态（boolean）", { gatePassed: isPassed });
+  return setWorkflowGateResult({
+    score: isPassed ? 100 : 0,
+    comment: isPassed ? "Passed (legacy)" : "Failed (legacy)",
+  });
 }
 
 /**

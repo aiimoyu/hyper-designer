@@ -116,52 +116,26 @@ export const OPENCODE_TOOL_SYNTAX: ToolSyntaxRegistry = {
     example: "todoread({})",
   },
 
-  get_hd_workflow_state: {
-    uniName: "get_hd_workflow_state",
-    description: "Get the current workflow state of the Hyper Designer project. Returns information about which stages are completed, current step, and handover state. Returns null if workflow has not been initialized.",
-    syntax: "get_hd_workflow_state()",
-    example: "get_hd_workflow_state()",
+  hd_workflow_state: {
+    uniName: "hd_workflow_state",
+    description: "Get the current workflow state of the Hyper Designer project. Returns information about which stages are completed, current step, gate result (score + comment), and handover state. Returns null if workflow has not been initialized.",
+    syntax: "hd_workflow_state()",
+    example: "hd_workflow_state()",
   },
 
-  set_hd_workflow_stage: {
-    uniName: "set_hd_workflow_stage",
-    description: "Update the completion status of a specific workflow stage. Use this to mark a stage as completed after finishing the work for that stage. Only mark stages as completed after they have been properly finished and reviewed.",
-    syntax: `set_hd_workflow_stage({
-  stage_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign",
-  is_completed: boolean
-})`,
-    example: `set_hd_workflow_stage({
-  stage_name: "IRAnalysis",
-  is_completed: true
-})`,
+  hd_handover: {
+    uniName: "hd_handover",
+    description: "Set the handover workflow step to transfer control to the next stage. Requires gate score > 75. After calling this, STOP immediately — do NOT continue with any tasks or tools.",
+    syntax: `hd_handover({\n  step_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign"\n})`,
+    example: `hd_handover({\n  step_name: "functionalRefinement"\n})`,
   },
 
-  set_hd_workflow_current: {
-    uniName: "set_hd_workflow_current",
-    description: "Set the current active workflow step. This defines which stage the workflow is currently working on. Use this when starting work on a new stage or switching between stages.",
-    syntax: `set_hd_workflow_current({
-  step_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign"
-})`,
-    example: `set_hd_workflow_current({
-  step_name: "scenarioAnalysis"
-})`,
+  hd_submit_evaluation: {
+    uniName: "hd_submit_evaluation",
+    description: "[HCritic only] Submit quality evaluation for the current workflow stage. Call this after completing a quality review to record the score and summary. Only HCritic has permission to call this tool.",
+    syntax: `hd_submit_evaluation({\n  score: number,                 // Quality gate score from 0 to 100\n  comment?: string               // Review summary or comment (optional)\n})`,
+    example: `hd_submit_evaluation({\n  score: 85,\n  comment: "文档结构完整，覆盖了主要需求，建议补充边界场景"\n})`,
   },
 
-  set_hd_workflow_handover: {
-    uniName: "set_hd_workflow_handover",
-    description: "Set the handover workflow step to transfer control to the next stage. This is used when completing one stage and moving to the next. After calling this, the workflow will transition to the specified stage and idle, waiting for the next agent to take over.",
-    syntax: `set_hd_workflow_handover({
-  step_name: "dataCollection" | "IRAnalysis" | "scenarioAnalysis" | "useCaseAnalysis" | "functionalRefinement" | "requirementDecomposition" | "systemFunctionalDesign" | "moduleFunctionalDesign"
-})`,
-    example: `set_hd_workflow_handover({
-  step_name: "functionalRefinement"
-})`,
-  },
-
-  hd_submit: {
-    uniName: "hd_submit",
-    description: "Submit current stage work for HCritic quality gate review. Returns structured JSON result and updates workflow gate status.",
-    syntax: "hd_submit()",
-    example: "hd_submit()"
-  },
 };
+

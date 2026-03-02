@@ -59,7 +59,7 @@ const DEFINITION: AgentDefinition = {
     filePrompt(join(__dirname, "prompts", "workflow.md")),
     filePrompt(join(__dirname, "prompts", "standard.md")),
     filePrompt(join(__dirname, "prompts", "interview.md")),
-    toolsPrompt(["ask_user", "hd_submit", "task"]),
+    toolsPrompt(["ask_user", "hd_workflow_state", "hd_handover", "task"]),
   ],
   defaultPermission: {
     bash: "deny",
@@ -88,11 +88,9 @@ const DEFINITION: AgentDefinition = {
     websearch: false,
     question: true,
     task: true,
-    get_hd_workflow_state: true,
-    set_hd_workflow_stage: false,
-    hd_submit: true,
-    set_hd_workflow_current: false,
-    set_hd_workflow_handover: true,
+    hd_workflow_state: true,
+    hd_handover: true,
+    hd_submit_evaluation: false,
   },
 }
 

@@ -18,14 +18,13 @@ export type {
   StageHookFn,
   WorkflowStageDefinition,
   WorkflowDefinition,
-  WorkflowStateAccessor,
 } from "./types";
 
 // Registry
 export { getWorkflowDefinition, getAvailableWorkflows } from "./registry";
 
 // State module
-export type { WorkflowStage, WorkflowState } from "./state/types";
+export type { WorkflowStage, WorkflowState, GateResult } from "./state/types";
 export {
   getStageOrder,
   initializeWorkflowState,
@@ -34,6 +33,7 @@ export {
   setWorkflowCurrent,
   setWorkflowHandover,
   setWorkflowGatePassed,
+  setWorkflowGateResult,
   executeWorkflowHandover,
 } from "./state";
 
@@ -50,11 +50,3 @@ export {
   loadPromptForStage,
 } from "./runtime";
 
-// Gate module
-export type { QualityGateResult } from "./gate/types";
-export {
-  DEFAULT_REVIEW_SCHEMA,
-  createWorkflowQualityGate,
-  parseReviewResult,
-  inferPassFromText,
-} from "./gate";

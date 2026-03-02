@@ -42,63 +42,34 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
 
   const workflowHooks = await createWorkflowHooks(ctx)
 
-  const hdWorkflowStateTool = {
-    get_hd_workflow_state: tool({
+  const hdTools = {
+    hd_workflow_state: tool({
       description: "Get the current workflow state of the Hyper Designer project. Returns null if workflow has not been initialized.",
       args: {},
       async execute() {
-        const state = workflowService.getState()
-        if (state === null) {
-          return JSON.stringify({
-            initialized: false,
-            message: "Workflow not initialized. Use set_hd_workflow_current or set_hd_workflow_handover to start.",
-          }, null, 2)
-        }
-        return JSON.stringify({ initialized: true, ...state }, null, 2)
+        const result = workflowService.hdGetWorkflowState()
+        return JSON.stringify(result, null, 2)
       },
     }),
-    set_hd_workflow_stage: tool({
-      description: "Update the completion status of a specific workflow stage of the Hyper Designer project",
-      args: {
-        stage_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow stage to update"),
-        is_completed: tool.schema.boolean().describe("Whether the stage is completed"),
-      },
-      async execute(params: { stage_name: string; is_completed: boolean }) {
-        const state = workflowService.setStage(params.stage_name, params.is_completed)
-        return JSON.stringify(state, null, 2)
-      },
-    }),
-    set_hd_workflow_current: tool({
-      description: "Set the current workflow step of the Hyper Designer project",
-      args: {
-        step_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow step to set as current"),
-      },
-      async execute(params: { step_name: string }) {
-        const state = workflowService.setCurrent(params.step_name)
-        return JSON.stringify(state, null, 2)
-      },
-    }),
-    set_hd_workflow_handover: tool({
+    hd_handover: tool({
       description: "Set the handover workflow step of the Hyper Designer project. IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.",
       args: {
         step_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow step to set as handover"),
       },
       async execute(params: { step_name: string }) {
-        const state = workflowService.setHandover(params.step_name)
-        return JSON.stringify({
-          success: true,
-          handover_to: params.step_name,
-          instruction: "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
-          state,
-        }, null, 2)
+        const result = workflowService.hdScheduleHandover(params.step_name)
+        return JSON.stringify(result, null, 2)
       },
     }),
-    hd_submit: tool({
-      description: "Run stage quality gate with HCritic in isolated context and return structured JSON result.",
-      args: {},
-      async execute() {
-        const result = await workflowHooks.executeWorkflowQualityGate()
-        return JSON.stringify(result, null, 2)
+    hd_submit_evaluation: tool({
+      description: "[HCritic only] Submit quality evaluation for the current workflow stage. Only HCritic has permission to call this tool. Stores score and comment in the workflow state.",
+      args: {
+        score: tool.schema.number().describe("Quality gate score from 0 to 100"),
+        comment: tool.schema.string().optional().describe("Review summary or comment"),
+      },
+      async execute(params: { score: number; comment?: string }) {
+        const state = workflowService.setGateResult({ score: params.score, comment: params.comment ?? null })
+        return JSON.stringify({ success: true, score: params.score, comment: params.comment ?? null, state }, null, 2)
       },
     }),
   }
@@ -106,7 +77,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   return {
     config: agentHandler,
     tool: {
-      ...hdWorkflowStateTool,
+      ...hdTools,
     },
     event: async (input) => {
       await workflowHooks.event(input)

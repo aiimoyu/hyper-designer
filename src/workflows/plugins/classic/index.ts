@@ -37,12 +37,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
       promptFile: 'prompts/IRAnalysis.md',
-      qualityGate: [
-        '请审查 IRAnalysis 阶段交付物。',
-        '重点检查：需求背景是否完整、5W2H 是否覆盖、关键约束是否明确、术语是否一致。',
-        '优先检查文件：IR信息.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema，若未通过请给出阻塞问题列表。',
-      ].join('\n'),
+      gate: true,
       beforeStage: [irAnalysisCollectorHook],
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -55,12 +50,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Analyze system usage scenarios, identify actors and business processes',
       agent: 'HArchitect',
       promptFile: 'prompts/scenarioAnalysis.md',
-      qualityGate: [
-        '请审查 scenarioAnalysis 阶段交付物。',
-        '重点检查：参与者识别、主/备流程、异常分支、边界条件、与 IR 约束一致性。',
-        '优先检查文件：功能场景.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema。',
-      ].join('\n'),
+      gate: true,
       beforeStage: [scenarioAnalysisCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (current) => {
@@ -74,12 +64,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Refine scenarios into detailed use case specifications with inputs, outputs, and acceptance criteria',
       agent: 'HArchitect',
       promptFile: 'prompts/useCaseAnalysis.md',
-      qualityGate: [
-        '请审查 useCaseAnalysis 阶段交付物。',
-        '重点检查：用例粒度、前置条件、后置条件、输入输出、验收标准可验证性。',
-        '优先检查文件：用例.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema。',
-      ].join('\n'),
+      gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -92,12 +77,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Extract complete functional list, prioritize using MoSCoW method, and perform FMEA analysis',
       agent: 'HArchitect',
       promptFile: 'prompts/functionalRefinement.md',
-      qualityGate: [
-        '请审查 functionalRefinement 阶段交付物。',
-        '重点检查：功能清单完整性、MoSCoW 优先级合理性、FMEA 风险项与缓解措施可执行性。',
-        '优先检查文件：功能细化.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema。',
-      ].join('\n'),
+      gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -110,12 +90,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Map and decompose functional list into module-level requirements, subsystems, and interface definitions',
       agent: 'HEngineer',
       promptFile: 'prompts/requirementDecomposition.md',
-      qualityGate: [
-        '请审查 requirementDecomposition 阶段交付物。',
-        '重点检查：SR/AR 拆分边界、模块映射一致性、接口职责清晰性、可追溯性。',
-        '优先检查文件：需求分解.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema。',
-      ].join('\n'),
+      gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''
@@ -128,12 +103,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
       promptFile: 'prompts/systemFunctionalDesign.md',
-      qualityGate: [
-        '请审查 systemFunctionalDesign 阶段交付物。',
-        '重点检查：架构分层、技术栈选择依据、数据模型一致性、接口协议完整性、非功能性约束。',
-        '优先检查文件：系统功能设计.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema。',
-      ].join('\n'),
+      gate: true,
       beforeStage: [systemDesignCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (current) => {
@@ -147,12 +117,7 @@ export const classicWorkflow: WorkflowDefinition = {
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
       promptFile: 'prompts/moduleFunctionalDesign.md',
-      qualityGate: [
-        '请审查 moduleFunctionalDesign 阶段交付物。',
-        '重点检查：模块职责边界、接口定义、关键流程/算法说明、数据结构设计、测试策略可执行性。',
-        '优先检查文件：模块功能设计.md（如不存在请在 issues 说明）。',
-        '输出必须符合 JSON Schema。',
-      ].join('\n'),
+      gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (current) => {
         const prefix = current ? `从${current}阶段移交` : ''

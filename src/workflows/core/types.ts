@@ -26,9 +26,8 @@ export interface WorkflowStageDefinition {
    beforeStage?: StageHookFn[]
    /** Hooks to run after the stage completes (future use) */
    afterStage?: StageHookFn[]
-   /** Stage-level quality gate config */
-   /** Stage-level quality gate prompt. If set, HCritic review is run; if undefined, gate is skipped. */
-   qualityGate?: string
+   /** Stage-level gate flag. If true, hd_handover checks score > 75 before allowing handover. */
+   gate?: boolean
    getHandoverPrompt: (currentStep: string | null) => string
 }
 
@@ -48,9 +47,3 @@ export interface WorkflowDefinition {
    stages: Record<string, WorkflowStageDefinition>
 }
 
-export interface WorkflowStateAccessor {
-  /** 获取当前工作流状态 */
-  getState: () => { currentStep?: string | null } | null
-  /** 写回门禁通过状态 */
-  setGatePassed: (passed: boolean) => unknown
-}

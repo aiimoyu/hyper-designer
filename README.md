@@ -106,16 +106,13 @@ HArchitect 将引导您完成完整的 8 阶段工作流，自动协调其他 Ag
 
 ```typescript
 // 检查当前工作流进度
-get_hd_workflow_state()
+hd_workflow_state()
 
-// 更新阶段完成状态
-set_hd_workflow_stage("IRAnalysis", true)
+// 在代理之间转移控制权（需要先通过质量门）
+hd_handover("requirementDecomposition")
 
-// 设置当前活动阶段
-set_hd_workflow_current("scenarioAnalysis")
-
-// 在代理之间转移控制权
-set_hd_workflow_handover("requirementDecomposition")
+// [仅 HCritic] 提交质量门评审分数
+hd_submit_evaluation({ score: 85, comment: "文档结构完整，覆盖了主要需求" })
 ```
 
 ### 工作流切换

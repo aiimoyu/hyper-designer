@@ -4,7 +4,6 @@
  * 提供与 OpenCode 平台的完整集成，包括：
  * 1. 事件处理：监听会话空闲事件，执行工作流交接
  * 2. 系统消息转换：替换工作流相关的占位符令牌
- * 3. 质量门禁执行：通过 HCritic 执行阶段评审
  *
  * 架构说明：
  * - adapters/types.ts 定义平台无关的 PlatformAdapter 接口
@@ -16,7 +15,6 @@ import type { PluginInput } from "@opencode-ai/plugin"
 
 import { workflowService } from "../../core/service"
 import { loadHDConfig } from "../../../config/loader"
-import { createOpenCodeAdapter } from "../../../adapters/opencode"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { createEventHandler } from "./event-handler"
 import { createSystemTransformer } from "./system-transform"
@@ -43,11 +41,6 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     return {
       event: async () => { },
       "experimental.chat.system.transform": async () => { },
-      executeWorkflowQualityGate: async () => ({
-        ok: false as const,
-        reason: "runtime_error" as const,
-        message: "Workflow definition not found.",
-      }),
     }
   }
 
@@ -60,17 +53,11 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
   })
 
-  // 门禁所需的平台适配器
-  const gateAdapter = createOpenCodeAdapter(ctx, config)
-
   return {
     /** 事件处理器：监听 session.idle 触发工作流交接 */
     event: createEventHandler(ctx, config),
 
     /** 系统消息转换器：注入工作流提示词 */
     "experimental.chat.system.transform": createSystemTransformer(),
-
-    /** 执行当前阶段质量门禁 */
-    executeWorkflowQualityGate: () => workflowService.executeQualityGate(gateAdapter),
   }
 }

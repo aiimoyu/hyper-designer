@@ -3,10 +3,19 @@ import type { PluginInput } from "@opencode-ai/plugin"
 
 vi.mock("@opencode-ai/plugin", () => {
   const tool = (definition: Record<string, unknown>) => definition
-  const chainable = { describe: () => ({}) }
+  // Chainable Zod-like stub: every method returns itself so .string().optional().describe() works
+  const chainable: Record<string, unknown> = {}
+  const chainFn = () => chainable
+  chainable.describe = chainFn
+  chainable.optional = chainFn
+  chainable.nullable = chainFn
+  chainable.min = chainFn
+  chainable.max = chainFn
   tool.schema = {
     enum: () => chainable,
     boolean: () => chainable,
+    number: () => chainable,
+    string: () => chainable,
   }
   return { tool }
 })
@@ -54,17 +63,13 @@ describe("HyperDesigner Plugin", () => {
     const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
     expect(pluginInstance.tool).toBeDefined()
-    expect(pluginInstance.tool).toHaveProperty("get_hd_workflow_state")
-    expect(pluginInstance.tool).toHaveProperty("set_hd_workflow_stage")
-    expect(pluginInstance.tool).toHaveProperty("set_hd_workflow_current")
-    expect(pluginInstance.tool).toHaveProperty("set_hd_workflow_handover")
-    expect(pluginInstance.tool).toHaveProperty("hd_submit")
+    expect(pluginInstance.tool).toHaveProperty("hd_workflow_state")
+    expect(pluginInstance.tool).toHaveProperty("hd_handover")
+    expect(pluginInstance.tool).toHaveProperty("hd_submit_evaluation")
 
-    expect(typeof pluginInstance.tool!.get_hd_workflow_state.execute).toBe("function")
-    expect(typeof pluginInstance.tool!.set_hd_workflow_stage.execute).toBe("function")
-    expect(typeof pluginInstance.tool!.set_hd_workflow_current.execute).toBe("function")
-    expect(typeof pluginInstance.tool!.set_hd_workflow_handover.execute).toBe("function")
-    expect(typeof pluginInstance.tool!.hd_submit.execute).toBe("function")
+    expect(typeof pluginInstance.tool!.hd_workflow_state.execute).toBe("function")
+    expect(typeof pluginInstance.tool!.hd_handover.execute).toBe("function")
+    expect(typeof pluginInstance.tool!.hd_submit_evaluation.execute).toBe("function")
   })
 
   it("should handle config agent mapping", async () => {
@@ -89,32 +94,13 @@ describe("HyperDesigner Plugin", () => {
     }).not.toThrow()
   })
 
-  it("hd_submit should use isolated HCritic session and return fail when review fails", async () => {
-    const createMock = vi.fn().mockResolvedValue({ data: { id: "review-session-1" } })
-    const promptMock = vi.fn().mockResolvedValue({
-      data: {
-        info: {
-          id: "msg-review-1",
-          sessionID: "review-session-1",
-          structured_output: {
-            passed: false,
-            summary: "文档缺少边界说明",
-            issues: ["未覆盖异常场景"],
-          },
-        },
-        parts: [{ type: "text", text: "FAIL: 未覆盖异常场景" }],
-      },
-      request: new Request("http://localhost/session"),
-      response: new Response(null, { status: 200 }),
-    })
-    const deleteMock = vi.fn().mockResolvedValue({})
-
+  it("hd_submit_evaluation should store score and comment in workflow state", async () => {
     const mockCtx = {
       client: {
         session: {
-          create: createMock,
-          prompt: promptMock,
-          delete: deleteMock,
+          create: vi.fn(),
+          prompt: vi.fn(),
+          delete: vi.fn(),
         },
       },
       directory: process.cwd(),
@@ -122,62 +108,25 @@ describe("HyperDesigner Plugin", () => {
 
     const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
     const pluginInstance = await HyperDesignerPlugin(mockCtx)
-    await pluginInstance.tool!.set_hd_workflow_current.execute({ step_name: "IRAnalysis" }, {} as any)
-    let output = await pluginInstance.tool!.hd_submit.execute({}, {} as any)
-    let result = JSON.parse(output) as { ok: boolean; reason: string; passed?: boolean }
-    if (result.reason === "no_active_stage") {
-      await pluginInstance.tool!.set_hd_workflow_current.execute({ step_name: "IRAnalysis" }, {} as any)
-      output = await pluginInstance.tool!.hd_submit.execute({}, {} as any)
-      result = JSON.parse(output) as { ok: boolean; reason: string; passed?: boolean }
-    }
 
-    expect(result.ok).toBe(false)
-    if (result.reason === "review_failed") {
-      expect(result.passed).toBe(false)
-      expect(createMock).toHaveBeenCalledTimes(1)
-      expect(promptMock).toHaveBeenCalledTimes(1)
-      expect(promptMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          path: { id: "review-session-1" },
-        })
-      )
-      expect(deleteMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          path: { id: "review-session-1" },
-        })
-      )
-    } else {
-      expect(result.reason).toBe("no_active_stage")
-    }
+    const output = await pluginInstance.tool!.hd_submit_evaluation.execute(
+      { score: 85, comment: "评审通过" },
+      {} as any,
+    )
+    const result = JSON.parse(output) as { success: boolean; score: number; comment: string }
 
+    expect(result.success).toBe(true)
+    expect(result.score).toBe(85)
+    expect(result.comment).toBe("评审通过")
   })
 
-  it("hd_submit should return pass result and set gatePassed=true when review passes", async () => {
-    const createMock = vi.fn().mockResolvedValue({ data: { id: "review-session-2" } })
-    const promptMock = vi.fn().mockResolvedValue({
-      data: {
-        info: {
-          id: "msg-review-2",
-          sessionID: "review-session-2",
-          structured_output: {
-            passed: true,
-            summary: "评审通过",
-            issues: [],
-          },
-        },
-        parts: [{ type: "text", text: "PASS" }],
-      },
-      request: new Request("http://localhost/session"),
-      response: new Response(null, { status: 200 }),
-    })
-    const deleteMock = vi.fn().mockResolvedValue({})
-
+  it("hd_submit_evaluation should work with score only (no comment)", async () => {
     const mockCtx = {
       client: {
         session: {
-          create: createMock,
-          prompt: promptMock,
-          delete: deleteMock,
+          create: vi.fn(),
+          prompt: vi.fn(),
+          delete: vi.fn(),
         },
       },
       directory: process.cwd(),
@@ -185,24 +134,15 @@ describe("HyperDesigner Plugin", () => {
 
     const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
     const pluginInstance = await HyperDesignerPlugin(mockCtx)
-    await pluginInstance.tool!.set_hd_workflow_current.execute({ step_name: "IRAnalysis" }, {} as any)
-    let output = await pluginInstance.tool!.hd_submit.execute({}, {} as any)
-    let result = JSON.parse(output) as { ok: boolean; reason: string; passed?: boolean }
-    if (result.reason === "no_active_stage") {
-      await pluginInstance.tool!.set_hd_workflow_current.execute({ step_name: "IRAnalysis" }, {} as any)
-      output = await pluginInstance.tool!.hd_submit.execute({}, {} as any)
-      result = JSON.parse(output) as { ok: boolean; reason: string; passed?: boolean }
-    }
 
-    expect(result.ok).toBe(true)
-    expect(result.reason).toBe("approved")
-    expect(result.passed).toBe(true)
-    expect(promptMock).toHaveBeenCalledTimes(1)
-    expect(promptMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        path: { id: "review-session-2" },
-      })
+    const output = await pluginInstance.tool!.hd_submit_evaluation.execute(
+      { score: 60 },
+      {} as any,
     )
+    const result = JSON.parse(output) as { success: boolean; score: number; comment: null }
 
+    expect(result.success).toBe(true)
+    expect(result.score).toBe(60)
+    expect(result.comment).toBeNull()
   })
 })

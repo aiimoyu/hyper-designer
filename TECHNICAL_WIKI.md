@@ -365,7 +365,7 @@ sequenceDiagram
 
     Note over User,State: 阶段 1: 数据收集
     User->>HA: "我想设计一个XX系统"
-    HA->>State: set_hd_workflow_handover("dataCollection")
+    HA->>State: hd_handover("dataCollection")
     HA->>HC: 委派数据收集任务
     HC->>HC: 收集参考资料
     HC-->>HA: 交接控制权
@@ -373,38 +373,38 @@ sequenceDiagram
     Note over User,State: 阶段 2-5: 需求分析（HArchitect 主导）
     State->>HA: 当前阶段 = IRAnalysis
     HA->>HA: 执行 IR 分析（注入 IR Analysis Skill）
-    HA->>HCr: 调用 HCritic 评审 ir信息.md
-    HCr-->>HA: 评审通过
-    HA->>State: set_hd_workflow_stage("IRAnalysis", true)
+    HA->>HCr: task(subagent=HCritic) 评审 ir信息.md
+    HCr->>State: hd_submit_evaluation({ score: 88 })
+    HA->>HA: 随居前进（阶段自动标记完成）
 
     State->>HA: 当前阶段 = scenarioAnalysis
     HA->>HA: 场景分析（注入 Scenario Skill）
-    HA->>HCr: 调用 HCritic 评审 功能场景.md
-    HCr-->>HA: 评审通过
-    HA->>State: set_hd_workflow_stage("scenarioAnalysis", true)
+    HA->>HCr: task(subagent=HCritic) 评审 功能场景.md
+    HCr->>State: hd_submit_evaluation({ score: 85 })
+    HA->>HA: 随居前进（阶段自动标记完成）
 
     Note over User,State: ... 经过 useCaseAnalysis, functionalRefinement
 
     State->>HA: 当前阶段 = functionalRefinement
     HA->>HA: 功能细化（注入 Functional Refinement Skill）
-    HA->>HCr: 调用 HCritic 评审功能列表
-    HCr-->>HA: 评审通过
-    HA->>State: set_hd_workflow_handover("requirementDecomposition")
+    HA->>HCr: task(subagent=HCritic) 评审功能列表
+    HCr->>State: hd_submit_evaluation({ score: 90 })
+    HA->>State: hd_handover("requirementDecomposition")
 
     Note over User,State: 阶段 6-8: 系统设计（HEngineer 接管）
     State->>HE: 当前阶段 = requirementDecomposition
     HE->>HE: 需求分解（注入 SR-AR Skill）
-    HE->>HCr: 调用 HCritic 评审 SR-AR 文档
-    HCr-->>HE: 评审通过
-    HE->>State: set_hd_workflow_stage("requirementDecomposition", true)
+    HE->>HCr: task(subagent=HCritic) 评审 SR-AR 文档
+    HCr->>State: hd_submit_evaluation({ score: 82 })
+    HE->>HA: 随居前进（阶段自动标记完成）
 
     State->>HE: 当前阶段 = systemFunctionalDesign
     HE->>HE: 系统设计（注入 Functional Design Skill）
-    HE->>State: set_hd_workflow_stage("systemFunctionalDesign", true)
+    HE->>HA: 随居前进（阶段自动标记完成）
 
     State->>HE: 当前阶段 = moduleFunctionalDesign
     HE->>HE: 模块设计
-    HE->>State: set_hd_workflow_stage("moduleFunctionalDesign", true)
+    HE->>HA: 随居前进（阶段自动标记完成）
 ```
 
 ### 4.3 事件驱动交接
@@ -692,7 +692,7 @@ sequenceDiagram
     Agents->>Agents: HArchitect 分析需求
 
     Note over U,Agents: 进入数据收集阶段
-    Agents->>S: set_hd_workflow_handover("dataCollection")
+    Agents->>S: hd_handover("dataCollection")
     Agents->>U: 完成分析，委派 HCollector
 
     Note over U,Agents: 触发交接（session.idle 事件）
@@ -704,7 +704,7 @@ sequenceDiagram
     Agents->>Agents: HCollector 执行数据收集
 
     Note over U,Agents: 进入 IR 分析阶段
-    Agents->>S: set_hd_workflow_handover("IRAnalysis")
+    Agents->>S: hd_handover("IRAnalysis")
     Agents->>U: HCollector 完成，交接回 HArchitect
 
     P->>H: 事件触发
@@ -717,8 +717,7 @@ sequenceDiagram
     H->>H: loadPromptForStage("IRAnalysis")
     H->>H: 读取 src/skills/ir-analysis/SKILL.md
     H->>Agents: 注入 5W2H 方法论、模板、检查清单
-    Agents->>Agents: HArchitect 生成 ir信息.md
-    Agents->>S: set_hd_workflow_stage("IRAnalysis", true)
+    Agents->>Agents: HArchitect 生成 ir信息.md（阶段自动标记完成）
 
     Note over U,Agents: 持续迭代
     Note right of Agents: 重复类似流程<br/>经过所有 8 个阶段<br/>每个阶段注入对应 Skill

@@ -4,26 +4,26 @@ import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const KERNEL_PATH = join(__dirname, "..", "..", "..", "agents", "HArchitect", "prompts", "kernel.md")
+const IDENTITY_PATH = join(__dirname, "..", "..", "..", "agents", "HArchitect", "prompts", "identity.md")
 
-describe("kernel.md compliance", () => {
-  it("kernel.md exists", () => {
-    expect(existsSync(KERNEL_PATH)).toBe(true)
+describe("identity.md compliance", () => {
+  it("identity.md exists", () => {
+    expect(existsSync(IDENTITY_PATH)).toBe(true)
   })
 
-  it("kernel.md word count is ≤375 (≈500 tokens)", () => {
-    const content = readFileSync(KERNEL_PATH, "utf-8")
+  it("identity.md word count is ≤375 (≈500 tokens)", () => {
+    const content = readFileSync(IDENTITY_PATH, "utf-8")
     const wordCount = content.split(/\s+/).filter(w => w.length > 0).length
     expect(wordCount).toBeLessThanOrEqual(375)
   })
 
-  it("kernel.md contains hd_submit keyword", () => {
-    const content = readFileSync(KERNEL_PATH, "utf-8")
-    expect(content).toContain("hd_submit")
+  it("identity.md contains requirements keyword", () => {
+    const content = readFileSync(IDENTITY_PATH, "utf-8")
+    expect(content).toContain("requirements")
   })
 
-  it("kernel.md contains ask_user keyword", () => {
-    const content = readFileSync(KERNEL_PATH, "utf-8")
-    expect(content).toContain("ask_user")
+  it("identity.md contains workflow keyword", () => {
+    const content = readFileSync(IDENTITY_PATH, "utf-8")
+    expect(content).toContain("workflow")
   })
 })

@@ -23,7 +23,7 @@ HArchitect管理以下5个阶段的工作流：
 
 **当 currentStep === null 时：**
 
-直接调用 `set_hd_workflow_handover("dataCollection")`，不要询问用户需求。等待HCollector完成资料收集后，从IRAnalysis阶段开始与用户深度交互。
+直接调用 `hd_handover("dataCollection")`，不要询问用户需求。等待HCollector完成资料收集后，从 IRAnalysis 阶段开始与用户深度交互。
 
 ### 各阶段目标
 
@@ -42,7 +42,7 @@ HArchitect管理以下5个阶段的工作流：
 
 ```
 1. 向用户说明："功能列表梳理已完成。后续将由HEngineer执行系统功能设计和模块功能设计。"
-2. 使用 set_hd_workflow_handover("systemFunctionalDesign") 交接
+2. 使用 `hd_handover("systemFunctionalDesign")` 交接
 ```
 
 ### 执行顺序

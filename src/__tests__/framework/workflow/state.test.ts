@@ -8,7 +8,6 @@ import {
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder,
-  createWorkflowQualityGate,
 } from '../../../workflows/core'
 
 import type { WorkflowDefinition } from '../../../workflows/core'
@@ -44,7 +43,7 @@ const classicWorkflowDef: WorkflowDefinition = {
       description: "Initial requirements analysis",
       agent: "HArchitect",
       promptFile: "ir_analysis.md",
-      qualityGate: "请评审 IRAnalysis 阶段产出物，检查是否符合规范。",
+      gate: true,
       getHandoverPrompt: (from) => `Handover from ${from ?? "dataCollection"} to IRAnalysis`
     },
     scenarioAnalysis: {
@@ -114,7 +113,7 @@ describe("workflow state management", () => {
       expect(state.workflow.IRAnalysis).toEqual({ isCompleted: false })
       expect(state.currentStep).toBeNull()
       expect(state.handoverTo).toBeNull()
-      expect(state.gatePassed).toBe(false)
+      expect(state.gateResult).toBeNull()
       expect(state.typeId).toBe("classic")
     })
 
@@ -222,7 +221,7 @@ describe("workflow state management", () => {
       expect(state!.typeId).toBe("classic")
       expect(state!.workflow.dataCollection.isCompleted).toBe(true)
       expect(state!.currentStep).toBeNull()
-      expect(state!.gatePassed).toBe(false)
+      expect(state!.gateResult).toBeNull()
     })
   })
 
@@ -279,7 +278,7 @@ describe("workflow state management", () => {
       setWorkflowGatePassed(true)
       const state = setWorkflowCurrent("scenarioAnalysis", classicWorkflowDef)
 
-      expect(state.gatePassed).toBe(false)
+      expect(state.gateResult).toBeNull()
     })
   })
 
@@ -288,57 +287,12 @@ describe("workflow state management", () => {
       initializeWorkflowState(classicWorkflowDef)
       const state = setWorkflowGatePassed(true)
 
-      expect(state.gatePassed).toBe(true)
+      expect(state.gateResult?.score).toBe(100)
       const reloaded = getWorkflowState()
-      expect(reloaded?.gatePassed).toBe(true)
+      expect(reloaded?.gateResult?.score).toBe(100)
     })
   })
 
-  describe("executeWorkflowQualityGate", () => {
-    it("uses stage-specific prompt and sets gatePassed=true on pass", async () => {
-      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
-
-      const result = await createWorkflowQualityGate(classicWorkflowDef, {
-        createSession: async (_title: string) => "mock-session-id",
-        sendPrompt: async (_params: unknown) => ({
-          structuredOutput: {
-            passed: true,
-            summary: "通过",
-            issues: [],
-          },
-          text: "PASS",
-        }),
-        deleteSession: async (_sessionId: string) => {},
-        summarizeSession: async (_sessionId: string) => {},
-      })
-
-      expect(result.ok).toBe(true)
-      expect(result.reason).toBe("approved")
-      expect(getWorkflowState()?.gatePassed).toBe(true)
-    })
-
-    it("sets gatePassed=false on review_failed", async () => {
-      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
-
-      const result = await createWorkflowQualityGate(classicWorkflowDef, {
-        createSession: async (_title: string) => "mock-session-id",
-        sendPrompt: async (_params: unknown) => ({
-          structuredOutput: {
-            passed: false,
-            summary: "未通过",
-            issues: ["关键章节缺失"],
-          },
-          text: "FAIL",
-        }),
-        deleteSession: async (_sessionId: string) => {},
-        summarizeSession: async (_sessionId: string) => {},
-      })
-
-      expect(result.ok).toBe(false)
-      expect(result.reason).toBe("review_failed")
-      expect(getWorkflowState()?.gatePassed).toBe(false)
-    })
-  })
 
   describe("setWorkflowHandover", () => {
     it("returns state object", () => {
