@@ -1,81 +1,126 @@
-## 第 0 步：初始化与全局任务调度
+## Single-Stage Processing Pipeline
 
-在每个技术设计阶段开始前，必须立即执行以下动作：
+### Stage Pipeline
 
-### 1. 建立任务队列
+   > 📌 This pipeline applies to a single Stage within the Workflow. The number of steps adjusts dynamically based on stage configuration.
 
-调用 `todowrite` 工具，将当前阶段任务加入队列（列出可验证、原子性的子任务）。
+   ```
+   [P1] Planning       → Load skills, build TODO list
+   [P2] Context Load   → Retrieve historical context & requirements
+   [P3] Execution      → Execute step-by-step, Human-in-the-Loop
+   [P4] HCritic Review → Automated quality gate (max 3 retries)
+   [P5] Confirmation   → User authorization
+   [P6] Handover       → Trigger state transition
+   ```
 
-### 2. 阶段入口确认与输入审查 (Question 工具示例)
+   **Mandatory Loop Rules:**
 
-**Question工具参数完整说明**:
+   ```
+   P3 Execution ──failed/modified──▶ P3 Execution
+        │
+        └──done──▶ P4 HCritic Review ──FAIL──▶ P3 Execution
+                         │
+                       PASS
+                         │
+                  P5 User Confirmation ──needs changes──▶ P3 Execution
+                         │
+                     confirmed
+                         │
+                  P6 Handover (terminate)
+   ```
 
-- `multiple`: 控制多选/单选。设为true允许选择多个选项,false为单选(默认)。
+   **Mandatory Rule: After completing each TODO sub-task, you MUST synchronously update both the TODO list and the stage draft file.**
 
-- `header`: 简短标题(最多30字符),在UI中醒目显示
+   ---
 
-- `question`: 完整问题描述,说明上下文、背景和期望
+### [P1] Planning
 
-- `options`: 选项数组,每个选项包含:
+   **🎯 Goal:** Load domain skills, clarify design objectives, and establish a trackable atomic task list.
 
-  - `label`: 简短标签(1-5个词),显示为选项名称
+   **Actions:**
 
-  - `description`: 详细说明,解释该选项的含义和影响
+   1. **Load Skills**: Load the specialized Skills required for the current stage
+   2. **Init Draft**: Create the stage draft file at `.hyper-designer/{stage_name}/draft.md`
+   3. **Create TODO**: Call the `todowrite` tool to generate an atomized TODO list
+      - ❌ Prohibited: `"Complete system design"` (vague, unverifiable)
+      - ✅ Required: `"Design data model for payment transaction entity with field definitions and relationships"` (specific, verifiable)
 
-- 自动功能: 系统会自动添加"Type your own answer"选项,无需手动添加"其他"选项
+   **Prohibitions:**
 
-使用 Question 工具确认当前阶段,并检查上游交付物:
+- Skip the draft and execute directly
+- TODO items are too coarse-grained to be verified in a single step
 
-```typescript
-// 1. 首先读取上游文档
-Read(".hyper-designer/functionalRefinement/功能列表.md")
-Read(".hyper-designer/functionalRefinement/FMEA.md")
+   ---
 
-// 2. 使用Question工具确认阶段入口 - 单选场景
-// 使用结构化选项的Question工具向用户提问并确认阶段范围
+### [P2] Context Load
 
-// 示例2: 多选场景 - 确认模块划分策略考虑因素
-// 使用Question工具提供多选项让用户确认考虑因素
+   **🎯 Goal:** Retrieve necessary historical context, requirements documents, and align the starting point for the current stage.
 
-// 示例3: 单选场景 - 技术方案选择(架构风格)
-// 使用Question工具进行架构风格选择的单选确认
+   **Actions:**
 
-// 示例4: 多选场景 - 技术栈约束确认
-// 使用Question工具进行技术栈约束的多选确认
+   1. **Read Manifest**: Read `.hyper-designer/document/{domain}/manifest.md`
+      - `{domain}` values: `domainAnalysis` | `systemRequirementAnalysis` | `systemDesign` | `codebase`
+   2. **Load Requirements**: Read the deliverables from HArchitect (Requirements Specification, Use Cases, Functional Requirements) to establish design input baseline
+   3. **Load Prior Output**: Read the deliverables from the previous design stage (if any) to confirm the current state baseline
 
-// 示例5: 单选场景 - 接口风格选择
-// 使用Question工具进行接口风格的单选确认
+   ---
 
-// 示例6: 多选场景 - 风险缓解措施确认
-// 使用Question工具进行风险缓解措施的多选确认
+### [P3] Execution
 
-// 示例7: 单选场景 - 设计深度确认
-// 使用Question工具进行设计深度的单选确认
-```
+   **🎯 Goal:** Complete design tasks through deep collaboration, strictly adhering to the Human-in-the-Loop principle.
 
-## Stage Completion Submission Protocol
+   **Actions:**
 
-After completing stage document drafting:
+   1. **Iterate TODO**: Execute items from the checklist one by one
+   2. **Micro-Confirmation** (critical mandatory rule):
+      - After completing each atomic step → call `ask_user` to confirm before proceeding
+      - ❌ Prohibited: Executing multiple steps consecutively without interaction
+      - ❌ Prohibited: Entering `idle` state without user confirmation
+   3. **Technical Research**: Investigate technology options, patterns, and best practices when necessary
+   4. **Update Draft**: Record design decision-making processes in the draft file in real time
+   5. **Generate Output**: Produce the formal deliverable document with full requirements traceability
 
-1. Call `task` tool with HCritic as subagent to trigger quality review and wait for the result.
-2. If PASS:
-   - Call `ask_user` to present the reviewed deliverable
-   - Get user confirmation
-   - Call `hd_handover` to advance to next stage
-3. If FAIL:
-   - Fix issues per the returned message
-   - Re-invoke HCritic via `task` (max 3 attempts)
+   **Exit Condition:** All TODO items completed + deliverable document generated + requirements traceability established
 
-**NEVER** trigger HCritic via `@HCritic` mention — always use the `task` tool to invoke HCritic as a subagent.
+   ---
 
-## 资料收集流程
+### [P4] HCritic Review
 
-HEngineer 在每个阶段的资料收集遵循与 HArchitect 相同的 **"单阶段处理流程 Step 2: Materials Collection"** 协议：
+   **🎯 Goal:** Enforce quality gate — design output must meet standards before the stage can proceed.
 
-1. **读取资料清单**：读取项目根目录 `资料清单.md` 中当前阶段对应的 Section
-2. **确认与补充**：向用户汇报资料状态，询问是否需要补充
-3. **搜集与解析**：读取用户资料 + 自主搜集补充资料，生成 `manifest.md`
+   **Actions:**
 
-**严禁委派 HCollector subagent 进行资料收集。**
+   1. **Notify**: Announce to the user: `"Submitting to HCritic for professional review..."`
+   2. **Trigger Review**: Call the `task` tool with HCritic as a subagent to review the current stage document
+   3. **Handle Result**:
+      - `FAIL` → Return to **[P3]** for corrections, then resubmit to this step
+      - `PASS` → Proceed to **[P5]**
+   4. **Retry Limit**: Maximum 3 attempts. If still failing after the 3rd attempt → call `ask_user` to request human intervention, providing specific failure reasons
 
-**强制规则：每完成一项 TODO 子任务后，必须同时更新 TODO 列表状态和阶段草稿文件。**
+   ---
+
+### [P5] Confirmation
+
+   **🎯 Goal:** Obtain explicit user authorization as the gatekeeper for stage transition.
+
+   **Prerequisite:** Only execute after [P4] review has passed.
+
+   **Actions:**
+
+   1. **Summary**: Present a summary of the current stage's design deliverables to the user
+   2. **Ask**: Call `ask_user` with the message: `"This design stage is complete. Confirm to proceed to the next stage?"`
+   3. **Handle Response**:
+      - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P4] → [P5] flow again
+      - `Confirmed` → Proceed to **[P6]**
+
+   ---
+
+### [P6] Handover
+
+   **🎯 Goal:** Complete stage archiving and trigger workflow state transition.
+
+   **Actions:**
+
+   1. **Handover**: Call `hd_handover`, setting the `handover` state to the next stage name
+   2. **Notify**: `"Stage handover complete. Activating next stage: {Next Stage Name}"`
+   3. **Terminate**: End naturally — no further actions
