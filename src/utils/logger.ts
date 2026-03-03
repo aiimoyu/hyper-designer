@@ -7,12 +7,17 @@
  * - 日志写入文件，避免污染stdout（保护TUI显示）
  * - 支持日志级别控制
  * - 支持模块化日志器
+ * - 文件持久化为可选功能（opt-in），默认不创建任何目录
  *
  * 日志级别定义：
  * - DEBUG: 详细调试信息，开发时使用
  * - INFO: 重要操作信息，用户应了解
  * - WARN: 警告信息，不影响功能但需要注意
  * - ERROR: 错误信息，需要立即处理
+ *
+ * 启用文件持久化：
+ * - 调用 initLogger({ persist: true, logDir: '...' })
+ * - 或设置环境变量 HYPER_DESIGNER_LOG_PERSIST=true
  */
 
 import { existsSync, mkdirSync, appendFileSync, writeFileSync } from "fs";
@@ -40,6 +45,11 @@ export interface LogOptions {
   level?: LogLevel;
   /** 日志文件目录 */
   logDir?: string;
+  /**
+   * 是否启用文件持久化（默认false）
+   * 设置为 true 或设置环境变量 HYPER_DESIGNER_LOG_PERSIST=true 才会创建日志目录
+   */
+  persist?: boolean;
 }
 
 // 日志级别优先级
@@ -70,6 +80,10 @@ function getDefaultLevelFromEnv(): LogLevel {
 
 function getPrintFromEnv(): boolean {
   return process.env.HYPER_DESIGNER_LOG_PRINT === "true" || process.env.LOG_PRINT === "true";
+}
+
+function getPersistFromEnv(): boolean {
+  return process.env.HYPER_DESIGNER_LOG_PERSIST === "true";
 }
 
 function getStrictErrorsFromEnv(): boolean {
@@ -142,12 +156,10 @@ function formatLogMessage(
 
 /**
  * 写入日志
+ * 如果未初始化（未调用 initLogger），此函数为 no-op（不创建任何文件或目录）
  */
 function writeLog(_level: LogLevel, formattedMessage: string): void {
-  if (!initialized) {
-    initLogger();
-  }
-
+  // 不再自动初始化 — 只有在显式调用 initLogger({ persist: true }) 之后才写文件
   if (logFilePath) {
     try {
       appendFileSync(logFilePath, formattedMessage);
@@ -170,6 +182,11 @@ function shouldLog(level: LogLevel): boolean {
 
 /**
  * 初始化日志系统
+ *
+ * 文件持久化为可选功能。只有当 persist: true 或环境变量
+ * HYPER_DESIGNER_LOG_PERSIST=true 时才会创建日志目录和文件。
+ *
+ * @param options 日志选项
  */
 export function initLogger(options: LogOptions = {}): void {
   if (initialized) return;
@@ -177,16 +194,33 @@ export function initLogger(options: LogOptions = {}): void {
   currentLevel = options.level ?? getDefaultLevelFromEnv();
   printToStderr = options.print ?? getPrintFromEnv();
 
-  const logDir = options.logDir || join(process.cwd(), ".hyper-designer", "logs");
-  ensureLogDir(logDir);
-  logFilePath = getLogFilePath(logDir);
+  // 只有显式启用持久化时才创建目录和文件
+  const shouldPersist = options.persist === true || getPersistFromEnv();
+  if (shouldPersist) {
+    const logDir = options.logDir || join(process.cwd(), ".hyper-designer", "logs");
+    ensureLogDir(logDir);
+    const filePath = getLogFilePath(logDir);
 
-  try {
-    writeFileSync(logFilePath, "");
-    initialized = true;
-  } catch {
-    logFilePath = null;
+    try {
+      writeFileSync(filePath, "");
+      logFilePath = filePath;
+    } catch {
+      logFilePath = null;
+    }
   }
+
+  initialized = true;
+}
+
+/**
+ * 重置日志系统状态（主要用于测试）
+ */
+export function resetLogger(): void {
+  currentLevel = "INFO";
+  printToStderr = false;
+  logFilePath = null;
+  lastTimestamp = Date.now();
+  initialized = false;
 }
 
 /**

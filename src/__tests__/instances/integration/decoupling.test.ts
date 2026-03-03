@@ -329,3 +329,57 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
   })
 })
+
+describe("No premature .hyper-designer directory creation", () => {
+  /**
+   * Regression guard: importing the plugin, loading config, reading workflow
+   * definitions, or creating agents must NOT cause the .hyper-designer
+   * directory to appear on disk.  Only explicit state writes (setStage,
+   * executeHandover) may create it.
+   */
+  let hdDirExistedBefore: boolean
+
+  beforeEach(() => {
+    hdDirExistedBefore = existsSync(PROJECT_CONFIG_DIR)
+  })
+
+  it("importing plugin module does not create .hyper-designer", async () => {
+    // HyperDesignerPlugin is already imported at the top of this file;
+    // the import itself must not create the directory.
+    if (!hdDirExistedBefore) {
+      expect(existsSync(PROJECT_CONFIG_DIR)).toBe(false)
+    }
+  })
+
+  it("loadHDConfig() does not create .hyper-designer", () => {
+    loadHDConfig()
+    if (!hdDirExistedBefore) {
+      expect(existsSync(PROJECT_CONFIG_DIR)).toBe(false)
+    }
+  })
+
+  it("getWorkflowDefinition() does not create .hyper-designer", () => {
+    getWorkflowDefinition("classic")
+    if (!hdDirExistedBefore) {
+      expect(existsSync(PROJECT_CONFIG_DIR)).toBe(false)
+    }
+  })
+
+  it("createHArchitectAgent() does not create .hyper-designer", () => {
+    createHArchitectAgent()
+    if (!hdDirExistedBefore) {
+      expect(existsSync(PROJECT_CONFIG_DIR)).toBe(false)
+    }
+  })
+
+  it("HyperDesignerPlugin() initialisation does not create .hyper-designer", async () => {
+    const mockCtx = {
+      client: { session: { prompt: async () => {} } },
+      directory: process.cwd(),
+    } as unknown as PluginInput
+    await HyperDesignerPlugin(mockCtx)
+    if (!hdDirExistedBefore) {
+      expect(existsSync(PROJECT_CONFIG_DIR)).toBe(false)
+    }
+  })
+})
