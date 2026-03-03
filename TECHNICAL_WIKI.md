@@ -277,9 +277,24 @@ interface WorkflowStageDefinition {
 interface WorkflowState {
   typeId: string                  // 工作流类型 ID
   workflow: Record<string, WorkflowStage>  // 各阶段状态
-  currentStep: string | null      // 当前活动阶段
-  handoverTo: string | null       // 交接目标阶段
-  gateResult: GateResult | null   // 当前阶段质量门结果
+  current: CurrentStageState | null;      // 当前活动阶段（包含名称、交接目标、质量门结果）
+}
+
+interface CurrentStageState {
+  name: string | null                 // 当前阶段 key，如 "IRAnalysis"
+  handoverTo: string | null           // 交接目标阶段
+  gateResult: GateResult | null       // 当前阶段质量门结果
+}
+
+interface WorkflowStage {
+  isCompleted: boolean            // 阶段是否完成
+  score?: number | null           // 最近一次评审得分
+  comment?: string | null         // 最近一次评审评语
+}
+
+interface GateResult {
+  score: number | null            // 质量评分 (0-100)
+  comment?: string | null         // 评审评语
 }
 
 interface WorkflowStage {
@@ -299,8 +314,8 @@ interface GateResult {
 
 ```typescript
 // 交接验证逻辑
-function validateHandover(currentStep, targetStep, stageOrder) {
-  const currentIndex = currentStep ? stageOrder.indexOf(currentStep) : -1
+function validateHandover(currentStage, targetStep, stageOrder) {
+  const currentIndex = currentStage ? stageOrder.indexOf(currentStage) : -1
   const targetIndex = stageOrder.indexOf(targetStep)
 
   // 规则 1: 无当前步骤时，只能交接给第一个阶段
@@ -488,7 +503,7 @@ sequenceDiagram
     U->>P: @HArchitect 我想设计一个系统
     P->>OC: 触发 system.transform
     OC->>WS: getState()
-    WS-->>OC: {currentStep: null}
+    WS-->>OC: {currentStage: null}
     OC->>OC: 替换占位符，注入阶段提示词
     OC-->>A: 注入提示词
     
@@ -499,7 +514,7 @@ sequenceDiagram
     Note over U,A: === 交接执行 (session.idle) ===
     P->>OC: 触发 session.idle
     OC->>WS: executeHandover()
-    WS->>S: currentStep = "IRAnalysis"
+    WS->>S: currentStage = "IRAnalysis"
     
     Note over U,A: 执行 beforeStage 钩子
     OC->>A: HCollector 收集领域分析资料
@@ -529,7 +544,7 @@ sequenceDiagram
     Note over U,A: === 交接执行 (session.idle) ===
     P->>OC: 触发 session.idle
     OC->>WS: executeHandover()
-    WS->>S: currentStep = "scenarioAnalysis"
+    WS->>S: currentStage = "scenarioAnalysis"
     
     Note over U,A: 执行 afterStage 钩子 (离开 IRAnalysis)
     OC->>OC: summarizeSession()

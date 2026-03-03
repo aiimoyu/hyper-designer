@@ -26,11 +26,11 @@ const GATE_PASS_THRESHOLD = 75;
  * WorkflowService 事件类型映射
  */
 export interface WorkflowServiceEvents {
-  stageCompleted: { stageName: string; isCompleted: boolean };
-  currentChanged: { previousStep: string | null; newStep: string };
-  handoverScheduled: { targetStep: string };
-  handoverExecuted: { fromStep: string; toStep: string };
-  gateChanged: { score: number | null; comment?: string | null; stage?: string | null };
+stageCompleted: { stageName: string; isCompleted: boolean };
+currentChanged: { previousStep: string | null; newStep: string };
+handoverScheduled: { targetStep: string };
+handoverExecuted: { fromStep: string; toStep: string };
+gateChanged: { score: number | null; comment?: string | null; stage?: string | null };
 }
 
 /**
@@ -52,6 +52,8 @@ export interface HandoverResult {
  */
 export class WorkflowService extends EventEmitter {
   private definition: WorkflowDefinition;
+  /** 内存锁：防止 session.idle 在 afterStage 钩子执行期间触发重入交接 */
+  private _handoverInProgress = false;
 
   /**
    * 创建工作流服务实例
@@ -78,8 +80,9 @@ export class WorkflowService extends EventEmitter {
    */
   getCurrentStage(): string | null {
     const state = getWorkflowState();
-    return state?.currentStep ?? null;
+    return state?.current?.name ?? null;
   }
+
 
   /**
    * 获取工作流定义
@@ -119,11 +122,12 @@ export class WorkflowService extends EventEmitter {
   setCurrent(stepName: string): WorkflowState {
     const previousStep = this.getCurrentStage();
     const state = setWorkflowCurrent(stepName, this.definition);
-    if (state.currentStep === stepName) {
+    if (state.current?.name === stepName) {
       this.emit('currentChanged', { previousStep, newStep: stepName });
     }
     return state;
   }
+
 
   /**
    * 设置工作流交接目标
@@ -132,11 +136,12 @@ export class WorkflowService extends EventEmitter {
    */
   setHandover(stepName: string | null): WorkflowState {
     const state = setWorkflowHandover(stepName, this.definition);
-    if (stepName !== null && state.handoverTo === stepName) {
+    if (stepName !== null && state.current?.handoverTo === stepName) {
       this.emit('handoverScheduled', { targetStep: stepName });
     }
     return state;
   }
+
 
   /**
    * 执行工作流交接
@@ -147,13 +152,28 @@ export class WorkflowService extends EventEmitter {
   async executeHandover(sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
     const fromStep = this.getCurrentStage();
     const preState = this.getState();
-    const toStep = preState?.handoverTo ?? null;
-    const state = await executeWorkflowHandover(this.definition, sessionID, adapter);
-    if (toStep !== null && state.currentStep === toStep) {
-      this.emit('handoverExecuted', { fromStep: fromStep ?? '', toStep });
+    const toStep = preState?.current?.handoverTo ?? null;
+    this._handoverInProgress = true;
+    try {
+      const state = await executeWorkflowHandover(this.definition, sessionID, adapter);
+      if (toStep !== null && state.current?.name === toStep) {
+        this.emit('handoverExecuted', { fromStep: fromStep ?? '', toStep });
+      }
+      return state;
+    } finally {
+      this._handoverInProgress = false;
     }
-    return state;
   }
+
+  /**
+   * 检查是否有交接正在执行中（内存锁）
+   * 供 event-handler 在 session.idle 时查询，防止重入
+   * @returns 是否有交接正在执行
+   */
+  isHandoverInProgress(): boolean {
+    return this._handoverInProgress;
+  }
+
 
   // ─── 质量门 API ──────────────────────────────────────────────────────────────
 
@@ -163,9 +183,10 @@ export class WorkflowService extends EventEmitter {
    */
   isGateApproved(): boolean {
     const state = getWorkflowState();
-    const score = state?.gateResult?.score;
+    const score = state?.current?.gateResult?.score;
     return typeof score === 'number' && score > GATE_PASS_THRESHOLD;
   }
+
 
   /**
    * @deprecated 使用 isGateApproved() 替代。保留以兼容旧代码。
@@ -181,11 +202,11 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setGateResult(params: { score: number | null; comment?: string | null; stage?: string | null }): WorkflowState {
-    const currentStep = this.getCurrentStage();
+    const currentStage = this.getCurrentStage();
     const gateResult: GateResult = {
       score: params.score,
       comment: params.comment ?? null,
-      stage: params.stage ?? currentStep,
+      stage: params.stage ?? currentStage,
     };
     const state = setWorkflowGateResult(gateResult);
     this.emit('gateChanged', { score: gateResult.score, comment: gateResult.comment, stage: gateResult.stage });
@@ -237,7 +258,7 @@ export class WorkflowService extends EventEmitter {
 
     if (hasGate && !this.isGateApproved()) {
       const state = getWorkflowState();
-      const score = state?.gateResult?.score;
+      const score = state?.current?.gateResult?.score;
       return {
         success: false,
         error: `质量门未通过。当前得分：${score !== null && score !== undefined ? score : '未评分'}（需要 > ${GATE_PASS_THRESHOLD}）。请先请求 HCritic 完成评审并调用 hd_submit_evaluation 记录得分，然后再进行工作流交接。`,
@@ -248,7 +269,7 @@ export class WorkflowService extends EventEmitter {
     const state = this.setHandover(stepName);
 
     // 如果 handoverTo 没有设置成功（被验证逻辑拒绝），返回错误
-    if (state.handoverTo !== stepName) {
+    if (state.current?.handoverTo !== stepName) {
       return {
         success: false,
         error: `无法设置交接目标 "${stepName}"。请检查目标步骤是否有效，或是否试图跳过步骤。`,
@@ -265,6 +286,7 @@ export class WorkflowService extends EventEmitter {
   }
 
 
+
   /**
    * 获取指定阶段的交接代理名称
    * @param stage 阶段名称
@@ -276,12 +298,12 @@ export class WorkflowService extends EventEmitter {
 
   /**
    * 获取阶段间交接提示词
-   * @param currentStep 当前阶段名称
+   * @param currentStage 当前阶段名称
    * @param nextStep 目标阶段名称
    * @returns 交接提示词或 null
    */
-  getHandoverPrompt(currentStep: string | null, nextStep: string): string | null {
-    return getHandoverPrompt(this.definition, currentStep, nextStep);
+  getHandoverPrompt(currentStage: string | null, nextStep: string): string | null {
+    return getHandoverPrompt(this.definition, currentStage, nextStep);
   }
 
   /**

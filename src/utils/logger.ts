@@ -50,6 +50,11 @@ export interface LogOptions {
    * 设置为 true 或设置环境变量 HYPER_DESIGNER_LOG_PERSIST=true 才会创建日志目录
    */
   persist?: boolean;
+  /**
+   * 是否启用 DEBUG 级别日志（默认false）
+   * 设置为 true 或设置环境变量 HYPER_DESIGNER_LOG_DEBUG=true 才会输出调试日志
+   */
+  debug?: boolean;
 }
 
 // 日志级别优先级
@@ -84,6 +89,10 @@ function getPrintFromEnv(): boolean {
 
 function getPersistFromEnv(): boolean {
   return process.env.HYPER_DESIGNER_LOG_PERSIST === "true";
+}
+
+function getDebugFromEnv(): boolean {
+  return process.env.HYPER_DESIGNER_LOG_DEBUG === "true" || process.env.LOG_DEBUG === "true";
 }
 
 function getStrictErrorsFromEnv(): boolean {
@@ -194,6 +203,11 @@ export function initLogger(options: LogOptions = {}): void {
   currentLevel = options.level ?? getDefaultLevelFromEnv();
   printToStderr = options.print ?? getPrintFromEnv();
 
+  // 启用 debug 日志（默认 false，需显式开启或设置 HYPER_DESIGNER_LOG_DEBUG=true）
+  if (options.debug === true || getDebugFromEnv()) {
+    HyperDesignerLogger.setDebugEnabled(true);
+  }
+
   // 只有显式启用持久化时才创建目录和文件
   const shouldPersist = options.persist === true || getPersistFromEnv();
   if (shouldPersist) {
@@ -238,7 +252,7 @@ export class HyperDesignerLogger {
    * 是否启用调试日志
    * 在生产环境中可设置为 false 以减少日志输出
    */
-  private static debugEnabled = true;
+  private static debugEnabled = false;
 
   /**
    * 设置调试日志启用状态

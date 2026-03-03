@@ -1,7 +1,7 @@
 ## 当前阶段：工作流初始化
 
 **Phase State**: Uninitialized  
-**Trigger**: `currentStep === null` or first launch
+**Trigger**: `currentStage === null` or first launch
 
 ### Objective
 

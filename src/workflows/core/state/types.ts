@@ -29,20 +29,29 @@ export interface WorkflowStage {
 }
 
 /**
+ * Current workflow stage state - contains all parameters for the active stage
+ */
+export interface CurrentStageState {
+  /** The stage key (e.g., "IRAnalysis"), or null for initial handover */
+  name: string | null;
+  /** Current quality gate result for this stage */
+  gateResult: GateResult | null;
+  /** Target stage for the next handover, if scheduled */
+  handoverTo: string | null;
+}
+
+/**
  * Represents the overall state of a workflow
  */
 export interface WorkflowState {
   /** Unique identifier for the workflow type */
   typeId: string;
-  /** Map of stage names to their current state */
+  /** Map of stage names to their historical/completion state */
   workflow: Record<string, WorkflowStage>;
-  /** Currently active step, or null if no step is active */
-  currentStep: string | null;
-  /** Step that the workflow is being handed over to, or null if no handover is pending */
-  handoverTo: string | null;
-  /**
-   * 当前活动阶段最新质量门结果（替代旧的 gatePassed boolean）。
-   * 进入新阶段时自动重置为 null。
+  /** 
+   * Active stage details. Contains current stage name, gate results, and handover target.
+   * Null if no stage is active.
    */
-  gateResult: GateResult | null;
+  current: CurrentStageState | null;
 }
+

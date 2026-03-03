@@ -10,7 +10,7 @@ const systemDesignCollectorHook = createHCollectorHook({ domains: ['systemDesign
  * 生成阶段移交提示词
  *
  * 使用 stage.name（显示名称）直接构造英文模板，无需维护独立的映射表。
- * 由 handover.ts 负责将 currentStep key 解析为 stage name 后传入。
+ * 由 handover.ts 负责将 currentStage key 解析为 stage name 后传入。
  *
  * @param thisName    目标阶段显示名称（来自 stageConfig.name）
  * @param stageTask   阶段任务描述（动词短语）

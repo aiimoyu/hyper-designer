@@ -203,51 +203,51 @@ describe("WorkflowService", () => {
   describe("setCurrent", () => {
     it("sets current active step", () => {
       const state = service.setCurrent("scenarioAnalysis");
-      expect(state.currentStep).toBe("scenarioAnalysis");
+      expect(state.current?.name).toBe("scenarioAnalysis");
     });
 
     it("persists current step to file", () => {
       service.setCurrent("useCaseAnalysis");
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.currentStep).toBe("useCaseAnalysis");
+      expect(raw.current?.name).toBe("useCaseAnalysis");
     });
 
     it("ignores invalid step names", () => {
       const state = service.setCurrent("invalidStep");
-      expect(state.currentStep).toBeNull();
+      expect(state.current).toBeNull();
     });
 
     it("resets gate status when step changes", () => {
       service.setCurrent("IRAnalysis");
       service.setGatePassed(true);
       expect(service.isGatePassed()).toBe(true);
-
       const state = service.setCurrent("scenarioAnalysis");
-      expect(state.gateResult).toBeNull();
+      expect(state.current?.gateResult).toBeNull();
     });
 
     it("does NOT reset gatePassed when setCurrent with same step", () => {
       service.setCurrent("IRAnalysis");
       service.setGatePassed(true);
-
       // Set to the same step again
       const state = service.setCurrent("IRAnalysis");
-      expect(state.gateResult?.score).toBe(100);
+      expect(state.current?.gateResult?.score).toBe(100);
     });
+
   });
+
 
   describe("setGatePassed", () => {
     it("updates gate pass status", () => {
       service.setCurrent("IRAnalysis");
       const state = service.setGatePassed(true);
-      expect(state.gateResult?.score).toBe(100);
+      expect(state.current?.gateResult?.score).toBe(100);
     });
 
     it("persists gate status to file", () => {
       service.setCurrent("IRAnalysis");
       service.setGatePassed(true);
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.gateResult?.score).toBe(100);
+      expect(raw.current?.gateResult?.score).toBe(100);
     });
 
     it("handles boolean parameter correctly", () => {
@@ -325,118 +325,107 @@ describe("WorkflowService", () => {
     it("sets handover target step", () => {
       service.setCurrent("dataCollection");
       const state = service.setHandover("IRAnalysis");
-      expect(state.handoverTo).toBe("IRAnalysis");
+      expect(state.current?.handoverTo).toBe("IRAnalysis");
     });
 
     it("allows null to clear handover", () => {
       service.setCurrent("dataCollection");
       service.setHandover("IRAnalysis");
       const state = service.setHandover(null);
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.handoverTo).toBeNull();
     });
 
     it("validates handover step exists", () => {
       service.setCurrent("dataCollection");
       const state = service.setHandover("nonExistentStep");
       // Invalid step is silently ignored - handoverTo stays null
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.handoverTo).toBeNull();
     });
 
     it("prevents skipping stages in handover", () => {
-      // Current is dataCollection, try to skip to scenarioAnalysis (skips IRAnalysis)
       service.setCurrent("dataCollection");
       const state = service.setHandover("scenarioAnalysis");
       // Should NOT set handover - skipping is not allowed
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.handoverTo).toBeNull();
     });
 
     it("allows backward handover", () => {
       service.setCurrent("scenarioAnalysis");
       const state = service.setHandover("dataCollection");
-      expect(state.handoverTo).toBe("dataCollection");
+      expect(state.current?.handoverTo).toBe("dataCollection");
     });
 
     it("persists handover state to file", () => {
       service.setCurrent("dataCollection");
       service.setHandover("IRAnalysis");
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.handoverTo).toBe("IRAnalysis");
+      expect(raw.current?.handoverTo).toBe("IRAnalysis");
     });
 
     it("allows handover to first stage when no current step", () => {
-      // No current step set - should allow handover to first stage
       const state = service.setHandover("dataCollection");
-      expect(state.handoverTo).toBe("dataCollection");
+      expect(state.current?.handoverTo).toBe("dataCollection");
     });
 
     it("rejects handover to non-first stage when no current step", () => {
-      // No current step set - should reject non-first stage
       const state = service.setHandover("IRAnalysis");
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.handoverTo).toBeNull();
     });
 
     it("setHandover(null) when already null - still writes, no error", () => {
-      // Ensure state exists first
       service.setStage("dataCollection", false);
       const state = service.setHandover(null);
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.handoverTo).toBeNull();
       // Verify file was written
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.handoverTo).toBeNull();
+      expect(raw.current?.handoverTo).toBeNull();
     });
 
     it("allows handover to same stage as current", () => {
       service.setCurrent("IRAnalysis");
       const state = service.setHandover("IRAnalysis");
       // Same stage = backward (targetIndex <= currentIndex), should be allowed
-      expect(state.handoverTo).toBe("IRAnalysis");
+      expect(state.current?.handoverTo).toBe("IRAnalysis");
     });
 
     it("allows handover to next step (forward by one)", () => {
       service.setCurrent("IRAnalysis");
       const state = service.setHandover("scenarioAnalysis");
-      expect(state.handoverTo).toBe("scenarioAnalysis");
+      expect(state.current?.handoverTo).toBe("scenarioAnalysis");
     });
 
     it("handles empty state file on disk gracefully", () => {
-      // setHandover creates state if none exists
       const state = service.setHandover("dataCollection");
       expect(state).toBeDefined();
-      expect(state.handoverTo).toBe("dataCollection");
+      expect(state.current?.handoverTo).toBe("dataCollection");
     });
   });
 
   describe("executeHandover", () => {
-    it("executes pending handover and transitions currentStep to target", async () => {
+    it("executes pending handover and transitions currentStage to target", async () => {
       service.setCurrent("dataCollection");
       service.setHandover("IRAnalysis");
-
       const state = await service.executeHandover();
-
-      expect(state.currentStep).toBe("IRAnalysis");
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.name).toBe("IRAnalysis");
+      expect(state.current?.handoverTo).toBeNull();
     });
 
     it("returns current state when no handover pending (handoverTo is null)", async () => {
       service.setCurrent("dataCollection");
       // No setHandover call - handoverTo stays null
-
       const state = await service.executeHandover();
-
-      expect(state.currentStep).toBe("dataCollection");
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.name).toBe("dataCollection");
+      expect(state.current?.handoverTo).toBeNull();
     });
 
     it("clears handoverTo after execution", async () => {
       service.setCurrent("dataCollection");
       service.setHandover("IRAnalysis");
-
       const state = await service.executeHandover();
-
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.handoverTo).toBeNull();
       // Verify on disk too
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.handoverTo).toBeNull();
+      expect(raw.current?.handoverTo).toBeNull();
     });
 
     it("marks previous step as completed when moving forward", async () => {
@@ -446,7 +435,8 @@ describe("WorkflowService", () => {
       const state = await service.executeHandover();
 
       expect(state.workflow.dataCollection.isCompleted).toBe(true);
-      expect(state.currentStep).toBe("IRAnalysis");
+      expect(state.current?.name).toBe("IRAnalysis")
+
     });
 
     it("resets completion status when moving backward", async () => {
@@ -462,7 +452,8 @@ describe("WorkflowService", () => {
       service.setHandover("dataCollection");
       const state = await service.executeHandover();
 
-      expect(state.currentStep).toBe("dataCollection");
+      expect(state.current?.name).toBe("dataCollection")
+
       // All steps from target to previous should be reset
       expect(state.workflow.dataCollection.isCompleted).toBe(false);
       expect(state.workflow.IRAnalysis.isCompleted).toBe(false);
@@ -477,9 +468,10 @@ describe("WorkflowService", () => {
       const state = await service.executeHandover();
 
       // gatePassed is NOT directly reset by executeHandover in state.ts,
-      // but currentStep change triggers gate reset via the state transition logic
-      // Let's check what the reference impl does - it sets currentStep which resets gate
-      expect(state.currentStep).toBe("IRAnalysis");
+      // but currentStage change triggers gate reset via the state transition logic
+      // Let's check what the reference impl does - it sets currentStage which resets gate
+      expect(state.current?.name).toBe("IRAnalysis")
+
     });
 
     it("afterStage runs while disk still shows DEPARTING stage (before state switch)", async () => {
@@ -509,9 +501,9 @@ describe("WorkflowService", () => {
       // Hook ran and captured disk state
       expect(stateOnDiskDuringHook).not.toBeNull();
       const diskState = JSON.parse(stateOnDiskDuringHook!);
-      // afterStage runs BEFORE the stage switch: currentStep is still the departing stage
-      expect(diskState.currentStep).toBe("dataCollection");
-      expect(diskState.handoverTo).toBe("IRAnalysis");
+      // afterStage 运行时 handoverTo 仍然保持在磁盘上（由内存锁防重入），currentStep 乚为离开的阶段
+      expect(diskState.current?.name).toBe("dataCollection");
+      expect(diskState.current?.handoverTo).toBe("IRAnalysis");
     });
 
     it("fires afterStage on departing stage THEN beforeStage on incoming stage", async () => {
@@ -634,31 +626,24 @@ describe("WorkflowService", () => {
 
       await expect(svc.executeHandover()).rejects.toThrow("Hook exploded");
 
-      // afterStage runs BEFORE the state switch, so if it throws the transition
-      // was never committed — disk still shows the departing stage
+      // afterStage 抛出错误时 handoverTo 仍然在磁盘上（尚未切换到新阶段）；过渡未提交。
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.currentStep).toBe("dataCollection");
-      expect(raw.handoverTo).toBe("IRAnalysis");
+      expect(raw.current?.name).toBe("dataCollection");
+      expect(raw.current?.handoverTo).toBe("IRAnalysis");
     });
-
     it("handles initial handover (no current step) to first stage", async () => {
       // No current step, handover to first stage
       service.setHandover("dataCollection");
-
       const state = await service.executeHandover();
-
-      expect(state.currentStep).toBe("dataCollection");
-      expect(state.handoverTo).toBeNull();
+      expect(state.current?.name).toBe("dataCollection");
+      expect(state.current?.handoverTo).toBeNull();
     });
-
     it("skips hooks when no hooks defined on stages", async () => {
       // classicWorkflowDef has no hooks - should not throw
       service.setCurrent("dataCollection");
       service.setHandover("IRAnalysis");
-
       const state = await service.executeHandover();
-
-      expect(state.currentStep).toBe("IRAnalysis");
+      expect(state.current?.name).toBe("IRAnalysis");
     });
   });
 
@@ -763,7 +748,8 @@ describe("WorkflowService", () => {
       let stepInListener: string | null | undefined;
       service.on("currentChanged", () => {
         const state = service.getState();
-        stepInListener = state?.currentStep;
+        stepInListener = state?.current?.name;
+
       });
 
       service.setCurrent("IRAnalysis");

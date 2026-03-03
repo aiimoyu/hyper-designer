@@ -28,8 +28,9 @@ export function createSystemTransformer() {
       {
         token: "{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}",
         resolve: () => {
-          const currentStep = workflowState?.currentStep || null
-          return loadStagePrompt(currentStep, workflow)
+          const currentStage = workflowState?.current?.name || null
+
+          return loadStagePrompt(currentStage, workflow)
         },
       },
     ]

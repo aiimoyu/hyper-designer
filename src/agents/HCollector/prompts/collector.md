@@ -87,7 +87,7 @@ Perform tasks strictly in the following sequence (0 → 5):
 
 1. Once standards are met, generate the final resource index: `.hyper-designer/document/{domain}/manifest.md`.
 2. **Only after** `manifest.md` is successfully written, create the `.hyper-designer/document/{domain}/completed` marker file.
-3. Enter `idle` state to hand over control.
+3. Enter `idle` state (return to user).
 
 ---
 

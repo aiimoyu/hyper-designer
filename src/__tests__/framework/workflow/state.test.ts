@@ -111,9 +111,8 @@ describe("workflow state management", () => {
       expect(Object.keys(state.workflow)).toHaveLength(8)
       expect(state.workflow.dataCollection).toEqual({ isCompleted: false })
       expect(state.workflow.IRAnalysis).toEqual({ isCompleted: false })
-      expect(state.currentStep).toBeNull()
-      expect(state.handoverTo).toBeNull()
-      expect(state.gateResult).toBeNull()
+      expect(state.current).toBeNull()
+      expect(state.typeId).toBe("classic")
       expect(state.typeId).toBe("classic")
     })
 
@@ -205,7 +204,7 @@ describe("workflow state management", () => {
           systemFunctionalDesign: { isCompleted: false },
           moduleFunctionalDesign: { isCompleted: false },
         },
-        currentStep: null,
+        currentStage: null,
         handoverTo: null,
       }
 
@@ -220,8 +219,8 @@ describe("workflow state management", () => {
       expect(state).not.toBeNull()
       expect(state!.typeId).toBe("classic")
       expect(state!.workflow.dataCollection.isCompleted).toBe(true)
-      expect(state!.currentStep).toBeNull()
-      expect(state!.gateResult).toBeNull()
+      expect(state!.current).toBeNull()
+  })
     })
   })
 
@@ -251,26 +250,27 @@ describe("workflow state management", () => {
       setWorkflowStage("useCaseAnalysis", false, classicWorkflowDef)
       const updatedState = setWorkflowCurrent("useCaseAnalysis", classicWorkflowDef)
 
-      expect(updatedState.currentStep).toBe("useCaseAnalysis")
+      expect(updatedState.current?.name).toBe("useCaseAnalysis");
     })
 
     it("allows null to clear current step", () => {
       setWorkflowStage("functionalRefinement", false, classicWorkflowDef)
       setWorkflowCurrent("functionalRefinement", classicWorkflowDef)
+      setWorkflowCurrent("functionalRefinement", classicWorkflowDef)
       const clearedState = setWorkflowCurrent(null, classicWorkflowDef)
 
-      expect(clearedState.currentStep).toBeNull()
+      expect(clearedState.current).toBeNull();
     })
 
     it("ignores invalid step name", () => {
       const state = setWorkflowCurrent("invalidStep", classicWorkflowDef)
-      expect(state.currentStep).toBeNull()
+      expect(state.current).toBeNull();
     })
 
     it("persists current step to file", () => {
       const state = setWorkflowCurrent("systemFunctionalDesign", classicWorkflowDef)
 
-      expect(state.currentStep).toBe("systemFunctionalDesign")
+      expect(state.current?.name).toBe("systemFunctionalDesign");
     })
 
     it("resets gate status when stage changes", () => {
@@ -278,18 +278,17 @@ describe("workflow state management", () => {
       setWorkflowGatePassed(true)
       const state = setWorkflowCurrent("scenarioAnalysis", classicWorkflowDef)
 
-      expect(state.gateResult).toBeNull()
+      expect(state.current?.gateResult).toBeNull();
     })
-  })
 
   describe("setWorkflowGatePassed", () => {
     it("updates gate pass status in state file", () => {
       initializeWorkflowState(classicWorkflowDef)
       const state = setWorkflowGatePassed(true)
 
-      expect(state.gateResult?.score).toBe(100)
+      expect(state.current?.gateResult?.score).toBe(100)
       const reloaded = getWorkflowState()
-      expect(reloaded?.gateResult?.score).toBe(100)
+      expect(reloaded?.current?.gateResult?.score).toBe(100)
     })
   })
 
@@ -301,32 +300,31 @@ describe("workflow state management", () => {
       const updatedState = setWorkflowHandover("IRAnalysis", classicWorkflowDef)
 
       expect(updatedState).toHaveProperty("workflow")
-      expect(updatedState).toHaveProperty("currentStep")
-      expect(updatedState).toHaveProperty("handoverTo")
-      expect(updatedState.handoverTo).toBe("IRAnalysis")
+      expect(updatedState).toHaveProperty("current")
+      expect(updatedState.current?.handoverTo).toBe("IRAnalysis");
     })
 
     it("allows null to clear handover", () => {
       initializeWorkflowState(classicWorkflowDef)
       setWorkflowCurrent("dataCollection", classicWorkflowDef)
       setWorkflowHandover("IRAnalysis", classicWorkflowDef)
+      setWorkflowHandover("IRAnalysis", classicWorkflowDef)
       const clearedState = setWorkflowHandover(null, classicWorkflowDef)
 
-      expect(clearedState.handoverTo).toBeNull()
+      expect(clearedState.current?.handoverTo).toBeNull();
     })
-
     it("ignores invalid handover step", () => {
       initializeWorkflowState(classicWorkflowDef)
       setWorkflowCurrent("dataCollection", classicWorkflowDef)
       const state = setWorkflowHandover("invalidHandover", classicWorkflowDef)
-      expect(state.handoverTo).toBeNull()
+      expect(state.current?.handoverTo).toBeNull();
     })
 
     it("prevents skipping stages in handover", () => {
       initializeWorkflowState(classicWorkflowDef)
       setWorkflowCurrent("dataCollection", classicWorkflowDef)
       const state = setWorkflowHandover("useCaseAnalysis", classicWorkflowDef)
-      expect(state.handoverTo).toBeNull()
+      expect(state.current?.handoverTo).toBeNull();
     })
 
     it("allows backward handover", () => {
@@ -337,9 +335,9 @@ describe("workflow state management", () => {
       setWorkflowStage("IRAnalysis", false, classicWorkflowDef)
       setWorkflowCurrent("scenarioAnalysis", classicWorkflowDef)
       const currentState = getWorkflowState()
-      expect(currentState?.currentStep).toBe("scenarioAnalysis")
+      expect(currentState?.current?.name).toBe("scenarioAnalysis")
       const state = setWorkflowHandover("IRAnalysis", classicWorkflowDef)
-      expect(state.handoverTo).toBe("IRAnalysis")
+      expect(state.current?.handoverTo).toBe("IRAnalysis");
     })
   })
 
@@ -348,8 +346,7 @@ describe("workflow state management", () => {
       initializeWorkflowState(classicWorkflowDef)
       const state = await executeWorkflowHandover(classicWorkflowDef)
       expect(state).toHaveProperty("workflow")
-      expect(state).toHaveProperty("currentStep")
-      expect(state).toHaveProperty("handoverTo")
+      expect(state.current).toBeDefined();
     })
 
     it("executes handover when handover is set", async () => {
@@ -359,9 +356,59 @@ describe("workflow state management", () => {
 
       const state = await executeWorkflowHandover(classicWorkflowDef)
 
-      expect(state.currentStep).toBe("scenarioAnalysis")
-      expect(state.handoverTo).toBeNull()
+      expect(state.current?.name).toBe("scenarioAnalysis")
+      expect(state.current?.handoverTo).toBeNull()
       expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
     })
   })
+  describe("gateResult clearing", () => {
+    it("clears gateResult when currentStage is updated to a different stage", () => {
+      // Setup: set current stage to IRAnalysis and set a gate result
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+      setWorkflowGatePassed(true)
+      
+      let state = getWorkflowState()
+      expect(state?.current?.gateResult).not.toBeNull()
+      expect(state?.current?.gateResult?.score).toBe(100)
+
+      expect(state?.current?.gateResult?.score).toBe(100)
+      
+      // Action: switch to scenarioAnalysis
+      setWorkflowCurrent("scenarioAnalysis", classicWorkflowDef)
+      
+      // Verify: gateResult is cleared
+      state = getWorkflowState()
+      expect(state?.current?.gateResult).toBeNull();
+    })
+    it("clears gateResult during executeWorkflowHandover", async () => {
+      // Setup: IRAnalysis with gate passed, handover scheduled to scenarioAnalysis
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+      setWorkflowGatePassed(true)
+      setWorkflowHandover("scenarioAnalysis", classicWorkflowDef)
+      
+      let state = getWorkflowState()
+      expect(state?.current?.gateResult).not.toBeNull()
+
+      
+      // Action: execute handover
+      await executeWorkflowHandover(classicWorkflowDef)
+      
+      // Verify: gateResult is cleared in the new state
+      state = getWorkflowState()
+      expect(state?.current?.name).toBe("scenarioAnalysis")
+      expect(state?.current?.gateResult).toBeNull()
+    })
+
+    it("clears gateResult when currentStage is set to null", () => {
+      setWorkflowCurrent("IRAnalysis", classicWorkflowDef)
+      setWorkflowGatePassed(true)
+      
+      setWorkflowCurrent(null, classicWorkflowDef)
+      
+      const state = getWorkflowState()
+      expect(state?.current).toBeNull()
+
+    })
+  })
+
 })

@@ -20,18 +20,18 @@ export function getHandoverAgent(definition: WorkflowDefinition, stage: string):
     });
     return null;
   }
-  
+
   HyperDesignerLogger.debug("Workflow", `获取交接代理`, {
     stage,
     agent: stageConfig.agent
   });
-  
+
   return stageConfig.agent;
 }
 
 export function getHandoverPrompt(
   definition: WorkflowDefinition,
-  currentStep: string | null,
+  currentStage: string | null,
   nextStep: string
 ): string | null {
   const stageConfig = definition.stages[nextStep];
@@ -53,14 +53,14 @@ export function getHandoverPrompt(
     });
     return null;
   }
-  
+
   HyperDesignerLogger.debug("Workflow", `生成交接提示词`, {
-    currentStep,
+    currentStage,
     nextStep,
     action: "generateHandoverPrompt"
   });
-  
-  // 将 currentStep key 解析为阶段显示名称，传入 getHandoverPrompt 而非原始 key
-  const currentStageName = currentStep ? (definition.stages[currentStep]?.name ?? currentStep) : null
+
+  // 将 currentStage key 解析为阶段显示名称，传入 getHandoverPrompt 而非原始 key
+  const currentStageName = currentStage ? (definition.stages[currentStage]?.name ?? currentStage) : null
   return stageConfig.getHandoverPrompt(currentStageName, stageConfig.name);
 }

@@ -33,26 +33,35 @@ export function readWorkflowStateFile(): WorkflowState | null {
       HyperDesignerLogger.debug("Workflow", `工作流状态文件不存在`, { path: WORKFLOW_STATE_PATH });
       return null;
     }
-    
+
     HyperDesignerLogger.debug("Workflow", `读取工作流状态文件`, { path: WORKFLOW_STATE_PATH });
     const data = readFileSync(WORKFLOW_STATE_PATH, "utf-8");
     const parsed = JSON.parse(data);
-    
+
+    // Support migration from old structure
+    let current: WorkflowState["current"] = null;
+    if (parsed.current) {
+      current = parsed.current;
+    } else if (parsed.currentStage) {
+      current = {
+        name: parsed.currentStage,
+        handoverTo: parsed.handoverTo || null,
+        gateResult: parsed.gateResult !== undefined
+          ? parsed.gateResult
+          : typeof parsed.gatePassed === 'boolean'
+            ? { score: parsed.gatePassed ? 100 : 0, comment: parsed.gatePassed ? 'Passed (legacy)' : 'Failed (legacy)' }
+            : null
+      };
+    }
+
     const state: WorkflowState = {
       typeId: parsed.typeId ?? "classic",
       workflow: parsed.workflow,
-      currentStep: parsed.currentStep,
-      handoverTo: parsed.handoverTo,
-      // 优先读取新的 gateResult 字段；若不存在则兼容旧的 gatePassed boolean
-      gateResult: parsed.gateResult !== undefined
-        ? parsed.gateResult
-        : typeof parsed.gatePassed === 'boolean'
-          ? { score: parsed.gatePassed ? 100 : 0, comment: parsed.gatePassed ? 'Passed (legacy)' : 'Failed (legacy)' }
-          : null,
+      current
     };
-    
-    HyperDesignerLogger.debug("Workflow", `工作流状态读取完成`, { 
-      currentStep: state.currentStep,
+
+    HyperDesignerLogger.debug("Workflow", `工作流状态读取完成`, {
+      currentStage: state.current?.name || null,
       workflowId: state.typeId
     });
     return state;
@@ -67,6 +76,7 @@ export function readWorkflowStateFile(): WorkflowState | null {
   }
 }
 
+
 /**
  * Writes the workflow state to the JSON file
  * @param state Workflow state to write
@@ -74,24 +84,26 @@ export function readWorkflowStateFile(): WorkflowState | null {
 export function writeWorkflowStateFile(state: WorkflowState): void {
   try {
     HyperDesignerLogger.debug("Workflow", `写入工作流状态文件`, { path: WORKFLOW_STATE_PATH });
-    
+
     const dir = dirname(WORKFLOW_STATE_PATH);
     if (!existsSync(dir)) {
       HyperDesignerLogger.debug("Workflow", `创建目录`, { directory: dir });
       mkdirSync(dir, { recursive: true });
     }
-    
+
     writeFileSync(WORKFLOW_STATE_PATH, JSON.stringify(state, null, 2), "utf-8");
-    HyperDesignerLogger.debug("Workflow", `工作流状态写入完成`, { 
-      currentStep: state.currentStep,
+    HyperDesignerLogger.debug("Workflow", `工作流状态写入完成`, {
+      currentStage: state.current?.name || null,
       workflowId: state.typeId
     });
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    HyperDesignerLogger.error("Workflow", `写入工作流状态文件失败`, err, { 
+    HyperDesignerLogger.error("Workflow", `写入工作流状态文件失败`, err, {
       path: WORKFLOW_STATE_PATH,
       action: "writeStateFile"
     });
     throw error;
   }
 }
+
+

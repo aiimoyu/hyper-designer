@@ -62,9 +62,11 @@ function setupInitialState(def: WorkflowDefinition): void {
       stage1: { isCompleted: false },
       stage2: { isCompleted: false },
     },
-    currentStep: "stage1",
-    handoverTo: "stage2",
-    gateResult: null,
+    current: {
+      name: "stage1",
+      handoverTo: "stage2",
+      gateResult: null,
+    },
   })
 }
 
@@ -161,12 +163,13 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
     expect(callOrder).toEqual(["after1", "after2", "before1", "before2"])
   })
 
-  it("afterStage 看到的 currentStep 是离开的阶段（fromStep）", async () => {
-    let currentStepDuringAfterHook: string | null = "not-set"
+  it("afterStage 看到的 currentStage 是离开的阶段（fromStep）", async () => {
+    let currentStageDuringAfterHook: string | null = "not-set"
 
     const afterHook: StageHookFn = async () => {
       const s = readWorkflowStateFile()
-      currentStepDuringAfterHook = s?.currentStep ?? null
+      currentStageDuringAfterHook = s?.current?.name ?? null
+
     }
 
     const def = makeWorkflow({ afterStage: [afterHook] })
@@ -174,16 +177,17 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
 
     await executeWorkflowHandover(def)
 
-    // afterStage 尚未切换，应该看到尚未更新的 currentStep（离开的阶段）
-    expect(currentStepDuringAfterHook).toBe("stage1")
+    // afterStage 尚未切换，应该看到尚未更新的 currentStage（离开的阶段）
+    expect(currentStageDuringAfterHook).toBe("stage1")
   })
 
-  it("beforeStage 看到的 currentStep 是进入的阶段（toStep）", async () => {
-    let currentStepDuringBeforeHook: string | null = "not-set"
+  it("beforeStage 看到的 currentStage 是进入的阶段（toStep）", async () => {
+    let currentStageDuringBeforeHook: string | null = "not-set"
 
     const beforeHook: StageHookFn = async () => {
       const s = readWorkflowStateFile()
-      currentStepDuringBeforeHook = s?.currentStep ?? null
+      currentStageDuringBeforeHook = s?.current?.name ?? null
+
     }
 
     const def = makeWorkflow({ beforeStage: [beforeHook] })
@@ -191,7 +195,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
 
     await executeWorkflowHandover(def)
 
-    expect(currentStepDuringBeforeHook).toBe("stage2")
+    expect(currentStageDuringBeforeHook).toBe("stage2")
   })
 })
 

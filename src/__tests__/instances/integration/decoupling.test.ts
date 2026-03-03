@@ -164,9 +164,8 @@ describe("Integration Tests: Deep Decoupling System", () => {
       const state = initializeWorkflowState(workflow)
 
       expect(Object.keys(state.workflow)).toHaveLength(7)
-      expect(state.currentStep).toBeNull()
-      expect(state.handoverTo).toBeNull()
-
+      expect(state.current).toBeNull()
+      
       expect(state.workflow.IRAnalysis.isCompleted).toBe(false)
       expect(state.workflow.scenarioAnalysis.isCompleted).toBe(false)
       expect(state.workflow.useCaseAnalysis.isCompleted).toBe(false)
@@ -207,15 +206,12 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should initialize state for handover execution", async () => {
-
       const state = await workflowService.executeHandover()
       expect(state).toHaveProperty("workflow")
-      expect(state).toHaveProperty("currentStep")
-      expect(state.handoverTo).toBeNull()
-    })
-
+      expect(state).toHaveProperty("current")
+    });
+      
     it("should get correct agent for each stage", () => {
-
       expect(workflowService.getHandoverAgent("IRAnalysis")).toBe("HArchitect")
       expect(workflowService.getHandoverAgent("scenarioAnalysis")).toBe("HArchitect")
       expect(workflowService.getHandoverAgent("useCaseAnalysis")).toBe("HArchitect")
@@ -305,9 +301,8 @@ describe("Integration Tests: Deep Decoupling System", () => {
       const state = initializeWorkflowState(workflow)
 
       expect(state).toHaveProperty("workflow")
-      expect(state).toHaveProperty("currentStep")
-      expect(state).toHaveProperty("handoverTo")
-
+      expect(state).toHaveProperty("current")
+      
       for (const stageName of workflow.stageOrder) {
         expect(state.workflow[stageName]).toHaveProperty("isCompleted")
         expect(typeof state.workflow[stageName].isCompleted).toBe("boolean")
@@ -374,7 +369,7 @@ describe("No premature .hyper-designer directory creation", () => {
 
   it("HyperDesignerPlugin() initialisation does not create .hyper-designer", async () => {
     const mockCtx = {
-      client: { session: { prompt: async () => {} } },
+      client: { session: { prompt: async () => { } } },
       directory: process.cwd(),
     } as unknown as PluginInput
     await HyperDesignerPlugin(mockCtx)

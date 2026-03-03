@@ -32,26 +32,25 @@ export function getStageOrder(definition: WorkflowDefinition): string[] {
  */
 export function initializeWorkflowState(definition: WorkflowDefinition): WorkflowState {
   HyperDesignerLogger.debug("Workflow", "初始化工作流状态", { workflowId: definition.id });
-  
+
   const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null }> = {};
   for (const stage of definition.stageOrder) {
     workflow[stage] = { isCompleted: false };
   }
-  
+
   const state: WorkflowState = {
     typeId: definition.id,
     workflow,
-    currentStep: null,
-    handoverTo: null,
-    gateResult: null,
+    current: null,
   };
-  
-  HyperDesignerLogger.debug("Workflow", "工作流状态初始化完成", { 
-    workflowId: definition.id, 
-    stageCount: Object.keys(workflow).length 
+
+  HyperDesignerLogger.debug("Workflow", "工作流状态初始化完成", {
+    workflowId: definition.id,
+    stageCount: Object.keys(workflow).length
   });
   return state;
 }
+
 
 /**
  * Gets the current workflow state
@@ -73,34 +72,33 @@ export function ensureWorkflowStateExists(definition?: WorkflowDefinition): Work
     HyperDesignerLogger.debug("Workflow", "使用现有工作流状态", { workflowId: state.typeId });
     return state;
   }
-  
+
   HyperDesignerLogger.info("Workflow", "未找到工作流状态，创建新的状态");
-  
+
   const workflowDef = definition ?? getWorkflowDefinition("classic");
-  
+
   if (workflowDef) {
     HyperDesignerLogger.debug("Workflow", "从定义初始化工作流状态", { workflowId: workflowDef.id });
     const newState = initializeWorkflowState(workflowDef);
     writeWorkflowStateFile(newState);
     return newState;
   }
-  
+
   HyperDesignerLogger.warn("Workflow", "获取工作流定义失败", {
     workflowId: "classic",
     action: "getWorkflowDefinition",
     error: "Workflow definition 'classic' not found"
   });
-  
+
   const fallbackState: WorkflowState = {
     typeId: "classic",
     workflow: {},
-    currentStep: null,
-    handoverTo: null,
-    gateResult: null,
+    current: null,
   };
   writeWorkflowStateFile(fallbackState);
   return fallbackState;
 }
+
 
 /**
  * Updates the completion status of a workflow stage
@@ -110,19 +108,19 @@ export function ensureWorkflowStateExists(definition?: WorkflowDefinition): Work
  * @returns Updated workflow state
  */
 export function setWorkflowStage(stageName: string, isCompleted: boolean, definition?: WorkflowDefinition): WorkflowState {
-  HyperDesignerLogger.info("Workflow", "设置工作流阶段状态", { 
-    stage: stageName, 
-    status: isCompleted ? "completed" : "not completed" 
+  HyperDesignerLogger.info("Workflow", "设置工作流阶段状态", {
+    stage: stageName,
+    status: isCompleted ? "completed" : "not completed"
   });
-  
+
   const state = ensureWorkflowStateExists(definition);
-  
+
   if (state.workflow[stageName]) {
     state.workflow[stageName].isCompleted = isCompleted;
     writeWorkflowStateFile(state);
-    HyperDesignerLogger.debug("Workflow", "工作流阶段状态更新完成", { 
-      stage: stageName, 
-      status: isCompleted 
+    HyperDesignerLogger.debug("Workflow", "工作流阶段状态更新完成", {
+      stage: stageName,
+      status: isCompleted
     });
   } else {
     HyperDesignerLogger.warn("Workflow", "无效的工作流阶段", {
@@ -131,7 +129,7 @@ export function setWorkflowStage(stageName: string, isCompleted: boolean, defini
       error: `Invalid workflow stage: ${stageName}`
     });
   }
-  
+
   return state;
 }
 
@@ -143,15 +141,21 @@ export function setWorkflowStage(stageName: string, isCompleted: boolean, defini
  */
 export function setWorkflowCurrent(stepName: string | null, definition?: WorkflowDefinition): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置当前工作流步骤", { step: stepName });
-  
+
   const state = ensureWorkflowStateExists(definition);
-  
-  if (stepName === null || state.workflow[stepName]) {
-    const previousStep = state.currentStep;
-    state.currentStep = stepName;
-    // 进入新阶段时重置门禁状态，避免沿用上阶段结果
+
+  if (stepName === null) {
+    state.current = null;
+    writeWorkflowStateFile(state);
+    HyperDesignerLogger.debug("Workflow", "当前工作流步骤已清除");
+  } else if (state.workflow[stepName]) {
+    const previousStep = state.current?.name || null;
     if (previousStep !== stepName) {
-      state.gateResult = null;
+      state.current = {
+        name: stepName,
+        gateResult: null,
+        handoverTo: null
+      };
     }
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", "当前工作流步骤更新完成", { step: stepName });
@@ -162,9 +166,10 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
       error: `Invalid workflow step: ${stepName}`
     });
   }
-  
+
   return state;
 }
+
 
 /**
  * Sets the workflow handover target
@@ -180,12 +185,22 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
  */
 export function setWorkflowHandover(stepName: string | null, definition: WorkflowDefinition): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置工作流交接目标", { targetStep: stepName });
-  
+
   const state = ensureWorkflowStateExists(definition);
+
+  if (state.current === null) {
+    // 初始逻辑：如果没有当前活动步骤，创建一个初始 current 对象
+    state.current = {
+      name: null,
+      gateResult: null,
+      handoverTo: null
+    };
+    writeWorkflowStateFile(state);
+  }
 
   // 清除交接目标
   if (stepName === null) {
-    state.handoverTo = null;
+    state.current.handoverTo = null;
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", "工作流交接目标已清除");
     return state;
@@ -202,45 +217,46 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
   }
 
   const stageOrder = definition.stageOrder;
-  const currentStep = state.currentStep;
-  const currentIndex = currentStep ? stageOrder.indexOf(currentStep) : -1;
-  const targetIndex = stageOrder.indexOf(stepName);
+  const firstStage = stageOrder[0];
 
-  // 如果没有当前步骤，只能交接给第一个步骤
-  if (currentIndex === -1) {
-    if (targetIndex !== 0) {
-      HyperDesignerLogger.warn("Workflow", "无法设置交接：没有当前步骤", {
-        targetStep: stepName,
-        targetIndex,
-        firstStep: stageOrder[0],
-        validation: "mustBeFirstStep",
-        error: "No current step set"
-      });
+  if (state.current.name === null) {
+    // 初始交接验证：只能交接给第一个步骤
+    if (stepName === firstStage) {
+      state.current.handoverTo = stepName;
+      writeWorkflowStateFile(state);
+      HyperDesignerLogger.debug("Workflow", "初始交接目标设置完成", { targetStep: stepName });
       return state;
     }
-  } else {
-    // 正常逻辑：只允许下一个步骤或向后步骤
-    const isNextStep = targetIndex === currentIndex + 1;
-    const isBackwardStep = targetIndex <= currentIndex;
 
-    if (!isNextStep && !isBackwardStep) {
-      HyperDesignerLogger.warn("Workflow", "无法跳过步骤设置交接", {
-        currentStep,
-        currentIndex,
-        targetStep: stepName,
-        targetIndex,
-        validation: "noStepSkipping",
-        error: "Cannot skip steps"
-      });
-      return state;
-    }
+    HyperDesignerLogger.warn("Workflow", "无法设置交接：没有当前活动步骤且目标不是首个步骤");
+    return state;
   }
 
-  state.handoverTo = stepName;
+  const currentIndex = stageOrder.indexOf(state.current.name);
+  const targetIndex = stageOrder.indexOf(stepName);
+
+  // 正常逻辑：只允许下一个步骤或向后步骤
+  const isNextStep = targetIndex === currentIndex + 1;
+  const isBackwardStep = targetIndex <= currentIndex;
+
+  if (!isNextStep && !isBackwardStep) {
+    HyperDesignerLogger.warn("Workflow", "无法跳过步骤设置交接", {
+      currentStage: state.current.name,
+      currentIndex,
+      targetStep: stepName,
+      targetIndex,
+      validation: "noStepSkipping",
+      error: "Cannot skip steps"
+    });
+    return state;
+  }
+
+  state.current.handoverTo = stepName;
   writeWorkflowStateFile(state);
   HyperDesignerLogger.debug("Workflow", "工作流交接目标设置完成", { targetStep: stepName });
   return state;
 }
+
 
 /**
  * Sets the workflow quality gate result (score + comment)
@@ -252,10 +268,13 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
 export function setWorkflowGateResult(gateResult: GateResult): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置门禁结果", { score: gateResult.score, stage: gateResult.stage });
   const state = ensureWorkflowStateExists();
-  state.gateResult = gateResult;
+  
+  if (state.current) {
+    state.current.gateResult = gateResult;
+  }
 
   // 同步更新当前阶段的 score/comment 字段（按阶段持久化评审历史）
-  const stageKey = gateResult.stage ?? state.currentStep;
+  const stageKey = gateResult.stage ?? state.current?.name;
   if (stageKey && state.workflow[stageKey]) {
     state.workflow[stageKey].score = gateResult.score;
     state.workflow[stageKey].comment = gateResult.comment ?? null;
@@ -278,6 +297,7 @@ export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
   });
 }
 
+
 /**
  * Executes a pending workflow handover
  * @param definition Workflow definition
@@ -285,7 +305,7 @@ export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
  */
 export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
   HyperDesignerLogger.info("Workflow", "执行工作流交接");
-  
+
   let state = readWorkflowStateFile();
 
   // 如果状态不存在，自动初始化
@@ -294,45 +314,33 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     state = initializeWorkflowState(definition);
   }
 
-  if (state.handoverTo === null) {
+  if (state.current === null || state.current.handoverTo === null) {
     HyperDesignerLogger.warn("Workflow", "未设置交接目标", {
       action: "executeHandover",
       validation: "handoverTargetRequired",
-      error: "No handover target set"
+      error: "No current stage or handover target set"
     });
     return state;
   }
 
   const stageOrder = definition.stageOrder;
-  const fromStep = state.currentStep;
-  const toStep = state.handoverTo;
+  const fromStep = state.current.name;
+  const toStep = state.current.handoverTo;
   const fromIndex = fromStep ? stageOrder.indexOf(fromStep) : -1;
   const toIndex = stageOrder.indexOf(toStep);
 
-  HyperDesignerLogger.debug("Workflow", "交接详情", { 
-    fromStep, 
-    fromIndex, 
-    toStep, 
-    toIndex 
+  HyperDesignerLogger.debug("Workflow", "交接详情", {
+    fromStep,
+    fromIndex,
+    toStep,
+    toIndex
   });
 
-  // 如果没有当前步骤，这是到第一个步骤的初始交接
-  if (fromIndex === -1) {
-    if (toIndex !== 0) {
-      HyperDesignerLogger.warn("Workflow", "无法执行交接：没有当前步骤", {
-        toStep,
-        toIndex,
-        firstStep: stageOrder[0],
-        validation: "initialHandoverMustBeFirstStep",
-        error: "No current step set"
-      });
-      return state;
-    }
-  } else if (toIndex > fromIndex) {
+  if (toIndex > fromIndex && fromStep !== null) {
     // 向前移动时将当前步骤标记为完成
-    state.workflow[fromStep!].isCompleted = true;
+    state.workflow[fromStep].isCompleted = true;
     HyperDesignerLogger.debug("Workflow", "步骤标记为完成", { step: fromStep });
-  } else if (toIndex < fromIndex) {
+  } else if (toIndex < fromIndex && fromStep !== null) {
     // 重置正在重新访问的步骤的完成状态
     for (let i = toIndex; i <= fromIndex; i++) {
       const step = stageOrder[i];
@@ -341,8 +349,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     }
   }
 
-  // Phase 1: afterStage 钩子在 stage 切换之前执行
-  // → 此时磁盘上的 currentStep 仍为 fromStep（离开的阶段）
+  // Phase 1: afterStage 钩子在 stage 切换之前执行（重入由 WorkflowService 内存锁保护）
   const departingStage = fromStep ? definition.stages[fromStep] : null;
   if (departingStage?.afterStage && departingStage.afterStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 afterStage 钩子", { step: fromStep, hookCount: departingStage.afterStage.length });
@@ -350,11 +357,13 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
       await hook({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
     }
   }
-
-  // Stage 切换：更新 currentStep 并持久化到磁盘
-  // afterStage 全部完成后才写盘，beforeStage 读盘时看到的是新阶段
-  state.handoverTo = null;
-  state.currentStep = toStep;
+  // Stage 切换
+  state.current = {
+    name: toStep,
+    gateResult: null,
+    handoverTo: null
+  };
+  
   writeWorkflowStateFile(state);
   HyperDesignerLogger.info("Workflow", "工作流交接执行完成", {
     toStep,
@@ -362,7 +371,6 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   });
 
   // Phase 2: beforeStage 钩子在 stage 切换之后执行
-  // → 此时磁盘上的 currentStep 已为 toStep（进入的阶段）
   const incomingStage = definition.stages[toStep];
   if (incomingStage?.beforeStage && incomingStage.beforeStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 beforeStage 钩子", { step: toStep, hookCount: incomingStage.beforeStage.length });
@@ -373,3 +381,4 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
 
   return state;
 }
+

@@ -103,7 +103,7 @@ export function createOpenCodeAdapter(ctx: PluginInput, config: HDConfig): Platf
             modelID: model.modelID,
           },
         })
-        HyperDesignerLogger.debug('OpenCode', '上下文压缩完成', { sessionId })
+        HyperDesignerLogger.info( 'OpenCode', '上下文压缩完成', { sessionId })
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error))
         HyperDesignerLogger.error('OpenCode', '上下文压缩失败', err, {
