@@ -19,7 +19,7 @@ An OpenCode plugin that implements specialized agents and workflow management fo
    if [ -d ~/.config/opencode/hyper-designer ]; then
      cd ~/.config/opencode/hyper-designer && git pull
    else
-     git clone https://github.com/aiimoyu/hyper-designer.git ~/.config/opencode/hyper-designer
+    git clone https://gitcode.com/u011501137/hyper-designer.git ~/.config/opencode/hyper-designer
    fi
    ```
 
@@ -47,7 +47,7 @@ An OpenCode plugin that implements specialized agents and workflow management fo
 **CMD (Administrator):**
 
 ```cmd
-git clone https://github.com/aiimoyu/hyper-designer.git "%USERPROFILE%\.config\opencode\hyper-designer"
+git clone https://gitcode.com/u011501137/hyper-designer.git "%USERPROFILE%\.config\opencode\hyper-designer"
 mkdir "%USERPROFILE%\.config\opencode\plugins"
 mkdir "%USERPROFILE%\.config\opencode\skills"
 
@@ -59,7 +59,7 @@ mklink /J "%USERPROFILE%\.config\opencode\skills\hyper-designer" "%USERPROFILE%\
 **PowerShell (Administrator):**
 
 ```powershell
-git clone https://github.com/aiimoyu/hyper-designer.git "$env:USERPROFILE\.config\opencode\hyper-designer"
+git clone https://gitcode.com/u011501137/hyper-designer.git "$env:USERPROFILE\.config\opencode\hyper-designer"
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\skills"
 
@@ -166,7 +166,7 @@ If you used copies instead of symbolic links, you will need to re-copy the files
 
 ## Getting Help
 
-- Repository & Issues: <https://github.com/aiimoyu/hyper-designer>
+- Repository & Issues: <https://gitcode.com/u011501137/hyper-designer>
 - If you encounter issues you cannot resolve, please open an Issue including your platform, OpenCode version, error logs, and the commands you executed.
 
 ---

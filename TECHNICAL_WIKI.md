@@ -737,7 +737,7 @@ async execute(params: { step_name: string }) {
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/aiimoyu/hyper-designer/main/schemas/hd-config.schema.json",
+  "$schema": "https://raw.atomgit.com/u011501137/hyper-designer/raw/master/schemas/hd-config.schema.json",
   "workflow": "classic",
   "agents": {
     "HArchitect": {
