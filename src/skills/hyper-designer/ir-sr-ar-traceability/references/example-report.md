@@ -6,7 +6,7 @@ This example demonstrates a complete IR-SR-AR traceability analysis for a simpli
 
 **Project**: E-commerce Platform Authentication
 **Documents Analyzed**:
-- `ir信息.md` - Contains 2 IRs about user authentication
+- `需求信息.md` - Contains 2 IRs about user authentication
 - `SR-AR分解分配表.md` - Contains 3 SRs and 7 ARs
 - Code context gathered via LSP analysis
 
@@ -17,7 +17,7 @@ This example demonstrates a complete IR-SR-AR traceability analysis for a simpli
 **Project**: E-commerce Platform Authentication
 **Analysis Date**: 2026-02-06
 **Analyzed Files**:
-- IR: ir信息.md
+- IR: 需求信息.md
 - SR-AR: SR-AR分解分配表.md
 - Code Context: LSP analysis + codebase exploration
 

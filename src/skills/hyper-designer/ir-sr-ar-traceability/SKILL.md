@@ -30,14 +30,14 @@ Validate ARs against actual codebase:
 ## Input Artifacts
 
 **Required**:
-1. **IR Information**: `ir信息.md` - Initial requirements with 5W2H structure
+1. **IR Information**: `需求信息.md` - Initial requirements with 5W2H structure
 2. **SR-AR Decomposition**: `SR-AR分解分配表.md` - System and allocated requirements
 3. **Code Context** (optional): LSP analysis results or codebase exploration
 
 **How to load**:
 ```typescript
 // Read requirement artifacts
-Read("ir信息.md")
+Read("需求信息.md")
 Read("SR-AR分解分配表.md")
 
 // Optional: Gather code context
@@ -142,7 +142,7 @@ Generate a structured traceability report:
 **Project**: [项目名称]
 **Analysis Date**: [日期]
 **Analyzed Files**:
-- IR: ir信息.md
+- IR: 需求信息.md
 - SR-AR: SR-AR分解分配表.md
 - Code Context: [LSP分析结果 / 代码库探索结果]
 
@@ -365,7 +365,7 @@ task(
   Review the SR-AR decomposition quality:
   
   Input files:
-  - IR: ir信息.md
+  - IR: 需求信息.md
   - SR-AR: SR-AR分解分配表.md
   
   Perform full IR-SR-AR traceability analysis:
