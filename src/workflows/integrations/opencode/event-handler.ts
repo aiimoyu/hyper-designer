@@ -5,7 +5,6 @@
  */
 
 import type { PluginInput } from "@opencode-ai/plugin"
-import type { HDConfig } from "../../../config/loader"
 import { workflowService } from "../../core/service"
 import { createOpenCodeAdapter } from "../../../adapters/opencode"
 import { HyperDesignerLogger } from "../../../utils/logger"
@@ -14,10 +13,9 @@ import { HyperDesignerLogger } from "../../../utils/logger"
  * 创建事件处理器
  *
  * @param ctx OpenCode 插件上下文
- * @param config Hyper Designer 配置
  * @returns 事件处理函数
  */
-export function createEventHandler(ctx: PluginInput, config: HDConfig) {
+export function createEventHandler(ctx: PluginInput) {
   return async ({ event }: { event: any }) => {
     const props = event.properties as Record<string, unknown> | undefined
     const sessionID = props?.sessionID as string | undefined
@@ -58,7 +56,7 @@ export function createEventHandler(ctx: PluginInput, config: HDConfig) {
         HyperDesignerLogger.info("OpenCode", `工作流交接：从阶段 ${currentPhase || "无"} 到阶段 ${handoverPhase}，由代理 ${nextAgent} 处理。`)
 
         // 创建平台适配器，注入到 workflowService.executeHandover
-        const adapter = createOpenCodeAdapter(ctx, config)
+        const adapter = createOpenCodeAdapter(ctx)
 
         try {
           await workflowService.executeHandover(sessionID, adapter)

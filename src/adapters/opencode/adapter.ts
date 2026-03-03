@@ -7,7 +7,6 @@
 
 import type { PluginInput } from '@opencode-ai/plugin'
 import type { SessionPromptData } from '@opencode-ai/sdk'
-import type { HDConfig } from '../../config/loader'
 import type { PlatformAdapter, SendPromptParams, SendPromptResult } from '../types'
 import { resolveDefaultModel } from './modelResolver'
 import { HyperDesignerLogger } from '../../utils/logger'
@@ -51,10 +50,9 @@ const extractTextFromParts = (parts: unknown): string => {
  * 创建 OpenCode 平台适配器
  *
  * @param ctx OpenCode 插件上下文
- * @param config Hyper Designer 配置
  * @returns PlatformAdapter 实现
  */
-export function createOpenCodeAdapter(ctx: PluginInput, config: HDConfig): PlatformAdapter {
+export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
   return {
     createSession: async (title: string): Promise<string> => {
       const result = await ctx.client.session.create({
@@ -95,7 +93,7 @@ export function createOpenCodeAdapter(ctx: PluginInput, config: HDConfig): Platf
     summarizeSession: async (sessionId: string): Promise<void> => {
       HyperDesignerLogger.info('OpenCode', '执行上下文压缩', { sessionId })
       try {
-        const model = await resolveDefaultModel(ctx, config)
+        const model = await resolveDefaultModel(ctx)
         await ctx.client.session.summarize({
           path: { id: sessionId },
           body: {

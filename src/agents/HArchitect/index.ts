@@ -72,6 +72,9 @@ const DEFINITION: AgentDefinition = {
     question: "allow",
     task: "allow",
     external_directory: "allow",
+    hd_workflow_state: "allow",
+    hd_handover: "allow",
+    hd_submit_evaluation: "deny",
   },
   defaultTools: {
     bash: false,

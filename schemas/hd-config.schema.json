@@ -40,10 +40,6 @@
         "description": "Custom agent configuration"
       }
     },
-    "summarize": {
-      "type": "string",
-      "description": "Model identifier for session summarization during workflow handover (e.g., 'github-copilot/claude-sonnet-4', 'github-copilot/gpt-4o')"
-    }
   },
   "required": [
     "agents"

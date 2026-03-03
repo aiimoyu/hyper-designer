@@ -5,7 +5,6 @@
  */
 
 import type { PluginInput } from '@opencode-ai/plugin'
-import type { HDConfig } from '../../config/loader'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 export interface ModelInfo {
@@ -16,21 +15,14 @@ export interface ModelInfo {
 /**
  * 解析用于上下文压缩的模型信息
  *
- * 优先级：hd-config.summarize > 用户当前模型 > 默认模型 (opencode/big-pickle)
+ * 优先级：用户当前模型 > 默认模型 (opencode/big-pickle)
  *
  * @param ctx OpenCode 插件上下文
+ * @returns 模型提供商 ID 和模型 ID
  * @param config Hyper Designer 配置
  * @returns 模型提供商 ID 和模型 ID
  */
-export async function resolveDefaultModel(ctx: PluginInput, config: HDConfig): Promise<ModelInfo> {
-  if (config.summarize) {
-    const [providerID, ...rest] = config.summarize.split('/')
-    return {
-      providerID,
-      modelID: rest.join('/'),
-    }
-  }
-
+export async function resolveDefaultModel(ctx: PluginInput): Promise<ModelInfo> {
   const specified = await ctx.client.config.get().then((cfg) => {
     const model = cfg.data?.model
     if (model) {

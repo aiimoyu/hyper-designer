@@ -41,10 +41,7 @@ export interface HDConfig {
   workflow?: string
   /** Agent-specific configuration overrides */
   agents: Record<string, AgentOverrideConfig>
-  /** Optional model identifier for session summarization during workflow handover */
-  summarize?: string
 }
-
 /** Default name for the configuration file */
 export const DEFAULT_CONFIG_PATH = "hd-config.json"
 

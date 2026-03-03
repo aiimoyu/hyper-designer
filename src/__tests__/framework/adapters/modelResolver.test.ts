@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { resolveDefaultModel } from '../../../adapters/opencode/modelResolver'
 import type { ModelInfo } from '../../../adapters/opencode/modelResolver'
-import type { HDConfig } from '../../../config/loader'
 import { HyperDesignerLogger } from '../../../utils/logger'
 
 /**
@@ -36,62 +35,16 @@ function createMockCtx(
   }
 }
 
-/**
- * Creates a minimal HDConfig for testing.
- */
-function createMockConfig(overrides?: Partial<HDConfig>): HDConfig {
-  return {
-    agents: {},
-    ...overrides,
-  }
-}
-
 describe('resolveDefaultModel', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
   })
 
-  describe('config.summarize override (highest priority)', () => {
-    it('returns providerID and modelID from config.summarize when set', async () => {
-      const ctx = createMockCtx()
-      const config = createMockConfig({ summarize: 'anthropic/claude-3-opus' })
-
-      const result = await resolveDefaultModel(ctx, config)
-
-      expect(result).toEqual({
-        providerID: 'anthropic',
-        modelID: 'claude-3-opus',
-      })
-    })
-
-    it('handles summarize with nested model path (multiple slashes)', async () => {
-      const ctx = createMockCtx()
-      const config = createMockConfig({ summarize: 'google/gemini/1.5-pro' })
-
-      const result = await resolveDefaultModel(ctx, config)
-
-      expect(result).toEqual({
-        providerID: 'google',
-        modelID: 'gemini/1.5-pro',
-      })
-    })
-
-    it('does not call ctx.client.config.get when summarize is set', async () => {
-      const ctx = createMockCtx()
-      const config = createMockConfig({ summarize: 'openai/gpt-4o' })
-
-      await resolveDefaultModel(ctx, config)
-
-      expect(ctx.client.config.get).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('user model from ctx.client.config (second priority)', () => {
-    it('returns user model when config.summarize is not set', async () => {
+  describe('user model from ctx.client.config', () => {
+    it('returns user model when available', async () => {
       const ctx = createMockCtx('openai/gpt-4-turbo')
-      const config = createMockConfig()
 
-      const result = await resolveDefaultModel(ctx, config)
+      const result = await resolveDefaultModel(ctx)
 
       expect(result).toEqual({
         providerID: 'openai',
@@ -101,9 +54,8 @@ describe('resolveDefaultModel', () => {
 
     it('handles user model with nested path (multiple slashes)', async () => {
       const ctx = createMockCtx('azure/openai/gpt-4')
-      const config = createMockConfig()
 
-      const result = await resolveDefaultModel(ctx, config)
+      const result = await resolveDefaultModel(ctx)
 
       expect(result).toEqual({
         providerID: 'azure',
@@ -112,12 +64,11 @@ describe('resolveDefaultModel', () => {
     })
   })
 
-  describe('fallback to default model (lowest priority)', () => {
-    it('returns default model when no summarize and no user model', async () => {
+  describe('fallback to default model', () => {
+    it('returns default model when no user model', async () => {
       const ctx = createMockCtx(undefined)
-      const config = createMockConfig()
 
-      const result = await resolveDefaultModel(ctx, config)
+      const result = await resolveDefaultModel(ctx)
 
       expect(result).toEqual({
         providerID: 'opencode',
@@ -127,9 +78,8 @@ describe('resolveDefaultModel', () => {
 
     it('returns default model when user model is null', async () => {
       const ctx = createMockCtx(null)
-      const config = createMockConfig()
 
-      const result = await resolveDefaultModel(ctx, config)
+      const result = await resolveDefaultModel(ctx)
 
       expect(result).toEqual({
         providerID: 'opencode',
@@ -140,9 +90,8 @@ describe('resolveDefaultModel', () => {
     it('returns default model when user model is empty string', async () => {
       // empty string is falsy, so it should fall through
       const ctx = createMockCtx('')
-      const config = createMockConfig()
 
-      const result = await resolveDefaultModel(ctx, config)
+      const result = await resolveDefaultModel(ctx)
 
       expect(result).toEqual({
         providerID: 'opencode',
@@ -158,9 +107,8 @@ describe('resolveDefaultModel', () => {
           },
         },
       }
-      const config = createMockConfig()
 
-      const result = await resolveDefaultModel(ctx as never, config)
+      const result = await resolveDefaultModel(ctx as never)
 
       expect(result).toEqual({
         providerID: 'opencode',
@@ -172,10 +120,9 @@ describe('resolveDefaultModel', () => {
   describe('error handling', () => {
     it('returns default model when ctx.client.config.get rejects', async () => {
       const ctx = createMockCtx(undefined, true)
-      const config = createMockConfig()
       const warnSpy = vi.spyOn(HyperDesignerLogger, 'warn').mockImplementation(() => {})
 
-      const result = await resolveDefaultModel(ctx, config)
+      const result = await resolveDefaultModel(ctx)
 
       expect(result).toEqual({
         providerID: 'opencode',
@@ -186,10 +133,9 @@ describe('resolveDefaultModel', () => {
 
     it('logs a warning when ctx.client.config.get rejects', async () => {
       const ctx = createMockCtx(undefined, true)
-      const config = createMockConfig()
       const warnSpy = vi.spyOn(HyperDesignerLogger, 'warn').mockImplementation(() => {})
 
-      await resolveDefaultModel(ctx, config)
+      await resolveDefaultModel(ctx)
 
       expect(warnSpy).toHaveBeenCalledWith(
         'OpenCode',
@@ -203,9 +149,8 @@ describe('resolveDefaultModel', () => {
   describe('return type', () => {
     it('returns object matching ModelInfo interface', async () => {
       const ctx = createMockCtx('test/model')
-      const config = createMockConfig()
 
-      const result: ModelInfo = await resolveDefaultModel(ctx as never, config)
+      const result: ModelInfo = await resolveDefaultModel(ctx as never)
 
       expect(result).toHaveProperty('providerID')
       expect(result).toHaveProperty('modelID')

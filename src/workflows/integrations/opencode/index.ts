@@ -55,7 +55,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
   return {
     /** 事件处理器：监听 session.idle 触发工作流交接 */
-    event: createEventHandler(ctx, config),
+    event: createEventHandler(ctx),
 
     /** 系统消息转换器：注入工作流提示词 */
     "experimental.chat.system.transform": createSystemTransformer(),
