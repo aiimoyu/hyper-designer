@@ -1,6 +1,6 @@
 ---
 name: IR Analysis
-description: Conduct Initial Requirement (IR) analysis using 5W2H framework and Socratic questioning. Use when users have a system/product idea that needs structured requirement clarification. The skill guides users through multi-turn conversations to identify stakeholders, specific requirements, constraints, and usage patterns, ultimately producing an ir信息.md document with structured 5W2H analysis.
+description: Conduct Initial Requirement (IR) analysis using 5W2H framework and Socratic questioning. Use when users have a system/product idea that needs structured requirement clarification. The skill guides users through multi-turn conversations to identify stakeholders, specific requirements, constraints, and usage patterns, ultimately producing an 需求信息.md document with structured 5W2H analysis.
 ---
 
 # IR Analysis Skill
@@ -48,79 +48,77 @@ if (documentIndexExists) {
 
 ### 4. Generate Output
 
-Create `ir信息.md` in the working directory following the 5W2H structure.
+Create `需求信息.md` in the working directory following the 描述 + 5W2H structure.
 
 **Before writing, confirm with user**:
 
 ```
-基于我们的讨论，我将生成正式的 IR 文档。
+基于我们的讨论，我将生成正式的需求信息文档。
 
-**一句话总结**：[summary]
+**需求价值**：[核心价值一句话]
 
 确认以上理解正确吗？生成后您仍可以要求修改。
 ```
 
 ## Output Format
 
-The `ir信息.md` must follow this structure:
+The `需求信息.md` must follow this structure:
 
 ```markdown
-# IR信息 - [系统名称]
+# 需求信息
 
-## 一句话总结
+## 描述
+### 需求价值
+[1-2 句话描述该需求的核心业务价值]
 
-[基于分析形成的IR一句话总结]
+### 需求描述
+[1-2 句话描述需求的本质和范围]
 
-## 5W2H 结构化分析
+### 验收标准
+[1-2 句话描述可验证的成功条件]
 
-### Who - 利益相关者
+## 5W2H 分析
+### What - 是什么
+[1-2 句话]
 
-[需求的利益相关者，系统上下文中的人或物等主语]
+### Why - 为什么
+[1-2 句话]
 
-### What - 需求诉求
+### Who - 谁使用
+[1-2 句话]
 
-[站在利益相关者上，对整个系统的期望诉求]
+### When - 何时使用
+[1-2 句话]
 
-- 必须具体化，不能过于抽象
-- 同一个IR内的诉求必须有强相关性
-- 不能写多个不相关的诉求
+### Where - 在哪里使用
+[1-2 句话]
 
-### When - 使用时机
+### How - 怎么做
+[1-2 句话]
 
-[需求在哪个生命周期使用]
+### How Much - 多少成本/规模
+[1-2 句话]
 
-### Why - 需求原因
-
-[需求产生的原因，为什么会提出这个需求]
-
-### Where - 使用环境
-
-[需求产生的环境，需求提出方在什么环境中使用该需求]
-
-### How Much - 规格约束
-
-[需求提出方对当前需求的规格约束，如体积/性能]
-
-### How - 使用方式
-
-[需求提出方怎么使用该需求]
+## 其他
+[可选内容，放置不适合5W2H框架的补充信息]
 ```
 
 **Detailed template**: See [ir-5w2h-template.md](references/ir-5w2h-template.md)
 
 ## Quality Checklist
 
-Before finalizing `ir信息.md`, verify:
+Before finalizing `需求信息.md`, verify:
 
-- [ ] 一句话总结清晰传达核心价值
-- [ ] Who 涵盖所有关键利益相关者（包括系统/法规等非人主体）
-- [ ] What 具体可验证，非抽象描述
-- [ ] 同一个 IR 内的诉求具有强相关性
-- [ ] When 明确时间和频率特征
+- [ ] 需求价值清晰传达核心业务价值
+- [ ] 需求描述准确描述需求本质和范围
+- [ ] 验收标准具体可验证
+- [ ] What 具体，非抽象描述
 - [ ] Why 追溯到业务根源和痛点
+- [ ] Who 涵盖所有关键利益相关者
+- [ ] When 明确时间和频率特征
 - [ ] Where 覆盖物理、技术、业务环境
-- [ ] How Much 包含可衡量的规格约束
 - [ ] How 描述具体使用方式和流程
+- [ ] How Much 包含可衡量的规格约束
 - [ ] 所有内容基于与用户的对话和上下文信息
 
 ## Example Interaction Flow
@@ -160,7 +158,7 @@ Before finalizing `ir信息.md`, verify:
 这个场景符合您的预期吗？还有哪些关键场景需要考虑？
 ```
 
-**Round 4** - Final confirmation, then generate `ir信息.md`.
+**Round 4** - Final confirmation, then generate `需求信息.md`.
 
 ## Anti-Patterns to Avoid
 
