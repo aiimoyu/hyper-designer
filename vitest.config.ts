@@ -5,5 +5,11 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ["./src/__tests__/setup.ts"],
     fileParallelism: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json-summary'],
+      reportsDirectory: './coverage',
+      exclude: ['src/__tests__/**', 'node_modules/**', 'opencode/**']
+    },
   }
 })

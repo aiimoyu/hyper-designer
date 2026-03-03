@@ -1,11 +1,13 @@
-import { describe, it, expect, afterEach, beforeEach } from "vitest"
+import { describe, it, expect, afterEach, beforeEach, vi } from "vitest"
 import { createAgent, filePrompt, toolsPrompt } from "../../../agents/factory"
+import { HyperDesignerLogger } from "../../../utils/logger"
 import type { AgentDefinition } from "../../../agents/factory"
 import type { AgentMode } from "../../../agents/types"
 import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "fs"
 import { join, dirname } from "path"
+import { createTempTestDir, cleanupTempDir } from "../../helpers/tempDir"
 
-const TEST_DIR = join(process.cwd(), ".test-temp", "factory-tests")
+let TEST_DIR = ""
 const PROJECT_CONFIG_PATH = process.env.HD_PROJECT_CONFIG_PATH
   ? join(process.cwd(), process.env.HD_PROJECT_CONFIG_PATH)
   : join(process.cwd(), ".hyper-designer", "hd-config.json")
@@ -20,6 +22,7 @@ let originalGlobalConfig: string | null = null
 describe("createAgent", () => {
   beforeEach(() => {
     snapshotConfigs()
+    TEST_DIR = createTempTestDir("factory-tests")
   })
 
   afterEach(() => {
@@ -37,9 +40,9 @@ describe("createAgent", () => {
       rmSync(ORIGINAL_GLOBAL_CONFIG_PATH, { force: true })
     }
 
-    if (existsSync(TEST_DIR)) {
-      rmSync(TEST_DIR, { recursive: true, force: true })
-    }
+    cleanupTempDir(TEST_DIR)
+
+
 
     originalProjectConfig = null
     originalGlobalConfig = null
@@ -53,7 +56,7 @@ describe("createAgent", () => {
       ? readFileSync(ORIGINAL_GLOBAL_CONFIG_PATH, "utf-8")
       : null
   }
-  const baseDefinition: AgentDefinition = {
+  const getBaseDefinition = () => ({
     name: "TestAgent",
     description: "Test agent for unit tests",
     mode: "primary" as AgentMode,
@@ -63,47 +66,45 @@ describe("createAgent", () => {
     promptGenerators: [filePrompt(join(TEST_DIR, "test.md"))],
     defaultPermission: { read: "allow" },
     defaultTools: { bash: true },
-  }
+  })
 
   it("reads prompt files and concatenates them", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "# Test Prompt")
 
-    const agent = createAgent(baseDefinition)
+    const agent = createAgent(getBaseDefinition())
 
     expect(agent.prompt).toContain("# Test Prompt")
 
-    rmSync(TEST_DIR, { recursive: true, force: true })
+
   })
 
   it("handles missing prompt files gracefully", () => {
-    const agent = createAgent(baseDefinition)
+    const loggerSpy = vi.spyOn(HyperDesignerLogger, 'warn')
+    const agent = createAgent(getBaseDefinition())
+    expect(loggerSpy).toHaveBeenCalled()
     expect(agent.prompt).toContain("Failed to load")
-  })
-
-  it("logs fallback when prompt files are missing", () => {
-    const agent = createAgent(baseDefinition)
-    expect(agent.prompt).toContain("Failed to load")
+    loggerSpy.mockRestore()
   })
 
   it("falls back to defaults when no config override", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "Content")
 
-    const agent = createAgent(baseDefinition)
+    const agent = createAgent(getBaseDefinition())
 
     expect(agent.temperature).toBe(0.5)
     expect(agent.maxTokens).toBe(8000)
     expect(agent.permission).toEqual({ read: "allow" })
 
-    rmSync(TEST_DIR, { recursive: true, force: true })
+
   })
 
   it("returns correct AgentConfig shape", () => {
     mkdirSync(TEST_DIR, { recursive: true })
     writeFileSync(join(TEST_DIR, "test.md"), "Content")
 
-    const agent = createAgent(baseDefinition, "gpt-4")
+    const agent = createAgent(getBaseDefinition(), "gpt-4")
 
     expect(agent).toHaveProperty("name", "TestAgent")
     expect(agent).toHaveProperty("description")
@@ -116,7 +117,7 @@ describe("createAgent", () => {
     expect(agent).toHaveProperty("tools")
     expect(agent.model).toBe("gpt-4")
 
-    rmSync(TEST_DIR, { recursive: true, force: true })
+
   })
 
   it("concatenates multiple prompt generators", () => {
@@ -125,7 +126,7 @@ describe("createAgent", () => {
     writeFileSync(join(TEST_DIR, "part2.md"), "# Part 2")
 
     const multiFileDefinition: AgentDefinition = {
-      ...baseDefinition,
+      ...getBaseDefinition(),
       promptGenerators: [
         filePrompt(join(TEST_DIR, "part1.md")),
         filePrompt(join(TEST_DIR, "part2.md")),
@@ -137,7 +138,7 @@ describe("createAgent", () => {
     expect(agent.prompt).toContain("# Part 1")
     expect(agent.prompt).toContain("# Part 2")
 
-    rmSync(TEST_DIR, { recursive: true, force: true })
+
   })
 
   it("applies config overrides from hd-config", () => {
@@ -156,7 +157,7 @@ describe("createAgent", () => {
     }
     writeFileSync(PROJECT_CONFIG_PATH, JSON.stringify(config, null, 2))
 
-    const agent = createAgent(baseDefinition, "gpt-3")
+    const agent = createAgent(getBaseDefinition(), "gpt-3")
 
     expect(agent.temperature).toBe(0.8)
     expect(agent.maxTokens).toBe(2000)
@@ -186,7 +187,7 @@ describe("createAgent", () => {
       const agent = createAgent(definition)
       expect(agent.prompt).toContain("Identity content")
 
-      rmSync(TEST_DIR, { recursive: true, force: true })
+
     })
 
     it("should allow empty promptGenerators array", () => {
@@ -206,5 +207,4 @@ describe("createAgent", () => {
       expect(agent.prompt).toBe("")
     })
   })
-
 })

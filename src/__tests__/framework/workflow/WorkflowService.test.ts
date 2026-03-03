@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { WorkflowService } from '../../../workflows/core'
+import { WorkflowService, workflowService } from '../../../workflows/core'
 import type { WorkflowDefinition, StageHookFn } from '../../../workflows/core'
 import { rmSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
@@ -800,8 +800,24 @@ describe("WorkflowService", () => {
   });
 
   describe("singleton usage", () => {
-    it.todo("module-level singleton maintains consistent state");
-    it.todo("singleton shares state across imports");
-    it.todo("singleton uses default workflow definition");
+    it("singleton uses default workflow definition", () => {
+      // 模块级单例应默认使用 classic 工作流
+      const def = workflowService.getDefinition();
+      expect(def.id).toBe("classic");
+    });
+
+    it("module-level singleton maintains consistent state", () => {
+      // 对单例的状态变更在同一实例的后续调用中应保持可见
+      workflowService.setStage("IRAnalysis", true);
+      const state = workflowService.getState();
+      expect(state).not.toBeNull();
+      expect(state!.workflow.IRAnalysis.isCompleted).toBe(true);
+    });
+
+    it("singleton shares state across imports", async () => {
+      // 从两个不同模块路径导入应得到同一个实例引用
+      const { workflowService: ws2 } = await import('../../../workflows');
+      expect(workflowService).toBe(ws2);
+    });
   });
 });

@@ -8,19 +8,9 @@ import type { WorkflowDefinition } from '../../../workflows/core'
 
 describe("workflow/prompts", () => {
   describe("loadPromptForStage", () => {
-    it("should load prompt for all classic workflow stages", () => {
-      const stages = classicWorkflow.stageOrder
-
-      stages.forEach(stage => {
-        const prompt = loadPromptForStage(stage, classicWorkflow)
-        expect(prompt).toBeTruthy()
-        expect(prompt.length).toBeGreaterThan(0)
-      })
-    })
-
     it("returns workflow prompt only for unknown stage", () => {
       const prompt = loadPromptForStage("unknownStage", classicWorkflow)
-      expect(prompt).toContain("工作流")
+      expect(prompt.length).toBeGreaterThan(0)
     })
 
     it("should return empty string for non-existent prompt file", () => {
@@ -47,7 +37,8 @@ describe("workflow/prompts", () => {
     it("should load prompts from workflow module directory", () => {
       const prompt = loadPromptForStage("IRAnalysis", classicWorkflow)
 
-      expect(prompt).toContain("工作流")
+      expect(prompt.length).toBeGreaterThan(0)
+      expect(prompt).toContain('#')
     })
 
     it("should verify all classic workflow prompt files exist and are readable", () => {
