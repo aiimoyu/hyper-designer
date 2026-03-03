@@ -86,6 +86,9 @@ const DEFINITION: AgentDefinition = {
     websearch: true,
     question: true,
     task: true,
+    hd_workflow_state: true,
+    hd_handover: false,
+    hd_submit_evaluation: false,
   },
 }
 
