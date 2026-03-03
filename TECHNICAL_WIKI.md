@@ -27,8 +27,8 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 | 阶段 | Agent | 输入 | 输出 | Skill |
 |------|-------|------|------|-------|
 | 1. **数据收集** | HCollector | 用户需求描述 | 参考资料清单 | - |
-| 2. **初始需求分析** | HArchitect | 参考资料 | `ir信息.md` | ir-analysis |
-| 3. **场景分析** | HArchitect | `ir信息.md` | `功能场景.md` | scenario-analysis |
+| 2. **初始需求分析** | HArchitect | 参考资料 | `需求信息.md` | ir-analysis |
+| 3. **场景分析** | HArchitect | `需求信息.md` | `功能场景.md` | scenario-analysis |
 | 4. **用例分析** | HArchitect | `功能场景.md` | `用例.md` | use-case-analysis |
 | 5. **功能细化** | HArchitect | `用例.md` | `{系统名}功能列表.md` | functional-refinement |
 | 6. **需求分解** | HEngineer | 功能列表 | `sr-ar-decomposition.md` | sr-ar-decomposition |
@@ -328,7 +328,7 @@ description: Conduct Initial Requirement (IR) analysis using 5W2H framework...
 4. Generate Output
 
 ## Output Format
-The `ir信息.md` must follow this structure:
+The `需求信息.md` must follow this structure:
 - 一句话总结
 - 5W2H 结构化分析（Who, What, When, Why, Where, How Much, How）
 
@@ -373,7 +373,7 @@ sequenceDiagram
     Note over User,State: 阶段 2-5: 需求分析（HArchitect 主导）
     State->>HA: 当前阶段 = IRAnalysis
     HA->>HA: 执行 IR 分析（注入 IR Analysis Skill）
-    HA->>HCr: task(subagent=HCritic) 评审 ir信息.md
+HA->>HCr: task(subagent=HCritic) 评审 需求信息.md
     HCr->>State: hd_submit_evaluation({ score: 88 })
     HA->>HA: 随居前进（阶段自动标记完成）
 
@@ -717,7 +717,7 @@ sequenceDiagram
     H->>H: loadPromptForStage("IRAnalysis")
     H->>H: 读取 src/skills/ir-analysis/SKILL.md
     H->>Agents: 注入 5W2H 方法论、模板、检查清单
-    Agents->>Agents: HArchitect 生成 ir信息.md（阶段自动标记完成）
+Agents->>Agents: HArchitect 生成 需求信息.md（阶段自动标记完成）
 
     Note over U,Agents: 持续迭代
     Note right of Agents: 重复类似流程<br/>经过所有 8 个阶段<br/>每个阶段注入对应 Skill
@@ -734,7 +734,7 @@ sequenceDiagram
 ├── workflow_state.json           # 工作流状态
 └── document/
     ├── manifest.md              # 文档清单
-    ├── ir信息.md                # 初始需求（5W2H）
+    ├── 需求信息.md                # 初始需求（5W2H）
     ├── 功能场景.md              # 场景库
     ├── 用例.md                  # 用例规格
     ├── {系统名}功能列表.md       # 功能清单
@@ -748,10 +748,10 @@ sequenceDiagram
 | 阶段 | 输出文件 | 核心内容 | Skill 检查清单 |
 |------|---------|---------|---------------|
 | 数据收集 | `参考资料清单.md` | 领域资料、代码库分析、FMEA 库 | - |
-| IR 分析 | `ir信息.md` | 5W2H 分析、一句话总结 | 9 项检查 |
-| 场景分析 | `功能场景.md` | 主场景、备选场景、异常场景 | 7 项检查 |
+| IR 分析 | `需求信息.md` | 5W2H 分析、一句话总结 | 9 项检查 |
+| 场景分析 | `功能场景.md` | 业务/操作/维护/制造/其他场景分类 | 7 项检查 |
 | 用例分析 | `用例.md` | 用例规格、触发事件、验收标准 | 10 项检查 |
-| 功能细化 | `{系统名}功能列表.md` | 前后端功能划分、复杂度评估 | 8 项检查 |
+| 功能细化 | `{系统名}功能列表.md` | 简化功能细化表（功能、描述、优先级、估算） | 8 项检查 |
 | 需求分解 | `sr-ar-decomposition.md` | SR-AR 分解、DDD 映射 | 6 项检查 |
 | 系统设计 | `system-design.md` | 架构图、技术栈、数据模型 | 5 项检查 |
 | 模块设计 | `module-specs.md` | 接口定义、算法、数据结构 | 4 项检查 |
