@@ -8,10 +8,11 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 
 **核心价值：**
 
-- **工作流标准化**：8 阶段标准化设计流程
+- **工作流标准化**：7 阶段标准化设计流程
 - **AI 能力专业化**：每个阶段通过 Skill 注入专属方法论
 - **输出件规范化**：每个阶段产出结构化设计文档
 - **Agent 专业协作**：4 个专业化 Agent 各司其职、无缝协作
+- **质量门禁**：每个阶段完成后自动质量评审
 
 ### 1.2 四大核心 Agent
 
@@ -22,621 +23,702 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 | **HEngineer** | primary | 系统工程师 | 需求分解 → 系统设计 → 模块设计 | 接收 HArchitect 交接 |
 | **HCritic** | subagent | 设计评审员 | 阶段文档质量审查、一致性检查 | 被动触发，只读审查 |
 
-### 1.3 8 阶段工作流
+### 1.3 7 阶段工作流
 
-| 阶段 | Agent | 输入 | 输出 | Skill |
-|------|-------|------|------|-------|
-| 1. **数据收集** | HCollector | 用户需求描述 | 参考资料清单 | - |
-| 2. **初始需求分析** | HArchitect | 参考资料 | `需求信息.md` | ir-analysis |
-| 3. **场景分析** | HArchitect | `需求信息.md` | `功能场景.md` | scenario-analysis |
-| 4. **用例分析** | HArchitect | `功能场景.md` | `用例.md` | use-case-analysis |
-| 5. **功能细化** | HArchitect | `用例.md` | `{系统名}功能列表.md` | functional-refinement |
-| 6. **需求分解** | HEngineer | 功能列表 | `sr-ar-decomposition.md` | sr-ar-decomposition |
-| 7. **系统功能设计** | HEngineer | SR-AR文档 | `system-design.md` | functional-design |
-| 8. **模块功能设计** | HEngineer | 系统架构 | `module-specs.md` | functional-design |
+| 阶段 | Agent | 输入 | 输出 | 质量门 |
+|------|-------|------|------|--------|
+| 1. **初始需求分析** | HArchitect | 参考资料 | `ir信息.md` | ✅ |
+| 2. **场景分析** | HArchitect | `ir信息.md` | `功能场景.md` | ✅ |
+| 3. **用例分析** | HArchitect | `功能场景.md` | `用例.md` | ✅ |
+| 4. **功能细化** | HArchitect | `用例.md` | `{系统名}功能列表.md` | ✅ |
+| 5. **需求分解** | HEngineer | 功能列表 | `sr-ar-decomposition.md` | ✅ |
+| 6. **系统功能设计** | HEngineer | SR-AR文档 | `system-design.md` | ✅ |
+| 7. **模块功能设计** | HEngineer | 系统架构 | `module-specs.md` | ✅ |
 
 ---
 
-## 2. 技术架构
+## 2. 核心概念模型
 
-### 2.1 整体架构图
+### 2.1 三大核心机制
+
+Hyper Designer 的核心由三大机制构成，它们协同工作实现完整的工作流管理：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Hyper Designer 核心架构                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐     │
+│  │   Agent      │    │  Workflow    │    │    Gate      │     │
+│  │   代理系统    │◄──►│   工作流引擎  │◄──►│   质量门禁    │     │
+│  └──────────────┘    └──────────────┘    └──────────────┘     │
+│         │                   │                   │              │
+│         │                   │                   │              │
+│         ▼                   ▼                   ▼              │
+│  ┌──────────────────────────────────────────────────────┐     │
+│  │              Stage Hooks (阶段钩子)                    │     │
+│  │  beforeStage: 进入阶段前执行（如：资料收集）            │     │
+│  │  afterStage:  离开阶段后执行（如：上下文压缩）          │     │
+│  └──────────────────────────────────────────────────────┘     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**机制说明：**
+
+1. **Agent 代理系统**：定义专业化 AI 代理，每个代理有独特的角色、权限和能力
+2. **Workflow 工作流引擎**：管理阶段流转、状态持久化、交接验证
+3. **Gate 质量门禁**：确保每个阶段的输出质量达到标准才能进入下一阶段
+4. **Stage Hooks 阶段钩子**：在阶段边界执行自动化任务（资料收集、上下文压缩）
+
+### 2.2 数据流向图
+
+```
+用户需求
+    │
+    ▼
+┌─────────────────┐
+│  HArchitect     │ ◄─── beforeStage: 收集领域分析资料
+│  (IR Analysis)  │
+└────────┬────────┘
+         │ hd_submit_evaluation(score: 85)
+         ▼
+    [Gate Check: score > 75? ✓]
+         │
+         ▼ hd_handover("scenarioAnalysis")
+┌─────────────────┐
+│  HArchitect     │ ◄─── beforeStage: 收集系统需求分析资料
+│  (Scenario)     │
+└────────┬────────┘
+         │ afterStage: 压缩上下文
+         ▼
+    [Gate Check] ──► ... ──► [HArchitect 阶段完成]
+         │
+         ▼ hd_handover("requirementDecomposition")
+┌─────────────────┐
+│  HEngineer      │ ◄─── Agent 切换
+│  (SR-AR)        │
+└────────┬────────┘
+         │
+         ▼
+    ... 继续后续阶段 ...
+```
+
+---
+
+## 3. 技术架构
+
+### 3.1 分层架构图
 
 ```mermaid
 graph TB
-    subgraph "用户交互层"
-        User[用户]
-        OpenCode[OpenCode 平台]
+    subgraph "适配层 - Platform Adapter"
+        Adapter[PlatformAdapter 接口]
+        OpenCodeImpl[OpenCode Adapter]
     end
-
-    subgraph "插件层 - Hyper Designer"
-        Plugin[hyper-designer.ts<br/>框架适配层]
-
-        subgraph "Agent 层"
-            HCollector[HCollector<br/>数据收集]
-            HArchitect[HArchitect<br/>需求架构]
-            HEngineer[HEngineer<br/>系统设计]
-            HCritic[HCritic<br/>设计评审]
-        end
-
-        subgraph "工作流引擎层"
-            State[core/state.ts<br/>状态管理]
-            Handover[core/handover.ts<br/>交接处理]
-            Prompts[core/prompts.ts<br/>提示词加载]
-            Registry[core/registry.ts<br/>工作流注册表]
-        end
-
-        subgraph "工作流插件层"
-            Classic[plugins/classic<br/>经典工作流]
-            OpenSource[plugins/open-source<br/>开源工作流]
-        end
-
-        subgraph "技能注入层"
-            Skills[src/skills/**<br/>阶段专属 Skill]
-        end
-    end
-
-    subgraph "持久化层"
-        StateFile[.hyper-designer/<br/>workflow_state.json]
-        OutputDoc[.hyper-designer/{stage}/document/<br/>阶段文档输出]
-    end
-
-    User --> OpenCode
-    OpenCode --> Plugin
-    Plugin --> HArchitect
-    HArchitect --> HCollector
-    HArchitect --> HEngineer
-    HArchitect --> HCritic
-
-    Plugin --> State
-    State --> Handover
-    State --> Prompts
-    Registry --> Classic
-    Registry --> OpenSource
     
-    Skills --> Prompts
-    Prompts --> HArchitect
-    Prompts --> HEngineer
+    subgraph "平台层 - OpenCode"
+        OC[OpenCode Runtime]
+    end
 
+    subgraph "插件入口 - Plugin Entry"
+        Plugin[hyper-designer.ts]
+    end
+
+    subgraph "定义层 - Definitions"
+        AgentDef[Agent Definition<br/>代理定义]
+        ToolDef[Tool Definition<br/>工具定义]
+        WorkflowDef[Workflow Definition<br/>工作流定义]
+    end
+
+    subgraph "服务层 - Workflow Service"
+        WS[WorkflowService<br/>统一服务接口]
+        Events[EventEmitter<br/>事件通知]
+    end
+
+    subgraph "核心层 - Core Engine"
+        State[State Manager<br/>状态管理]
+        Handover[Handover Manager<br/>交接处理]
+        PromptLoader[Prompt Loader<br/>提示词加载]
+        Hooks[Stage Hooks<br/>阶段钩子]
+    end
+
+    subgraph "持久化层 - Persistence"
+        StateFile[workflow_state.json<br/>状态文件]
+        Documents[阶段文档输出]
+    end
+
+    %% 注册关系：Plugin 将组件注册到 OpenCode
+    Plugin -->|注册 Agents| OC
+    Plugin -->|注册 Tools| OC
+    Plugin -->|注册 Hooks<br/>event/system.transform| OC
+
+    %% 定义层到 Plugin
+    AgentDef --> Plugin
+    ToolDef --> Plugin
+    WorkflowDef --> WS
+
+    %% OpenCode 调用 Plugin
+    OC -->|触发 Hooks| Plugin
+    Plugin --> OpenCodeImpl
+    OpenCodeImpl --> Adapter
+
+    %% 服务层调用关系
+    WS --> Events
+    WS --> State
+    WS --> Handover
+    WS -->|executeHandover| Hooks
+    Hooks -->|sendPrompt| Adapter
+
+    %% 提示词加载
+    Plugin -->|注入阶段提示词| PromptLoader
+
+    %% 持久化
     State --> StateFile
-    HArchitect --> OutputDoc
-    HEngineer --> OutputDoc
+    WS --> Documents
 ```
 
-### 2.2 核心模块说明
+### 3.2 核心模块职责
 
-#### 2.2.1 Agent 工厂 (`src/agents/factory.ts`)
-
-**职责：**
-
-1. 根据 `AgentDefinition` 创建完整的 Agent 配置
-2. 支持多种提示词生成器（filePrompt, toolsPrompt, stringPrompt）
-3. 合并默认配置和用户覆盖配置
-4. 从 `hd-config.json` 读取 Agent 覆盖配置
-
-**关键代码结构：**
-
-```typescript
-export interface AgentDefinition {
-  name: string
-  description: string
-  mode: AgentMode
-  color?: string
-  defaultTemperature: number
-  defaultMaxTokens?: number
-  promptGenerators: PromptGenerator[]
-  defaultPermission?: Record<string, string>
-  defaultTools?: Record<string, boolean>
-}
-
-export function createAgent(
-  definition: AgentDefinition,
-  model?: string,
-  runtime?: RuntimeType
-): AgentConfig
-```
-
-#### 2.2.2 工作流定义 (`src/workflows/core/types.ts`)
-
-**职责：**
-
-定义标准化的工作流结构，支持插件化扩展。
-
-```typescript
-export interface WorkflowStageDefinition {
-  name: string
-  description: string
-  agent: string
-  skill?: string
-  promptFile?: string
-  getHandoverPrompt: (currentStep: string | null) => string
-}
-
-export interface WorkflowDefinition {
-  id: string
-  name: string
-  description: string
-  promptFile?: string
-  stageFallbackPromptFile?: string
-  stageOrder: string[]
-  stages: Record<string, WorkflowStageDefinition>
-}
-```
-
-#### 2.2.3 工作流状态管理 (`src/workflows/core/state.ts`)
-
-**职责：**
-
-- 维护工作流状态（阶段完成状态、当前步骤、交接目标）
-- 支持阶段完成标记
-- 支持阶段交接验证（防止跳过关键步骤）
-- 状态持久化到 JSON 文件
-
-**数据结构：**
-
-```typescript
-export interface WorkflowStage {
-  isCompleted: boolean
-}
-
-export interface WorkflowState {
-  typeId: string
-  workflow: Record<string, WorkflowStage>
-  currentStep: string | null
-  handoverTo: string | null
-}
-```
-
-**关键函数：**
-
-```typescript
-// 获取当前工作流状态
-export function getWorkflowState(): WorkflowState | null
-
-// 设置阶段完成状态
-export function setWorkflowStage(stageName: string, isCompleted: boolean): WorkflowState
-
-// 设置当前活动步骤
-export function setWorkflowCurrent(stepName: string | null): WorkflowState
-
-// 设置交接目标（带验证）
-export function setWorkflowHandover(stepName: string | null, definition: WorkflowDefinition): WorkflowState
-
-// 执行交接（更新状态并标记完成）
-export function executeWorkflowHandover(definition: WorkflowDefinition): WorkflowState
-```
-
-#### 2.2.4 提示词加载 (`src/workflows/core/prompts.ts`)
-
-**职责：**
-
-- 加载工作流级别通用提示词
-- 加载阶段特定提示词
-- 提供回退机制
-
-```typescript
-export function loadWorkflowPrompt(definition: WorkflowDefinition): string
-export function loadStagePrompt(stage: string | null, definition: WorkflowDefinition): string
-export function loadPromptForStage(stage: string | null, definition: WorkflowDefinition): string
-```
+| 模块 | 文件路径 | 职责 |
+|------|---------|------|
+| **WorkflowService** | `src/workflows/core/service/WorkflowService.ts` | 统一服务接口，封装状态操作，提供事件通知 |
+| **State Manager** | `src/workflows/core/state/` | 工作流状态管理、持久化、验证 |
+| **Handover Manager** | `src/workflows/core/runtime/handover.ts` | 交接代理获取、交接提示词生成 |
+| **Prompt Loader** | `src/workflows/core/runtime/promptLoader.ts` | 工作流/阶段提示词加载 |
+| **Stage Hooks** | `src/workflows/core/stageHooks/` | beforeStage/afterStage 钩子实现 |
+| **Platform Adapter** | `src/adapters/` | 平台无关接口，支持多平台扩展 |
 
 ---
 
-## 3. 技能注入机制
+## 4. 核心机制详解
 
-### 3.1 Skill 的作用
+### 4.1 Agent 代理系统
 
-Skill 是每个阶段的专业能力注入器，为 Agent 提供：
-
-- 方法论指导（如 5W2H 框架）
-- 输出模板（如用例模板）
-- 质量检查清单
-- 最佳实践
-
-### 3.2 Skill 加载流程
-
-```mermaid
-sequenceDiagram
-    participant User as 用户
-    participant Hook as system.transform Hook
-    participant State as State Manager
-    participant Prompts as Prompt Loader
-    participant Agent as OpenCode Agent
-
-    User->>Hook: 发起对话
-    Hook->>State: 获取当前工作流状态
-    State-->>Hook: 返回 currentStep
-    Hook->>Prompts: loadPromptForStage(currentStep)
-    Prompts->>Prompts: 加载 Workflow Prompt + Stage Prompt
-    Prompts-->>Hook: 返回完整提示词
-    Hook->>Agent: 将 Skill 注入到 system[] 数组
-    Agent->>Agent: 基于注入的能力执行任务
-```
-
-### 3.3 实现代码
-
-**Hook 实现：**
+#### 4.1.1 Agent 定义结构
 
 ```typescript
-// src/workflows/hooks/opencode/index.ts
-"experimental.chat.system.transform": async (_input: unknown, output: { system: string[] }) => {
-  const workflowState = getWorkflowState()
-  
-  const placeholderResolvers: PlaceholderResolver[] = [
-    {
-      token: "{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}",
-      resolve: () => loadWorkflowPrompt(workflow!)
-    },
-    {
-      token: "{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}",
-      resolve: () => {
-        const currentStep = workflowState?.currentStep || null
-        return loadStagePrompt(currentStep, workflow!)
-      }
-    }
-  ]
-
-  replacePlaceholders(output.system, placeholderResolvers)
+interface AgentDefinition {
+  name: string                    // 代理名称
+  description: string             // 代理描述
+  mode: AgentMode                 // 运行模式: primary | subagent | all
+  color?: string                  // UI 显示颜色
+  defaultTemperature: number      // 默认温度
+  defaultMaxTokens?: number       // 默认最大 token
+  promptGenerators: PromptGenerator[]  // 提示词生成器数组
+  defaultPermission?: Record<string, string>  // 默认权限
+  defaultTools?: Record<string, boolean>       // 默认工具配置
 }
 ```
 
-**Skill 文件结构：**
+#### 4.1.2 Agent 提示词动态组合
 
-```
-src/skills/
-├── ir-analysis/
-│   ├── SKILL.md                    # 核心技能定义
-│   └── references/
-│       ├── ir-5w2h-template.md    # 5W2H 模板
-│       └── socratic-guide.md      # 苏格拉底对话指南
-├── scenario-analysis/
-│   └── SKILL.md
-├── use-case-analysis/
-│   ├── SKILL.md
-│   └── references/
-│       ├── use-case-template.md
-│       └── dfx-guidelines.md
-├── functional-refinement/
-│   └── SKILL.md
-├── sr-ar-decomposition/
-│   ├── SKILL.md
-│   ├── references/
-│   │   ├── ddd-patterns.md
-│   │   └── ar-estimation.md
-│   └── templates/
-│       └── sr-ar-template.md
-└── functional-design/
-    ├── SKILL.md
-    └── references/
-        ├── system-design.md
-        └── module-design.md
+每个 Agent 的提示词由多个部分动态组合而成：
+
+```typescript
+// HArchitect 的提示词组合示例
+promptGenerators: [
+  filePrompt("prompts/identity.md"),                              // 1. 身份定义
+  stringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),      // 2. 工作流概览（占位符）
+  filePrompt("prompts/step.md"),                                  // 3. 步骤指导
+  filePrompt("prompts/file.md"),                                  // 4. 文件操作规范
+  filePrompt("prompts/interview.md"),                             // 5. 访谈技巧
+  filePrompt("prompts/constraints.md"),                           // 6. 约束条件
+  stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),          // 7. 当前阶段提示词（占位符）
+]
 ```
 
-**Skill 文件示例：**
+**占位符替换机制：**
 
-```markdown
----
-name: IR Analysis
-description: Conduct Initial Requirement (IR) analysis using 5W2H framework...
----
+- `{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}` → 工作流整体概览提示词
+- `{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}` → 当前阶段的专属提示词
 
-# IR Analysis Skill
+替换发生在 `system.transform` Hook 中，确保每次对话都注入正确的阶段上下文。
 
-## Core Workflow
-1. Establish Identity
-2. Conduct Socratic Dialogue
-3. Gather Context
-4. Generate Output
+#### 4.1.3 Agent 权限矩阵
 
-## Output Format
-The `需求信息.md` must follow this structure:
-- 一句话总结
-- 5W2H 结构化分析（Who, What, When, Why, Where, How Much, How）
+| Agent | edit | skill | task | hd_handover | hd_submit_evaluation |
+|-------|------|-------|------|-------------|---------------------|
+| **HArchitect** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **HEngineer** | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **HCritic** | ❌ (只读) | ✅ | ❌ | ❌ | ✅ |
+| **HCollector** | ✅ | ✅ | ✅ | ❌ | ❌ |
 
-## Quality Checklist
-- [ ] 一句话总结清晰传达核心价值
-- [ ] Who 涵盖所有关键利益相关者
-- ...
+### 4.2 Workflow 工作流引擎
+
+#### 4.2.1 工作流定义结构
+
+```typescript
+interface WorkflowDefinition {
+  id: string                      // 工作流唯一标识
+  name: string                    // 工作流名称
+  description: string             // 工作流描述
+  promptFile?: string             // 工作流级别提示词文件
+  stageFallbackPromptFile?: string // 阶段回退提示词文件
+  stageOrder: string[]            // 阶段执行顺序
+  stages: Record<string, WorkflowStageDefinition>  // 阶段定义映射
+}
+
+interface WorkflowStageDefinition {
+  name: string                    // 阶段显示名称
+  description: string             // 阶段描述
+  agent: string                   // 负责该阶段的 Agent
+  promptFile?: string             // 阶段专属提示词文件
+  gate?: boolean                  // 是否启用质量门禁
+  beforeStage?: StageHookFn[]     // 进入阶段前执行的钩子
+  afterStage?: StageHookFn[]      // 离开阶段后执行的钩子
+  getHandoverPrompt: (currentStageName, thisStageName) => string  // 生成交接提示词
+}
 ```
 
----
+#### 4.2.2 工作流状态结构
 
-## 4. Agent 协作机制
+```typescript
+interface WorkflowState {
+  typeId: string                  // 工作流类型 ID
+  workflow: Record<string, WorkflowStage>  // 各阶段状态
+  currentStep: string | null      // 当前活动阶段
+  handoverTo: string | null       // 交接目标阶段
+  gateResult: GateResult | null   // 当前阶段质量门结果
+}
 
-### 4.1 Agent 能力矩阵
+interface WorkflowStage {
+  isCompleted: boolean            // 阶段是否完成
+  score?: number | null           // 最近一次评审得分
+  comment?: string | null         // 最近一次评审评语
+}
 
-| Agent | Mode | Tool 权限 | 核心能力 | Temperature |
-|-------|------|-----------|---------|-------------|
-| **HCollector** | all | websearch, webfetch, task, edit | 资料收集、文档整理 | 0.3 |
-| **HArchitect** | primary | edit, skill, task, question | 需求分析、流程协调 | 0.6 |
-| **HEngineer** | primary | edit, skill, task, question | 技术设计、需求分解 | 0.4 |
-| **HCritic** | subagent | read, grep, glob | 文档质量检查、一致性验证 | 0.1 |
+interface GateResult {
+  score: number | null            // 质量评分 (0-100)
+  comment?: string | null         // 评审评语
+  stage?: string | null           // 产生此结果的阶段
+}
+```
 
-### 4.2 Agent 协作流程
+#### 4.2.3 交接验证规则
+
+```typescript
+// 交接验证逻辑
+function validateHandover(currentStep, targetStep, stageOrder) {
+  const currentIndex = currentStep ? stageOrder.indexOf(currentStep) : -1
+  const targetIndex = stageOrder.indexOf(targetStep)
+
+  // 规则 1: 无当前步骤时，只能交接给第一个阶段
+  if (currentIndex === -1) {
+    return targetIndex === 0
+  }
+
+  // 规则 2: 只允许下一阶段或回退到之前阶段
+  const isNextStep = targetIndex === currentIndex + 1
+  const isBackwardStep = targetIndex <= currentIndex
+
+  return isNextStep || isBackwardStep
+}
+```
+
+### 4.3 Gate 质量门禁
+
+#### 4.3.1 质量门工作流程
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant User as 用户
-    participant HA as HArchitect
-    participant HC as HCollector
-    participant HE as HEngineer
-    participant HCr as HCritic
+    participant Agent as HArchitect/HEngineer
+    participant Critic as HCritic
+    participant Service as WorkflowService
     participant State as State Manager
 
-    Note over User,State: 阶段 1: 数据收集
-    User->>HA: "我想设计一个XX系统"
-    HA->>State: hd_handover("dataCollection")
-    HA->>HC: 委派数据收集任务
-    HC->>HC: 收集参考资料
-    HC-->>HA: 交接控制权
-
-    Note over User,State: 阶段 2-5: 需求分析（HArchitect 主导）
-    State->>HA: 当前阶段 = IRAnalysis
-    HA->>HA: 执行 IR 分析（注入 IR Analysis Skill）
-HA->>HCr: task(subagent=HCritic) 评审 需求信息.md
-    HCr->>State: hd_submit_evaluation({ score: 88 })
-    HA->>HA: 随居前进（阶段自动标记完成）
-
-    State->>HA: 当前阶段 = scenarioAnalysis
-    HA->>HA: 场景分析（注入 Scenario Skill）
-    HA->>HCr: task(subagent=HCritic) 评审 功能场景.md
-    HCr->>State: hd_submit_evaluation({ score: 85 })
-    HA->>HA: 随居前进（阶段自动标记完成）
-
-    Note over User,State: ... 经过 useCaseAnalysis, functionalRefinement
-
-    State->>HA: 当前阶段 = functionalRefinement
-    HA->>HA: 功能细化（注入 Functional Refinement Skill）
-    HA->>HCr: task(subagent=HCritic) 评审功能列表
-    HCr->>State: hd_submit_evaluation({ score: 90 })
-    HA->>State: hd_handover("requirementDecomposition")
-
-    Note over User,State: 阶段 6-8: 系统设计（HEngineer 接管）
-    State->>HE: 当前阶段 = requirementDecomposition
-    HE->>HE: 需求分解（注入 SR-AR Skill）
-    HE->>HCr: task(subagent=HCritic) 评审 SR-AR 文档
-    HCr->>State: hd_submit_evaluation({ score: 82 })
-    HE->>HA: 随居前进（阶段自动标记完成）
-
-    State->>HE: 当前阶段 = systemFunctionalDesign
-    HE->>HE: 系统设计（注入 Functional Design Skill）
-    HE->>HA: 随居前进（阶段自动标记完成）
-
-    State->>HE: 当前阶段 = moduleFunctionalDesign
-    HE->>HE: 模块设计
-    HE->>HA: 随居前进（阶段自动标记完成）
+    Note over Agent,State: 阶段文档完成
+    Agent->>Critic: task(subagent=HCritic)<br/>评审文档
+    
+    Critic->>Critic: 检查文档完整性
+    Critic->>Critic: 检查文档一致性
+    Critic->>Critic: 检查标准符合度
+    Critic->>Critic: 计算评分 (0-100)
+    
+    Critic->>Service: hd_submit_evaluation({score, comment})
+    Service->>State: setGateResult({score, comment})
+    State-->>Service: 更新后的状态
+    
+    Note over Agent,State: Agent 尝试交接
+    Agent->>Service: hd_handover("nextStage")
+    Service->>State: isGateApproved()?
+    
+    alt score > 75
+        State-->>Service: true
+        Service->>State: setHandover("nextStage")
+        Service-->>Agent: {success: true}
+    else score ≤ 75
+        State-->>Service: false
+        Service-->>Agent: {success: false, error: "Gate not passed"}
+    end
 ```
 
-### 4.3 事件驱动交接
-
-通过 OpenCode 的 `session.idle` 事件实现 Agent 交接：
+#### 4.3.2 质量门工具定义
 
 ```typescript
-// src/workflows/hooks/opencode/index.ts
-event: async ({ event }: { event: any }) => {
-  const sessionID = event.properties?.sessionID
-  if (!sessionID) return
+// hd_submit_evaluation - 仅 HCritic 可调用
+{
+  description: "[HCritic only] Submit quality evaluation for the current workflow stage",
+  args: {
+    score: number,      // 质量评分 (0-100)
+    comment?: string    // 评审评语
+  }
+}
 
-  if (event.type === "session.idle") {
-    const workflowState = getWorkflowState()
+// hd_handover - HArchitect/HEngineer 可调用
+{
+  description: "Set the handover workflow step. Requires gate score > 75",
+  args: {
+    step_name: string   // 目标阶段名称
+  }
+}
+```
 
-    if (workflowState && workflowState.handoverTo !== null) {
-      const handoverPhase = workflowState.handoverTo
-      const currentPhase = workflowState.currentStep
+#### 4.3.3 质量门评分标准
 
-      const nextAgent = getHandoverAgent(workflow!, handoverPhase)
-      const handoverContent = getHandoverPrompt(workflow!, currentPhase, handoverPhase)
+| 分数范围 | 等级 | 说明 |
+|---------|------|------|
+| 90-100 | 优秀 | 文档完整、一致、符合所有标准 |
+| 75-89 | 合格 | 文档基本完整，可通过门禁 |
+| 60-74 | 待改进 | 文档存在明显缺陷，需补充 |
+| 0-59 | 不合格 | 文档严重缺失，需重做 |
 
-      // 执行交接（更新状态）
-      executeWorkflowHandover(workflow!)
-      
-      // 向目标 Agent 发送交接消息
-      await prompt(sessionID, nextAgent, handoverContent)
+### 4.4 Stage Hooks 阶段钩子
+
+#### 4.4.1 钩子类型与执行时机
+
+```typescript
+interface StageHookFn {
+  (ctx: {
+    stageKey: string           // 阶段 key
+    stageName: string          // 阶段显示名称
+    workflow: WorkflowDefinition
+    sessionID?: string
+    adapter?: PlatformAdapter  // 平台适配器
+  }): Promise<void>
+}
+```
+
+**执行时机：**
+
+| 钩子类型 | 执行时机 | 典型用途 |
+|---------|---------|---------|
+| `beforeStage` | 进入新阶段后、Agent 开始工作前 | 资料收集、环境准备 |
+| `afterStage` | 离开阶段后、状态更新完成后 | 上下文压缩、清理工作 |
+
+#### 4.4.2 内置钩子实现
+
+**HCollector Hook (beforeStage)**
+
+```typescript
+// 在阶段开始前自动收集资料
+function createHCollectorHook(options: { domains: CollectionDomain[] }): StageHookFn {
+  return async ({ stageKey, sessionID, adapter }) => {
+    // 检查资料是否已收集完成
+    const completed = domains.every(d => existsSync(`.hyper-designer/document/${d}/completed`))
+    
+    if (!completed) {
+      // 委派 HCollector 收集资料
+      await adapter.sendPrompt({
+        sessionId: sessionID,
+        agent: 'HCollector',
+        text: '收集资料指令...'
+      })
     }
   }
 }
 ```
 
----
-
-## 5. 工作流插件系统
-
-### 5.1 插件架构
-
-```
-src/workflows/plugins/
-├── classic/              # 经典需求工程工作流
-│   ├── index.ts          # 工作流定义与导出
-│   └── prompts/          # 阶段提示词
-│       ├── workflow.md
-│       ├── dataCollection.md
-│       ├── IRAnalysis.md
-│       └── ...
-│
-└── open-source/          # 开源项目工作流
-    ├── index.ts          # 工作流定义与导出
-    └── prompts/
-```
-
-### 5.2 工作流定义示例
+**Summarize Hook (afterStage)**
 
 ```typescript
-// src/workflows/plugins/classic/index.ts
-export const classicWorkflow: WorkflowDefinition = {
-  id: 'classic',
-  name: 'Classic Requirements Engineering',
-  description: '8-stage workflow from data collection to module design',
-  
-  promptFile: 'prompts/workflow.md',
-  stageFallbackPromptFile: 'prompts/fallback.md',
-  
-  stageOrder: [
-    'dataCollection',
-    'IRAnalysis',
-    'scenarioAnalysis',
-    'useCaseAnalysis',
-    'functionalRefinement',
-    'requirementDecomposition',
-    'systemFunctionalDesign',
-    'moduleFunctionalDesign',
-  ],
+// 在阶段结束后压缩上下文
+const summarizeHook: StageHookFn = async ({ sessionID, adapter }) => {
+  await adapter.summarizeSession(sessionID)
+}
+```
 
-  stages: {
-    dataCollection: {
-      name: 'Data Collection',
-      description: 'Collect reference materials and domain knowledge',
-      agent: 'HCollector',
-      promptFile: 'prompts/dataCollection.md',
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `步骤${current}结束，` : ''
-        return `${prefix}进入Data Collection阶段...`
-      },
-    },
-    
-    IRAnalysis: {
-      name: 'Initial Requirement Analysis',
-      description: 'Conduct IR analysis using 5W2H framework',
-      agent: 'HArchitect',
-      skill: 'ir-analysis',  // 关联 Skill
-      promptFile: 'prompts/IRAnalysis.md',
-      getHandoverPrompt: (current) => {
-        const prefix = current ? `步骤${current}结束，` : ''
-        return `${prefix}进入Initial Requirement Analysis阶段...`
-      },
-    },
-    // ... 其他阶段
+#### 4.4.3 Classic 工作流钩子配置
+
+```typescript
+stages: {
+  IRAnalysis: {
+    beforeStage: [createHCollectorHook({ domains: ['domainAnalysis'] })],
+    // 进入 IR 阶段前收集领域分析资料
+  },
+  
+  scenarioAnalysis: {
+    beforeStage: [createHCollectorHook({ domains: ['systemRequirementAnalysis'] })],
+    afterStage: [summarizeHook],
+    // 进入场景分析前收集系统需求资料，离开后压缩上下文
+  },
+  
+  systemFunctionalDesign: {
+    beforeStage: [createHCollectorHook({ domains: ['systemDesign', 'codebase'] })],
+    afterStage: [summarizeHook],
+    // 进入系统设计前收集系统设计和代码库资料
   },
 }
 ```
 
-### 5.3 添加新工作流
+---
 
-1. 在 `src/workflows/plugins/` 创建新目录
-2. 实现 `WorkflowDefinition` 接口
-3. 创建阶段提示词文件
-4. 在 `src/workflows/core/registry.ts` 中注册：
+## 5. 完整工作流程
 
-```typescript
-const workflowRegistry: Record<string, WorkflowDefinition> = {
-  classic: classicWorkflow,
-  "open-source": openSourceWorkflow,
-  "custom": customWorkflow,  // 新工作流
-}
+### 5.1 端到端时序图
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant P as Plugin
+    participant OC as OpenCode
+    participant WS as WorkflowService
+    participant S as State
+    participant A as Agent<br/>(HArchitect/HEngineer/<br/>HCollector/HCritic)
+
+    Note over U,A: === 初始化 ===
+    U->>P: 启动插件
+    P->>WS: 创建 WorkflowService
+    P->>OC: 注册 Hooks
+    P->>A: 注册 4 个 Agent
+
+    Note over U,A: === 进入 IR 分析阶段 ===
+    U->>P: @HArchitect 我想设计一个系统
+    P->>OC: 触发 system.transform
+    OC->>WS: getState()
+    WS-->>OC: {currentStep: null}
+    OC->>OC: 替换占位符，注入阶段提示词
+    OC-->>A: 注入提示词
+    
+    A->>WS: hd_handover("IRAnalysis")
+    WS->>S: setHandover("IRAnalysis")
+    WS-->>A: {success: true}
+
+    Note over U,A: === 交接执行 (session.idle) ===
+    P->>OC: 触发 session.idle
+    OC->>WS: executeHandover()
+    WS->>S: currentStep = "IRAnalysis"
+    
+    Note over U,A: 执行 beforeStage 钩子
+    OC->>A: HCollector 收集领域分析资料
+    A-->>OC: 完成 (session.idle)
+
+    Note over U,A: === IR 分析阶段执行 ===
+    OC->>A: HArchitect 进入 IR 分析阶段
+    
+    loop 需求澄清
+        A->>U: 提问 (如：系统边界？核心用户？)
+        U->>A: 回答
+    end
+    
+    A->>A: 生成 ir信息.md
+    
+    Note over U,A: 质量门检查
+    A->>A: HCritic 评审文档
+    A->>WS: hd_submit_evaluation({score: 85})
+    WS->>S: setGateResult({score: 85})
+    
+    Note over U,A: 请求交接
+    A->>WS: hd_handover("scenarioAnalysis")
+    WS->>S: isGateApproved()? (85 > 75 ✓)
+    WS->>S: setHandover("scenarioAnalysis")
+    WS-->>A: {success: true}
+
+    Note over U,A: === 交接执行 (session.idle) ===
+    P->>OC: 触发 session.idle
+    OC->>WS: executeHandover()
+    WS->>S: currentStep = "scenarioAnalysis"
+    
+    Note over U,A: 执行 afterStage 钩子 (离开 IRAnalysis)
+    OC->>OC: summarizeSession()
+    
+    Note over U,A: 执行 beforeStage 钩子 (进入 scenarioAnalysis)
+    OC->>A: HCollector 收集系统需求资料
+    A-->>OC: 完成 (session.idle)
+    
+    Note over U,A: === 继续后续阶段... ===
+```
+
+### 5.2 阶段流转状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> IRAnalysis: 用户发起需求
+    
+    IRAnalysis --> GateCheck1: 完成文档
+    GateCheck1 --> IRAnalysis: score ≤ 75<br/>需改进
+    GateCheck1 --> scenarioAnalysis: score > 75<br/>通过门禁
+    
+    scenarioAnalysis --> GateCheck2: 完成文档
+    GateCheck2 --> scenarioAnalysis: score ≤ 75
+    GateCheck2 --> useCaseAnalysis: score > 75
+    
+    useCaseAnalysis --> GateCheck3: 完成文档
+    GateCheck3 --> useCaseAnalysis: score ≤ 75
+    GateCheck3 --> functionalRefinement: score > 75
+    
+    functionalRefinement --> GateCheck4: 完成文档
+    GateCheck4 --> functionalRefinement: score ≤ 75
+    GateCheck4 --> requirementDecomposition: score > 75<br/>切换到 HEngineer
+    
+    requirementDecomposition --> GateCheck5: 完成文档
+    GateCheck5 --> requirementDecomposition: score ≤ 75
+    GateCheck5 --> systemFunctionalDesign: score > 75
+    
+    systemFunctionalDesign --> GateCheck6: 完成文档
+    GateCheck6 --> systemFunctionalDesign: score ≤ 75
+    GateCheck6 --> moduleFunctionalDesign: score > 75
+    
+    moduleFunctionalDesign --> GateCheck7: 完成文档
+    GateCheck7 --> moduleFunctionalDesign: score ≤ 75
+    GateCheck7 --> [*]: score > 75<br/>工作流完成
+    
+    note right of IRAnalysis
+        beforeStage: 收集领域分析资料
+    end note
+    
+    note right of scenarioAnalysis
+        beforeStage: 收集系统需求资料
+        afterStage: 压缩上下文
+    end note
 ```
 
 ---
 
-## 6. 核心技术亮点
+## 6. 平台适配器模式
 
-### 6.1 框架无关设计
-
-**核心逻辑与框架解耦：**
-
-```
-src/
-├── agents/           # Agent 定义（框架无关）
-├── workflows/        # 工作流逻辑（框架无关）
-├── skills/           # Skill 文件（框架无关）
-└── tools/            # 工具定义（多运行时支持）
-
-opencode/
-└── .plugins/
-    └── hyper-designer.ts  # OpenCode 框架适配层
-```
-
-**优势：**
-
-- 核心业务逻辑可复用到其他 AI 框架（Claude Code 等）
-- 通过 `RuntimeType` 支持多运行时
-- 降低框架升级风险
-
-### 6.2 动态提示组合
-
-每个 Agent 支持多阶段提示动态加载：
+### 6.1 适配器接口定义
 
 ```typescript
-const DEFINITION: AgentDefinition = {
-  promptGenerators: [
-    filePrompt(join(__dirname, "prompts", "identity.md")),
-    filePrompt(join(__dirname, "prompts", "constraints.md")),
-    toolsPrompt(["ask_user", "task"]),
-    filePrompt(join(__dirname, "prompts", "step.md")),
-    stringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),  // 占位符
-    stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),      // 运行时替换
-  ],
+interface PlatformAdapter {
+  // 创建新会话
+  createSession(title: string): Promise<string>
+  
+  // 发送提示词给指定 Agent
+  sendPrompt(params: {
+    sessionId: string
+    agent: string
+    text: string
+    schema?: Record<string, unknown>
+  }): Promise<{
+    structuredOutput?: unknown
+    text?: string
+  }>
+  
+  // 删除会话
+  deleteSession(sessionId: string): Promise<void>
+  
+  // 压缩会话上下文
+  summarizeSession(sessionId: string): Promise<void>
 }
 ```
 
-### 6.3 状态持久化与验证
-
-工作流状态持久化到 JSON 文件，支持：
-
-- **进度恢复**：中断后可继续
-- **多用户隔离**：每个工作目录独立状态
-- **交接验证**：防止跳过关键步骤
+### 6.2 OpenCode 适配器实现
 
 ```typescript
-// 交接验证逻辑
-export function setWorkflowHandover(stepName: string | null, definition: WorkflowDefinition): WorkflowState {
-  // ...
-  const stageOrder = definition.stageOrder
-  const currentIndex = currentStep ? stageOrder.indexOf(currentStep) : -1
-  const targetIndex = stageOrder.indexOf(stepName)
+function createOpenCodeAdapter(ctx: PluginInput, config: HDConfig): PlatformAdapter {
+  return {
+    createSession: async (title) => {
+      const result = await ctx.client.session.create({
+        body: { title },
+        query: { directory: ctx.directory }
+      })
+      return result.data.id
+    },
 
-  // 如果没有当前步骤，只能交接给第一个步骤
-  if (currentIndex === -1) {
-    if (targetIndex !== 0) {
-      // 拒绝交接
-      return state
-    }
-  } else {
-    // 只允许下一个步骤或向后步骤
-    const isNextStep = targetIndex === currentIndex + 1
-    const isBackwardStep = targetIndex <= currentIndex
+    sendPrompt: async ({ sessionId, agent, text, schema }) => {
+      const response = await ctx.client.session.prompt({
+        path: { id: sessionId },
+        body: {
+          agent,
+          parts: [{ type: 'text', text }],
+          ...(schema && { format: { type: 'json_schema', schema } })
+        }
+      })
+      return { structuredOutput: response.data?.info?.structured_output }
+    },
 
-    if (!isNextStep && !isBackwardStep) {
-      // 拒绝交接（不允许跳过）
-      return state
+    summarizeSession: async (sessionId) => {
+      const model = await resolveDefaultModel(ctx, config)
+      await ctx.client.session.summarize({
+        path: { id: sessionId },
+        body: { providerID: model.providerID, modelID: model.modelID }
+      })
     }
   }
-  // ...
 }
 ```
 
-### 6.4 质量保证机制
+### 6.3 扩展到其他平台
 
-通过 HCritic Agent 实现自动审查：
+通过实现 `PlatformAdapter` 接口，可以将 Hyper Designer 移植到其他 AI 平台：
 
-- **完整性检查**：确保输出文档包含所有必需章节
-- **一致性验证**：确保阶段间文档逻辑一致
-- **标准符合度**：对照 Skill 中的质量清单验证
+```
+PlatformAdapter (接口)
+    │
+    ├── OpenCode Adapter (已实现)
+    │
+    ├── Claude Code Adapter (未来)
+    │
+    └── 其他平台 Adapter (未来)
+```
 
-HCritic 配置为只读模式，确保评审的客观性：
+---
+
+## 7. 工具系统
+
+### 7.1 工具定义
+
+Hyper Designer 提供三个核心工具：
+
+| 工具名称 | 权限 | 描述 |
+|---------|------|------|
+| `hd_workflow_state` | 所有 Agent | 获取当前工作流状态 |
+| `hd_handover` | HArchitect, HEngineer | 设置交接目标（需通过质量门） |
+| `hd_submit_evaluation` | 仅 HCritic | 提交质量评审结果 |
+
+### 7.2 工具调用流程
 
 ```typescript
-defaultPermission: {
-  bash: "deny",
-  edit: "deny",      // 只读
-  skill: "allow",    // 可使用 skill 进行检查
-  // ...
+// hd_handover 工具实现
+async execute(params: { step_name: string }) {
+  // 1. 检查质量门
+  if (!workflowService.isGateApproved()) {
+    return {
+      success: false,
+      error: "Gate not passed. Current score must be > 75"
+    }
+  }
+  
+  // 2. 设置交接目标
+  const state = workflowService.setHandover(params.step_name)
+  
+  // 3. 返回结果
+  return {
+    success: true,
+    handover_to: params.step_name,
+    instruction: "STOP immediately. Handover will be processed on session.idle"
+  }
 }
 ```
 
 ---
 
-## 7. 配置系统
+## 8. 配置系统
 
-### 7.1 配置层级
+### 8.1 配置层级
 
 ```
-配置优先级（高 -> 低）：
+配置优先级（高 → 低）：
 1. 代码中的 AgentDefinition 默认值
 2. ~/.config/opencode/hyper-designer/hd-config.json (全局配置)
 3. ./.hyper-designer/hd-config.json (项目配置)
 4. 环境变量 (HD_PROJECT_CONFIG_PATH, HD_GLOBAL_CONFIG_PATH)
 ```
 
-### 7.2 配置文件格式
+### 8.2 配置文件格式
 
 ```json
 {
@@ -656,7 +738,7 @@ defaultPermission: {
 }
 ```
 
-### 7.3 默认温度配置
+### 8.3 默认温度配置
 
 | Agent | 默认温度 | 理由 |
 |-------|---------|------|
@@ -667,231 +749,122 @@ defaultPermission: {
 
 ---
 
-## 8. 完整工作流程时序图
+## 9. 扩展指南
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant U as 用户
-    participant P as Plugin
-    participant H as Hooks
-    participant S as State
-    participant Agents as Agent 系统
+### 9.1 添加新工作流
 
-    Note over U,Agents: 初始化
-    U->>P: 启动插件
-    P->>Agents: 注册 4 个 Agent
-    P->>H: 注册 Hooks
+1. 在 `src/workflows/plugins/` 创建新目录
+2. 实现 `WorkflowDefinition` 接口
+3. 创建阶段提示词文件
+4. 在 `src/workflows/core/registry.ts` 中注册
 
-    Note over U,Agents: 对话开始
-    U->>P: @HArchitect 我想设计一个系统
-    P->>H: 触发 system.transform
-    H->>S: getWorkflowState()
-    S-->>H: currentStep=null, handoverTo=null
-    H-->>Agents: [无 Skill 注入，使用基础 prompt]
-    Agents->>Agents: HArchitect 分析需求
+### 9.2 添加新阶段钩子
 
-    Note over U,Agents: 进入数据收集阶段
-    Agents->>S: hd_handover("dataCollection")
-    Agents->>U: 完成分析，委派 HCollector
+1. 在 `src/workflows/core/stageHooks/` 创建新钩子
+2. 实现 `StageHookFn` 接口
+3. 在工作流定义中配置 `beforeStage` 或 `afterStage`
 
-    Note over U,Agents: 触发交接（session.idle 事件）
-    P->>H: 事件触发
-    H->>S: getWorkflowState()
-    S-->>H: handoverTo=dataCollection
-    H->>S: executeWorkflowHandover()
-    H->>Agents: 调用 HCollector，传递交接 Prompt
-    Agents->>Agents: HCollector 执行数据收集
+### 9.3 添加新 Agent
 
-    Note over U,Agents: 进入 IR 分析阶段
-    Agents->>S: hd_handover("IRAnalysis")
-    Agents->>U: HCollector 完成，交接回 HArchitect
-
-    P->>H: 事件触发
-    H->>S: getWorkflowState()
-    S-->>H: handoverTo=IRAnalysis
-    H->>S: executeWorkflowHandover()
-    H->>Agents: 调用 HArchitect
-
-    Note over U,Agents: Skill 注入执行
-    H->>H: loadPromptForStage("IRAnalysis")
-    H->>H: 读取 src/skills/ir-analysis/SKILL.md
-    H->>Agents: 注入 5W2H 方法论、模板、检查清单
-Agents->>Agents: HArchitect 生成 需求信息.md（阶段自动标记完成）
-
-    Note over U,Agents: 持续迭代
-    Note right of Agents: 重复类似流程<br/>经过所有 8 个阶段<br/>每个阶段注入对应 Skill
-```
+1. 在 `src/agents/` 创建新目录
+2. 定义 `AgentDefinition`
+3. 创建提示词文件
+4. 在 `src/agents/utils.ts` 中注册
 
 ---
 
-## 9. 输出件规范
+## 10. 关键技术亮点
 
-### 9.1 文档目录结构
+### 10.1 框架无关设计
 
-```
-.hyper-designer/
-├── workflow_state.json           # 工作流状态
-└── document/
-    ├── manifest.md              # 文档清单
-    ├── 需求信息.md                # 初始需求（5W2H）
-    ├── 功能场景.md              # 场景库
-    ├── 用例.md                  # 用例规格
-    ├── {系统名}功能列表.md       # 功能清单
-    ├── sr-ar-decomposition.md    # SR-AR 分解
-    ├── system-design.md         # 系统架构设计
-    └── module-specs.md          # 模块技术规格
-```
+核心业务逻辑与 AI 平台解耦，通过 `PlatformAdapter` 接口支持多平台扩展。
 
-### 9.2 各阶段输出规范
+### 10.2 动态提示组合
 
-| 阶段 | 输出文件 | 核心内容 | Skill 检查清单 |
-|------|---------|---------|---------------|
-| 数据收集 | `参考资料清单.md` | 领域资料、代码库分析、FMEA 库 | - |
-| IR 分析 | `需求信息.md` | 5W2H 分析、一句话总结 | 9 项检查 |
-| 场景分析 | `功能场景.md` | 业务/操作/维护/制造/其他场景分类 | 7 项检查 |
-| 用例分析 | `用例.md` | 用例规格、触发事件、验收标准 | 10 项检查 |
-| 功能细化 | `{系统名}功能列表.md` | 简化功能细化表（功能、描述、优先级、估算） | 8 项检查 |
-| 需求分解 | `sr-ar-decomposition.md` | SR-AR 分解、DDD 映射 | 6 项检查 |
-| 系统设计 | `system-design.md` | 架构图、技术栈、数据模型 | 5 项检查 |
-| 模块设计 | `module-specs.md` | 接口定义、算法、数据结构 | 4 项检查 |
+Agent 提示词由多个部分动态组合，支持运行时占位符替换，实现阶段上下文注入。
+
+### 10.3 事件驱动交接
+
+通过 `session.idle` 事件触发交接，确保 Agent 完成当前工作后再切换。
+
+### 10.4 质量门禁机制
+
+每个阶段完成后必须通过质量评审（score > 75）才能进入下一阶段，确保输出质量。
+
+### 10.5 阶段钩子系统
+
+通过 `beforeStage` 和 `afterStage` 钩子实现自动化任务（资料收集、上下文压缩），降低 Agent 负担。
 
 ---
 
-## 10. 关键技术决策
-
-### 10.1 为什么使用 Hook 机制？
-
-**问题：** 如何在不修改 Agent 源码的情况下，动态增强其能力？
-
-**解决方案：**
-
-- OpenCode 提供了 `experimental.chat.system.transform` Hook
-- 在 Agent 执行前拦截，动态向 `system[]` 数组注入内容
-- 根据当前工作流状态加载对应的 Skill
-
-**优势：**
-
-- Agent 专注于自身职责（SOLID 原则）
-- Skill 可独立迭代和更新
-- 支持阶段能力的热插拔
-
-### 10.2 为什么使用事件驱动交接？
-
-**问题：** Agent A 如何将控制权交给 Agent B？
-
-**解决方案：**
-
-- Agent A 设置 `handoverTo` 字段
-- 框架触发 `session.idle` 事件时检测到交接标记
-- Hook 自动向目标 Agent 发送交接 Prompt
-- 目标 Agent 接管工作
-
-**优势：**
-
-- 解耦 Agent 间的直接依赖
-- 支持异步交接
-- 可记录交接历史
-
-### 10.3 为什么使用状态持久化？
-
-**问题：** 如何保证工作流的连续性和可追溯性？
-
-**解决方案：**
-
-- 每次状态变更立即写入 JSON 文件
-- 支持 `getWorkflowState()` 读取当前状态
-- 历史状态可用于审计和回溯
-
-**优势：**
-
-- 进度可恢复
-- 多用户隔离
-- 便于调试和问题排查
-
-### 10.4 为什么区分 Agent Mode？
-
-| Mode | 说明 | 使用场景 |
-|------|------|---------|
-| **primary** | 主要 Agent，遵循 UI 选择的模型 | HArchitect, HEngineer（工作流主导者） |
-| **subagent** | 子代理，用于特定任务 | HCritic（被动触发的评审员） |
-| **all** | 所有模式，具有最大灵活性 | HCollector（可被委派也可独立使用） |
-
----
-
-## 11. 扩展性设计
-
-### 11.1 新增 Agent 步骤
-
-1. 在 `src/agents/` 创建新 Agent 目录
-2. 实现 `createXAgent()` 工厂函数
-3. 在 `src/agents/utils.ts` 中注册到 `BUILTIN_AGENT_FACTORIES`
-4. 在工作流定义的 `stages` 中配置交接
-5. 在 `hd-config.json` 中添加默认配置（可选）
-
-### 11.2 新增工作流阶段
-
-1. 在 `WorkflowDefinition.stageOrder` 中添加新阶段
-2. 在 `stages` 中定义阶段配置（agent, skill, getHandoverPrompt）
-3. 创建阶段提示词文件 `prompts/{stage}.md`
-4. 创建对应的 Skill 文件（如果需要）
-
-### 11.3 新增 Skill
-
-1. 在 `src/skills/` 创建新目录
-2. 编写 `SKILL.md`（包含 Frontmatter、方法论、模板、检查清单）
-3. 在 `references/` 中添加参考文档（可选）
-4. 在工作流阶段定义中通过 `skill` 字段引用
-
----
-
-## 12. 测试策略
-
-### 12.1 测试结构
+## 11. 文件结构总览
 
 ```
-src/__tests__/
-├── framework/           # 单元测试
-│   ├── agents/          # Agent 相关测试
-│   ├── config/          # 配置加载测试
-│   ├── workflow/        # 工作流核心测试
-│   └── plugin/          # 插件集成测试
+src/
+├── adapters/                    # 平台适配器
+│   ├── types.ts                 # PlatformAdapter 接口定义
+│   └── opencode/                # OpenCode 平台实现
+│       ├── adapter.ts           # 适配器实现
+│       ├── modelResolver.ts     # 模型解析
+│       └── index.ts
 │
-└── instances/           # 集成测试
-    ├── integration/     # 端到端集成测试
-    └── workflows/       # 工作流场景测试
+├── agents/                      # Agent 定义
+│   ├── types.ts                 # Agent 类型定义
+│   ├── factory.ts               # Agent 工厂
+│   ├── utils.ts                 # Agent 工具函数
+│   ├── HArchitect/              # 系统架构师
+│   ├── HCollector/              # 需求收集专家
+│   ├── HEngineer/               # 系统工程师
+│   └── HCritic/                 # 设计评审员
+│
+├── workflows/
+│   ├── core/                    # 工作流核心引擎
+│   │   ├── types.ts             # 类型定义
+│   │   ├── state/               # 状态管理
+│   │   │   ├── types.ts         # 状态类型
+│   │   │   ├── operations.ts    # 状态操作
+│   │   │   └── persistence.ts   # 状态持久化
+│   │   ├── runtime/             # 运行时
+│   │   │   ├── handover.ts      # 交接处理
+│   │   │   └── promptLoader.ts  # 提示词加载
+│   │   ├── service/             # 服务层
+│   │   │   └── WorkflowService.ts
+│   │   ├── stageHooks/          # 阶段钩子
+│   │   │   ├── hCollectorHook.ts
+│   │   │   └── summarizeHook.ts
+│   │   └── registry.ts          # 工作流注册表
+│   │
+│   ├── integrations/            # 平台集成
+│   │   └── opencode/            # OpenCode 集成
+│   │       ├── event-handler.ts # 事件处理
+│   │       ├── system-transform.ts # 系统消息转换
+│   │       └── index.ts
+│   │
+│   └── plugins/                 # 工作流插件
+│       └── classic/             # 经典工作流
+│           ├── index.ts         # 工作流定义
+│           └── prompts/         # 阶段提示词
+│
+├── skills/                      # Skill 文件
+│   └── hyper-designer/
+│       ├── ir-analysis/
+│       ├── scenario-analysis/
+│       ├── use-case-analysis/
+│       ├── functional-refinement/
+│       ├── sr-ar-decomposition/
+│       └── functional-design/
+│
+├── tools/                       # 工具定义
+│   ├── index.ts                 # 工具类型定义
+│   └── opencode.ts              # OpenCode 工具语法
+│
+├── config/                      # 配置加载
+│   └── loader.ts
+│
+└── utils/                       # 工具函数
+    └── logger.ts
+
+opencode/
+└── .plugins/
+    └── hyper-designer.ts        # OpenCode 插件入口
 ```
-
-### 12.2 核心测试场景
-
-- **Agent 工厂测试**：验证 `createAgent` 正确合并配置
-- **状态管理测试**：验证工作流状态转换和持久化
-- **交接逻辑测试**：验证阶段交接验证规则
-- **提示词加载测试**：验证 Skill 注入逻辑
-- **配置加载测试**：验证配置合并优先级
-
----
-
-## 13. 总结
-
-### 13.1 核心成果
-
-- **标准化工作流**：8 阶段从需求到设计的完整流程
-- **AI 能力专业化**：每个阶段通过 Skill 注入专属方法论
-- **专业化协作**：4 个 Agent 各司其职、无缝协作
-- **输出件规范**：每个阶段产出结构化设计文档
-- **质量保证**：HCritic 自动审查文档质量
-
-### 13.2 技术价值
-
-- **可复用**：框架无关设计，核心逻辑可移植
-- **可扩展**：Agent、阶段、Skill 均可独立扩展
-- **可维护**：清晰的模块划分和代码结构
-- **可追溯**：状态持久化支持过程审计
-
-### 13.3 业务价值
-
-- **提升效率**：AI 自动化重复性工作
-- **保证质量**：标准化流程和 Skill 指导
-- **降低门槛**：新手也能产出专业设计文档
-- **沉淀知识**：Skill 文件是企业方法论的最佳载体
