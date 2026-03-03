@@ -66,6 +66,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptFile: 'prompts/IRAnalysis.md',
       gate: true,
       beforeStage: [irAnalysisCollectorHook],
+      afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行严格的需求分析', currentName),
     },
