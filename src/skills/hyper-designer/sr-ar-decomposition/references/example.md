@@ -103,8 +103,8 @@ Using DDD principles:
 **实现方式**: 复用现有功能
 - 位置: `user-service/src/controllers/userController.ts`
 - 修改点:
-  - 后端接口扩充: 新增 `POST /v1/users/oauth-link` 接口
-  - 前端功能扩展: 在账号设置页面增加"关联第三方账号"按钮
+  - 接口扩充: 新增 `POST /v1/users/oauth-link` 接口
+  - 客户端/UI变更: 在账号设置页面增加"关联第三方账号"按钮
 
 **数据模型**:
 - 新增 oauth_tokens 表 (user_id, provider, provider_user_id, access_token, refresh_token, expires_at)

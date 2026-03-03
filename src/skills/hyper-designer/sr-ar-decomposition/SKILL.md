@@ -104,7 +104,7 @@ Transform a functional requirements list into:
 - **实现方式**:
   - 选项1：复用现有功能
     - 位置: [模块/文件/函数位置]
-    - 修改点: [后端接口扩充/前端功能扩展的具体内容]
+    - 修改点: [接口扩充/UI变更的具体内容]
   - 选项2：新增功能
     - 调用接口: [API endpoint]
     - 成功处理: [成功时的行为]
@@ -312,8 +312,8 @@ Identify cross-cutting concerns separately:
 - **实现方式**: 复用现有功能
   - 位置: api-gateway/middleware/auth.ts
   - 修改点: 
-    - 后端接口扩充: 增加JWT验证逻辑
-    - 前端功能扩展: 在所有HTTP请求头添加Authorization字段
+    - 接口扩充: 增加JWT验证逻辑
+    - 客户端变更: 在所有HTTP请求头添加Authorization字段
 - **数据模型**: 无变更
 - **工作量估算**: 0.2K
 - **分配团队**: Gateway团队
