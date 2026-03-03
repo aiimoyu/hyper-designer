@@ -341,18 +341,8 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     }
   }
 
-  // 完成交接
-  state.handoverTo = null;
-  state.currentStep = toStep;
-  
-  writeWorkflowStateFile(state);
-  HyperDesignerLogger.info("Workflow", "工作流交接执行完成", { 
-    toStep,
-    workflowId: state.typeId
-  });
-  
-  // 状态转换完成后执行生命周期钩子
-  // afterStage：离开阶段时执行（在状态更新之后，针对已离开的阶段）
+  // Phase 1: afterStage 钩子在 stage 切换之前执行
+  // → 此时磁盘上的 currentStep 仍为 fromStep（离开的阶段）
   const departingStage = fromStep ? definition.stages[fromStep] : null;
   if (departingStage?.afterStage && departingStage.afterStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 afterStage 钩子", { step: fromStep, hookCount: departingStage.afterStage.length });
@@ -361,7 +351,18 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     }
   }
 
-  // beforeStage：进入新阶段时执行（在状态更新之后，针对即将进入的阶段）
+  // Stage 切换：更新 currentStep 并持久化到磁盘
+  // afterStage 全部完成后才写盘，beforeStage 读盘时看到的是新阶段
+  state.handoverTo = null;
+  state.currentStep = toStep;
+  writeWorkflowStateFile(state);
+  HyperDesignerLogger.info("Workflow", "工作流交接执行完成", {
+    toStep,
+    workflowId: state.typeId
+  });
+
+  // Phase 2: beforeStage 钩子在 stage 切换之后执行
+  // → 此时磁盘上的 currentStep 已为 toStep（进入的阶段）
   const incomingStage = definition.stages[toStep];
   if (incomingStage?.beforeStage && incomingStage.beforeStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 beforeStage 钩子", { step: toStep, hookCount: incomingStage.beforeStage.length });

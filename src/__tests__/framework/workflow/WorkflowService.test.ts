@@ -482,10 +482,10 @@ describe("WorkflowService", () => {
       expect(state.currentStep).toBe("IRAnalysis");
     });
 
-    it("persists state to disk BEFORE firing hooks", async () => {
+    it("afterStage runs while disk still shows DEPARTING stage (before state switch)", async () => {
       let stateOnDiskDuringHook: string | null = null;
       const afterHook: StageHookFn = async () => {
-        // Read disk state during hook execution
+        // Read disk state during hook execution — state switch has NOT happened yet
         stateOnDiskDuringHook = readFileSync(STATE_FILE, "utf-8");
       };
 
@@ -509,9 +509,9 @@ describe("WorkflowService", () => {
       // Hook ran and captured disk state
       expect(stateOnDiskDuringHook).not.toBeNull();
       const diskState = JSON.parse(stateOnDiskDuringHook!);
-      // State was already committed: currentStep is IRAnalysis, handoverTo is null
-      expect(diskState.currentStep).toBe("IRAnalysis");
-      expect(diskState.handoverTo).toBeNull();
+      // afterStage runs BEFORE the stage switch: currentStep is still the departing stage
+      expect(diskState.currentStep).toBe("dataCollection");
+      expect(diskState.handoverTo).toBe("IRAnalysis");
     });
 
     it("fires afterStage on departing stage THEN beforeStage on incoming stage", async () => {
@@ -612,7 +612,7 @@ describe("WorkflowService", () => {
       expect(receivedSessionID).toBe("my-session-id");
     });
 
-    it("propagates hook errors without rollback (state already committed)", async () => {
+    it("propagates hook errors before state commit (afterStage throws before transition)", async () => {
       const failingHook: StageHookFn = async () => {
         throw new Error("Hook exploded");
       };
@@ -634,10 +634,11 @@ describe("WorkflowService", () => {
 
       await expect(svc.executeHandover()).rejects.toThrow("Hook exploded");
 
-      // State was already committed BEFORE the hook ran - no rollback
+      // afterStage runs BEFORE the state switch, so if it throws the transition
+      // was never committed — disk still shows the departing stage
       const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"));
-      expect(raw.currentStep).toBe("IRAnalysis");
-      expect(raw.handoverTo).toBeNull();
+      expect(raw.currentStep).toBe("dataCollection");
+      expect(raw.handoverTo).toBe("IRAnalysis");
     });
 
     it("handles initial handover (no current step) to first stage", async () => {
