@@ -118,7 +118,7 @@ Before finalizing `需求信息.md`, verify:
 - [ ] When 明确时间和频率特征
 - [ ] Where 覆盖物理、技术、业务环境
 - [ ] How 描述具体使用方式和流程
-- [ ] How Much 包含可衡量的规格约束
+- [ ] How Much 包含资源投入与成本预算（人力/资金/时间/设备）
 - [ ] 所有内容基于与用户的对话和上下文信息
 
 ## Example Interaction Flow
