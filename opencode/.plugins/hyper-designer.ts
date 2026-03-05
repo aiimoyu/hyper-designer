@@ -5,6 +5,7 @@ import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
 import { createBuiltinAgents } from "../../src/agents/utils"
 import { workflowService } from "../../src/workflows/core/service"
 import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
+import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   return {
@@ -30,7 +31,7 @@ const toOpencodeAgents = (
 }
 
 export const HyperDesignerPlugin: Plugin = async (ctx) => {
-  const agents = await createBuiltinAgents("opencode")
+  const agents = await createBuiltinAgents()
   const mappedAgents = toOpencodeAgents(agents)
   const agentHandler = async (config: Record<string, unknown>) => {
     config.agent = {
@@ -41,6 +42,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
 
 
   const workflowHooks = await createWorkflowHooks(ctx)
+  const documentReviewTools = createDocumentReviewTools()
 
   const hdTools = {
     hd_workflow_state: tool({
@@ -78,6 +80,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     config: agentHandler,
     tool: {
       ...hdTools,
+      ...documentReviewTools,
     },
     event: async (input) => {
       await workflowHooks.event(input)

@@ -10,8 +10,7 @@
 
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
-import { filePrompt, toolsPrompt } from "../factory"
-import type { RuntimeType } from "../../tools"
+import { filePrompt, stringPrompt } from "../factory"
 import { createAgent } from "../factory"
 import { join } from "path"
 import { dirname } from "path"
@@ -54,12 +53,12 @@ const DEFINITION: AgentDefinition = {
   defaultTemperature: 0.4,
   promptGenerators: [
     filePrompt(join(__dirname, "prompts", "identity.md")),
-    filePrompt(join(__dirname, "prompts", "constraints.md")),
+    stringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),
     filePrompt(join(__dirname, "prompts", "step.md")),
-    filePrompt(join(__dirname, "prompts", "workflow.md")),
-    filePrompt(join(__dirname, "prompts", "standard.md")),
+    filePrompt(join(__dirname, "prompts", "file.md")),
     filePrompt(join(__dirname, "prompts", "interview.md")),
-    toolsPrompt(["ask_user", "hd_workflow_state", "hd_handover", "task"]),
+    filePrompt(join(__dirname, "prompts", "constraints.md")),
+    stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
   ],
   defaultPermission: {
     bash: "deny",
@@ -94,8 +93,8 @@ const DEFINITION: AgentDefinition = {
   },
 }
 
-export function createHEngineerAgent(model?: string, runtime?: RuntimeType) {
-  return createAgent(DEFINITION, model, runtime)
+export function createHEngineerAgent(model?: string) {
+  return createAgent(DEFINITION, model)
 }
 
 createHEngineerAgent.mode = DEFINITION.mode

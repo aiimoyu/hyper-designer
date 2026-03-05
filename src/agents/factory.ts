@@ -3,22 +3,20 @@
  * 
  * 负责创建和管理 AI 代理的配置，包括：
  * 1. 从文件加载提示词内容
- * 2. 生成工具相关的提示词
- * 3. 合并默认配置和覆盖配置
- * 4. 创建完整的代理配置对象
+ * 2. 合并默认配置和覆盖配置
+ * 3. 创建完整的代理配置对象
  */
 
 import type { AgentConfig, AgentMode } from "./types"
 import type { AgentOverrideConfig } from "../config/loader"
 import { loadHDConfig } from "../config/loader"
-import { generateToolsPrompt, type RuntimeType } from "../tools"
 import { readFileSync } from "fs"
 import { HyperDesignerLogger } from "../utils/logger"
 
 /**
- * A function that generates a prompt string based on the runtime environment
+ * A function that generates a prompt string
  */
-export type PromptGenerator = (runtime: RuntimeType) => string
+export type PromptGenerator = () => string
 
 /**
  * Creates a PromptGenerator that reads content from a file
@@ -38,32 +36,6 @@ export function filePrompt(filePath: string): PromptGenerator {
         error: err.message
       })
       return `# Failed to load ${filePath}`
-    }
-  }
-}
-
-/**
- * Creates a PromptGenerator that generates tool-related prompts
- * @param toolNames Array of tool names to include in the prompt
- * @returns PromptGenerator function that generates tool prompts
- */
-export function toolsPrompt(toolNames: string[]): PromptGenerator {
-  return (runtime) => {
-    try {
-      HyperDesignerLogger.debug("AgentFactory", `生成工具提示词`, { 
-        runtime, 
-        tools: toolNames 
-      })
-      return generateToolsPrompt(runtime, toolNames)
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error))
-      HyperDesignerLogger.warn("AgentFactory", `生成工具提示词失败`, {
-        runtime,
-        tools: toolNames,
-        action: "generateToolsPrompt",
-        error: err.message
-      })
-      return `# Failed to generate tools prompt for ${runtime}: ${err.message}`
     }
   }
 }
@@ -107,33 +79,19 @@ export interface AgentDefinition {
  * Creates an agent configuration based on a definition and optional overrides
  * @param definition Agent definition containing base configuration
  * @param model Optional model name to use instead of default
- * @param runtime Optional runtime environment (defaults to "opencode")
  * @returns Complete agent configuration object
  */
 export function createAgent(
   definition: AgentDefinition,
-  model?: string,
-  runtime?: RuntimeType
+  model?: string
 ): AgentConfig {
   HyperDesignerLogger.info("AgentFactory", `创建代理`, { agent: definition.name })
   
-  // 加载全局配置
   const config = loadHDConfig()
   const agentConfig = config.agents[definition.name] as AgentOverrideConfig | undefined
 
-  // 解析运行时环境（默认为 opencode）
-  const resolvedRuntime = runtime ?? "opencode"
-  HyperDesignerLogger.debug("AgentFactory", `使用运行时环境`, { 
-    runtime: resolvedRuntime,
-    agent: definition.name
-  })
+  const promptParts = definition.promptGenerators.map(generator => generator())
 
-  // 生成提示词各部分
-  const promptParts = definition.promptGenerators.map(generator =>
-    generator(resolvedRuntime)
-  )
-
-  // 追加自定义提示词内容（如果配置中存在）
   if (agentConfig?.prompt_append) {
     HyperDesignerLogger.debug("AgentFactory", `追加自定义提示词内容`, { 
       agent: definition.name,
@@ -142,7 +100,6 @@ export function createAgent(
     promptParts.push(agentConfig.prompt_append)
   }
 
-  // 合并所有提示词部分
   const finalPrompt = promptParts.join("\n\n")
   HyperDesignerLogger.debug("AgentFactory", `生成最终提示词`, { 
     agent: definition.name,

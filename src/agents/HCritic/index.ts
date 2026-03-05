@@ -11,7 +11,6 @@
 import type { AgentPromptMetadata } from "../types"
 import type { AgentDefinition } from "../factory"
 import { filePrompt } from "../factory"
-import type { RuntimeType } from "../../tools"
 import { createAgent } from "../factory"
 import { join } from "path"
 import { dirname } from "path"
@@ -89,8 +88,8 @@ const DEFINITION: AgentDefinition = {
   },
 }
 
-export function createHCriticAgent(model?: string, runtime?: RuntimeType) {
-  return createAgent(DEFINITION, model, runtime)
+export function createHCriticAgent(model?: string) {
+  return createAgent(DEFINITION, model)
 }
 
 createHCriticAgent.mode = DEFINITION.mode
