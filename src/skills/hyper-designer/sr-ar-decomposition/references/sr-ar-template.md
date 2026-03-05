@@ -302,9 +302,3 @@ SR-001: {SR 名称}
 | 6. 接口与依赖矩阵 | 必填 | 系统元素间交互定义 |
 | 7. 追溯链完整性自检 | 必填 | 质量门前置检查 |
 | 8. 关键设计决策记录 | 推荐 | 设计理由的可追溯性 |
-
-### 下游对接要点
-
-- **systemFunctionalDesign** 从第 3 节（SR 分解）提取 SR 清单和 NFR 指标
-- **moduleFunctionalDesign** 从第 5 节（SR-AR 汇总表）提取增量 SR 清单和 AR 分配表
-- **ir-sr-ar-traceability** 从第 7 节（追溯链自检）验证分解完整性

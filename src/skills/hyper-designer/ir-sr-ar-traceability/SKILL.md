@@ -1,418 +1,359 @@
 ---
 name: ir-sr-ar-traceability
-description: IR-SR-AR bidirectional traceability analysis for requirements engineering. Use when reviewing requirement decomposition quality in HyperDesigner workflow, particularly during functionalRefinement stage review. Validates consistency from IR→SR→AR (upward trace) and AR feasibility against codebase (downward validation). Detects over-design, missing implementations, and code conflicts. Essential for HCritic agent when auditing SR-AR decomposition outputs.
+description: Architecture review skill for auditing IR→SR→AR traceability chains against existing codebases. Use this skill whenever a user asks to review, audit, validate, or evaluate SR-AR decomposition documents, check requirements traceability, identify over-design or missing implementations, verify code feasibility of allocation requirements, detect naming conflicts between new interfaces and existing code, find orphaned SRs without AR coverage, flag ARs without IR support, or assess whether system design aligns with original requirements. Trigger this skill when the user mentions "SR-AR review", "需求分解评审", "追溯性报告", "AR评审", "代码可行性", or any combination of requirements decomposition + code review tasks. This skill acts as an architect reviewer—tracing upward to prevent scope creep and downward to ensure implementation feasibility.
 ---
 
-# IR-SR-AR Bidirectional Traceability Analysis
+# Skill: IR-SR-AR 追溯评审（架构评审师视角）
 
-## Overview
+## 技能用途
 
-This skill performs **R-Reflection** (反馈环) analysis in the HyperDesigner methodology, acting as an **Architecture Auditor** to ensure requirement traceability and implementation feasibility.
+作为**架构评审师**，对 SR-AR 分解分配表进行双向审查：
+- **向上追溯**：确认每个 AR/SR 都能追溯到原始 IR，标记无依据的过度设计
+- **向下验证**：对照现有代码库，验证 AR 中的接口设计、依赖调用是否可落地
 
-**Role**: You are a senior system architecture auditor responsible for validating the integrity of requirement decomposition.
+**三大核心输出：**
+1. **追溯性报告** — IR→SR→AR 映射关系图（含 1:1 / 1:N / N:1 标注）
+2. **差异预警** — 孤立 SR、未实现的 AR、过度设计的模块
+3. **代码可行性验证** — 命名冲突、依赖可行性、复用建议
 
-## Core Responsibilities
+---
 
-### 1. Upward Traceability (向上追溯) - Consistency Check
-Ensure every design decision traces back to original requirements:
-- Verify SR coverage of IRs
-- Verify AR coverage of SRs
-- Detect over-design: ARs without SR justification
-- Detect gaps: SRs without corresponding ARs
+## 输入需求
 
-### 2. Downward Validation (向下验证) - Feasibility Check (Optional)
-Validate ARs against actual codebase:
-- Check naming conflicts with existing code
-- Verify dependency availability (APIs, libraries, database operations)
-- Identify reusable code for AR implementation
-- Flag infeasible AR specifications
+| 输入 | 必需性 | 说明 |
+| :--- | :--- | :--- |
+| SR-AR 分解分配表 | 必需 | `sr-ar-decomposition.md` 或等效文档 |
+| 初始需求（IR）文档 | 必需 | 5W2H 结构的需求信息文档 |
+| 现有项目代码 | 强烈推荐 | 用于可行性验证；若未提供，跳过第三部分 |
 
-## Input Artifacts
+**输入获取方式：**
+1. 请用户确认文档路径，读取 SR-AR 分解表和 IR 文档
+2. 主动浏览项目代码结构（目录树、接口定义、类名、数据库 Schema）
+3. 若代码路径未指定，询问用户或在当前工作目录搜索
 
-**Required**:
-1. **IR Information**: `需求信息.md` - Initial requirements with 5W2H structure
-2. **SR-AR Decomposition**: `SR-AR分解分配表.md` - System and allocated requirements
-3. **Code Context** (optional): LSP analysis results or codebase exploration
+---
 
-**How to load**:
-```typescript
-// Read requirement artifacts
-Read("需求信息.md")
-Read("SR-AR分解分配表.md")
+## 审查工作流（五步法）
 
-// Optional: Gather code context
-task(
-  subagent_type="explore",
-  run_in_background=true,
-  load_skills=[],
-  prompt="Analyze codebase structure: list all exported APIs, class definitions, database schemas, and external library dependencies"
-)
+### 步骤 1：解析输入文档
+
+读取 SR-AR 分解表，提取以下结构化信息：
+
+```
+IR 列表:   [IR-001, IR-002, ...]
+SR 列表:   [SR-001 → 关联IR, SR-002 → 关联IR, ...]
+AR 列表:   [AR-001-01 → 关联SR → 系统元素, ...]
 ```
 
-## Analysis Workflow
+构建内存中的追溯映射：
+```
+IR-001 → [SR-001, SR-002]
+SR-001 → [AR-001-01, AR-001-02]
+SR-002 → [AR-002-01]
+```
 
-### Phase 1: Upward Traceability Analysis
+---
 
-**Step 1: Parse Input Documents**
+### 步骤 2：向上追溯分析（防止过度设计）
 
-Extract structured information:
-- **From IR**: List all IR requirements with their 5W2H components
-- **From SR-AR**: Extract all SRs and their mapped ARs
+**检查每个 SR 是否有 IR 来源：**
 
-**Step 2: Build Traceability Matrix**
+```
+对每个 SR：
+  - SR 是否在 IR-SR 映射表中有对应 IR？
+  - SR 的 What 描述是否能对应到某个 IR 的业务目标？
+  - 若无对应 IR → 标记为 ⚠️ 孤立SR（疑似过度设计）
+```
 
-Create mapping relationships:
+**检查每个 AR 是否能追溯到 SR：**
+
+```
+对每个 AR：
+  - AR 是否明确引用了 SR 编号？
+  - AR 的分配需求描述是否在父 SR 的 What 范围之内？
+  - AR 引入的新功能是否超出了 SR 的边界？
+  - 若 AR 实现的内容无法追溯到 SR 目标 → 标记为 ⚠️ 疑似过度设计
+```
+
+**检查是否有 SR 未被任何 AR 实现：**
+
+```
+对每个 SR：
+  - AR 列表中是否有 AR-SSS-XX 归属于该 SR？
+  - 若无对应 AR → 标记为 ❌ 遗漏SR（需求黑洞）
+```
+
+---
+
+### 步骤 3：向下验证分析（确保可落地）
+
+> 若用户未提供代码库，跳过此步骤，在报告中注明"代码可行性验证：未执行（无代码输入）"
+
+**3.1 命名冲突检查：**
+
+```
+对每个 AR 中提到的新接口/方法/类名：
+  在代码库中搜索同名定义（grep 类名、方法名、接口名）
+  若已存在同名：
+    - 功能相同 → ✅ 可直接复用，建议引用现有实现
+    - 功能不同 → ⚠️ 命名冲突，需重命名或区分
+```
+
+**3.2 依赖可行性检查：**
+
+```
+对每个 AR 描述中提到的底层调用（数据操作/外部SDK/中间件）：
+  - 数据库操作：Schema 中是否存在对应的表/字段？
+  - 外部 SDK：package.json / pom.xml / requirements.txt 中是否有对应依赖？
+  - 内部服务调用：被调用的服务/接口是否已在代码中实现？
+  若调用目标不存在 → ⚠️ 依赖缺失，需新增或修改 AR 描述
+```
+
+**3.3 复用建议识别：**
+
+```
+对每个 AR 描述的功能需求：
+  - 在代码库中搜索语义相似的现有实现
+  - 标记可直接调用/继承/组合的代码路径
+  - 输出格式：AR-XXX-XX 可复用 {文件路径} 中的 {类/方法名}
+```
+
+---
+
+### 步骤 4：映射关系分类
+
+对每个 IR→SR 和 SR→AR 的关联，标注关系类型：
+
+| 关系类型 | 含义 | 标注 |
+| :--- | :--- | :--- |
+| 1:1 | 一个 IR/SR 对应一个 SR/AR | `[1:1]` |
+| 1:N | 一个 IR/SR 对应多个 SR/AR（正常分解）| `[1:N]` |
+| N:1 | 多个 IR/SR 对应同一 SR/AR（可能合并不当）| `[N:1] ⚠️` |
+| 0:1 | 没有上游的孤立节点 | `[孤立] ❌` |
+| 1:0 | 有上游但无下游（遗漏）| `[遗漏] ❌` |
+
+N:1 关系需额外说明：判断是合理聚合（多个需求共享同一实现）还是职责混淆。
+
+---
+
+### 步骤 5：生成评审报告
+
+按以下结构输出报告（详见"输出格式"章节）。
+
+---
+
+## 输出格式
 
 ```markdown
-IR-001 → SR-001, SR-002
-IR-002 → SR-003
-SR-001 → AR-001-01, AR-001-02
-SR-002 → AR-002-01
-SR-003 → (no ARs) ⚠️
-SR-004 → AR-004-01 (but SR-004 has no IR) ⚠️
-```
+# IR-SR-AR 追溯评审报告
 
-**Step 3: Identify Issues**
+## 评审摘要
 
-| Issue Type | Detection Logic | Severity |
-|------------|----------------|----------|
-| **Orphaned SR** | SR exists but no matching IR | High - Possible over-design |
-| **Orphaned AR** | AR exists but no matching SR | High - Over-design |
-| **Missing AR** | SR exists but no ARs allocated | High - Implementation gap |
-| **Missing SR** | IR exists but no SRs created | High - Analysis gap |
-| **Weak mapping** | Vague "Why" in SR 5W2H | Medium - Traceability unclear |
-
-### Phase 2: Downward Validation (Optional)
-
-**Step 1: Extract AR Technical Specifications**
-
-For each AR, identify:
-- Proposed interface names (classes, functions, APIs)
-- Required dependencies (libraries, external services)
-- Data model changes (database schemas, DTOs)
-
-**Step 2: Query Codebase Context**
-
-If LSP analysis results available:
-```typescript
-// Use LSP to check for conflicts
-lsp_symbols(filePath="target/module.ts", scope="workspace", query="ProposedClassName")
-
-// Search for existing implementations
-grep(pattern="function proposedFunctionName", include="*.ts")
-```
-
-If no LSP, use explore agent:
-```typescript
-task(
-  subagent_type="explore",
-  run_in_background=true,
-  load_skills=[],
-  prompt="Find: 1) All exported class/function names matching AR-001-01 proposed interfaces, 2) Existing implementations that could support AR-001-01 scenarios"
-)
-```
-
-**Step 3: Validate Feasibility**
-
-For each AR, classify:
-
-| Status | Criteria | Action |
-|--------|----------|--------|
-| **✅ Feasible** | No conflicts, dependencies available | Proceed |
-| **⚠️ Needs Modification** | Naming conflict or partial dependency missing | Provide alternatives |
-| **❌ Already Exists** | Exact implementation found | Reference existing code |
-| **❌ Infeasible** | Critical dependency unavailable | Flag for architecture revision |
-
-**Step 4: Identify Reuse Opportunities**
-
-Suggest existing code that can be reused or extended:
-```markdown
-AR-001-01 can reuse:
-- `src/auth/TokenValidator.ts` - Extend with new validation logic
-- `src/middleware/authMiddleware.ts` - Add JWT support here
-```
-
-## Output Format
-
-Generate a structured traceability report:
-
-```markdown
-# IR-SR-AR 追溯性分析报告
-
-**Project**: [项目名称]
-**Analysis Date**: [日期]
-**Analyzed Files**:
-- IR: 需求信息.md
-- SR-AR: SR-AR分解分配表.md
-- Code Context: [LSP分析结果 / 代码库探索结果]
+| 项目 | 数量 | 状态 |
+| :--- | :--- | :--- |
+| IR 总数 | N | - |
+| SR 总数 | M | ✅/⚠️ |
+| AR 总数 | K | ✅/⚠️ |
+| 孤立SR（无IR支撑）| X | ❌ |
+| 遗漏SR（无AR覆盖）| Y | ❌ |
+| 疑似过度设计AR | Z | ⚠️ |
+| 命名冲突 | P | ⚠️ |
+| 依赖缺失 | Q | ⚠️ |
 
 ---
 
-## 一致性评分 (Consistency Score)
+## 第一部分：追溯性报告
 
-**总分: X / 100**
+### IR → SR 映射
 
-- IR-SR 追溯完整性: X / 40
-- SR-AR 追溯完整性: X / 40
-- 描述质量 (5W2H): X / 20
+| IR 编号 | IR 描述摘要 | 对应SR | 关系类型 | 状态 |
+| :--- | :--- | :--- | :--- | :--- |
+| IR-001 | {摘要} | SR-001, SR-002 | [1:N] | ✅ |
+| IR-002 | {摘要} | SR-003 | [1:1] | ✅ |
+| — | — | SR-004 | [孤立] | ❌ 无IR来源 |
+
+### SR → AR 映射
+
+| SR 编号 | SR 名称 | 对应AR | 关系类型 | 状态 |
+| :--- | :--- | :--- | :--- | :--- |
+| SR-001 | {名称} | AR-001-01, AR-001-02 | [1:N] | ✅ |
+| SR-002 | {名称} | — | [遗漏] | ❌ 无AR实现 |
+| SR-003 | {名称} | AR-003-01 | [1:1] | ✅ |
+
+### 完整追溯链
+
+> 格式：IR → SR → AR → 系统元素
+
+```
+IR-001（{描述}）
+  └── SR-001（{名称}）[1:N]
+        ├── AR-001-01（{名称}）→ {系统元素}  ✅
+        └── AR-001-02（{名称}）→ {系统元素}  ✅
+  └── SR-002（{名称}）[1:1]
+        └── ❌ 无AR实现
+
+IR-002（{描述}）
+  └── SR-003（{名称}）[1:1]
+        └── AR-003-01（{名称}）→ {系统元素}  ✅
+
+❌ 孤立SR：
+  └── SR-004（{名称}）— 无IR来源，疑似过度设计
+        └── AR-004-01（{名称}）→ {系统元素}
+```
 
 ---
 
-## 追溯性矩阵 (Traceability Matrix)
+## 第二部分：差异预警
 
-### IR → SR Mapping
+### ❌ 孤立SR（无IR支撑 — 疑似过度设计）
 
-| IR ID | IR Summary | Mapped SRs | Status |
-|-------|-----------|------------|--------|
-| IR-001 | [一句话总结] | SR-001, SR-002 | ✅ |
-| IR-002 | [一句话总结] | (none) | ❌ 缺少SR分解 |
+| SR 编号 | SR 名称 | 问题描述 | 建议处理 |
+| :--- | :--- | :--- | :--- |
+| SR-XXX | {名称} | 在IR-SR映射表中无对应IR；SR的What描述"{内容}"无法追溯到任何业务需求 | 删除该SR，或补充相应IR说明业务价值 |
 
-### SR → AR Mapping
+### ❌ 遗漏SR（有SR但无AR实现 — 需求黑洞）
 
-| SR ID | SR Name | Mapped ARs | IR Source | Status |
-|-------|---------|------------|-----------|--------|
-| SR-001 | [SR名称] | AR-001-01, AR-001-02 | IR-001 | ✅ |
-| SR-003 | [SR名称] | (none) | IR-002 | ❌ 无AR实现 |
-| SR-004 | [SR名称] | AR-004-01 | (none) | ⚠️ 无IR支撑 |
+| SR 编号 | SR 名称 | 问题描述 | 建议处理 |
+| :--- | :--- | :--- | :--- |
+| SR-XXX | {名称} | AR分配章节中无 AR-XXX-XX 对应该SR | 补充AR分配，明确由哪个系统元素实现 |
 
----
+### ⚠️ 疑似过度设计AR（超出SR边界）
 
-## 一致性问题警示 (Consistency Warnings)
+| AR 编号 | AR 名称 | 父SR | 超界原因 | 建议处理 |
+| :--- | :--- | :--- | :--- | :--- |
+| AR-XXX-XX | {名称} | SR-XXX | AR描述中"{新增内容}"超出SR的What范围"{SR范围}" | 新增对应SR，或裁剪AR范围 |
 
-### 高优先级 - 过度设计 (Over-Design)
+### ⚠️ N:1关系分析
 
-**SR-004: [SR名称]**
-- **问题**: 该SR无法追溯到任何IR需求
-- **影响**: 可能是需求范围蔓延或误解客户需求
-- **建议**: 
-  1. 确认是否为遗漏的需求项，若是则补充IR
-  2. 若非必需,考虑移除该SR及其ARs
-
-**AR-002-03: [AR名称]**
-- **问题**: 该AR在SR-002中未体现,且无明确场景支撑
-- **影响**: 增加开发成本但无明确价值
-- **建议**: 移除或合并到相关AR
-
-### 高优先级 - 实现缺失 (Missing Implementation)
-
-**SR-003: [SR名称]**
-- **问题**: 该SR已定义但未分配任何AR
-- **影响**: 设计阶段遗漏,将导致开发阶段才发现需求缺失
-- **建议**: 立即补充AR分解,或确认该SR已通过其他方式实现
-
-**IR-002: [IR一句话总结]**
-- **问题**: 该IR未被任何SR覆盖
-- **影响**: 客户需求未被系统分析,可能导致交付不满足预期
-- **建议**: 补充SR分析,或确认该IR已合并到其他IR
-
-### 中优先级 - 描述质量问题
-
-**SR-005: [SR名称]**
-- **问题**: 5W2H中的"Why"字段为"需求要求",未明确指向具体IR
-- **影响**: 追溯性弱,难以验证需求合理性
-- **建议**: 明确标注"基于IR-003的用户登录需求"
+| 多IR/SR | 合并到 | 关系类型 | 评估 |
+| :--- | :--- | :--- | :--- |
+| SR-001, SR-002 | AR-001-01 | [N:1] | {合理聚合/职责混淆，原因说明} |
 
 ---
 
-## 落地可行性分析 (Feasibility Analysis) [可选]
+## 第三部分：代码可行性验证
 
-### AR Feasibility Summary
+> 若未提供代码库，本章节标注"未执行"
 
-| AR ID | AR Name | Code Feasibility | Details |
-|-------|---------|------------------|---------|
-| AR-001-01 | 用户登录接口 | ⚠️ 需修改 | 接口名`/login`已存在于`auth.controller.ts` |
-| AR-001-02 | Token验证中间件 | ✅ 可复用 | 可扩展现有`authMiddleware.ts` |
-| AR-002-01 | 数据加密存储 | ❌ 依赖缺失 | 需要的`crypto-lib`未安装 |
-| AR-003-01 | 用户权限管理 | ✅ 已存在 | 完全实现于`rbac.service.ts` |
+### 3.1 命名冲突
 
-### Detailed Validation
+| AR 编号 | 新设计名称 | 冲突位置 | 冲突类型 | 建议 |
+| :--- | :--- | :--- | :--- | :--- |
+| AR-XXX-XX | {接口/类名} | {文件路径:行号} | 功能相同/功能不同 | 复用现有/重命名为{建议名} |
 
-#### AR-001-01: 用户登录接口
-**Status**: ⚠️ 需修改
-- **命名冲突**: 
-  - 现有接口: `POST /api/v1/login` (src/auth/auth.controller.ts:42)
-  - AR定义: `POST /v1/auth/login`
-  - 建议: 使用AR定义的路径以避免冲突
-  
-- **依赖可行性**: ✅
-  - JWT库: `jsonwebtoken` 已安装
-  - 数据库: PostgreSQL连接已配置
-  
-- **复用建议**:
-  - 可复用 `src/auth/UserService.validateCredentials()` 进行凭证验证
-  - 可复用 `src/utils/TokenGenerator.ts` 生成JWT token
+### 3.2 依赖可行性
 
-#### AR-002-01: 数据加密存储
-**Status**: ❌ 依赖缺失
-- **依赖可行性**: ❌
-  - AR要求: `crypto-lib` 用于AES-256加密
-  - 现状: 该库未在package.json中
-  - 建议: 
-    1. 添加依赖 `npm install crypto-lib`
-    2. 或使用Node.js内置`crypto`模块替代
+| AR 编号 | 依赖描述 | 依赖类型 | 存在性 | 说明 |
+| :--- | :--- | :--- | :--- | :--- |
+| AR-XXX-XX | {调用的服务/库/表} | SDK/DB/内部服务 | ✅ 已存在/❌ 不存在 | {文件路径或缺失说明} |
 
-#### AR-003-01: 用户权限管理
-**Status**: ✅ 已存在
-- **现有实现**: `src/rbac/rbac.service.ts` 完整实现了基于角色的权限控制
-- **建议**: 直接引用现有实现,无需重复开发
-- **文档位置**: docs/architecture/rbac-design.md
+### 3.3 复用建议
+
+| AR 编号 | AR 职责 | 可复用代码 | 文件路径 | 复用方式 |
+| :--- | :--- | :--- | :--- | :--- |
+| AR-XXX-XX | {职责描述} | {类/方法名} | {路径} | 直接调用/继承/组合 |
 
 ---
 
-## 修正建议 (Correction Recommendations)
+## 第四部分：综合建议
 
-### 建议1: 补充缺失的SR
-**优先级**: 🔴 高
+### 优先修复项（P0 — 阻断性问题）
 
-针对 IR-002,需补充以下SR:
-```markdown
-## SR-005: 数据安全管理模块
+1. **{问题标题}**：{描述} → {修复建议}
 
-### SR描述 (5W2H)
-- **Who**: 数据安全子系统
-- **When**: 用户数据存储和传输时
-- **What**: 确保敏感数据的加密存储和安全传输
-- **Where**: 数据层和传输层
-- **Why**: 基于IR-002的数据安全合规要求
-- **How Much**: 覆盖所有敏感字段(密码、个人信息、支付数据)
-- **How**: 通过AES-256加密存储,TLS加密传输
+### 建议改进项（P1 — 设计质量问题）
 
-### 分配的AR列表
-- AR-005-01: 实现数据加密存储服务
-- AR-005-02: 实现数据传输加密
-```
+1. **{问题标题}**：{描述} → {改进建议}
 
-### 建议2: 移除过度设计的AR
-**优先级**: 🟡 中
+### 值得认可的设计决策
 
-AR-002-03 "实时数据同步" 无明确SR支撑且无业务场景,建议:
-- 若确实需要,追加到SR-002并补充场景说明
-- 若非必需,直接移除以降低复杂度
-
-### 建议3: 修正AR命名冲突
-**优先级**: 🟡 中
-
-AR-001-01的接口路径与现有代码冲突,建议采用以下方案之一:
-1. 使用AR定义的路径 `/v1/auth/login` (推荐)
-2. 或重构现有接口到新路径以保持一致性
+- {优点描述}
 
 ---
 
-## 总体评估 (Overall Assessment)
+## 评审自检清单
 
-**一致性状况**: [良好 / 需改进 / 严重问题]
-
-**主要发现**:
-1. [总结关键问题1]
-2. [总结关键问题2]
-3. [总结关键问题3]
-
-**后续行动**:
-- [ ] 补充缺失的SR/AR
-- [ ] 移除无根据的过度设计
-- [ ] 解决命名冲突
-- [ ] 添加缺失的依赖库
-- [ ] 更新追溯矩阵
-
-**建议**: [是否通过审查 / 需返工修正]
+```
+□ 所有IR都被至少一个SR覆盖（向上追溯完整）
+□ 所有SR都被至少一个AR实现（向下追溯完整）
+□ 所有AR都能追溯到某个SR（无孤立AR）
+□ 所有SR都能追溯到某个IR（无孤立SR）
+□ N:1关系已评估是否合理
+□ 命名冲突已检查（若有代码）
+□ 依赖可行性已检查（若有代码）
+□ 复用建议已识别（若有代码）
+□ 综合建议按优先级排列
+```
 ```
 
-## Scoring Methodology
+---
 
-### Consistency Score Calculation (100 points)
+## 评审原则
 
-**IR-SR Traceability (40 points)**:
-- Perfect mapping (all IRs have SRs, no orphaned SRs): 40
-- Each missing SR for IR: -8
-- Each orphaned SR (no IR source): -5
+### 向上追溯原则（防止过度设计）
 
-**SR-AR Traceability (40 points)**:
-- Perfect mapping (all SRs have ARs, no orphaned ARs): 40
-- Each missing AR for SR: -8
-- Each orphaned AR (no SR source): -5
+> "每一行设计都应该有它存在的理由，这个理由必须能追溯到用户的真实需求。"
 
-**Description Quality (20 points)**:
-- All SRs have complete 5W2H: 20
-- Each SR with weak/missing "Why" field: -3
-- Each SR with incomplete 5W2H: -5
+- AR 的存在意义 = 实现某个 SR 的某个方面
+- SR 的存在意义 = 满足某个 IR 的业务目标
+- 无法追溯的设计 = 工程师的假设，不是用户的需求
 
-**Formula**:
+**判断标准：**
 ```
-Score = min(100, 
-            IR_SR_score + 
-            SR_AR_score + 
-            Description_score)
+疑似过度设计的信号：
+  - AR 描述中出现 SR 未提及的新功能
+  - SR 在 IR 文档中找不到对应的业务价值描述
+  - AR 编号存在，但 SR-AR 汇总表中无对应 SR 行
 ```
 
-**Thresholds**:
-- **90-100**: Excellent - Minor polish only
-- **70-89**: Good - Some gaps to address
-- **50-69**: Needs Improvement - Significant rework required
-- **<50**: Critical Issues - Major revision needed
+### 向下验证原则（确保可落地）
 
-## Integration with HCritic
+> "再好的设计，如果依赖不存在的代码或产生命名混乱，就是纸上谈兵。"
 
-This skill is designed for use by the **HCritic agent** during `functionalRefinement` stage review.
+- 代码库是设计的约束，而不是设计的附属品
+- 命名冲突在集成阶段代价巨大，在设计阶段发现代价为零
+- 复用现有代码比重复实现更可靠
 
-**Typical invocation**:
-```typescript
-// HCritic uses this skill when reviewing SR-AR decomposition
-task(
-  category="unspecified-high",
-  load_skills=["ir-sr-ar-traceability"],
-  description="Validate SR-AR decomposition traceability",
-  prompt=`
-  Review the SR-AR decomposition quality:
-  
-  Input files:
-  - IR: 需求信息.md
-  - SR-AR: SR-AR分解分配表.md
-  
-  Perform full IR-SR-AR traceability analysis:
-  1. Check consistency (IR→SR→AR)
-  2. Identify over-design and gaps
-  3. Generate traceability report with scoring
-  
-  Output the structured traceability report.
-  `,
-  run_in_background=false
-)
+**判断标准：**
+```
+需要修正的信号：
+  - AR 要求调用的方法/表/SDK 在代码库中不存在
+  - AR 新设计的接口名已被现有代码占用（且语义不同）
+  - AR 要求的技术方案与现有技术栈不兼容
 ```
 
-## Quality Checklist
+---
 
-Before finalizing traceability report:
+## 评审对话示例
 
-- [ ] All IRs mapped to SRs (or justified why not)
-- [ ] All SRs mapped to ARs (or justified why not)
-- [ ] No orphaned SRs or ARs without parent requirements
-- [ ] Consistency score calculated correctly
-- [ ] Specific file/line references for code conflicts (if feasibility check performed)
-- [ ] Actionable correction recommendations provided
-- [ ] Clear pass/fail recommendation given
+**启动评审时：**
+```
+"我将作为架构评审师，对 SR-AR 分解进行双向审查：
+1. 向上追溯：确认每个AR/SR都有IR支撑
+2. 向下验证：核查现有代码的可行性
 
-## Anti-Patterns to Avoid
+请确认：
+- SR-AR 分解表路径？
+- IR 需求文档路径？
+- 现有代码库路径？（可选，不提供则跳过代码验证）"
+```
 
-**Don't**:
-- Accept vague "Why" fields like "需求要求" without specific IR reference
-- Ignore ARs that seem disconnected from SRs
-- Skip feasibility analysis just because code context is incomplete
-- Give passing score without checking all traceability links
-- Suggest design solutions (that's not your role - only audit)
+**发现问题时：**
+```
+"发现以下问题需要确认：
 
-**Do**:
-- Insist on explicit IR references in SR "Why" field
-- Flag every orphaned requirement as potential over-design
-- Use best-effort code analysis even without full LSP data
-- Provide concrete examples of missing mappings
-- Focus on traceability quality, not design quality
+⚠️ SR-004 疑似孤立：在IR-SR映射表中未找到对应IR。
+   SR-004 的 What 描述为"{内容}"。
+   这是有意为之的架构扩展，还是遗漏了 IR 来源？
 
-## Success Criteria
+❌ SR-002 无AR实现：SR-002（{名称}）在 AR 分配章节中
+   未找到对应的 AR-002-XX 条目，该 SR 将无法被实现。
+   建议补充 AR 分配。"
+```
 
-A successful traceability analysis:
-- ✅ Identifies all missing requirement links
-- ✅ Flags all over-design candidates with clear reasoning
-- ✅ Provides quantitative scoring (0-100)
-- ✅ Gives specific correction recommendations
-- ✅ Validates code feasibility where possible
-- ✅ Outputs structured report usable by HCritic
+---
+
+## 参考文档
+
+- 详细的报告模板格式：参见 `references/report-template.md`
+- SR-AR 分解方法论：参见 SR-AR 分解分配技能文档
