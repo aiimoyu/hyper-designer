@@ -1,645 +1,465 @@
 ---
 name: sr-ar-decomposition
-description: SR-AR Decomposition skill for breaking down System Requirements (SR) into Allocated Requirements (AR) with system element mapping, interface specification, and DFX analysis. Use when decomposing functional requirements into system-level SRs and implementation-level ARs, identifying system elements and their interfaces, capturing non-functional (DFX) requirements, and preparing structured input for systemFunctionalDesign and moduleFunctionalDesign stages.
+description: SR→AR decomposition methodology and templates for requirements engineering. Use when decomposing System Requirements (SR) into Allocation Requirements (AR), applying DDD bounded context mapping, defining subsystem interfaces and dependencies, or establishing IR→SR→AR traceability chains. Essential during the requirementDecomposition stage.
 ---
 
-# SR-AR Decomposition (系统需求与分配需求分解)
+# Skill: SR-AR 分解分配（需求分解分配）
 
-## Overview
+## 技能用途
 
-将功能需求列表分解为结构化的系统需求(SR)和分配需求(AR)，同时建立系统元素模型、接口规格和DFX属性，为下游的**系统功能设计**和**模块功能设计**提供完整输入。
+基于功能列表（含 SR 映射）和需求信息，结合当前**代码项目**和**业界参考方案**，将系统级需求（SR）分解为模块级分配需求（AR），应用领域驱动设计（DDD）进行限界上下文划分，定义子系统接口与依赖关系，建立完整的 IR→SR→AR 追溯链。
 
-本阶段输出必须直接支撑：
-1. **systemFunctionalDesign**: 系统设计说明书（系统级规格设计、系统级专项设计、设计约束）
-2. **moduleFunctionalDesign**: 模块功能设计说明书（功能实现设计、接口设计、DFX分析、分配需求表）
+本技能的输出（SR-AR 分解分配表）直接支撑后续两个设计阶段：
+- **systemFunctionalDesign**：系统级规格分解、专项设计方案，以 SR 清单和 NFR 为输入
+- **moduleFunctionalDesign**：逐功能实现设计、接口设计、DFX 分析和 AR 分配，以 SR-AR 映射为输入
 
-### 核心产出物
+---
 
-| 产出物 | 说明 | 下游消费者 |
-|--------|------|-----------|
-| SR-AR分解分配表 | SR的5W2H描述 + AR的场景化分解 | 系统设计、模块设计 |
-| 系统元素清单 | 架构元素和功能对象的识别与职责定义 | 系统设计（架构视图） |
-| 接口规格清单 | 系统元素间的接口定义(名称/类型/I-O/SLA/约束) | 模块设计（接口设计章节） |
-| 系统级规格分解 | 全局性能/容量/可靠性指标到功能的分解 | 系统设计（规格设计章节） |
-| DFX需求矩阵 | 每个SR/AR关联的可靠性、安全性、性能需求 | 模块设计（DFX分析章节） |
-| 系统设计约束清单 | 技术实现层面的关键假设和限制 | 系统设计（约束章节） |
+## 核心指导原则
 
-## Quick Start
+### 1. 输入内容
 
-**Before starting, load reference documents based on your needs:**
+**必需输入：**
 
-1. **First-time users**: Read all references for complete understanding
-2. **Experienced users**: Load specific references as needed during work
+| 输入内容 | 说明 |
+| :--- | :--- |
+| **功能列表** | 含 SR 映射表、功能描述、NFR/DFX 汇总的功能清单文档 |
+| **需求信息（IR）** | 5W2H 结构的初始需求文档 |
 
-**Typical workflow**:
+**强烈推荐的补充输入：**
+
+| 输入内容 | 说明 |
+| :--- | :--- |
+| **当前项目代码** | 了解现有架构、模块划分、接口定义、技术栈约束 |
+| **业界参考方案** | 同类系统架构参考、最佳实践、设计模式 |
+| **现有架构文档** | 重构/迁移项目的部署拓扑与模块清单 |
+| **资料清单** | 已收集的结构化需求摘要文档 |
+
+**输入获取方式（自然语言描述，不依赖特定框架）：**
+
+1. 向用户请求或确认功能列表文件和需求信息文件的位置，读取其内容
+2. 主动浏览项目代码结构：列出主要模块目录、导出的 API/类定义、数据库 Schema、外部依赖、技术栈约束
+3. 搜索同类系统的架构参考方案和模块划分最佳实践，重点关注子系统拆分、接口设计模式和 NFR 分配策略
+4. 若存在资料清单或架构文档，一并读取
+
+---
+
+### 2. 参考资料收集（代码项目与业界方案）
+
+**为什么需要参考资料：**
+
+SR-AR 分解不是凭空设计。好的分解必须考虑：
+- **现有系统约束**：当前代码的模块边界、接口契约、数据模型限制了 AR 的分配方式
+- **业界经验**：类似系统的架构模式和模块划分，避免重复犯错
+- **技术可行性**：参考实现验证 AR 的技术方案是否可落地
+
+**代码项目分析要点：**
+
 ```
-1. Read functional requirements → Understand context
-2. Load DDD Patterns reference → Identify bounded contexts, system elements, and modules
-3. Create SRs using 5W2H Framework reference → Write comprehensive SR descriptions
-4. Identify system elements → Define architecture elements and functional objects
-5. Decompose SRs into ARs → Map to system elements with interface specs
-6. Capture DFX requirements → Reliability, security, performance per SR/AR
-7. Derive system-level specs and constraints → Quantitative metrics decomposition
-8. Estimate AR workloads using AR Estimation reference → Ensure each AR ≤ 0.5K
-9. Use Template reference → Generate final output document
-```
+1. 模块划分现状：
+   - 目录结构 → 识别现有的限界上下文
+   - 类/文件命名 → 理解业务域划分
+   - 导入/依赖关系 → 发现模块间耦合点
 
-## Core Concepts
+2. 接口现状：
+   - API 定义文件（OpenAPI/Swagger/gRPC proto）→ 现有接口契约
+   - 数据库 Schema → 数据模型和存储边界
+   - 消息/事件定义 → 异步交互模式
 
-### System Requirement (SR) — 系统需求
-
-**定义**: 系统工程师(SE)基于对系统整体架构的理解，对初始需求(IR)进行分解后产生的系统级功能需求。
-
-**特征**:
-- 描述系统为完成预期输出需要执行的功能任务
-- 使用5W2H框架进行全面描述
-- 包含页面变更、功能逻辑、数据模型、使用范围和前置条件
-- 一个IR可分解为多个SR
-- **必须关联到系统元素**，建立功能与架构的映射
-- **必须标注DFX属性**（可靠性、安全性、性能等非功能需求）
-- **必须包含规格指标**（可量化的性能/容量/质量目标）
-
-### Allocated Requirement (AR) — 分配需求
-
-**定义**: 在SR基础上，进一步分解和细化到具体系统元素的实现级需求。
-
-**特征**:
-- 场景化的、详细的实现需求
-- **分配到具体的系统元素**（不仅仅是团队）
-- 描述系统元素间的交互行为
-- **必须定义接口规格**（接口名称、类型、输入输出、SLA、约束）
-- 每个AR工作量 ≤ 0.5K
-- 使用概念设计级描述（不涉及具体代码实现细节）
-- 包含成功/失败处理、数据模型变更
-
-### System Element (系统元素) — 新增核心概念
-
-**定义**: 系统架构中可独立识别的构成单元，包括架构元素（如服务、模块、中间件）和功能对象（如领域实体、处理器、适配器）。
-
-**层次**:
-```
-系统 (System)
-├── 子系统 (Subsystem)          — 如: 认证子系统、订单子系统
-│   ├── 架构元素 (Architecture Element) — 如: auth-service, api-gateway
-│   │   ├── 功能对象 (Functional Object)  — 如: TokenGenerator, SessionManager
-│   │   └── ...
-│   └── ...
-└── ...
+3. 技术栈约束：
+   - 框架版本 → 限制可选的技术方案
+   - 部署方式 → 影响模块拆分粒度
+   - 已有中间件 → 可复用的基础设施
 ```
 
-**为什么需要系统元素**:
-- systemFunctionalDesign中的"行为描述"需要展示**系统架构对象和功能对象之间的交互**
-- moduleFunctionalDesign中的"实现设计"需要将功能展开到**更细粒度的架构元素交互**
-- "分配需求表"要求明确每个AR归属的**系统元素**
-- "接口设计"从功能视角提出对**系统元素**的接口诉求
+**业界参考方案收集要点：**
 
-### Interface Specification (接口规格) — 新增核心概念
+```
+1. 搜索同类系统的开源实现（GitHub 1000+ stars）
+2. 查找行业最佳实践文档（官方文档、技术博客、架构决策记录）
+3. 重点关注：
+   - 子系统/模块划分方式
+   - 关键接口的设计模式
+   - NFR 的实现策略（缓存、限流、熔断）
+   - 数据一致性方案
+```
 
-**定义**: 系统元素之间或系统元素与外部系统之间的交互契约。
+---
 
-**接口规格要素**:
+### 3. SR 分解方法论
 
-| 项目 | 说明 |
-|------|------|
-| 接口名称 | 唯一标识，如 `IF-001: 用户认证接口` |
-| 接口描述 | 接口的功能目的 |
-| 接口类型 | REST API / gRPC / Event / Internal Method / Message Queue |
-| 所属系统元素 | 提供该接口的系统元素 |
-| 消费系统元素 | 调用/消费该接口的系统元素 |
-| 输入要求/参数 | 请求格式、参数类型、必选/可选、约束条件 |
-| 输出要求/参数 | 响应格式、返回值类型、错误码定义 |
-| SLA定义 | 响应时间、吞吐量、可用性要求 |
-| 约束和注意事项 | 并发限制、幂等性、版本兼容、安全要求 |
+**SR 与 AR 的关系：**
 
-### System Specification (系统规格) — 新增核心概念
+```
+IR (Initial Requirement) — 初始需求
+  └── SR (System Requirement) — 系统级需求，描述系统应具备的能力
+        └── AR (Allocation Requirement) — 分配需求，描述某个系统元素如何实现 SR 的一部分
 
-**定义**: 系统全局性的可量化设计指标，需要分解到具体的系统功能上。
+IR → SR：一个 IR 可以分解为多个 SR
+SR → AR：一个 SR 可以分解为多个 AR，分配到不同系统元素
+AR → 系统元素：一个 AR 只能归属于一个系统元素（单一归属原则）
+```
 
-**规格类型**:
-- **性能规格**: 响应时间、吞吐量、并发能力
-- **容量规格**: 数据存储量、用户数、连接数
-- **可靠性规格**: MTBF、MTTR、故障恢复时间
-- **安全规格**: 认证强度、加密等级、审计要求
+**SR 编号规则：** `SR-NNN`（三位数字，从 001 递增）。从功能列表的 SR 映射表中继承，必要时新增。
 
-### DFX Attributes (DFX属性) — 新增核心概念
+**SR 5W2H 描述规范（核心）：**
 
-**定义**: Design for X，涵盖可靠性(Reliability)、安全性(Security)、性能(Performance)、可维护性(Maintainability)等非功能性设计属性。
+SR 的 5W2H 聚焦于**系统实现层面**，而非业务层面。
 
-**SR级DFX**:
-- 每个SR应标注其关键DFX关注点
-- 识别需要进行FMEA的功能流程
-- 识别需要进行安全威胁分析的功能点
-- 标注性能敏感的处理路径
+| 维度 | 含义 | 填写指南 |
+| :--- | :--- | :--- |
+| **Who** | 系统或子系统 | 哪个系统/子系统负责此需求。从 DDD 限界上下文确定；已有系统参考现有模块划分 |
+| **When** | 系统生命周期阶段 | 功能在系统哪个生命周期起作用（启动/运行/升级/维护等）。可继承 IR 的 When |
+| **What** | 功能内容 | 新增功能或功能变更点描述，含发布件变化。仅测试变化时需说明导致测试变化的原因 |
+| **Where** | 功能运行上下文 | 功能运行的环境和上下文（服务端/客户端、哪个部署单元、哪个网络分区）|
+| **How Much** | 规模/规格指标 | 从 IR 的 How Much 分解。多个 SR 分解同一 IR 时必须分解；单一 SR 可直接继承 |
+| **How** | 使用方式 | 当前系统中怎么使用这个功能、如何发挥作用。描述运作机制和与其他功能的协作关系 |
 
-**AR级DFX**:
-- 每个AR应继承SR的DFX要求并细化
-- 明确异常情况处理方案
-- 定义重试/降级/熔断策略
-- 标注安全需求（认证、授权、数据保护）
+**SR 5W2H 填写经验：**
 
-### Design Constraint (设计约束) — 新增核心概念
+```
+Who 的粒度控制：
+  ✅ "用户认证子系统" — 明确到子系统级别
+  ✅ "订单管理模块（OrderService）" — 已有系统可到模块级别
+  ❌ "系统" — 太笼统，无法指导 AR 分配
+  ❌ "OrderService.createOrder()" — 太细，是 AR 层面的事
 
-**定义**: 基于当前技术条件的实现层面约束，来自利益相关人的、在版本生命周期内需遵循的限制。
+When 的继承与分解：
+  若 IR When 为"用户下单时"且只有一个 SR → 直接继承
+  若分解为多个 SR → 每个 SR 的 When 精确描述其触发时机
 
-**约束类型**:
-- **技术约束**: 技术栈限制、兼容性要求、标准遵从
-- **性能约束**: 系统容量规格、资源运行设定条件
-- **安全约束**: 安全/韧性/隐私的全局遵从要求
-- **可靠性约束**: 可靠性指标的假设和约束
-- **组织约束**: 团队结构、交付时间线
+What 区分新增与变更：
+  新增功能："实现用户登录认证功能，支持账号密码和第三方 OAuth 登录"
+  变更功能："在现有用户管理模块中增加角色字段，支持 RBAC 权限模型"
+  仅测试变更："底层加密库从 OpenSSL 1.1 升级到 3.0，接口行为不变但需要回归测试"
 
-## Input Requirements
+How Much 的分解原则：
+  IR: "系统支持 1000 TPS"
+  分解到 SR 时下游指标需 ≥ 上游（含余量）：
+    - SR-001 API 网关：支持 1200 TPS（含 20% 余量）
+    - SR-002 业务处理：支持 1100 TPS（含 10% 余量）
+    - SR-003 数据存储：支持 1100 TPS 写入（含 10% 余量）
 
-**Required artifacts** (read these first):
-1. 功能需求列表: `XX功能列表.md`
-2. 项目代码库上下文文件
-3. 组件/模块组织文档
-4. 现有架构文档（如有）
+How 要结合现有系统：
+  ✅ "通过 Spring Security OAuth2 实现认证，JWT Token 作为会话凭证，
+      与现有 UserService 集成获取用户信息"
+  ❌ "实现认证功能" — 没有描述如何在当前系统中发挥作用
+```
 
-**Context to gather**:
-- 现有系统架构和系统元素
-- 现有API端点、接口契约和数据模型
-- 团队/组件边界和所有权
-- 非功能性需求（性能、可靠性、安全性指标）
-- 技术栈约束和标准
+---
 
-## Output Structure
+### 4. AR 分配方法论
 
-### 完整输出件结构
+**AR 编号规则：** `AR-SSS-NN`（SSS 为 SR 编号后三位，NN 为该 SR 下的 AR 序号）。例：AR-001-01, AR-001-02。
+
+**AR 描述规范：**
+
+| 字段 | 要求 |
+| :--- | :--- |
+| **系统需求** | 对应的 SR 编号和名称，必须明确引用 SR 编号 |
+| **分配需求名称** | 清晰表达 AR 的核心职责 |
+| **分配需求描述** | 必须比 SR 更具体，接近实现层面，包含可验证的指标 |
+| **系统元素** | 明确到具体的服务/组件/模块（如 OrderService、InventoryRepository）|
+
+**AR 粒度控制经验：**
+
+```
+太粗：AR-001-01 "实现订单管理全部功能" → 一个 AR 覆盖太多职责
+合适：AR-001-01 "OrderService 接收订单请求，执行参数校验和价格计算，在 80ms 内完成"
+太细：AR-001-01 "校验订单金额不为空" → 单字段验证不应独立为 AR
+
+判断标准：
+- 一个 AR 是否可以被一个开发者独立实现和测试？
+- AR 的描述是否足够具体，开发者无需再做架构判断？
+- AR 是否只归属于一个系统元素？
+```
+
+**系统元素识别方法：**
+
+```
+已有系统：
+  1. 阅读代码，识别现有的服务/类/模块
+  2. AR 优先分配到已有系统元素
+  3. 只有当现有元素无法承载时才新增，并说明原因
+
+新建系统：
+  1. 从 DDD 限界上下文推导系统元素
+  2. 参考业界同类系统的模块划分
+  3. 系统元素粒度 ≈ 可独立部署的服务或可独立测试的组件
+  4. 命名采用 {业务域}{职责} 模式（如 OrderService、PaymentGateway）
+
+注意：系统元素 ≠ 代码类。系统元素是逻辑架构层面的组件，一个系统元素可能包含多个代码类。
+```
+
+---
+
+### 5. DDD 限界上下文映射
+
+**从功能到模块的映射流程：**
+
+```
+步骤 1: 识别业务域
+  从功能列表中提取业务领域（如：认证域、订单域、支付域）
+  已有系统：以现有代码的模块划分为起点
+
+步骤 2: 划分限界上下文 (Bounded Context)
+  每个限界上下文 = 一个内聚的业务模块
+  参考业界同类系统验证划分合理性
+
+步骤 3: 定义上下文映射关系
+  确定模块间的依赖和集成模式
+
+步骤 4: 分配 AR 到系统元素
+  每个 AR 归属到唯一的系统元素
+  系统元素属于某个限界上下文
+```
+
+**限界上下文划分原则：**
+
+| 原则 | 检验方法 |
+| :--- | :--- |
+| **高内聚** | 上下文内的功能是否都服务于同一业务能力？ |
+| **低耦合** | 移除某个上下文后，其他上下文是否仍能独立定义？ |
+| **单一职责** | 能否用一句话描述此上下文的职责？ |
+| **自治性** | 修改此上下文是否需要同时修改其他上下文？ |
+
+**上下文映射关系类型：**
+
+```
+[U/D] Upstream/Downstream — 上下游依赖
+[ACL] Anti-Corruption Layer — 防腐层（隔离外部模型）
+[OHS] Open Host Service — 开放主机服务（提供标准接口）
+[PL]  Published Language — 发布语言（共享数据格式）
+[CF]  Conformist — 跟随者（直接使用上游模型）
+[SK]  Shared Kernel — 共享内核（共享部分模型）
+```
+
+---
+
+### 6. NFR/DFX 到 AR 的分配
+
+**NFR 分配原则：** NFR 必须被分配到具体 AR 才能被实现和验证，不能作为"全局"悬空约束。
+
+```
+步骤：
+1. 从功能列表 NFR/DFX 汇总表中提取所有 NFR
+2. 识别每个 NFR 影响的 SR
+3. 将 NFR 约束传递到对应的 AR 描述中
+4. 确保 AR 描述中包含可验证的 NFR 指标
+```
+
+**分配规则：**
+
+| NFR 类型 | 分配策略 | 示例 |
+| :--- | :--- | :--- |
+| **性能** | 分配到直接处理数据流的 AR | 响应时间 < 200ms → AR-001-02（查询处理）|
+| **安全** | 分配到涉及认证/授权/加密的 AR | TLS 1.3 → AR-003-01（通信层）|
+| **可靠性** | 分配到关键路径上的 AR | 99.9% 可用性 → AR-002-01（主服务）|
+| **隐私** | 分配到处理敏感数据的 AR | 数据脱敏 → AR-004-01（数据存储）|
+
+**NFR 冲突解决（strictest-metric 规则）：** 当多个源对同一 AR 提出不同 NFR 时，取最严格值。优先级：IR 约束 > 场景需求 > 用例 DFX 属性。
+
+---
+
+### 7. 下游对接
+
+**对接 systemFunctionalDesign（系统功能设计说明书）：**
+
+| 下游需要的数据 | 对应本阶段输出 |
+| :--- | :--- |
+| SR 清单及 5W2H 描述 | SR 分解章节的每个 SR |
+| NFR/DFX 指标 | SR 的 How Much 和关联 NFR |
+| 模块划分和依赖关系 | DDD 限界上下文和上下文映射 |
+| 关键 FMEA 风险 | NFR 分析中识别的风险 |
+
+**对接 moduleFunctionalDesign（模块功能设计说明书）：**
+
+| 下游需要的数据 | 对应本阶段输出 | 对接模板字段 |
+| :--- | :--- | :--- |
+| 增量系统需求清单 | SR 分解章节 | `\| 系统需求编号 \| 系统需求 \| 系统需求描述 \|` |
+| 分配需求汇总 | AR 分配章节 | `\| 系统需求编号 \| 系统需求 \| 分配需求编号 \| 分配需求描述 \| 系统元素 \|` |
+| 系统元素定义 | AR 的系统元素字段 | 功能实现设计中的系统元素交互 |
+
+**确保对接的检查点：**
+
+```
+□ 每个 SR 的 5W2H 描述完整，可被 systemFunctionalDesign 直接引用
+□ 每个 AR 的系统元素字段明确，可被 moduleFunctionalDesign 直接引用
+□ SR 的 How Much 包含可度量的规格指标，支撑系统级规格分解
+□ AR 的分配需求描述足够具体，开发者可据此编写实现设计
+```
+
+---
+
+## 实战工作流程
+
+### SR-AR 分解七步法
+
+```
+步骤 1: 读取输入制品
+  读取功能列表（含 SR 映射表）和需求信息（IR）
+  提取所有 SR 编号、描述和关联功能
+
+步骤 2: 收集参考资料
+  浏览当前项目代码：模块划分、接口定义、技术栈
+  搜索业界参考方案：同类系统架构、设计模式
+  读取资料清单（如有）
+
+步骤 3: DDD 限界上下文划分
+  结合现有代码结构和功能列表，识别业务域
+  划分限界上下文，定义上下文映射关系
+  确定系统元素（服务/组件/模块）
+
+步骤 4: SR 分解
+  为每个 SR 填写 5W2H 描述
+  继承或分解 IR 的 When 和 How Much
+  结合现有系统描述 How（功能如何在系统中发挥作用）
+  关联对应的功能编号
+
+步骤 5: AR 分配
+  将每个 SR 分解为一个或多个 AR
+  为每个 AR 确定系统元素
+  编写 AR 的分配需求描述（比 SR 更具体，接近实现）
+  将 NFR/DFX 约束传递到相关 AR 描述中
+
+步骤 6: 汇总与追溯验证
+  建立 IR→SR 映射总览表
+  检查 SR→AR 追溯完整性
+  验证无孤立 AR 和遗漏 SR
+
+步骤 7: 确认与输出
+  向用户确认分解方案
+  输出 sr-ar-decomposition.md
+```
+
+### 与用户协作
+
+**分解方案确认对话示例：**
+
+```
+"我完成了 SR-AR 分解初稿：
+
+【SR 分解概要】
+- 共 N 个 SR，关联 M 个功能
+- IR-001 → SR-001, SR-002（2 个系统需求）
+
+【AR 分配概要】
+- 共 K 个 AR，分配到 P 个系统元素
+- 系统元素：OrderService, InventoryService, PaymentGateway
+
+【关键设计决策】
+- 认证与授权拆分为独立系统元素（基于参考项目 xxx 的实践）
+- 库存管理采用缓存 + DB 双写模式（基于现有代码中已有 Redis 配置）
+
+请确认：
+1. SR 的 5W2H 描述是否准确？
+2. AR 的系统元素分配是否合理？
+3. 是否有遗漏的系统需求？"
+```
+
+**遇到歧义时的微确认问题示例：**
+
+```
+"SR-NNN 的 Who 无法确定：功能 F-NNN 涉及多个子系统（认证 + 权限），
+应归属哪个子系统？还是需要拆分为两个 SR？"
+
+"IR 的 How Much 为'支持 1000 并发用户'，SR-NNN 和 SR-MMM 如何分解？
+建议 SR-NNN（API 层）分配 1200 并发，SR-MMM（数据层）分配 1100 并发，预留余量。是否同意？"
+
+"现有代码中 ModuleName 已实现部分功能，SR-NNN 的 What 应描述为'新增功能'
+还是'功能变更'？变更点是：[具体变化描述]"
+```
+
+---
+
+## 输出格式
+
+**主输出文件：** `sr-ar-decomposition.md`，放置于需求分解的指定输出目录。
+
+完整模板格式参见 [references/sr-ar-template.md](references/sr-ar-template.md)。
+
+**输出结构概要：**
 
 ```markdown
-# SR-AR分解分配表
+# SR-AR 分解分配表
 
-## Metadata
-- Project: [项目名称]
-- Version: [版本号]
-- Date: [创建日期]
-- Input: [功能列表文件路径]
+## IR-SR 映射总览
 
----
+| 初始需求 | 系统需求 | 需求描述 | 关联功能 |
+| :--- | :--- | :--- | :--- |
+| IR-001 | SR-001 | [SR 描述摘要] | F001, F002 |
+| IR-001 | SR-002 | [SR 描述摘要] | F003 |
 
-## 一、系统元素清单
+## SR 分解
 
-### 1.1 架构元素定义
+### SR-001（{SR 名称}）
 
-| 元素ID | 元素名称 | 元素类型 | 核心职责 | 所属子系统 | 依赖元素 |
-|--------|---------|---------|---------|-----------|---------|
-| SE-001 | [名称] | Service/Module/Middleware/... | [一句话职责] | [子系统] | [SE-XXX, ...] |
+#### 初始需求
+[对应的 IR 编号和简要描述，建立追溯链]
 
-### 1.2 功能对象定义
+#### 系统需求描述
+- **Who**: [系统或子系统]
+- **When**: [系统生命周期阶段]
+- **What**: [功能内容/变更点描述]
+- **Where**: [功能运行上下文]
+- **How Much**: [规模/规格指标]
+- **How**: [在系统中如何使用和发挥作用]
 
-| 对象ID | 对象名称 | 所属架构元素 | 核心职责 | 聚合根/实体 |
-|--------|---------|------------|---------|------------|
-| FO-001 | [名称] | SE-XXX | [职责] | [领域实体] |
+#### 关联功能
+[关联的功能编号和名称列表]
 
-### 1.3 领域数据模型
+## AR 分配
 
-描述核心数据对象、数据对象之间的关系、数据对象归属的系统元素。
-用文字或 mermaid ER图表达。
+### AR-001-01（{AR 名称}）
 
----
+#### 系统需求
+[对应的 SR 编号和名称]
 
-## 二、系统设计约束
+#### 分配需求描述
+[详细的实现要求，比 SR 更具体，接近实现层面，含可验证指标]
 
-### 2.1 技术约束
-| 约束ID | 约束内容 | 来源 | 影响范围 |
-|--------|---------|------|---------|
-| TC-001 | [约束描述] | [场景/利益相关人] | [影响的SR/系统元素] |
-
-### 2.2 性能约束
-| 约束ID | 指标名称 | 指标要求 | 度量条件 | 影响范围 |
-|--------|---------|---------|---------|---------|
-| PC-001 | [如：响应时间] | [如：P99 < 200ms] | [负载条件] | [SR/系统元素] |
-
-### 2.3 安全/韧性/隐私约束
-| 约束ID | 约束类型 | 约束内容 | 合规要求 | 影响范围 |
-|--------|---------|---------|---------|---------|
-| SC-001 | 安全/韧性/隐私 | [约束描述] | [标准/法规] | [SR/系统元素] |
-
-### 2.4 可靠性/可用性约束
-| 约束ID | 指标名称 | 目标值 | 度量方式 | 影响范围 |
-|--------|---------|--------|---------|---------|
-| RC-001 | [如：系统可用性] | [如：99.9%] | [计算方式] | [SR/系统元素] |
-
-### 2.5 易用性约束
-| 约束ID | 约束内容 | 来源 | 影响范围 |
-|--------|---------|------|---------|
-| UC-001 | [易用性要求描述] | [来源] | [影响范围] |
-
----
-
-## 三、系统级规格设计
-
-### 3.1 [规格名称] 系统级规格设计
-
-**设计思路**: [概述设计原则和方法]
-
-**规格分解**:
-
-| 系统级指标 | 目标值 | 分解到系统功能 | 功能级指标 | 分解依据 |
-|-----------|--------|-------------|-----------|---------|
-| [全局指标] | [值] | SR-XXX | [功能指标] | [为什么这样分] |
-
----
-
-## 四、SR-AR分解
-
-### SR-001: [SR名称]
-
-#### SR描述 (5W2H)
-- **Who**: [系统元素ID + 名称] — 不仅仅是团队，要关联到具体系统元素
-- **When**: [功能生命周期阶段]
-- **What**: [功能内容 + 发布件变化 + 测试变化]
-- **Where**: [运行环境 + 依赖组件 + 部署位置]
-- **Why**: [需求来源IR]
-- **How Much**: [规模估算]
-- **How**: [使用方式 + 工作流程 + 集成点]
-
-#### 关联系统元素
-| 系统元素ID | 元素名称 | 在本SR中的职责 | 是否新增 |
-|-----------|---------|--------------|---------|
-| SE-XXX | [名称] | [职责] | 新增/修改 |
-
-#### DFX需求
-| DFX类型 | 需求ID | 需求描述 | 优先级 | 验证方式 |
-|---------|--------|---------|--------|---------|
-| 可靠性 | DFX-R-001 | [如：功能FMEA需关注的异常场景] | 高/中/低 | [如：故障注入测试] |
-| 安全性 | DFX-S-001 | [如：需进行威胁建模的攻击面] | 高/中/低 | [如：渗透测试] |
-| 性能 | DFX-P-001 | [如：关键路径响应时间要求] | 高/中/低 | [如：压力测试] |
-| 可维护性 | DFX-M-001 | [如：可观测性/日志/监控要求] | 高/中/低 | [如：监控验收] |
-
-#### 系统规格指标
-| 指标名称 | 目标值 | 度量条件 | 来源(系统级规格) |
-|---------|--------|---------|----------------|
-| [指标] | [值] | [条件] | 规格3.1分解而来 |
-
-#### 分配的AR列表
-
-##### AR-001-01: [AR名称]
-
-**AR描述**:
-- **场景**: [具体使用场景]
-- **前置条件**: [执行前需满足的条件]
-- **后置条件**: [执行后的系统状态]
-
-**分配系统元素**: SE-XXX [系统元素名称]
-
-**实现方式**:
-- 选项1：复用现有功能
-  - 位置: [模块/文件/函数位置]
-  - 修改点: [接口扩充/行为变更的具体内容]
-- 选项2：新增功能
-  - 调用接口: [API endpoint]
-  - 成功处理: [成功时的行为]
-  - 失败处理: [失败时的行为]
-
-**接口规格**:
-
-| 项目 | 内容 |
-|------|------|
-| 接口名称 | IF-XXX: [接口名称] |
-| 接口描述 | [功能目的] |
-| 接口类型 | REST API / gRPC / Event / Internal / MQ |
-| 提供方系统元素 | SE-XXX [名称] |
-| 消费方系统元素 | SE-YYY [名称] |
-| 输入要求/参数 | [参数名称、类型、必选/可选、约束] |
-| 输出要求/参数 | [返回值类型、错误码、响应格式] |
-| SLA定义 | [响应时间、吞吐量、可用性] |
-| 约束和注意事项 | [幂等性、并发、版本兼容、安全] |
-
-**数据模型**: [涉及的数据结构变更]
-
-**DFX要求**:
-- 可靠性: [异常处理、重试策略、降级方案]
-- 安全性: [认证/授权/数据保护要求]
-- 性能: [响应时间/吞吐量要求]
-
-**工作量估算**: [≤0.5K]
-**分配团队**: [负责组件团队]
-
----
-
-## 五、接口规格汇总
-
-| 接口ID | 接口名称 | 接口类型 | 提供方(系统元素) | 消费方(系统元素) | 输入概要 | 输出概要 | SLA | 关联AR |
-|--------|---------|---------|----------------|----------------|---------|---------|-----|--------|
-| IF-001 | [名称] | [类型] | SE-XXX [名称] | SE-YYY [名称] | [主要入参] | [主要出参] | [要求] | AR-XXX-XX |
-
----
-
-## 六、分配需求汇总
-
-| 系统需求编号 | 系统需求 | 分配需求编号 | 分配需求描述 | 系统元素 | 分配团队 |
-|------------|---------|------------|------------|---------|---------|
-| SR-001 | [名称] | AR-001-01 | [描述] | SE-XXX [名称] | [团队] |
-
----
-
-## 七、DFX需求汇总
-
-### 7.1 可靠性需求矩阵
-| SR/AR编号 | 功能描述 | 故障模式 | 故障影响 | 严重度 | 检测方式 | 缓解/恢复措施 |
-|-----------|---------|---------|---------|--------|---------|-------------|
-| AR-XXX-XX | [描述] | [可能故障] | [对系统/用户的影响] | 高/中/低 | [如何检测] | [如何缓解和恢复] |
-
-### 7.2 安全需求矩阵
-| SR/AR编号 | 功能描述 | 威胁场景 | 威胁等级 | 安全要求 | 防护措施 | 验证方式 |
-|-----------|---------|---------|---------|---------|---------|---------|
-| AR-XXX-XX | [描述] | [威胁] | 高/中/低 | [要求] | [措施] | [验证方法] |
-
-### 7.3 性能需求矩阵
-| SR/AR编号 | 功能描述 | 性能指标 | 目标值 | 度量条件 | 优化策略 |
-|-----------|---------|---------|--------|---------|---------|
-| AR-XXX-XX | [描述] | [如：响应时间] | [如：P99<100ms] | [负载条件] | [缓存/异步/批处理等] |
+#### 系统元素
+[负责实现的逻辑元素名称]
 ```
 
-## Reference Documents
+---
 
-This skill includes detailed reference guides. Load them as needed:
+## 质量检查清单
 
-- **[5W2H Framework](references/5w2h-framework.md)**: Complete guide for writing SR descriptions using 5W2H structure. Load when writing SR descriptions or validating existing SRs.
-- **[DDD Patterns](references/ddd-patterns.md)**: Domain-Driven Design patterns for bounded context identification, system element mapping, and module organization. Load when identifying system elements or organizing modules.
-- **[AR Estimation](references/ar-estimation.md)**: Workload estimation techniques and AR splitting strategies. Load when estimating AR workloads or splitting ARs that exceed 0.5K.
-- **[Example](references/example.md)**: Complete worked example of SR-AR decomposition with system elements, interfaces, and DFX. Load when you need a reference example to understand the complete workflow.
-- **[Template](templates/sr-ar-template.md)**: Standard SR-AR decomposition table template. Load when starting a new decomposition document.
-
-**When to load references**:
-- First time using this skill → Read Example for complete understanding
-- Writing SR descriptions → Load 5W2H Framework
-- Identifying system elements and modules → Load DDD Patterns
-- Estimating ARs → Load AR Estimation
-- Creating output document → Load Template
-
-## Workflow
-
-### Phase 1: Analyze Inputs
-
-**Step 1: Read functional requirements**
-```bash
-# Read the functional requirements list
-Read: [功能列表文件路径]
+```
+□ 所有 IR 都被至少一个 SR 覆盖（IR→SR 追溯完整）
+□ 所有 SR 都已填写完整的 5W2H 描述
+□ SR 的 Who 明确到系统/子系统级别，非笼统的"系统"
+□ SR 的 How Much 正确继承或分解了 IR 的 How Much
+□ SR 的 How 描述了功能在当前系统中的使用方式
+□ 每个 SR 都被分解为至少一个 AR
+□ AR 编号格式正确（AR-SSS-NN），无重复
+□ 每个 AR 的分配需求描述比 SR 更具体，包含可验证指标
+□ 每个 AR 只归属于一个系统元素（单一归属原则）
+□ NFR/DFX 已传递到具体 AR 的描述中，非"全局"悬空
+□ 已参考现有代码结构进行系统元素识别和 AR 分配
+□ DDD 限界上下文划分合理（高内聚、低耦合）
+□ IR→SR→AR 追溯链完整，无断链、无孤立 AR
+□ 输出可被 systemFunctionalDesign 直接使用
+□ 输出可被 moduleFunctionalDesign 直接使用
+□ 用户已确认分解方案和关键设计决策
 ```
 
-**Step 2: Understand system context**
-- Read component organization document and existing architecture
-- Identify existing system elements (services, modules, middleware)
-- Identify existing interfaces, APIs, and data models
-- Map component ownership to teams
-- Collect non-functional requirements (performance, reliability, security targets)
+## 反模式（Anti-Patterns）
 
-**Step 3: Analyze codebase structure**
-```typescript
-// Use explore agent for codebase pattern discovery
-task(
-  subagent_type="explore",
-  run_in_background=true,
-  load_skills=[],
-  prompt="Find existing system element boundaries (services, modules, middleware), interface contracts (API definitions, message schemas), data models, and non-functional patterns (error handling, retry, circuit breaker, auth) in the codebase"
-)
-```
+**不要：**
+- 将 NFR 作为"全局约束"而不传递到具体 AR — 全局 NFR 无法被实现和验证
+- 一个 AR 归属多个系统元素 — 违反单一归属原则，导致职责模糊
+- SR 的 Who 写"系统"而不指明具体子系统 — 无法指导 AR 分配
+- SR 的 How 只写"实现 XX 功能" — 必须描述在当前系统中如何运作
+- 照搬 SR 描述作为 AR 描述 — AR 应比 SR 更具体、更接近实现
+- 跳过代码分析直接分配 AR — 不了解现有约束会导致分配不合理
+- 忽略业界参考方案 — 闭门造车容易遗漏成熟的设计模式
 
-### Phase 2: Identify System Elements (系统元素识别)
-
-**Step 1: 识别架构元素**
-从现有架构和代码结构中识别：
-- 独立部署的服务 (Service)
-- 可复用的功能模块 (Module)
-- 中间件/网关 (Middleware/Gateway)
-- 存储组件 (Storage)
-- 外部系统适配器 (Adapter)
-
-**Step 2: 识别功能对象**
-在每个架构元素内部识别：
-- 领域实体和聚合根 (DDD Aggregate Roots)
-- 业务处理器 (Handlers/Processors)
-- 适配器和工厂 (Adapters/Factories)
-- 事件发布/订阅者 (Event Publishers/Subscribers)
-
-**Step 3: 定义领域数据模型**
-- 识别核心数据对象及其属性
-- 定义数据对象之间的关系（关联、聚合、组合）
-- 明确数据对象归属的系统元素
-- 用文字或mermaid ER图表达
-
-**Step 4: 记录系统元素清单**
-按照模板输出：
-- 架构元素定义表 (SE-XXX)
-- 功能对象定义表 (FO-XXX)
-- 领域数据模型图
-
-### Phase 3: Capture Design Constraints and System Specifications (设计约束与规格)
-
-**Step 1: 识别设计约束**
-从场景分析和利益相关人要求中提取：
-- 技术栈限制、兼容性要求
-- 性能容量规格和资源条件
-- 安全/韧性/隐私全局要求
-- 可靠性指标假设
-- 组织和交付约束
-
-**Step 2: 定义系统级规格**
-对全局性设计指标进行初步定义：
-- 性能规格（响应时间、吞吐量、并发数）
-- 容量规格（数据量、用户规模、连接数）
-- 可靠性规格（可用性目标、故障恢复时间）
-- 安全规格（认证等级、加密要求）
-
-**Step 3: 规格分解预研**
-初步分析如何将系统级规格分解到各个系统功能：
-- 确定哪些SR承载哪些规格指标
-- 给出分解依据和设计思路
-- 注意：详细分解在systemFunctionalDesign阶段完成，此处提供分解基础
-
-### Phase 4: Decompose into SRs (DDD-based Module Identification)
-
-**Step 1: Identify bounded contexts**
-Apply Domain-Driven Design principles:
-- Group related functions into logical modules
-- Maintain high cohesion, low coupling
-- Identify core domain entities (Aggregate Roots)
-- **Map each bounded context to system elements**
-
-**Step 2: Create SRs**
-For each identified module:
-1. Define SR using 5W2H framework
-2. Map to functional requirements (IR traceability)
-3. **Associate with system elements** (not just teams)
-4. **Attach DFX requirements** (reliability, security, performance)
-5. **Assign system specification indicators** from Phase 3
-6. Estimate scope (how much)
-
-**Key questions to ask**:
-- What system elements are involved in this function?
-- What interfaces does this function need between system elements?
-- What are the DFX (non-functional) requirements?
-- What quantitative specifications apply?
-- What data does this function access and which system element owns it?
-- Are there cross-cutting concerns (auth, logging, etc.) → extract as system-wide SRs
-
-### Phase 5: Decompose SRs into ARs (with Interface Specs)
-
-**Step 1: Scenario analysis**
-For each SR, identify all usage scenarios:
-- User interactions (normal flow)
-- System integrations (between system elements)
-- Edge cases and error conditions
-- **Key use cases that need sequence diagram level detail**
-
-**Step 2: Create ARs**
-For each scenario:
-1. **Assign to specific system element** (SE-XXX)
-2. **Define interface specifications**:
-   - 接口名称、类型（REST/gRPC/Event/MQ/Internal）
-   - 输入输出参数（类型、格式、约束）
-   - SLA要求（响应时间、吞吐量）
-   - 约束（幂等性、并发控制、版本兼容）
-3. **Capture DFX requirements at AR level**:
-   - 可靠性：异常处理、重试/降级/熔断策略
-   - 安全性：认证/授权/数据保护
-   - 性能：关键路径性能预算
-4. Define success/failure handling
-5. Specify data model changes
-6. Estimate workload (must be ≤ 0.5K)
-7. Assign to component team
-
-**AR description checklist**:
-- [ ] Specific scenario described with pre/post conditions
-- [ ] **Assigned to a specific system element (SE-XXX)**
-- [ ] **Interface specification defined (name, type, I/O, SLA, constraints)**
-- [ ] Implementation approach chosen (reuse vs new)
-- [ ] Success/failure handling defined
-- [ ] Data model changes specified
-- [ ] **DFX requirements captured (reliability, security, performance)**
-- [ ] Workload ≤ 0.5K
-- [ ] Team assignment clear
-
-### Phase 6: Build Summary Tables (汇总表)
-
-**Step 1: 接口规格汇总**
-将所有AR中定义的接口汇集到统一的接口规格表：
-- 去重合并相同接口
-- 检查接口一致性（同一接口在不同AR中的定义不矛盾）
-- 标注接口间的依赖关系
-
-**Step 2: 分配需求汇总**
-构建 SR → AR → 系统元素 的完整追溯表：
-
-| 系统需求编号 | 系统需求 | 分配需求编号 | 分配需求描述 | 系统元素 |
-|------------|---------|------------|------------|---------|
-
-**Step 3: DFX需求汇总**
-构建可靠性需求矩阵（FMEA输入）和安全需求矩阵：
-- 从所有SR/AR中提取DFX需求
-- 补充故障模式、威胁场景分析
-- 这将直接作为moduleFunctionalDesign中DFX分析章节的输入
-
-### Phase 7: Validate and Refine
-
-**Validation checklist — 覆盖性检查**:
-- [ ] All functional requirements mapped to SRs (IR → SR追溯完整)
-- [ ] Each SR follows 5W2H structure
-- [ ] SRs maintain high cohesion within modules
-- [ ] Low coupling between SRs
-
-**Validation checklist — 系统元素检查**:
-- [ ] All SRs associated with system elements
-- [ ] System elements have clear responsibilities and boundaries
-- [ ] Domain data model complete with entity relationships
-
-**Validation checklist — 接口规格检查**:
-- [ ] **All AR-to-AR interactions have interface specifications**
-- [ ] **Interface I/O parameters are typed and constrained**
-- [ ] **SLA requirements defined for external-facing interfaces**
-- [ ] Interface consistency across ARs (no contradictions)
-
-**Validation checklist — DFX检查**:
-- [ ] Each SR has DFX requirements identified
-- [ ] Critical paths have performance budgets
-- [ ] Failure modes identified for reliability-sensitive functions
-- [ ] Security-sensitive functions have threat scenarios
-
-**Validation checklist — 规格检查**:
-- [ ] System-level specifications defined with quantitative targets
-- [ ] Specifications mapped to SRs with decomposition rationale
-- [ ] Design constraints documented with sources
-
-**Validation checklist — AR检查**:
-- [ ] All SRs decomposed into ARs
-- [ ] Each AR workload ≤ 0.5K
-- [ ] Each AR assigned to specific system element
-- [ ] ARs reference specific code locations or APIs
-- [ ] Component team assignments are clear
-- [ ] No AR description exceeds conceptual design level
-
-**Common validation issues**:
-| Issue | Detection | Fix |
-|-------|-----------|-----|
-| AR missing interface spec | No interface table in AR | Add interface specification with I/O, SLA |
-| AR not mapped to system element | Missing SE-XXX reference | Assign to specific system element |
-| SR missing DFX | No DFX requirements section | Analyze reliability/security/performance needs |
-| Interface inconsistency | Same interface defined differently in two ARs | Unify interface definition |
-| System spec not decomposed | Global metric without function-level breakdown | Add decomposition rationale per SR |
-| AR too large | Workload > 0.5K | Split into multiple ARs by scenario |
-| AR too vague | Missing code location or API | Add specific module/file/function references |
-| SR spans multiple domains | Low cohesion indicators | Split into separate SRs by bounded context |
-
-## Downstream Traceability Map
-
-本阶段输出如何映射到下游文档章节：
-
-### → systemFunctionalDesign (系统功能设计说明书)
-
-| 系统设计说明书章节 | 来源 |
-|------------------|------|
-| 系统设计方案概述 | SR-AR整体结构 + 系统元素清单 |
-| 系统级设计约束 | 二、系统设计约束 |
-| 系统级规格设计 | 三、系统级规格设计 + SR规格指标 |
-| 系统级专项设计 - 行为描述 | AR交互关系 + 接口规格 → 生成时序图 |
-| 系统级专项设计 - DFX | 七、DFX需求汇总 |
-
-### → moduleFunctionalDesign (模块功能设计说明书)
-
-| 模块设计说明书章节 | 来源 |
-|------------------|------|
-| 功能域概述 | SR bounded context描述 |
-| 功能域总体方案 | 系统元素清单 + 领域数据模型 |
-| 增量系统需求清单 | SR列表 (直接映射) |
-| 实现思路 | AR实现方式 |
-| 实现设计 - 时序图 | AR接口规格 + 系统元素交互 → 展开为时序图 |
-| **接口设计** | **五、接口规格汇总 + AR接口规格** |
-| **DFX分析** | **七、DFX需求汇总 + AR级DFX要求** |
-| **分配需求** | **六、分配需求汇总** |
-
-## Common Pitfalls
-
-| Pitfall | How to Avoid |
-|---------|--------------|
-| SR too granular | Ensure SR represents a complete functional module, not individual features |
-| AR too abstract | Always reference specific code locations or API endpoints |
-| Missing 5W2H in SR | Use checklist to verify all 5W2H elements present |
-| AR workload > 0.5K | Split into multiple ARs by scenario or implementation phase |
-| **AR缺少接口规格** | **每个涉及系统元素间交互的AR必须定义接口规格表** |
-| **SR缺少DFX** | **每个SR必须标注可靠性、安全性、性能的关注点** |
-| **未识别系统元素** | **先建立系统元素清单，再进行SR-AR分解** |
-| **规格未分解** | **系统级指标必须分解到具体SR/功能** |
-| Unclear team assignment | Always specify which component team owns each AR |
-| Duplicate AR creation | Check existing system capabilities before defining new ARs |
-
-## Success Criteria
-
-- [ ] All functional requirements decomposed into SRs
-- [ ] Each SR uses complete 5W2H description
-- [ ] SRs aligned with DDD bounded contexts
-- [ ] **System elements identified with clear responsibilities**
-- [ ] **Domain data model defined with entity relationships**
-- [ ] All SRs decomposed into ARs
-- [ ] Each AR ≤ 0.5K workload
-- [ ] **Each AR assigned to specific system element (SE-XXX)**
-- [ ] **Interface specifications defined for all inter-element interactions**
-- [ ] **DFX requirements captured for each SR/AR**
-- [ ] **System-level specifications defined and decomposed to SRs**
-- [ ] **Design constraints documented**
-- [ ] ARs reference specific implementation locations
-- [ ] Clear team assignments for all ARs
-- [ ] **Summary tables complete**: Interface spec table, allocation table, DFX matrix
-- [ ] Output saved to `.hyper-designer/sr-ar-decomposition/[项目名]-SR-AR分解表.md`
+**要做：**
+- 每个 SR 的 5W2H 必须完整，特别是 Who、How Much 和 How
+- 每个 AR 必须比其父 SR 更具体，包含实现层面的决策
+- SR 的 How Much 必须从 IR 正确继承或分解，不能丢失指标
+- 模块划分前先分析现有代码结构和业界参考方案
+- NFR 必须落实到具体 AR 描述中
+- 输出格式必须匹配下游阶段的输入需求
