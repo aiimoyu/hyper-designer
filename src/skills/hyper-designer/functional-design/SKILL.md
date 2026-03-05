@@ -28,6 +28,7 @@ All design tasks require:
 - **项目代码**: Context files in the project
 - **参考项目代码**: Reference implementations (if available)
 - **功能库**: Reusable component library (if available)
+- **功能列表文档** (Functional List with SR Mapping and NFR/DFX Summary): Located in `.hyper-designer/functionalList/`. Contains SR mapping table (功能编号 → SR 编号) and consolidated NFR/DFX summary from IR constraints, scenarios, and use cases.
 
 ## Outputs
 
@@ -74,6 +75,18 @@ Before finalizing any design document, verify:
 - [ ] Deployment and CI/CD process documented
 - [ ] Test strategy covers integration, performance, fault tolerance
 - [ ] Risk/trade-off records preserved
+- [ ] §0 概要: 系统背景、目标、范围、文档结构
+- [ ] §1 设计目标与约束: 功能目标、非功能目标、约束条件（技术/业务/资源）、关键假设
+- [ ] §2 总体架构: 架构风格、分层设计、关键模块职责、模块间交互关系
+- [ ] §3 技术栈与选型理由: 技术栈列表、选型决策记录（含权衡分析）、风险评估
+- [ ] §4 模块设计概要: 模块职责、核心类设计、关键算法设计
+- [ ] §5 数据模型: 核心实体、关系图、一致性策略、索引策略
+- [ ] §6 交互协议: API 设计、认证授权、错误处理、版本管理
+- [ ] §7 非功能实现策略: 性能（缓存、并发）、安全（认证、加密）、可靠性（容错、降级）、可观测性
+- [ ] §8 部署与运维: 部署架构、CI/CD 流程、监控告警、故障恢复
+- [ ] §9 风险与权衡: 架构权衡记录、技术风险评估、迁移路径
+- [ ] §10 测试策略: 单元测试、集成测试、性能测试、故障注入测试
+- [ ] §11 参考资料与附录: 参考文献、术语表、变更历史
 
 **Module design**:
 - [ ] Module responsibilities clear and non-overlapping
@@ -83,6 +96,16 @@ Before finalizing any design document, verify:
 - [ ] Data models include fields, indexes, consistency notes
 - [ ] Unit/integration/performance test cases cover key scenarios
 - [ ] Deployment config and operational checks documented
+- [ ] §0 概要: 模块背景、目标、范围、文档结构
+- [ ] §1 目标与职责: 功能目标、非功能目标、职责边界、与其他模块关系
+- [ ] §2 接口规范: 公共接口定义、输入输出、错误语义、SLA、调用示例
+- [ ] §3 内部架构与组件: 组件职责、协作流程、状态管理、关键类设计
+- [ ] §4 数据结构与存储: 数据结构定义、存储方案、索引策略、一致性保证
+- [ ] §5 非功能要求实现: 性能优化、安全措施、容错机制、可观测性
+- [ ] §6 测试与验证: 单元测试、集成测试、性能测试、测试覆盖率
+- [ ] §7 部署与运维注意事项: 部署配置、健康检查、监控指标、故障排查
+- [ ] §8 开发注意与最佳实践: 代码规范、性能建议、安全建议、常见陷阱
+- [ ] §9 附录: 参考资料、术语表、变更历史
 
 ## Common Pitfalls
 
@@ -108,7 +131,7 @@ Before finalizing any design document, verify:
 - Module design drafts: `.hyper-designer/moduleFunctionalDesign/{模块名}/draft.md`
 
 **Pre-requisites**:
-- System design requires: System requirement decomposition document
+- System design requires: Functional list document with SR mapping table and NFR/DFX summary (from functionalRefinement)
 - Module design requires: System functional design document
 
 **Next steps**:
