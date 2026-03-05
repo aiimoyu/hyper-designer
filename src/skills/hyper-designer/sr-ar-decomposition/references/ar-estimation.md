@@ -196,6 +196,10 @@ Before finalizing AR estimations:
 - [ ] Dependencies identified and not double-counted
 - [ ] AR description specific enough to estimate (no vague terms)
 - [ ] Single team can own each AR independently
+- [ ] **Each AR assigned to exactly one system element (SE-XXX)**
+- [ ] **SE assignment consistent with bounded context ownership**
+- [ ] **Interface specifications defined for cross-SE interactions**
+- [ ] **DFX requirements inherited from parent SR and refined**
 
 ## Examples
 
@@ -338,10 +342,14 @@ AR-003: 用户订单数据每日增量同步到数据仓库 (0.35K)
 
 ```
 Start: AR workload > 0.5K?
-  ├─ No → ✅ AR is valid
+  ├─ No → Check SE assignment
+  │   ├─ SE-XXX assigned? → ✅ AR is valid
+  │   └─ No SE assigned? → ❌ Assign SE-XXX before proceeding
   └─ Yes → Need to split
+      ├─ Multiple system elements involved?
+      │   └─ Yes → Split by SE ownership (one AR per SE)
       ├─ Multiple layers involved?
-      │   └─ Yes → Split by layer (UI/API/Domain/Infra)
+      │   └─ Yes → Split by layer (UI/API/Domain/Infra), assign each to SE
       ├─ Multiple scenarios?
       │   └─ Yes → Split by scenario (happy path/error cases)
       ├─ Multiple features?
@@ -350,4 +358,70 @@ Start: AR workload > 0.5K?
       │   └─ Yes → Split by complexity
       └─ Multiple technologies?
           └─ Yes → Split by technology stack
+
+Post-split validation:
+  ├─ Each resulting AR ≤ 0.5K? → Continue
+  ├─ Each AR has exactly one SE-XXX? → Continue
+  ├─ Cross-AR dependencies have IF-XXX? → Continue
+  └─ Any check fails → Re-split or adjust
+```
+
+## SE Assignment Requirements
+
+### Why SE Assignment is Mandatory
+
+Every AR must be assigned to exactly one System Element (SE-XXX) because:
+1. **moduleFunctionalDesign** requires each AR to map to a specific system element for implementation design
+2. **Interface specifications** depend on knowing provider/consumer SE for every interaction
+3. **Team allocation** follows SE ownership — unclear SE = unclear ownership
+4. **DFX analysis** needs SE context to assess failure modes and security boundaries
+
+### SE Assignment Rules
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| One AR → One SE | Each AR belongs to exactly one system element | AR-001-01 → SE-001 |
+| Cross-SE → Split | If AR spans multiple SEs, split into per-SE ARs | AR "用户注册" → AR "注册UI" (SE-FE) + AR "注册逻辑" (SE-AUTH) |
+| Interface → IF-XXX | Cross-SE interaction requires interface spec | SE-001 calls SE-002 → define IF-001 |
+| DFX inherit | AR inherits DFX from parent SR, refines per SE context | SR DFX "可靠性:高" → AR adds specific retry/fallback for this SE |
+
+### SE Assignment Checklist
+
+Before finalizing any AR, verify:
+
+- [ ] AR has `分配系统元素: SE-XXX [名称]` field filled
+- [ ] SE-XXX exists in the 系统元素清单 (Section 一)
+- [ ] AR's scope fits within the SE's 核心职责 (core responsibility)
+- [ ] If AR interacts with another SE → IF-XXX interface spec is defined
+- [ ] AR workload ≤ 0.5K for this single SE
+- [ ] Team assignment is consistent with SE ownership
+
+### Example: SE-Aware AR Splitting
+
+**Before (❌ No SE assignment, too large)**:
+```
+AR-001-01: 用户注册完整功能 (0.8K) 
+  → 无系统元素分配
+  → 跨越前端、后端、数据库三个系统元素
+```
+
+**After (✅ Split by SE, each ≤ 0.5K)**:
+```
+AR-001-01: 注册表单UI (0.15K)
+  → 分配系统元素: SE-010 前端应用 (frontend-app)
+  → 接口: IF-001 注册请求接口 (消费方)
+
+AR-001-02: 注册业务逻辑 (0.25K)
+  → 分配系统元素: SE-001 用户服务 (user-service)
+  → 接口: IF-001 注册请求接口 (提供方), IF-002 邮件通知接口 (消费方)
+
+AR-001-03: 注册数据持久化 (0.1K)
+  → 分配系统元素: SE-001 用户服务 (user-service)
+  → 数据模型: users表新增字段
+
+AR-001-04: 注册邮件验证 (0.2K)
+  → 分配系统元素: SE-005 通知服务 (notification-service)
+  → 接口: IF-002 邮件通知接口 (提供方)
+
+Total: 0.7K ✅ (每个AR有明确SE分配和接口定义)
 ```
