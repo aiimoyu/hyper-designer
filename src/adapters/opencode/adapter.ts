@@ -109,7 +109,6 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
           action: 'summarizeSession',
           recovery: 'continueWithoutSummarize',
         })
-        // 压缩失败不中断工作流，继续执行
       }
     },
   }

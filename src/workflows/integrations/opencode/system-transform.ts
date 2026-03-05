@@ -1,12 +1,13 @@
 /**
  * 系统消息转换器
  *
- * 替换系统消息中的工作流相关占位符令牌。
+ * 替换系统消息中的工作流相关占位符令牌和工具名称占位符。
  */
 
 import { workflowService } from "../../core/service"
 import { loadWorkflowPrompt, loadStagePrompt } from "../../core/runtime"
 import { replacePlaceholders, type PlaceholderResolver } from "./utils"
+import { replaceToolPlaceholders, OPENCODE_TOOL_MAPPING } from "./tool-transform"
 
 /**
  * 创建系统消息转换器
@@ -36,5 +37,9 @@ export function createSystemTransformer() {
     ]
 
     replacePlaceholders(output.system, placeholderResolvers)
+
+    for (let index = 0; index < output.system.length; index += 1) {
+      output.system[index] = replaceToolPlaceholders(output.system[index], OPENCODE_TOOL_MAPPING)
+    }
   }
 }

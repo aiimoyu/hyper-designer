@@ -4,6 +4,7 @@
  * 提供与 OpenCode 平台的完整集成，包括：
  * 1. 事件处理：监听会话空闲事件，执行工作流交接
  * 2. 系统消息转换：替换工作流相关的占位符令牌
+ * 3. 工具名称转换：替换 HD_TOOL_* 占位符为平台实际工具名
  *
  * 架构说明：
  * - adapters/types.ts 定义平台无关的 PlatformAdapter 接口
@@ -20,6 +21,14 @@ import { createEventHandler } from "./event-handler"
 import { createSystemTransformer } from "./system-transform"
 
 export { replacePlaceholders, type PlaceholderResolver } from "./utils"
+export {
+  HD_TOOL_PLACEHOLDERS,
+  OPENCODE_TOOL_MAPPING,
+  replaceToolPlaceholders,
+  createToolTransformer,
+  type ToolNameMapping,
+  type HdToolPlaceholder,
+} from "./tool-transform"
 
 /**
  * 创建 OpenCode 平台集成钩子
@@ -57,7 +66,7 @@ export async function createWorkflowHooks(ctx: PluginInput) {
     /** 事件处理器：监听 session.idle 触发工作流交接 */
     event: createEventHandler(ctx),
 
-    /** 系统消息转换器：注入工作流提示词 */
+    /** 系统消息转换器：注入工作流提示词并替换工具名称占位符 */
     "experimental.chat.system.transform": createSystemTransformer(),
   }
 }
