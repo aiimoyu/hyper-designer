@@ -63,10 +63,21 @@
    1. **Read Manifest**: Read `.hyper-designer/document/{domain}/manifest.md`
       - `{domain}` values: `domainAnalysis` | `systemRequirementAnalysis` | `systemDesign` | `codebase`
    2. **Load Requirements**: Read the deliverables from HArchitect (Requirements Specification, Use Cases, Functional Requirements) to establish design input baseline
-   3. **Load Prior Output**: Read the deliverables from the previous design stage (if any) to confirm the current state baseline
-   4. **Load NFR Data**: Read the NFR/DFX summary table from `.hyper-designer/functionalRefinement/` (functional list document)
+   3. **Incremental Pre-Check** (MANDATORY for systemFunctionalDesign and moduleFunctionalDesign stages):
+      - Check `.hyper-designer/systemFunctionalDesign/` — if any document exists, **read it** before starting system design
+      - Check `.hyper-designer/moduleFunctionalDesign/` — if any document exists, **read it** before starting module design
+      - ❌ Prohibited: Starting design work without reading existing design documents first
+      - Determine change scope for each section: New / Modify / Reuse / Deprecate
+      - Record findings in `draft.md §1 Requirements Baseline` with a note: "Existing design read: YES/NO, change scope: [...]"
+   4. **Load Prior Output**: Read the deliverables from the previous design stage (if any) to confirm the current state baseline
+   5. **Read Project Code**: Scan the actual project codebase to understand existing implementation:
+      - Directory structure and module boundaries
+      - Existing interface definitions and API contracts
+      - Technology constraints (framework versions, DB types, protocols)
+      - Technical debt or mismatches with any existing design
+      - Record key findings in `draft.md §5 Research Findings`
+   6. **Load NFR Data**: Read the NFR/DFX summary table from `.hyper-designer/functionalRefinement/` (functional list document)
       - NFR/DFX data used for §1 design goals, §7 NFR implementation strategies (system), §5 NFR implementation (module)
-   ---
 
 ### [P3] Execution
 
