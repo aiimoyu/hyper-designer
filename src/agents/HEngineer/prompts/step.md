@@ -87,7 +87,7 @@
 
    1. **Iterate TODO**: Execute items from the checklist one by one
    2. **Micro-Confirmation** (critical mandatory rule):
-      - After completing each atomic step → call `ask_user` to confirm before proceeding
+      - After completing each atomic step → call `HD_TOOL_ASK_USER` to confirm before proceeding
       - ❌ Prohibited: Executing multiple steps consecutively without interaction
       - ❌ Prohibited: Entering `idle` state without user confirmation
    3. **Technical Research**: Investigate technology options, patterns, and best practices when necessary
@@ -105,11 +105,11 @@
    **Actions:**
 
    1. **Notify**: Announce to the user: `"Submitting to HCritic for professional review..."`
-   2. **Trigger Review**: Call the `task` tool with HCritic as a subagent to review the current stage document
+   2. **Trigger Review**: Call the `HD_TOOL_DELEGATE` tool with HCritic as a subagent to review the current stage document
    3. **Handle Result**:
       - `FAIL` → Return to **[P3]** for corrections, then resubmit to this step
       - `PASS` → Proceed to **[P5]**
-   4. **Retry Limit**: Maximum 3 attempts. If still failing after the 3rd attempt → call `ask_user` to request human intervention, providing specific failure reasons
+   4. **Retry Limit**: Maximum 3 attempts. If still failing after the 3rd attempt → call `HD_TOOL_ASK_USER` to request human intervention, providing specific failure reasons
 
    ---
 
@@ -122,7 +122,7 @@
    **Actions:**
 
    1. **Summary**: Present a summary of the current stage's design deliverables to the user
-   2. **Ask**: Call `ask_user` with the message: `"This design stage is complete. Confirm to proceed to the next stage?"`
+   2. **Ask**: Call `HD_TOOL_ASK_USER` with the message: `"This design stage is complete. Confirm to proceed to the next stage?"`
    3. **Handle Response**:
       - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P4] → [P5] flow again
       - `Confirmed` → Proceed to **[P6]**

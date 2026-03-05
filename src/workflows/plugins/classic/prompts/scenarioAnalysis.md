@@ -7,7 +7,7 @@
 ### 1. 资料收集
 
 **必须先完成资料收集，再开始执行。**
-使用 `task` 工具委派 HCollector 进行资料收集
+使用 `HD_TOOL_DELEGATE` 工具委派 HCollector 进行资料收集
 
 #### 所需资料类别
 
@@ -33,7 +33,7 @@
 
 ### 4. 质量审查
 
-**审查方式**：使用 `task(subagent=HCritic)` 调用 HCritic 进行质量评审。
+**审查方式**：使用 `HD_TOOL_DELEGATE(subagent=HCritic)` 调用 HCritic 进行质量评审。
 
 #### 审查提示词
 
