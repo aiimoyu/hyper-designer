@@ -5,11 +5,11 @@
 本工作流由 **HArchitect** 与 **HEngineer** 协作完成，严格遵循线性执行顺序。每个阶段必须按照 `Single-Stage Processing Pipeline` 执行后方可进入下一阶段。
 
 **执行链条：**
-`IRAnalysis` → `scenarioAnalysis` → `useCaseAnalysis` → `functionalRefinement` → `systemFunctionalDesign` → `moduleFunctionalDesign`
+`IRAnalysis` → `scenarioAnalysis` → `useCaseAnalysis` → `functionalRefinement` → `requirementDecomposition` → `systemFunctionalDesign` → `moduleFunctionalDesign`
 
 ### 阶段定义与执行规范
 
-以下定义涵盖所有6个阶段。Agent在执行对应阶段时，必须严格遵循下述的输入、行动指引与输出规范。
+以下定义涵盖所有7个阶段。Agent在执行对应阶段时，必须严格遵循下述的输入、行动指引与输出规范。
 
 #### 阶段 1：IRAnalysis (初始需求分析)
 
@@ -62,7 +62,6 @@
 
 **输入依赖：**
 
-- `.hyper-designer/IRAnalysis/需求信息.md`
 - `.hyper-designer/scenarioAnalysis/{功能名}场景.md`
 
 **执行行动指引：**
@@ -84,6 +83,7 @@
 
 **输入依赖：**
 
+- `.hyper-designer/IRAnalysis/需求信息.md`
 - `.hyper-designer/useCaseAnalysis/{功能名}用例.md`
 
 **执行行动指引：**
@@ -97,7 +97,30 @@
 - `.hyper-designer/functionalRefinement/{功能名}功能列表.md`
 - `.hyper-designer/functionalRefinement/{功能名}FMEA.md`
 
-#### 阶段 5：systemFunctionalDesign (系统功能设计)
+#### 阶段 5：requirementDecomposition (需求分解)
+
+**执行者：** HEngineer
+**核心目标：** 应用领域驱动设计（DDD）将系统级需求（SR）细化为模块级需求与可执行实现要求（AR），定义子系统接口与依赖关系。
+
+**输入依赖：**
+
+- `.hyper-designer/IRAnalysis/需求信息.md`
+- `.hyper-designer/functionalRefinement/{功能名}功能列表.md`
+- `.hyper-designer/functionalRefinement/{功能名}FMEA.md`
+
+**执行行动指引：**
+
+1. **领域建模**：采用 DDD 方法划分限界上下文与聚合。
+2. **需求分解**：将系统级需求分解为模块级需求，建立 SR-AR 映射。
+3. **接口定义**：定义模块间的接口契约与依赖关系。
+4. **追溯验证**：建立 IR→SR→AR 的完整追溯链。
+
+**输出交付物：**
+
+- `.hyper-designer/requirementDecomposition/sr-ar-decomposition.md`
+- `.hyper-designer/requirementDecomposition/traceability-report.md`
+
+#### 阶段 6：systemFunctionalDesign (系统功能设计)
 
 **执行者：** HEngineer
 **核心目标：** 构建系统整体架构，分解模块需求，确定技术蓝图。
@@ -105,18 +128,19 @@
 
 **输入依赖：**
 
-- `.hyper-designer/functionalRefinement/{功能名}功能列表.md`
-- `.hyper-designer/functionalRefinement/{功能名}FMEA.md`
+- `.hyper-designer/IRAnalysis/需求信息.md`
+- `.hyper-designer/requirementDecomposition/sr-ar-decomposition.md`
+- `.hyper-designer/requirementDecomposition/traceability-report.md`
 
 **执行行动指引：**
 
-**子步骤 5.1：系统需求分解**
+**子步骤 6.1：系统需求分解**
 
 1. **模块划分**：基于功能列表与FMEA，与用户讨论系统模块划分维度（按业务域/技术层次）。
 2. **接口定义**：初步定义模块间的交互边界与接口契约。
 3. **输出生成**：生成系统需求分解文档。
 
-**子步骤 5.2：系统功能设计**
+**子步骤 6.2：系统功能设计**
 
 1. **架构设计**：基于分解结果设计系统架构（单体/微服务/分布式）。
 2. **技术选型**：确定框架、数据库、中间件等技术栈。
@@ -125,10 +149,9 @@
 
 **输出交付物：**
 
-- `.hyper-designer/systemFunctionalDesign/系统需求分解.md`
-- `.hyper-designer/systemFunctionalDesign/系统功能设计.md`
+- `.hyper-designer/systemFunctionalDesign/system-design.md`
 
-#### 阶段 6：moduleFunctionalDesign (模块功能设计)
+#### 阶段 7：moduleFunctionalDesign (模块功能设计)
 
 **执行者：** HEngineer
 **核心目标：** 将系统设计转化为可开发的详细模块规格与活动计划。
@@ -136,18 +159,18 @@
 
 **输入依赖：**
 
-- `.hyper-designer/systemFunctionalDesign/系统功能设计.md`
-- `.hyper-designer/systemFunctionalDesign/系统需求分解.md`
+- `.hyper-designer/systemFunctionalDesign/system-design.md`
+- `.hyper-designer/requirementDecomposition/sr-ar-decomposition.md`
 
 **执行行动指引：**
 
-**子步骤 6.1：活动需求分解**
+**子步骤 7.1：活动需求分解**
 
 1. **工作包拆解**：将系统功能转化为可执行的开发任务包。
 2. **计划制定**：与用户确认里程碑节点、工作量估算与优先级。
 3. **输出生成**：生成活动需求分解文档。
 
-**子步骤 6.2：模块功能设计**
+**子步骤 7.2：模块功能设计**
 
 1. **详细设计**：针对每个模块输出详细技术规格（职责、接口、内部结构、算法、数据结构）。
 2. **验证确认**：与用户验证设计的可实现性与可测试性。
