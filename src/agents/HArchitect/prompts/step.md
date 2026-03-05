@@ -5,12 +5,13 @@
    > 📌 This pipeline applies to a single Stage within the Workflow. The number of steps adjusts dynamically based on stage configuration.
 
    ```
-   [P1] Planning       → Load skills, build TODO list
-   [P2] Context Load   → Retrieve historical context
-   [P3] Execution      → Execute step-by-step, Human-in-the-Loop
-   [P4] HCritic Review → Automated quality gate (max 3 retries)
-   [P5] Confirmation   → User authorization
-   [P6] Handover       → Trigger state transition
+   [P1] Planning           → Load skills, build TODO list
+   [P2] Context Load       → Retrieve historical context
+   [P3] Execution          → Execute step-by-step, Human-in-the-Loop
+   [P4] Interactive Revision → User-driven document refinement
+   [P5] HCritic Review     → Automated quality gate (max 3 retries)
+   [P6] Confirmation       → User authorization
+   [P7] Handover           → Trigger state transition
    ```
 
    **Mandatory Loop Rules:**
@@ -18,15 +19,19 @@
    ```
    P3 Execution ──failed/modified──▶ P3 Execution
         │
-        └──done──▶ P4 HCritic Review ──FAIL──▶ P3 Execution
+        └──done──▶ P4 Interactive Revision ──modified──▶ P4 Interactive Revision
+                         │
+                    no changes
+                         │
+                  P5 HCritic Review ──FAIL──▶ P3 Execution
                          │
                        PASS
                          │
-                  P5 User Confirmation ──needs changes──▶ P3 Execution
+                  P6 User Confirmation ──needs changes──▶ P3 Execution
                          │
                      confirmed
                          │
-                  P6 Handover (terminate)
+                  P7 Handover (terminate)
    ```
 
    **Mandatory Rule: After completing each TODO sub-task, you MUST synchronously update both the TODO list and the stage draft file.**
@@ -83,7 +88,29 @@
 
    ---
 
-### [P4] HCritic Review
+### [P4] Interactive Revision
+
+   **🎯 Goal:** Enable user-driven document refinement through an interactive review-modify loop.
+
+   **Actions:**
+
+   1. **Prepare Review**: Call `hd_prepare_review` with the deliverable document path to create a user-editable snapshot in the project root directory
+   2. **Ask User**: Call `HD_TOOL_ASK_USER` with the message: `"Document is ready for review. Please check the file at {reviewPath}. Have you completed modifications?"` with options: `["Completed modifications", "No changes needed"]`
+   3. **Finalize Review**: Call `hd_finalize_review` to detect changes and clean up the temporary file
+   4. **Process Changes** (if user selected "Completed modifications"):
+      - Analyze each diff hunk to identify user intent:
+        - `add`: New content added → integrate into the document
+        - `delete`: Content removed → remove from the document
+        - `modify`: Content changed → update the document
+      - Apply changes to form the revised draft
+      - Loop back to step 1 for another revision round
+   5. **Proceed** (if user selected "No changes needed"): Continue to **[P5]**
+
+   **Loop Rule:** This step repeats until the user selects "No changes needed".
+
+   ---
+
+### [P5] HCritic Review
 
    **🎯 Goal:** Enforce quality gate — output must meet standards before the stage can proceed.
 
@@ -93,28 +120,28 @@
    2. **Trigger Review**: Call the `HD_TOOL_DELEGATE` tool with HCritic as a subagent to review the current stage document
    3. **Handle Result**:
       - `FAIL` → Return to **[P3]** for corrections, then resubmit to this step
-      - `PASS` → Proceed to **[P5]**
+      - `PASS` → Proceed to **[P6]**
    4. **Retry Limit**: Maximum 3 attempts. If still failing after the 3rd attempt → call `HD_TOOL_ASK_USER` to request human intervention, providing specific failure reasons
 
    ---
 
-### [P5] Confirmation
+### [P6] Confirmation
 
    **🎯 Goal:** Obtain explicit user authorization as the gatekeeper for stage transition.
 
-   **Prerequisite:** Only execute after [P4] review has passed.
+   **Prerequisite:** Only execute after [P5] review has passed.
 
    **Actions:**
 
    1. **Summary**: Present a summary of the current stage's deliverables to the user
    2. **Ask**: Call `HD_TOOL_ASK_USER` with the message: `"This stage is complete. Confirm to proceed to the next stage?"`
    3. **Handle Response**:
-      - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P4] → [P5] flow again
-      - `Confirmed` → Proceed to **[P6]**
+      - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P5] → [P6] flow again
+      - `Confirmed` → Proceed to **[P7]**
 
    ---
 
-### [P6] Handover
+### [P7] Handover
 
    **🎯 Goal:** Complete stage archiving and trigger workflow state transition.
 

@@ -1,7 +1,7 @@
 /**
- * OpenCode 平台工具集成
+ * OpenCode Platform Tool Integration
  *
- * 将 documentReview 等抽象工具实现注册到 OpenCode 平台。
+ * Registers abstract tool implementations (such as documentReview) to the OpenCode platform.
  */
 
 import { tool } from "@opencode-ai/plugin"
@@ -10,31 +10,31 @@ import { finalizeReview } from "../../documentReview/finalizeReview"
 import { HyperDesignerLogger } from "../../../utils/logger"
 
 /**
- * 创建文档审核工具
+ * Creates document review tools
  */
 export function createDocumentReviewTools() {
   return {
     hd_prepare_review: tool({
-      description: "拷贝文档到项目根目录供用户审核修改。Agent 形成初稿后调用此工具，然后使用 ask_user 让用户确认修改完成。",
+      description: "This tool is used to initiate the interactive document modification workflow. It creates a temporary snapshot file from a specified source path for the user to edit. Call this tool when user intervention is required to adjust content after a document is generated. Note: After calling this, you MUST call hd_finalize_review to retrieve the user's modifications.",
       args: {
-        sourcePath: tool.schema.string().describe("源文件路径，如 .hyper-designer/functionalRefinement/xxx.md"),
-        reviewPath: tool.schema.string().optional().describe("可选，默认为项目根目录同名文件"),
+        sourcePath: tool.schema.string().describe("The path of the source file to be reviewed or modified"),
+        reviewPath: tool.schema.string().optional().describe("The temporary destination path for user editing. If not specified, a copy with the same name will be created in the project root by default."),
       },
       async execute(params: { sourcePath: string; reviewPath?: string }) {
-        HyperDesignerLogger.debug("DocumentReview", "执行 hd_prepare_review", params)
+        HyperDesignerLogger.debug("DocumentReview", "Executing hd_prepare_review", params)
         const result = await prepareReview(params)
         return JSON.stringify(result, null, 2)
       },
     }),
 
     hd_finalize_review: tool({
-      description: "获取用户修改前后的差异，返回结构化差异数据，并删除临时审核文件。用户确认修改完成后调用。",
+      description: "This tool is used to conclude the document modification workflow and retrieve the changes made by the user. It compares the snapshot created by hd_prepare_review with the current content, returns structured data containing additions, deletions, and modifications, and subsequently cleans up the temporary files. Call this tool only after the user explicitly confirms the completion of modifications or indicates no changes are needed, in order to obtain final feedback or update the original document.",
       args: {
-        sourcePath: tool.schema.string().describe("源文件路径，与 prepare 时相同"),
-        reviewPath: tool.schema.string().optional().describe("可选，默认为项目根目录同名文件"),
+        sourcePath: tool.schema.string().describe("The source file path used when the review was initiated"),
+        reviewPath: tool.schema.string().optional().describe("The temporary path previously edited by the user; must remain consistent with the 'prepare' phase."),
       },
       async execute(params: { sourcePath: string; reviewPath?: string }) {
-        HyperDesignerLogger.debug("DocumentReview", "执行 hd_finalize_review", params)
+        HyperDesignerLogger.debug("DocumentReview", "Executing hd_finalize_review", params)
         const result = await finalizeReview(params)
         return JSON.stringify(result, null, 2)
       },

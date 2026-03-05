@@ -42,7 +42,7 @@ export async function prepareReview(
       success: false,
       sourcePath,
       reviewPath,
-      message: `源文件不存在: ${sourcePath}`
+      message: `Source file does not exist: ${sourcePath}`
     }
   }
 
@@ -59,7 +59,7 @@ export async function prepareReview(
       success: true,
       sourcePath,
       reviewPath,
-      message: `文档已拷贝到项目根目录，请修改 ${reviewPath}`
+      message: `User annotation document generated: ${reviewPath}. Please guide the user to modify the file at the above path and ask the user to answer "修改完成" (modifications completed) or "无需修改" (no modifications needed). After the user responds, call hd_finalize_review to get the user's modified content`
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -68,7 +68,7 @@ export async function prepareReview(
       success: false,
       sourcePath,
       reviewPath,
-      message: `拷贝文档失败: ${err.message}`
+      message: `Failed to copy document: ${err.message}`
     }
   }
 }

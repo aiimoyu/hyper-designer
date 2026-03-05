@@ -71,7 +71,7 @@ export async function finalizeReview(
         hasChanges: false,
         hunks: [],
         summary: { additions: 0, deletions: 0, modifications: 0 },
-        message: '文档未检测到修改'
+        message: 'Document has no modifications'
       }
     }
 
@@ -80,7 +80,7 @@ export async function finalizeReview(
       hasChanges: true,
       hunks,
       summary,
-      message: `检测到 ${summary.modifications} 处修改，临时文件已删除`
+      message: `Detected ${summary.modifications} modifications. Please identify the user's intent (addition, deletion, modification) based on the differences and modify the file according to the user's intent`
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -90,7 +90,7 @@ export async function finalizeReview(
       hasChanges: false,
       hunks: [],
       summary: { additions: 0, deletions: 0, modifications: 0 },
-      message: `获取差异失败: ${err.message}`
+      message: `Failed to get diff hunks: ${err.message}`
     }
   }
 }
