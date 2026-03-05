@@ -44,7 +44,9 @@
    3. **Create TODO**: Call the `todowrite` tool to generate an atomized TODO list
       - ❌ Prohibited: `"Complete system design"` (vague, unverifiable)
       - ✅ Required: `"Design data model for payment transaction entity with field definitions and relationships"` (specific, verifiable)
-
+   4. **Load Template Checklist**: Load the canonical template sections checklist
+      - System design (systemFunctionalDesign): §0-§11 (12 sections)
+      - Module design (moduleFunctionalDesign): §0-§9 (10 sections)
    **Prohibitions:**
 
 - Skip the draft and execute directly
@@ -62,7 +64,8 @@
       - `{domain}` values: `domainAnalysis` | `systemRequirementAnalysis` | `systemDesign` | `codebase`
    2. **Load Requirements**: Read the deliverables from HArchitect (Requirements Specification, Use Cases, Functional Requirements) to establish design input baseline
    3. **Load Prior Output**: Read the deliverables from the previous design stage (if any) to confirm the current state baseline
-
+   4. **Load NFR Data**: Read the NFR/DFX summary table from `.hyper-designer/functionalRefinement/` (functional list document)
+      - NFR/DFX data used for §1 design goals, §7 NFR implementation strategies (system), §5 NFR implementation (module)
    ---
 
 ### [P3] Execution
@@ -78,9 +81,9 @@
       - ❌ Prohibited: Entering `idle` state without user confirmation
    3. **Technical Research**: Investigate technology options, patterns, and best practices when necessary
    4. **Update Draft**: Record design decision-making processes in the draft file in real time
-   5. **Generate Output**: Produce the formal deliverable document with full requirements traceability
+   5. **Generate Output**: Produce the formal deliverable document following canonical template structure (§0-§11 for system design, §0-§9 for module design) with full requirements traceability
 
-   **Exit Condition:** All TODO items completed + deliverable document generated + requirements traceability established
+   **Exit Condition:** All TODO items completed + all template sections populated (§0-§11 or §0-§9) + deliverable document generated + requirements traceability established
 
    ---
 
