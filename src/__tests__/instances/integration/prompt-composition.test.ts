@@ -4,7 +4,6 @@ import { join } from "path"
 import { createHArchitectAgent } from "../../../agents/HArchitect"
 import { createHEngineerAgent } from "../../../agents/HEngineer"
 import { createHCriticAgent } from "../../../agents/HCritic"
-import type { RuntimeType } from "../../../tools"
 import { loadPromptForStage, getWorkflowDefinition, initializeWorkflowState } from '../../../workflows/core'
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")
@@ -27,7 +26,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("creates HArchitect agent with valid configuration", () => {
-    const agent = createHArchitectAgent(undefined, "opencode" as RuntimeType)
+    const agent = createHArchitectAgent()
 
     expect(agent.name).toBe("HArchitect")
     expect(agent.mode).toBe("primary")
@@ -39,7 +38,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("creates HEngineer agent with valid configuration", () => {
-    const agent = createHEngineerAgent(undefined, "opencode" as RuntimeType)
+    const agent = createHEngineerAgent()
 
     expect(agent.name).toBe("HEngineer")
     expect(agent.prompt).toBeTruthy()
@@ -48,7 +47,7 @@ describe("Integration Tests: Prompt Composition", () => {
   })
 
   it("creates HCritic agent with valid configuration", () => {
-    const agent = createHCriticAgent(undefined, "opencode" as RuntimeType)
+    const agent = createHCriticAgent()
 
     expect(agent.name).toBe("HCritic")
     expect(agent.prompt).toBeTruthy()

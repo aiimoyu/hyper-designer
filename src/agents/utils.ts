@@ -12,7 +12,6 @@ import { createHCollectorAgent } from "./HCollector"
 import { createHArchitectAgent } from "./HArchitect"
 import { createHCriticAgent } from "./HCritic"
 import { createHEngineerAgent } from "./HEngineer"
-import type { RuntimeType } from "../tools"
 
 
 
@@ -41,13 +40,12 @@ export function isHDBuiltinAgent(agentName: string | undefined): boolean {
 }
 
 export async function createBuiltinAgents(
-  runtime: RuntimeType,
   model?: string
 ): Promise<Record<HDBuiltinAgentName, AgentConfig>> {
   const result: Partial<Record<HDBuiltinAgentName, AgentConfig>> = {}
 
   for (const name of HD_BUILTIN_AGENT_NAMES) {
-    result[name] = BUILTIN_AGENT_FACTORIES[name](model, runtime)
+    result[name] = BUILTIN_AGENT_FACTORIES[name](model)
   }
 
   return result as Record<HDBuiltinAgentName, AgentConfig>

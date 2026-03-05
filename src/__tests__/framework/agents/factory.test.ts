@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from "vitest"
-import { createAgent, filePrompt, toolsPrompt } from "../../../agents/factory"
+import { createAgent, filePrompt, stringPrompt } from "../../../agents/factory"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import type { AgentDefinition } from "../../../agents/factory"
 import type { AgentMode } from "../../../agents/types"
@@ -165,7 +165,7 @@ describe("createAgent", () => {
   })
 
   describe("promptGenerators", () => {
-    it("should accept filePrompt and toolsPrompt generators", () => {
+    it("should accept filePrompt and stringPrompt generators", () => {
       mkdirSync(TEST_DIR, { recursive: true })
       writeFileSync(join(TEST_DIR, "test.md"), "Identity content")
 
@@ -178,7 +178,7 @@ describe("createAgent", () => {
         defaultMaxTokens: 32000,
         promptGenerators: [
           filePrompt(join(TEST_DIR, "test.md")),
-          toolsPrompt(["ask_user"]),
+          stringPrompt("Additional prompt content"),
         ],
         defaultPermission: {},
         defaultTools: {},
@@ -186,8 +186,7 @@ describe("createAgent", () => {
 
       const agent = createAgent(definition)
       expect(agent.prompt).toContain("Identity content")
-
-
+      expect(agent.prompt).toContain("Additional prompt content")
     })
 
     it("should allow empty promptGenerators array", () => {
