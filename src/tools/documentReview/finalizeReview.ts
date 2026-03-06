@@ -87,7 +87,7 @@ export async function finalizeReview(
       canProceedToNextStep: false,
       hunks,
       summary,
-      message: `Detected ${summary.modifications} modification hunks. Changes remain — call hd_prepare_review to start the next revision round.`,
+      message: `Detected ${summary.modifications} modification hunks. Process all user changes (apply additions, deletions, and // annotations) to the source document first, then call hd_prepare_review to start the next revision round.`,
       unifiedDiff
     }
   } catch (error) {

@@ -107,33 +107,38 @@
 
    **🎯 Goal:** Enable user-driven document refinement through an annotation-driven review loop.
 
-   **User Annotation Convention:**
-   Users communicate changes by writing **annotations that start with `//` (double slash) or multiple slashes** (e.g., `///`). Annotations are **instructions to you**, not document content — never copy them verbatim into the final document.
+   **Review File Location:** `hd_prepare_review` creates a snapshot with the **same filename as the source document in the project root directory**. Always tell the user the exact path from the `reviewPath` field of the return value.
 
-   | Scenario | What the user does | How you must handle it |
+   **User Edit Convention:**
+   The user edits the snapshot file directly. Two mechanisms:
+
+   | Change type | How the user signals it | No annotation needed? |
    |---|---|---|
-   | **Addition** | Writes new text, optionally with `// polish this` nearby | Polish the added text for style/voice consistency; integrate it naturally into surrounding content; strip any `//` annotations from the final text |
-   | **Deletion** | Removes a section or writes `// delete` / `// remove` | Remove the marked content **and** scan the entire document for all related references — leave no orphan sentences, dangling cross-references, or logical contradictions |
-   | **Modification** | Edits text directly or writes `// change X to Y` | Apply the change exactly as instructed |
-   | **Extra work required** | Writes `// research X`, `// explore codebase for Y`, `// clarify design decision` | Execute the required task with appropriate tools first; update the document with your findings; then remove the annotation |
+   | **Addition** | Directly types new text into the file | ✅ No `//` needed — agent detects via diff |
+   | **Deletion** | Directly removes text from the file | ✅ No `//` needed — agent detects via diff |
+   | **Modification instruction** | Writes `// change X to Y`, `// rephrase this as...` etc. | `//` required — this is an instruction to you, not content |
+   | **Extra work required** | Writes `// research X`, `// explore codebase for Y`, `// clarify design decision` | `//` required — execute the task, then update the document |
+
+   **Key rule:** Lines starting with `//` are instructions to you — never copy them into the final document.
 
    **Actions:**
 
-   1. **Prepare Review**: Call `hd_prepare_review` with the deliverable document path to create a user-editable snapshot in the project root directory
+   1. **Prepare Review**: Call `hd_prepare_review` with the deliverable document path. The snapshot is created in the **project root directory** with the same filename. Record the returned `reviewPath`.
    2. **Notify User**: Call `HD_TOOL_ASK_USER` with:
-      - Message: `"Document snapshot ready at {reviewPath}. Open the file and annotate using // comments to indicate additions, deletions, modifications, or tasks (e.g., // add: expand this section, // delete, // change X to Y, // research: best design pattern for Z). Select when done."`
-      - Options: `["Done annotating", "No changes needed"]`
+      - Message: `"Review snapshot created at {reviewPath} (project root). Open that file, make your edits: add/delete text directly, or write // instructions for modifications and tasks (e.g., // change X to Y, // research best design pattern for Z). Select when done."`
+      - Options: `["Done editing", "No changes needed"]`
    3. **Finalize Review**: Call `hd_finalize_review` to retrieve the diff and clean up the snapshot
    4. **Check `canProceedToNextStep`** from the `hd_finalize_review` return value:
       - `canProceedToNextStep === true` → **Exit P4**, proceed to **[P5]**
-      - `canProceedToNextStep === false` → Changes detected; process them (step 5), then **immediately return to step 1**
+      - `canProceedToNextStep === false` → Process all changes (step 5), then **immediately return to step 1**
    5. **Process changes** (only when step 4 directs you to loop):
-      - Read the `hunks` and `unifiedDiff` fields to understand what changed
-      - For each hunk, identify the annotation type from the `//` prefix and apply the rule in the table above
-      - **Addition hunks**: Polish added text for consistency; never copy `//` annotations into the document
-      - **Deletion hunks**: Remove the content **and** all related references throughout the document (interfaces, traceability chains, module dependencies) to ensure global consistency
-      - **Modification hunks**: Apply the instruction; if extra work (code exploration, technical research, design revision) is required, complete that work first, then update the document
-      - Write the revised content to the source document
+      - Read `hunks` and `unifiedDiff` to understand every change
+      - **Addition hunks** (user added text directly): Polish for style/voice consistency; integrate naturally into surrounding content
+      - **Deletion hunks** (user removed text directly): Remove the content **and** scan the entire document for all related references — no orphan sentences, dangling cross-references, traceability gaps, or logical contradictions
+      - **`//` annotation hunks**: Parse the instruction:
+        - Modification (`// change X...`, `// rephrase...`): apply the change; remove the `//` line
+        - Extra work (`// research...`, `// explore codebase...`, `// clarify...`): execute the task using appropriate tools first; update the document with findings; remove the `//` line
+      - Write all changes to the source document
       - ↩ **Loop: return to step 1 immediately**
 
    **Exit Condition:** `hd_finalize_review` returns `canProceedToNextStep === true`.
