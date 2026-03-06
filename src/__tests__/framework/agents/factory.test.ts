@@ -114,7 +114,7 @@ describe("createAgent", () => {
     expect(agent).toHaveProperty("prompt")
     expect(agent).toHaveProperty("permission")
     expect(agent).toHaveProperty("color")
-    expect(agent).toHaveProperty("tools")
+    // tools 字段在 OpenCode 转换层从 permission 生成，不在 LocalAgentConfig 中
     expect(agent.model).toBe("gpt-4")
 
 
@@ -180,8 +180,6 @@ describe("createAgent", () => {
           filePrompt(join(TEST_DIR, "test.md")),
           stringPrompt("Additional prompt content"),
         ],
-        defaultPermission: {},
-        defaultTools: {},
       }
 
       const agent = createAgent(definition)
@@ -198,8 +196,6 @@ describe("createAgent", () => {
         defaultTemperature: 0.6,
         defaultMaxTokens: 32000,
         promptGenerators: [],
-        defaultPermission: {},
-        defaultTools: {},
       }
 
       const agent = createAgent(definition)

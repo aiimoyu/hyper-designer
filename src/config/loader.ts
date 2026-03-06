@@ -29,8 +29,9 @@ export interface AgentOverrideConfig {
   prompt_append?: string
   /** Optional permission settings for the agent */
   permission?: Record<string, string>
+  /** Optional tool settings for the agent (permission converted to boolean) */
+  tools?: Record<string, boolean>
 }
-
 /**
  * Hyper Designer configuration structure
  */

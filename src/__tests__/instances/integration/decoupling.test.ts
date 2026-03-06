@@ -320,7 +320,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(agent.maxTokens).toBeUndefined()
       expect(agent).toHaveProperty("color")
       expect(agent).toHaveProperty("permission")
-      expect(agent).toHaveProperty("tools")
+      // tools 字段在 OpenCode 转换层从 permission 生成，不在 LocalAgentConfig 中
     })
   })
 })

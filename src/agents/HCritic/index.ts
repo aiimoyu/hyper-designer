@@ -66,26 +66,6 @@ const DEFINITION: AgentDefinition = {
     hd_handover: "deny",
     hd_submit_evaluation: "allow",
   },
-  defaultTools: {
-    bash: false,
-    edit: false,
-    write: false,
-    read: true,
-    grep: true,
-    glob: true,
-    list: true,
-    patch: false,
-    skill: true,
-    todowrite: false,
-    todoread: false,
-    webfetch: true,
-    websearch: true,
-    question: false,
-    task: false,
-    hd_workflow_state: true,
-    hd_handover: false,
-    hd_submit_evaluation: true,
-  },
 }
 
 export function createHCriticAgent(model?: string) {

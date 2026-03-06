@@ -75,26 +75,6 @@ const DEFINITION: AgentDefinition = {
     hd_handover: "allow",
     hd_submit_evaluation: "deny",
   },
-  defaultTools: {
-    bash: false,
-    edit: true,
-    write: true,
-    read: true,
-    grep: true,
-    glob: true,
-    list: true,
-    patch: true,
-    skill: true,
-    todowrite: true,
-    todoread: true,
-    webfetch: false,
-    websearch: false,
-    question: true,
-    task: true,
-    hd_workflow_state: true,
-    hd_handover: true,
-    hd_submit_evaluation: false,
-  },
 }
 
 export function createHArchitectAgent(model?: string) {

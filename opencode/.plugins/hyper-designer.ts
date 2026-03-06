@@ -8,18 +8,26 @@ import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
 import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
-  return {
+  const result: OpencodeAgentConfig = {
     ...(agent.model !== undefined ? { model: agent.model } : {}),
     ...(agent.temperature !== undefined ? { temperature: agent.temperature } : {}),
     ...(agent.maxTokens !== undefined ? { maxTokens: agent.maxTokens } : {}),
     ...(agent.variant !== undefined ? { variant: agent.variant } : {}),
     ...(agent.prompt !== undefined ? { prompt: agent.prompt } : {}),
-    ...(agent.tools !== undefined ? { tools: agent.tools } : {}),
     ...(agent.description !== undefined ? { description: agent.description } : {}),
     ...(agent.mode !== undefined ? { mode: agent.mode } : {}),
     ...(agent.color !== undefined ? { color: agent.color } : {}),
     ...(agent.permission !== undefined ? { permission: agent.permission } : {}),
   }
+  // 将权限转换为工具配置：Permission是deny就是false、其他就是true，默认false
+  if (agent.permission !== undefined) {
+    const tools: Record<string, boolean> = {}
+    for (const [tool, perm] of Object.entries(agent.permission)) {
+      tools[tool] = perm === "deny" ? false : true
+    }
+    result.tools = tools
+  }
+  return result
 }
 
 const toOpencodeAgents = (

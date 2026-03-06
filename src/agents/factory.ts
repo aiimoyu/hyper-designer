@@ -70,9 +70,8 @@ export interface AgentDefinition {
   /** Array of prompt generators to construct the agent's prompt */
   promptGenerators: PromptGenerator[]
   /** Optional default permissions for the agent */
+  /** Optional default permissions: Record<string, string> */
   defaultPermission?: Record<string, string>
-  /** Optional default tools configuration for the agent */
-  defaultTools?: Record<string, boolean>
 }
 
 /**
@@ -128,14 +127,10 @@ export function createAgent(
     result.permission = permissionValue
   }
 
+
   // 设置代理颜色（如果定义中存在）
   if (definition.color !== undefined) {
     result.color = definition.color
-  }
-
-  // 设置默认工具配置（如果定义中存在）
-  if (definition.defaultTools !== undefined) {
-    result.tools = definition.defaultTools
   }
 
   // 合并模型配置（覆盖配置优先于参数）

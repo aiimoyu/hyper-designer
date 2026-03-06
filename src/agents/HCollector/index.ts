@@ -72,26 +72,6 @@ const DEFINITION: AgentDefinition = {
     hd_handover: "deny",
     hd_submit_evaluation: "deny",
   },
-  defaultTools: {
-    bash: false,
-    edit: true,
-    write: true,
-    read: true,
-    grep: true,
-    glob: true,
-    list: true,
-    patch: false,
-    skill: true,
-    todowrite: true,
-    todoread: true,
-    webfetch: true,
-    websearch: true,
-    question: true,
-    task: true,
-    hd_workflow_state: true,
-    hd_handover: false,
-    hd_submit_evaluation: false,
-  },
 }
 
 export function createHCollectorAgent(model?: string) {
