@@ -68,6 +68,20 @@ New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\hyper-designer" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\hyper-designer"
 ```
 
+### Install Additional Skills (Optional)
+
+Install recommended diagram skills for enhanced visualization capabilities:
+
+```bash
+npx skills add https://github.com/softaworks/agent-toolkit --skill mermaid-diagrams -g -y
+npx skills add https://github.com/github/awesome-copilot --skill plantuml-ascii -g -y
+```
+
+These skills provide:
+- **mermaid-diagrams**: Create professional software diagrams using Mermaid syntax
+- **plantuml-ascii**: Generate ASCII art diagrams using PlantUML text mode
+
+---
 ---
 
 ## Usage / Verification
