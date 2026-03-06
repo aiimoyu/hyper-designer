@@ -42,7 +42,7 @@ describe('documentReview', () => {
       expect(result.success).toBe(true)
       expect(result.sourcePath).toBe(sourceFilePath)
       expect(result.reviewPath).toBe(path.join(tempDir, '测试文档.md'))
-      expect(result.message).toContain('已拷贝')
+      expect(result.message).toContain('generated')
 
       const reviewContent = await fs.readFile(result.reviewPath, 'utf-8')
       const sourceContent = await fs.readFile(sourceFilePath, 'utf-8')
@@ -101,7 +101,9 @@ describe('documentReview', () => {
       expect(result.hasChanges).toBe(true)
       expect(result.hunks.length).toBeGreaterThan(0)
       expect(result.summary.additions).toBeGreaterThan(0)
-      expect(result.message).toContain('修改')
+      expect(result.message).toContain('modifications')
+      expect(result.unifiedDiff).toBeDefined()
+      expect(result.unifiedDiff.length).toBeGreaterThan(0)
 
       const reviewFileExists = await fs.access(reviewPath).then(() => true).catch(() => false)
       expect(reviewFileExists).toBe(false)
@@ -123,7 +125,8 @@ describe('documentReview', () => {
       expect(result.hunks).toHaveLength(0)
       expect(result.summary.additions).toBe(0)
       expect(result.summary.deletions).toBe(0)
-      expect(result.message).toContain('未检测到修改')
+      expect(result.message).toContain('no modifications')
+      expect(result.unifiedDiff).toBe('')
     })
 
     it('should fail when review file is deleted', async () => {
@@ -195,6 +198,33 @@ describe('documentReview', () => {
       const hunks = convertToHunks(content, content)
 
       expect(hunks).toHaveLength(0)
+    })
+
+    it('should include context lines in hunks', () => {
+      const oldContent = 'line1\nline2\nline3\nold line\nline5\nline6\nline7'
+      const newContent = 'line1\nline2\nline3\nnew line\nline5\nline6\nline7'
+
+      const hunks = convertToHunks(oldContent, newContent)
+
+      expect(hunks).toHaveLength(1)
+      expect(hunks[0].contextBefore).toBeDefined()
+      expect(hunks[0].contextAfter).toBeDefined()
+      expect(hunks[0].contextOldStart).toBeLessThan(hunks[0].oldStart)
+    })
+
+    it('should have context with at least 1 line and at most 5 lines', () => {
+      const oldContent = 'line1\nline2\nline3\nline4\nline5\nold line\nline7\nline8\nline9\nline10\nline11'
+      const newContent = 'line1\nline2\nline3\nline4\nline5\nnew line\nline7\nline8\nline9\nline10\nline11'
+
+      const hunks = convertToHunks(oldContent, newContent)
+
+      expect(hunks).toHaveLength(1)
+      const beforeLines = hunks[0].contextBefore.split('\n').filter(l => l.length > 0)
+      const afterLines = hunks[0].contextAfter.split('\n').filter(l => l.length > 0)
+      expect(beforeLines.length).toBeGreaterThanOrEqual(1)
+      expect(beforeLines.length).toBeLessThanOrEqual(5)
+      expect(afterLines.length).toBeGreaterThanOrEqual(1)
+      expect(afterLines.length).toBeLessThanOrEqual(5)
     })
   })
 })

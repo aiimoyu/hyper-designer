@@ -23,6 +23,14 @@ export interface DiffHunk {
   newEnd: number
   /** 新文件内容 */
   newContent: string
+  /** 修改前的上下文（原文件中修改位置之前的若干行） */
+  contextBefore: string
+  /** 修改后的上下文（原文件中修改位置之后的若干行） */
+  contextAfter: string
+  /** 上下文在原文件中的起始行号 */
+  contextOldStart: number
+  /** 上下文在新文件中的起始行号 */
+  contextNewStart: number
 }
 
 /** 文档审核参数 */
@@ -64,4 +72,6 @@ export interface FinalizeReviewResult {
   }
   /** 提示信息 */
   message: string
+  /** Unified diff 格式的差异输出，便于 Agent 理解和定位 */
+  unifiedDiff: string
 }
