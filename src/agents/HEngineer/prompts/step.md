@@ -117,8 +117,12 @@
         - `add`: New content added → integrate into the document
         - `delete`: Content removed → remove from the document
         - `modify`: Content changed → update the document
+      - **Locate Changes**: For each modification, identify the exact section/paragraph in the document where the change occurs
+      - **Assess Change Type**: Determine if the modification requires:
+        - `Text-only`: Simple content update → directly apply text changes
+        - `Extra Work Required`: Modification involves additional tasks (e.g., code exploration, re-interview, technical research, design revision) → execute those tasks first, then update the document
       - Apply changes to form the revised draft
-      - Loop back to step 1 for another revision round
+      - Return to step 1: Call `hd_prepare_review` again to create a new review snapshot, then ask user to confirm
    5. **Proceed** (if user selected "No changes needed"): Continue to **[P5]**
 
    **Loop Rule:** This step repeats until the user selects "No changes needed".
