@@ -3,25 +3,16 @@
   "workflow": "classic",
   "agents": {
     "HArchitect": {
-      "model": "volces/ep-20260306100253-tq6jf",
-      "temperature": 0.7,
-      "maxTokens": 200000,
-      "variant": "high"
+      "model": "volces/ep-20260306100253-tq6jf"
     },
     "HCollector": {
-      "model": "volces/ep-20260306100253-tq6jf",
-      "temperature": 0.2,
-      "maxTokens": 200000
+      "model": "volces/ep-20260306100253-tq6jf"
     },
     "HCritic": {
-      "model": "volces/ep-20260306100253-tq6jf",
-      "temperature": 0.1,
-      "maxTokens": 200000
+      "model": "volces/ep-20260306100253-tq6jf"
     },
     "HEngineer": {
-      "model": "volces/ep-20260306100253-tq6jf",
-      "temperature": 0.4,
-      "maxTokens": 200000
+      "model": "volces/ep-20260306100253-tq6jf"
     }
   }
 }
