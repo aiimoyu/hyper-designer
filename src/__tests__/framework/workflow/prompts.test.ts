@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
-import { existsSync, readFileSync } from "fs"
-import { join, dirname } from "path"
-import { fileURLToPath } from "url"
-import { loadPromptForStage } from '../../../workflows/core'
+import {
+  loadPromptForStage,
+  WORKFLOW_STEP_PROMPT_TOKEN,
+} from '../../../workflows/core'
 import { classicWorkflow } from "../../../workflows/plugins/classic"
 import type { WorkflowDefinition } from '../../../workflows/core'
 
@@ -43,27 +43,13 @@ describe("workflow/prompts", () => {
 
     it("should verify all classic workflow prompt files exist and are readable", () => {
       const workflow = classicWorkflow
-      const __filename = fileURLToPath(import.meta.url)
-      const promptsDir = join(
-        dirname(__filename),
-        "..",
-        "..",
-        "..",
-        "workflows",
-        "plugins",
-        "classic",
-        "prompts"
-      )
 
       workflow.stageOrder.forEach(stage => {
         const stageDef = workflow.stages[stage]
-        expect(stageDef.promptFile).toBeDefined()
-        const promptPath = join(promptsDir, stageDef.promptFile!.replace("prompts/", ""))
-
-        expect(existsSync(promptPath)).toBe(true)
-        const content = readFileSync(promptPath, "utf-8")
-        expect(content.length).toBeGreaterThan(0)
-        expect(content).toContain("#")
+        const promptBinding = stageDef.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]
+        expect(promptBinding).toBeDefined()
+        expect(promptBinding!.length).toBeGreaterThan(0)
+        expect(promptBinding).toContain("#")
       })
     })
   })

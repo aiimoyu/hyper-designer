@@ -5,4 +5,11 @@
  */
 
 export { getHandoverAgent, getHandoverPrompt } from "./handover";
-export { loadWorkflowPrompt, loadStagePrompt, loadPromptForStage } from "./promptLoader";
+export {
+  loadPromptBindings,
+  loadWorkflowPrompt,
+  loadStagePrompt,
+  loadPromptForStage,
+  WORKFLOW_OVERVIEW_PROMPT_TOKEN,
+  WORKFLOW_STEP_PROMPT_TOKEN,
+} from './promptLoader'

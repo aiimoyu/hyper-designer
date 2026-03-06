@@ -282,7 +282,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
         expect(stage).toHaveProperty("name")
         expect(stage).toHaveProperty("description")
         expect(stage).toHaveProperty("agent")
-        expect(stage).toHaveProperty("promptFile")
+        expect(stage.promptBindings ?? stage.promptFile).toBeTruthy()
         expect(stage).toHaveProperty("getHandoverPrompt")
       }
     })

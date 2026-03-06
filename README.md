@@ -80,6 +80,65 @@ Fetch and follow instructions from https://raw.atomgit.com/u011501137/hyper-desi
 | `agents.{name}.model` | Agent 使用的模型 ID |
 | `agents.{name}.temperature` | 模型温度参数 |
 | `agents.{name}.maxTokens` | 最大输出 Token 数 |
+## 日志配置
+
+### 环境变量配置
+
+日志系统默认不创建文件（opt-in 设计），需要通过环境变量启用：
+
+```bash
+# 启用日志文件写入
+export HYPER_DESIGNER_LOG_PERSIST=true
+
+# 设置日志级别（可选，默认 INFO）
+export HYPER_DESIGNER_LOG_LEVEL=DEBUG
+
+# 在终端查看日志（可选，用于调试）
+export HYPER_DESIGNER_LOG_PRINT=true
+
+# 启用 DEBUG 级别日志（可选）
+export HYPER_DESIGNER_LOG_DEBUG=true
+
+# 严格模式：记录错误后抛出异常（可选）
+export HD_STRICT_ERRORS=1
+```
+
+### 日志级别
+
+| 级别 | 说明 | 优先级 |
+|------|------|--------|
+| `DEBUG` | 详细调试信息，开发时使用 | 0 |
+| `INFO` | 重要操作信息，用户应了解（默认） | 1 |
+| `WARN` | 警告信息，不影响功能但需要注意 | 2 |
+| `ERROR` | 错误信息，需要立即处理 | 3 |
+
+### 日志文件位置
+
+- **目录**：`.hyper-designer/logs/`（项目根目录）
+- **文件名**：`{timestamp}.log`（如 `2026-03-06T10-30-00.log`）
+- **格式**：`2026-03-06T10:30:00 +100ms [hyper-designer:ModuleName:INFO] message key=value`
+
+### 使用示例
+
+```typescript
+import { HyperDesignerLogger } from './utils/logger'
+
+// 静态方法调用
+HyperDesignerLogger.info('MyModule', '操作完成', { duration: 100 })
+HyperDesignerLogger.error('MyModule', '操作失败', error, { userId: 123 })
+
+// 模块特定日志器
+const logger = HyperDesignerLogger.forModule('MyFeature')
+logger.debug('调试信息')
+logger.warn('警告信息')
+```
+
+### 注意事项
+
+1. **必须设置环境变量**：只有设置了 `HYPER_DESIGNER_LOG_PERSIST=true` 才会创建日志文件
+2. **日志文件不会自动创建**：日志系统设计为 opt-in，避免污染项目目录
+3. **文件写入失败静默处理**：不会因为日志写入失败而中断程序执行
+4. **日志级别过滤**：低于当前级别的日志会被忽略
 
 ## 快速开始
 

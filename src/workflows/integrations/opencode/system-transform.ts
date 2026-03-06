@@ -4,10 +4,14 @@
  * 替换系统消息中的工作流相关占位符令牌和工具名称占位符。
  */
 
-import { workflowService } from "../../core/service"
-import { loadWorkflowPrompt, loadStagePrompt } from "../../core/runtime"
-import { replacePlaceholders, type PlaceholderResolver } from "./utils"
-import { replaceToolPlaceholders, OPENCODE_TOOL_MAPPING } from "./tool-transform"
+import { workflowService } from '../../core/service'
+import {
+  loadPromptBindings,
+  WORKFLOW_OVERVIEW_PROMPT_TOKEN,
+  WORKFLOW_STEP_PROMPT_TOKEN,
+} from '../../core/runtime'
+import { replacePlaceholders, type PlaceholderResolver } from './utils'
+import { replaceToolPlaceholders, OPENCODE_TOOL_MAPPING } from './tool-transform'
 
 /**
  * 创建系统消息转换器
@@ -18,21 +22,21 @@ export function createSystemTransformer() {
   return async (_input: unknown, output: { system: string[] }) => {
     const workflow = workflowService.getDefinition()
     const workflowState = workflowService.getState()
+    const currentStage = workflowState?.current?.name || null
+
+    const promptBindings = loadPromptBindings({
+      definition: workflow,
+      stage: currentStage,
+    })
 
     const placeholderResolvers: PlaceholderResolver[] = [
       {
-        token: "{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}",
-        resolve: () => {
-          return loadWorkflowPrompt(workflow)
-        },
+        token: WORKFLOW_OVERVIEW_PROMPT_TOKEN,
+        resolve: () => promptBindings[WORKFLOW_OVERVIEW_PROMPT_TOKEN] ?? '',
       },
       {
-        token: "{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}",
-        resolve: () => {
-          const currentStage = workflowState?.current?.name || null
-
-          return loadStagePrompt(currentStage, workflow)
-        },
+        token: WORKFLOW_STEP_PROMPT_TOKEN,
+        resolve: () => promptBindings[WORKFLOW_STEP_PROMPT_TOKEN] ?? '',
       },
     ]
 

@@ -1,5 +1,10 @@
+import { filePrompt } from '../../core/utils'
 import type { WorkflowDefinition } from '../../core/types'
 import { createHCollectorHook, summarizeHook } from '../../core/stageHooks'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** 阶段钩子定义 */
 const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })
@@ -44,9 +49,13 @@ export const classicWorkflow: WorkflowDefinition = {
   name: 'Classic Requirements Engineering',
   description: '7-stage workflow: IR analysis → scenario analysis → use case analysis → functional refinement → requirement decomposition → system functional design → module functional design',
 
-  promptFile: 'prompts/workflow.md',
+  promptBindings: {
+    '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(join(__dirname, 'prompts', 'workflow.md')),
+  },
 
-  stageFallbackPromptFile: 'prompts/fallback.md',
+  fallbackPromptBindings: {
+    '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'fallback.md')),
+  },
 
   stageOrder: [
     'IRAnalysis',
@@ -63,7 +72,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Initial Requirement Analysis',
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
-      promptFile: 'prompts/IRAnalysis.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
+      },
       gate: true,
       beforeStage: [irAnalysisCollectorHook],
       afterStage: [summarizeHook],
@@ -75,7 +86,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Scenario Analysis',
       description: 'Analyze system usage scenarios, identify actors and business processes',
       agent: 'HArchitect',
-      promptFile: 'prompts/scenarioAnalysis.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
+      },
       gate: true,
       beforeStage: [scenarioAnalysisCollectorHook],
       afterStage: [summarizeHook],
@@ -87,7 +100,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Use Case Analysis',
       description: 'Refine scenarios into detailed use case specifications with inputs, outputs, and acceptance criteria',
       agent: 'HArchitect',
-      promptFile: 'prompts/useCaseAnalysis.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
+      },
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
@@ -98,7 +113,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Functional Refinement',
       description: 'Extract complete functional list, prioritize using MoSCoW method, and perform FMEA analysis',
       agent: 'HArchitect',
-      promptFile: 'prompts/functionalRefinement.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
+      },
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
@@ -109,7 +126,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Requirement Decomposition',
       description: 'Map and decompose functional list into module-level requirements, subsystems, and interface definitions',
       agent: 'HEngineer',
-      promptFile: 'prompts/requirementDecomposition.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
+      },
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
@@ -120,7 +139,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'System Functional Design',
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
-      promptFile: 'prompts/systemFunctionalDesign.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
+      },
       gate: true,
       beforeStage: [systemDesignCollectorHook],
       afterStage: [summarizeHook],
@@ -132,7 +153,9 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Module Functional Design',
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
-      promptFile: 'prompts/moduleFunctionalDesign.md',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
+      },
       gate: true,
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>

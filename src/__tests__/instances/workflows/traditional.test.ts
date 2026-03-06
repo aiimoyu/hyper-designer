@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { loadPromptForStage, getWorkflowDefinition, getAvailableWorkflows } from '../../../workflows/core'
+import {
+  loadPromptForStage,
+  getWorkflowDefinition,
+  getAvailableWorkflows,
+  WORKFLOW_OVERVIEW_PROMPT_TOKEN,
+  WORKFLOW_STEP_PROMPT_TOKEN,
+} from '../../../workflows/core'
 
 import { classicWorkflow } from '../../../workflows/plugins/classic'
 import type { WorkflowDefinition } from '../../../workflows/core'
@@ -96,24 +102,21 @@ describe('Classic Workflow', () => {
     })
   })
 
-  describe('prompt files', () => {
-    it('should have promptFile for all stages', () => {
+  describe('prompt bindings', () => {
+    it('should have workflow overview bindings', () => {
       const workflow = getClassicWorkflow()
-      workflow.stageOrder.forEach((stageName) => {
-        expect(workflow.stages[stageName].promptFile).toBeTruthy()
-        expect(workflow.stages[stageName].promptFile).toMatch(/^prompts\/.*\.md$/)
-      })
+      expect(workflow.promptBindings?.[WORKFLOW_OVERVIEW_PROMPT_TOKEN]).toContain('工作流各阶段概览')
     })
 
-    it('should use correct prompt file names', () => {
+    it('should use correct stage prompt binding file names', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stages.IRAnalysis.promptFile).toBe('prompts/IRAnalysis.md')
-      expect(workflow.stages.scenarioAnalysis.promptFile).toBe('prompts/scenarioAnalysis.md')
-      expect(workflow.stages.useCaseAnalysis.promptFile).toBe('prompts/useCaseAnalysis.md')
-      expect(workflow.stages.functionalRefinement.promptFile).toBe('prompts/functionalRefinement.md')
-      expect(workflow.stages.requirementDecomposition.promptFile).toBe('prompts/requirementDecomposition.md')
-      expect(workflow.stages.systemFunctionalDesign.promptFile).toBe('prompts/systemFunctionalDesign.md')
-      expect(workflow.stages.moduleFunctionalDesign.promptFile).toBe('prompts/moduleFunctionalDesign.md')
+      expect(workflow.stages.IRAnalysis.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('Current Phase: Initial Requirements Analysis')
+      expect(workflow.stages.scenarioAnalysis.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：场景分析')
+      expect(workflow.stages.useCaseAnalysis.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：用例分析')
+      expect(workflow.stages.functionalRefinement.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：功能细化')
+      expect(workflow.stages.requirementDecomposition.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：需求分解')
+      expect(workflow.stages.systemFunctionalDesign.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：系统功能设计')
+      expect(workflow.stages.moduleFunctionalDesign.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：模块功能设计')
     })
 
     it('should load prompt content for each stage', () => {

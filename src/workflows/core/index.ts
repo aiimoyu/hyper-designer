@@ -15,15 +15,17 @@
 export type {
   PlatformAdapter,
   StageHookFn,
+  WorkflowPromptBindings,
   WorkflowStageDefinition,
   WorkflowDefinition,
-} from "./types";
+} from './types'
+export { filePrompt, stringPrompt } from './utils'
 
 // Registry
-export { getWorkflowDefinition, getAvailableWorkflows } from "./registry";
+export { getWorkflowDefinition, getAvailableWorkflows } from './registry'
 
 // State module
-export type { WorkflowStage, WorkflowState, GateResult } from "./state/types";
+export type { WorkflowStage, WorkflowState, GateResult } from './state/types'
 export {
   getStageOrder,
   initializeWorkflowState,
@@ -34,18 +36,20 @@ export {
   setWorkflowGatePassed,
   setWorkflowGateResult,
   executeWorkflowHandover,
-} from "./state";
+} from './state'
 
 // Service module
-export { WorkflowService, workflowService } from "./service";
-export type { WorkflowServiceEvents } from "./service";
+export { WorkflowService, workflowService } from './service'
+export type { WorkflowServiceEvents } from './service'
 
 // Runtime module
 export {
   getHandoverAgent,
   getHandoverPrompt,
+  loadPromptBindings,
   loadWorkflowPrompt,
   loadStagePrompt,
   loadPromptForStage,
-} from "./runtime";
-
+  WORKFLOW_OVERVIEW_PROMPT_TOKEN,
+  WORKFLOW_STEP_PROMPT_TOKEN,
+} from './runtime'

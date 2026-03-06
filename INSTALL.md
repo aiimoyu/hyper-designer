@@ -23,7 +23,26 @@ An OpenCode plugin that implements specialized agents and workflow management fo
    fi
    ```
 
-2. Create the plugins directory and create symbolic links:
+2. Install dependencies:
+
+   The project requires Node.js dependencies. Choose one of the following package managers:
+
+   - **npm** (default, comes with Node.js):
+     ```bash
+     cd ~/.config/opencode/hyper-designer && npm install
+     ```
+   - **bun** (faster alternative, if installed):
+     ```bash
+     cd ~/.config/opencode/hyper-designer && bun install
+     ```
+   - **pnpm** (disk-space efficient, if installed):
+     ```bash
+     cd ~/.config/opencode/hyper-designer && pnpm install
+     ```
+
+   If none of these package managers are available, install Node.js (includes npm).
+
+3. Create the plugins directory and create symbolic links:
 
    ```bash
    mkdir -p ~/.config/opencode/plugins
@@ -38,7 +57,16 @@ An OpenCode plugin that implements specialized agents and workflow management fo
 
    - To force overwrite existing links: use `ln -sf ...` for files and `ln -sfn ...` for directories
 
-3. Restart OpenCode (or reload plugins in OpenCode).
+4. Restart OpenCode (or reload plugins in OpenCode).
+
+5. (Optional) Verify installation:
+
+   ```bash
+   cd ~/.config/opencode/hyper-designer && npm run verify
+   ```
+
+   Expected output includes: `All checks passed. Installation is valid.`
+   This verification only checks the plugin repository itself: dependency installation, direct import declarations, plugin entry file, and bundled skills.
 
 ### Windows (CMD / PowerShell)
 
@@ -48,24 +76,46 @@ An OpenCode plugin that implements specialized agents and workflow management fo
 
 ```cmd
 git clone https://gitcode.com/u011501137/hyper-designer.git "%USERPROFILE%\.config\opencode\hyper-designer"
+cd "%USERPROFILE%\.config\opencode\hyper-designer"
+
+REM Install dependencies (npm is included with Node.js)
+npm install
+REM Or use bun/pnpm if installed:
+REM bun install
+REM pnpm install
+
 mkdir "%USERPROFILE%\.config\opencode\plugins"
 mkdir "%USERPROFILE%\.config\opencode\skills"
 
 mklink "%USERPROFILE%\.config\opencode\plugins\hyper-designer.ts" "%USERPROFILE%\.config\opencode\hyper-designer\opencode\.plugins\hyper-designer.ts"
 
 mklink /J "%USERPROFILE%\.config\opencode\skills\hyper-designer" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\hyper-designer"
+
+REM (Optional) Verify installation
+node verify.js
 ```
 
 **PowerShell (Administrator):**
 
 ```powershell
 git clone https://gitcode.com/u011501137/hyper-designer.git "$env:USERPROFILE\.config\opencode\hyper-designer"
+cd "$env:USERPROFILE\.config\opencode\hyper-designer"
+
+# Install dependencies (npm is included with Node.js)
+npm install
+# Or use bun/pnpm if installed:
+# bun install
+# pnpm install
+
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\plugins"
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\skills"
 
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\plugins\hyper-designer.ts" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\opencode\.plugins\hyper-designer.ts"
 
 New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.config\opencode\skills\hyper-designer" -Target "$env:USERPROFILE\.config\opencode\hyper-designer\src\skills\hyper-designer"
+
+# (Optional) Verify installation
+node verify.js
 ```
 
 ### Install Additional Skills (Optional)
@@ -114,6 +164,7 @@ When the repository already exists, pull the latest code and restart OpenCode:
 
 ```bash
 cd ~/.config/opencode/hyper-designer && git pull
+npm install  # or bun install / pnpm install
 # Restart OpenCode
 ```
 
@@ -170,12 +221,58 @@ If you used copies instead of symbolic links, you will need to re-copy the files
 
 ---
 
-## Testing
+## Testing & Verification
 
-- After installation, use OpenCode's plugin/skill list to check if `hyper-designer` appears.
-- Add a simple `console.log` or logging statement in the plugin code, restart OpenCode, and observe the console output to verify the plugin is being executed.
-- Try invoking one of the hyper-designer agents (HArchitect, HCritic, etc.) to verify they are available.
+### Quick Verification (Recommended)
 
+Run the lightweight verification script:
+
+```bash
+cd ~/.config/opencode/hyper-designer && npm run verify
+```
+
+This script checks:
+- ✅ `node_modules` exists and contains packages
+- ✅ All packages declared in `package.json` are installed
+- ✅ Direct package imports in plugin source are declared in `package.json`
+- ✅ Plugin entry file exists
+- ✅ Skills directory exists and every skill contains `SKILL.md`
+
+The script does not verify OpenCode or Claude Code host integration. Treat it as a fast self-check for the plugin repository and its dependencies.
+
+**Expected output includes:** `All checks passed. Installation is valid.`
+
+If verification fails, the script will provide specific error messages and suggested fixes.
+
+### Full Verification (Optional)
+
+For comprehensive validation, run the following commands:
+
+#### 1. Type Checking
+
+```bash
+cd ~/.config/opencode/hyper-designer && npm run typecheck
+```
+
+Expected output: No errors (exit code 0).
+
+#### 2. Run Tests
+
+```bash
+cd ~/.config/opencode/hyper-designer && npm run test
+```
+
+Expected output: All tests pass.
+
+### Verify Plugin Loading in OpenCode
+
+- Restart OpenCode or reload plugins
+- Check the plugins/skills panel to confirm `hyper-designer` appears
+- Review OpenCode console/logs for any plugin loading errors
+
+### Test Agent Invocation
+
+Try invoking one of the hyper-designer agents (HArchitect, HCritic, HEngineer, HCollector) to verify they are available and functional.
 ---
 
 ## Getting Help

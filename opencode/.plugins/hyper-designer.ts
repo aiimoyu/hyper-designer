@@ -6,6 +6,7 @@ import { createBuiltinAgents } from "../../src/agents/utils"
 import { workflowService } from "../../src/workflows/core/service"
 import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
 import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
+import { initLogger } from "../../src/utils/logger"
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   const result: OpencodeAgentConfig = {
@@ -39,6 +40,9 @@ const toOpencodeAgents = (
 }
 
 export const HyperDesignerPlugin: Plugin = async (ctx) => {
+  // Initialize logger - respects HYPER_DESIGNER_LOG_PERSIST env var
+  initLogger()
+
   const agents = await createBuiltinAgents()
   const mappedAgents = toOpencodeAgents(agents)
   const agentHandler = async (config: Record<string, unknown>) => {
