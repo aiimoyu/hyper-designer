@@ -41,9 +41,10 @@ export async function finalizeReview(
     return {
       success: false,
       hasChanges: false,
+      canProceedToNextStep: false,
       hunks: [],
       summary: { additions: 0, deletions: 0, modifications: 0 },
-      message: `审核文件已被删除，请重新准备审核: ${reviewPath}`,
+      message: `Review file has been deleted, please call hd_prepare_review again: ${reviewPath}`,
       unifiedDiff: ''
     }
   }
@@ -70,9 +71,10 @@ export async function finalizeReview(
       return {
         success: true,
         hasChanges: false,
+        canProceedToNextStep: true,
         hunks: [],
         summary: { additions: 0, deletions: 0, modifications: 0 },
-        message: 'Document has no modifications',
+        message: 'Document has no modifications. You can proceed to the next step.',
         unifiedDiff: ''
       }
     }
@@ -82,9 +84,10 @@ export async function finalizeReview(
     return {
       success: true,
       hasChanges: true,
+      canProceedToNextStep: false,
       hunks,
       summary,
-      message: `Detected ${summary.modifications} modifications. Please identify the user's intent (addition, deletion, modification) based on the differences and modify the file according to the user's intent`,
+      message: `Detected ${summary.modifications} modification hunks. Changes remain — call hd_prepare_review to start the next revision round.`,
       unifiedDiff
     }
   } catch (error) {
@@ -93,9 +96,10 @@ export async function finalizeReview(
     return {
       success: false,
       hasChanges: false,
+      canProceedToNextStep: false,
       hunks: [],
       summary: { additions: 0, deletions: 0, modifications: 0 },
-      message: `Failed to get diff hunks: ${err.message}`,
+      message: `Failed to get diff: ${err.message}`,
       unifiedDiff: ''
     }
   }

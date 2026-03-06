@@ -105,27 +105,40 @@
 
 ### [P4] Interactive Revision
 
-   **🎯 Goal:** Enable user-driven document refinement through an interactive review-modify loop.
+   **🎯 Goal:** Enable user-driven document refinement through an annotation-driven review loop.
+
+   **User Annotation Convention:**
+   Users communicate changes by writing **annotations that start with `//` (double slash) or multiple slashes** (e.g., `///`). Annotations are **instructions to you**, not document content — never copy them verbatim into the final document.
+
+   | Scenario | What the user does | How you must handle it |
+   |---|---|---|
+   | **Addition** | Writes new text, optionally with `// polish this` nearby | Polish the added text for style/voice consistency; integrate it naturally into surrounding content; strip any `//` annotations from the final text |
+   | **Deletion** | Removes a section or writes `// delete` / `// remove` | Remove the marked content **and** scan the entire document for all related references — leave no orphan sentences, dangling cross-references, or logical contradictions |
+   | **Modification** | Edits text directly or writes `// change X to Y` | Apply the change exactly as instructed |
+   | **Extra work required** | Writes `// research X`, `// explore codebase for Y`, `// clarify design decision` | Execute the required task with appropriate tools first; update the document with your findings; then remove the annotation |
 
    **Actions:**
 
    1. **Prepare Review**: Call `hd_prepare_review` with the deliverable document path to create a user-editable snapshot in the project root directory
-   2. **Ask User**: Call `HD_TOOL_ASK_USER` with the message: `"Document is ready for review. Please check the file at {reviewPath}. Have you completed modifications?"` with options: `["Completed modifications", "No changes needed"]`
-   3. **Finalize Review**: Call `hd_finalize_review` to detect changes and clean up the temporary file
-   4. **Process Changes** (if user selected "Completed modifications"):
-      - Analyze each diff hunk to identify user intent:
-        - `add`: New content added → integrate into the document
-        - `delete`: Content removed → remove from the document
-        - `modify`: Content changed → update the document
-      - **Locate Changes**: For each modification, identify the exact section/paragraph in the document where the change occurs
-      - **Assess Change Type**: Determine if the modification requires:
-        - `Text-only`: Simple content update → directly apply text changes
-        - `Extra Work Required`: Modification involves additional tasks (e.g., code exploration, re-interview, technical research, design revision) → execute those tasks first, then update the document
-      - Apply changes to form the revised draft
-      - Return to step 1: Call `hd_prepare_review` again to create a new review snapshot, then ask user to confirm
-   5. **Proceed** (if user selected "No changes needed"): Continue to **[P5]**
+   2. **Notify User**: Call `HD_TOOL_ASK_USER` with:
+      - Message: `"Document snapshot ready at {reviewPath}. Open the file and annotate using // comments to indicate additions, deletions, modifications, or tasks (e.g., // add: expand this section, // delete, // change X to Y, // research: best design pattern for Z). Select when done."`
+      - Options: `["Done annotating", "No changes needed"]`
+   3. **Finalize Review**: Call `hd_finalize_review` to retrieve the diff and clean up the snapshot
+   4. **Check `canProceedToNextStep`** from the `hd_finalize_review` return value:
+      - `canProceedToNextStep === true` → **Exit P4**, proceed to **[P5]**
+      - `canProceedToNextStep === false` → Changes detected; process them (step 5), then **immediately return to step 1**
+   5. **Process changes** (only when step 4 directs you to loop):
+      - Read the `hunks` and `unifiedDiff` fields to understand what changed
+      - For each hunk, identify the annotation type from the `//` prefix and apply the rule in the table above
+      - **Addition hunks**: Polish added text for consistency; never copy `//` annotations into the document
+      - **Deletion hunks**: Remove the content **and** all related references throughout the document (interfaces, traceability chains, module dependencies) to ensure global consistency
+      - **Modification hunks**: Apply the instruction; if extra work (code exploration, technical research, design revision) is required, complete that work first, then update the document
+      - Write the revised content to the source document
+      - ↩ **Loop: return to step 1 immediately**
 
-   **Loop Rule:** This step repeats until the user selects "No changes needed".
+   **Exit Condition:** `hd_finalize_review` returns `canProceedToNextStep === true`.
+
+   **Loop Rule:** P4 repeats until `canProceedToNextStep` is `true`.
 
    ---
 

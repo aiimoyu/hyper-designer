@@ -59,6 +59,8 @@ export interface FinalizeReviewResult {
   success: boolean
   /** 是否有修改 */
   hasChanges: boolean
+  /** 是否可以进入下一步（无修改时为 true，有修改待处理时为 false） */
+  canProceedToNextStep: boolean
   /** 差异块列表 */
   hunks: DiffHunk[]
   /** 差异统计 */

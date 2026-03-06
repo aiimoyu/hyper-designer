@@ -101,8 +101,9 @@ describe('documentReview', () => {
       expect(result.hasChanges).toBe(true)
       expect(result.hunks.length).toBeGreaterThan(0)
       expect(result.summary.additions).toBeGreaterThan(0)
-      expect(result.message).toContain('modifications')
+      expect(result.message).toContain('modification hunks')
       expect(result.unifiedDiff).toBeDefined()
+      expect(result.canProceedToNextStep).toBe(false)
       expect(result.unifiedDiff.length).toBeGreaterThan(0)
 
       const reviewFileExists = await fs.access(reviewPath).then(() => true).catch(() => false)
@@ -127,6 +128,7 @@ describe('documentReview', () => {
       expect(result.summary.deletions).toBe(0)
       expect(result.message).toContain('no modifications')
       expect(result.unifiedDiff).toBe('')
+      expect(result.canProceedToNextStep).toBe(true)
     })
 
     it('should fail when review file is deleted', async () => {
@@ -144,7 +146,7 @@ describe('documentReview', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.message).toContain('已被删除')
+      expect(result.message).toContain('hd_prepare_review')
     })
   })
 
