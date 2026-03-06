@@ -29,6 +29,7 @@ export function createMockAdapter(
     }),
     deleteSession: vi.fn().mockResolvedValue(undefined),
     summarizeSession: vi.fn().mockResolvedValue(undefined),
+    clearSession: vi.fn().mockResolvedValue('mock-fresh-session-id'),
     ...overrides
   }
 }

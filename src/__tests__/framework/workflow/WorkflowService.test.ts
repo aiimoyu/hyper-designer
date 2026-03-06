@@ -570,6 +570,7 @@ describe("WorkflowService", () => {
         sendPrompt: vi.fn(),
         deleteSession: vi.fn().mockResolvedValue(undefined),
         summarizeSession: vi.fn().mockResolvedValue(undefined),
+        clearSession: vi.fn().mockResolvedValue('mock-fresh-session-id'),
       };
 
       await svc.executeHandover("test-session", mockAdapter);

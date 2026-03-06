@@ -36,6 +36,7 @@ export interface SendPromptResult {
  * - 隔离会话管理（创建、删除）
  * - 向指定会话发送 prompt
  * - 会话上下文压缩
+ * - 会话上下文清空（通过切换到新会话）
  */
 export interface PlatformAdapter {
   /** 创建隔离会话，返回 sessionId */
@@ -52,4 +53,7 @@ export interface PlatformAdapter {
 
   /** 压缩指定会话的上下文（降低 token 消耗），失败时静默忽略 */
   summarizeSession: (sessionId: string) => Promise<void>
+
+  /** 清空指定会话上下文并切换到新会话 */
+  clearSession: (sessionId: string) => Promise<string>
 }

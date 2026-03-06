@@ -22,6 +22,20 @@ type PromptBodyWithFormat = NonNullable<SessionPromptData['body']> & {
   format?: JsonSchema
 }
 
+interface TuiSessionSelectEvent {
+  type: 'tui.session.select'
+  properties: {
+    sessionID: string
+  }
+}
+
+interface TuiPublisher {
+  publish: (parameters: {
+    directory: string
+    body: TuiSessionSelectEvent
+  }) => Promise<unknown>
+}
+
 // ── 内部辅助函数 ──────────────────────────────────────────────────────────────
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -44,6 +58,14 @@ const extractTextFromParts = (parts: unknown): string => {
   return textParts.join('\n')
 }
 
+const resolveSessionID = (sessionId: string, redirects: Map<string, string>): string =>
+  redirects.get(sessionId) ?? sessionId
+
+const getTuiPublisher = (ctx: PluginInput): TuiPublisher =>
+  ctx.client.tui as unknown as TuiPublisher
+
+const buildClearedSessionTitle = (): string => 'Fresh Context'
+
 // ── 工厂函数 ─────────────────────────────────────────────────────────────────
 
 /**
@@ -53,6 +75,8 @@ const extractTextFromParts = (parts: unknown): string => {
  * @returns PlatformAdapter 实现
  */
 export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
+  const sessionRedirects = new Map<string, string>()
+
   return {
     createSession: async (title: string): Promise<string> => {
       const result = await ctx.client.session.create({
@@ -67,8 +91,9 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
     },
 
     sendPrompt: async ({ sessionId, agent, text, schema }: SendPromptParams): Promise<SendPromptResult> => {
+      const resolvedSessionId = resolveSessionID(sessionId, sessionRedirects)
       const response = await ctx.client.session.prompt({
-        path: { id: sessionId },
+        path: { id: resolvedSessionId },
         body: {
           agent,
           noReply: false,
@@ -84,18 +109,20 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
     },
 
     deleteSession: async (sessionId: string): Promise<void> => {
+      const resolvedSessionId = resolveSessionID(sessionId, sessionRedirects)
       await ctx.client.session.delete({
-        path: { id: sessionId },
+        path: { id: resolvedSessionId },
         query: { directory: ctx.directory },
       })
     },
 
     summarizeSession: async (sessionId: string): Promise<void> => {
+      const resolvedSessionId = resolveSessionID(sessionId, sessionRedirects)
       HyperDesignerLogger.info('OpenCode', '执行上下文压缩', { sessionId })
       try {
         const model = await resolveDefaultModel(ctx)
         await ctx.client.session.summarize({
-          path: { id: sessionId },
+          path: { id: resolvedSessionId },
           body: {
             providerID: model.providerID,
             modelID: model.modelID,
@@ -110,6 +137,36 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
           recovery: 'continueWithoutSummarize',
         })
       }
+    },
+
+    clearSession: async (sessionId: string): Promise<string> => {
+      const title = buildClearedSessionTitle()
+      HyperDesignerLogger.info('OpenCode', '执行上下文清空', { sessionId, title })
+      const newSessionId = await ctx.client.session.create({
+        body: { title },
+        query: { directory: ctx.directory },
+      }).then((result) => {
+        const id = result.data?.id
+        if (!id) {
+          throw new Error(`Failed to create cleared session: ${title}`)
+        }
+        return id
+      })
+
+      sessionRedirects.set(sessionId, newSessionId)
+
+      await getTuiPublisher(ctx).publish({
+        directory: ctx.directory,
+        body: {
+          type: 'tui.session.select',
+          properties: {
+            sessionID: newSessionId,
+          },
+        },
+      })
+
+      HyperDesignerLogger.info('OpenCode', '上下文清空完成', { sessionId, newSessionId })
+      return newSessionId
     },
   }
 }

@@ -6,15 +6,22 @@ import type { PluginInput } from '@opencode-ai/plugin'
 // ── 测试辅助工厂 ────────────────────────────────────────────────────────
 function makeCtx(options?: {
   summarizeImpl?: () => Promise<unknown>
+  createImpl?: () => Promise<unknown>
+  publishImpl?: () => Promise<unknown>
 }): PluginInput {
   const summarizeImpl = options?.summarizeImpl ?? (() => Promise.resolve({ data: {} }))
+  const createImpl = options?.createImpl ?? (() => Promise.resolve({ data: { id: 'mock-id' } }))
+  const publishImpl = options?.publishImpl ?? (() => Promise.resolve(true))
   return {
     client: {
       session: {
         summarize: vi.fn().mockImplementation(summarizeImpl),
-        create: vi.fn().mockResolvedValue({ data: { id: 'mock-id' } }),
+        create: vi.fn().mockImplementation(createImpl),
         delete: vi.fn().mockResolvedValue({}),
         prompt: vi.fn().mockResolvedValue({ data: { info: {}, parts: [] } }),
+      },
+      tui: {
+        publish: vi.fn().mockImplementation(publishImpl),
       },
       config: {
         get: vi.fn().mockResolvedValue({ data: { model: 'openai/gpt-4o' } }),
@@ -139,6 +146,51 @@ describe('createOpenCodeAdapter', () => {
           })
         )
       })
+    })
+  })
+
+  describe('clearSession', () => {
+    it('creates a new session and selects it in TUI', async () => {
+      const ctx = makeCtx({
+        createImpl: () => Promise.resolve({ data: { id: 'fresh-session-id' } }),
+      })
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.clearSession('ses-old-001')
+
+      expect(ctx.client.session.create).toHaveBeenCalledOnce()
+      expect(ctx.client.session.create).toHaveBeenCalledWith({
+        body: { title: 'Fresh Context' },
+        query: { directory: '/tmp/test' },
+      })
+      expect(ctx.client.tui.publish).toHaveBeenCalledOnce()
+      expect(ctx.client.tui.publish).toHaveBeenCalledWith({
+        directory: '/tmp/test',
+        body: {
+          type: 'tui.session.select',
+          properties: { sessionID: 'fresh-session-id' },
+        },
+      })
+    })
+
+    it('redirects subsequent prompt calls to the fresh session', async () => {
+      const ctx = makeCtx({
+        createImpl: () => Promise.resolve({ data: { id: 'fresh-session-id' } }),
+      })
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.clearSession('ses-old-002')
+      await adapter.sendPrompt({
+        sessionId: 'ses-old-002',
+        agent: 'HArchitect',
+        text: 'continue',
+      })
+
+      expect(ctx.client.session.prompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: { id: 'fresh-session-id' },
+        }),
+      )
     })
   })
 })
