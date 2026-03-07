@@ -47,7 +47,7 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
 export const classicWorkflow: WorkflowDefinition = {
   id: 'classic',
   name: 'Classic Requirements Engineering',
-  description: '7-stage workflow: IR analysis → scenario analysis → use case analysis → functional refinement → requirement decomposition → system functional design → module functional design',
+  description: '8-stage workflow: IR analysis → scenario analysis → use case analysis → functional refinement → requirement decomposition → system functional design → module functional design → SDD plan generation',
 
   promptBindings: {
     '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(join(__dirname, 'prompts', 'workflow.md')),
@@ -65,6 +65,7 @@ export const classicWorkflow: WorkflowDefinition = {
     'requirementDecomposition',
     'systemFunctionalDesign',
     'moduleFunctionalDesign',
+    'sddPlanGeneration',
   ],
 
   stages: {
@@ -160,6 +161,19 @@ export const classicWorkflow: WorkflowDefinition = {
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '为各模块输出详细技术规格说明，涵盖职责、接口、内部结构、算法、数据结构及测试策略', currentName),
+    },
+
+    sddPlanGeneration: {
+      name: 'SDD Plan Generation',
+      description: 'Generate specification-driven development (SDD) plans from module functional design docs: task waves, complexity ratings, subagent dispatch strategy, interface cards, acceptance criteria and TDD scenarios',
+      agent: 'HEngineer',
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
+      },
+      gate: true,
+      afterStage: [summarizeHook],
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, '基于模块功能设计说明书，生成可直接分发给 subagent 执行的 SDD 开发计划', currentName),
     },
   },
 }

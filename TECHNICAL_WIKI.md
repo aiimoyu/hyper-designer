@@ -8,7 +8,7 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 
 **核心价值：**
 
-- **工作流标准化**：7 阶段标准化设计流程
+- **工作流标准化**：8 阶段标准化设计流程
 - **AI 能力专业化**：每个阶段通过 Skill 注入专属方法论
 - **输出件规范化**：每个阶段产出结构化设计文档
 - **Agent 专业协作**：4 个专业化 Agent 各司其职、无缝协作
@@ -23,7 +23,7 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 | **HEngineer** | primary | 系统工程师 | 需求分解 → 系统设计 → 模块设计 | 接收 HArchitect 交接 |
 | **HCritic** | subagent | 设计评审员 | 阶段文档质量审查、一致性检查 | 被动触发，只读审查 |
 
-### 1.3 7 阶段工作流
+### 1.3 8 阶段工作流
 
 | 阶段 | Agent | 输入 | 输出 | 质量门 |
 |------|-------|------|------|--------|
@@ -34,6 +34,7 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 | 5. **需求分解** | HEngineer | 功能列表 | `sr-ar-decomposition.md` | ✅ |
 | 6. **系统功能设计** | HEngineer | SR-AR文档 | `system-design.md` | ✅ |
 | 7. **模块功能设计** | HEngineer | 系统架构 | `module-specs.md` | ✅ |
+| 8. **SDD 开发计划生成** | HEngineer | MFD文档 | `dev-plan/{模块名}-dev-plan.md` | ✅ |
 
 ---
 

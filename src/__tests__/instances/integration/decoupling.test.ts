@@ -107,7 +107,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(workflow).not.toBeNull()
       expect(workflow!.id).toBe("classic")
       expect(workflow!.name).toBe("Classic Requirements Engineering")
-      expect(workflow!.stageOrder).toHaveLength(7)
+      expect(workflow!.stageOrder).toHaveLength(8)
       expect(workflow!.stageOrder).toEqual([
         "IRAnalysis",
         "scenarioAnalysis",
@@ -116,6 +116,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
         "requirementDecomposition",
         "systemFunctionalDesign",
         "moduleFunctionalDesign",
+        "sddPlanGeneration",
       ])
 
       const agent = createHArchitectAgent()
@@ -163,7 +164,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       const workflow = getClassicWorkflow()
       const state = initializeWorkflowState(workflow)
 
-      expect(Object.keys(state.workflow)).toHaveLength(7)
+      expect(Object.keys(state.workflow)).toHaveLength(8)
       expect(state.current).toBeNull()
       
       expect(state.workflow.IRAnalysis.isCompleted).toBe(false)
@@ -173,6 +174,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(state.workflow.requirementDecomposition.isCompleted).toBe(false)
       expect(state.workflow.systemFunctionalDesign.isCompleted).toBe(false)
       expect(state.workflow.moduleFunctionalDesign.isCompleted).toBe(false)
+      expect(state.workflow.sddPlanGeneration.isCompleted).toBe(false)
     })
 
     it("should complete stages and persist to disk", () => {

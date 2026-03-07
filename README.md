@@ -13,7 +13,7 @@
 | **HCollector** | 需求收集专家 | 数据收集、用户访谈、参考资料整理 |
 | **HCritic** | 设计评审员 | 阶段文档质量检查、一致性验证、质量门评审 |
 
-### 7 阶段标准化工作流
+### 8 阶段标准化工作流
 
 ```
 阶段1: 初始需求分析(IR)     @HArchitect  → ir-analysis
@@ -23,6 +23,7 @@
 阶段5: 需求分解(SR-AR)      @HEngineer   → sr-ar-decomposition
 阶段6: 系统功能设计         @HEngineer   → functional-design
 阶段7: 模块功能设计         @HEngineer   → functional-design
+阶段8: SDD 开发计划生成     @HEngineer   → sdd-plan-generator
 ```
 
 每个阶段通过对应的 Skill 文件注入专属方法论，完成后需通过 HCritic 质量门评审。

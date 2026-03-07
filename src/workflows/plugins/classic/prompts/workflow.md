@@ -5,11 +5,11 @@
 本工作流由 **HArchitect** 与 **HEngineer** 协作完成，严格遵循线性执行顺序。每个阶段必须按照 `Single-Stage Processing Pipeline` 执行后方可进入下一阶段。
 
 **执行链条：**
-`IRAnalysis` → `scenarioAnalysis` → `useCaseAnalysis` → `functionalRefinement` → `requirementDecomposition` → `systemFunctionalDesign` → `moduleFunctionalDesign`
+`IRAnalysis` → `scenarioAnalysis` → `useCaseAnalysis` → `functionalRefinement` → `requirementDecomposition` → `systemFunctionalDesign` → `moduleFunctionalDesign` → `sddPlanGeneration`
 
 ### 阶段定义与执行规范
 
-以下定义涵盖所有7个阶段。Agent在执行对应阶段时，必须严格遵循下述的输入、行动指引与输出规范。
+以下定义涵盖所有8个阶段。Agent在执行对应阶段时，必须严格遵循下述的输入、行动指引与输出规范。
 
 #### 阶段 1：IRAnalysis (初始需求分析)
 
@@ -180,3 +180,25 @@
 
 - `.hyper-designer/moduleFunctionalDesign/活动需求分解.md`
 - `.hyper-designer/moduleFunctionalDesign/{模块名}设计.md` （每个模块独立文件）
+
+#### 阶段 8：sddPlanGeneration (SDD 开发计划生成)
+
+**执行者：** HEngineer
+**核心目标：** 基于模块功能设计说明书（MFD），生成可直接分发给 subagent 执行的规格驱动开发（SDD）计划。
+
+**输入依赖：**
+
+- `.hyper-designer/moduleFunctionalDesign/{模块名}设计.md`（每个模块）
+- `.hyper-designer/systemFunctionalDesign/system-design.md`
+- `.hyper-designer/requirementDecomposition/sr-ar-decomposition.md`
+
+**执行行动指引：**
+
+1. **访谈确认**：使用 `sdd-plan-generator` Skill 的访谈清单，与用户确认技术栈、测试策略和并行模式。
+2. **任务分解**：按照 Skill 中的波次划分原则，将每个模块的 MFD 分解为可执行任务。
+3. **覆盖验证**：确保功能覆盖矩阵涵盖所有 MFD 功能（§3.x 章节）和接口卡片。
+4. **循环执行**：对每个模块重复此过程，直至所有模块的开发计划生成完毕。
+
+**输出交付物：**
+
+- `dev-plan/{模块名}-dev-plan.md`（每个模块独立文件）

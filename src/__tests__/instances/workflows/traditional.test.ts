@@ -33,14 +33,14 @@ describe('Classic Workflow', () => {
     it('should have description', () => {
       const workflow = getClassicWorkflow()
       expect(workflow.description).toBeTruthy()
-      expect(workflow.description).toContain('7-stage')
+      expect(workflow.description).toContain('8-stage')
     })
   })
 
   describe('stage order', () => {
-    it('should have exactly 7 stages', () => {
+    it('should have exactly 8 stages', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder).toHaveLength(7)
+      expect(workflow.stageOrder).toHaveLength(8)
     })
 
     it('should start with IRAnalysis', () => {
@@ -48,9 +48,9 @@ describe('Classic Workflow', () => {
       expect(workflow.stageOrder[0]).toBe('IRAnalysis')
     })
 
-    it('should end with moduleFunctionalDesign', () => {
+    it('should end with sddPlanGeneration', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder[6]).toBe('moduleFunctionalDesign')
+      expect(workflow.stageOrder[7]).toBe('sddPlanGeneration')
     })
 
     it('should have correct order', () => {
@@ -63,6 +63,7 @@ describe('Classic Workflow', () => {
         'requirementDecomposition',
         'systemFunctionalDesign',
         'moduleFunctionalDesign',
+        'sddPlanGeneration',
       ])
     })
   })
@@ -99,6 +100,7 @@ describe('Classic Workflow', () => {
       expect(workflow.stages.requirementDecomposition.agent).toBe('HEngineer')
       expect(workflow.stages.systemFunctionalDesign.agent).toBe('HEngineer')
       expect(workflow.stages.moduleFunctionalDesign.agent).toBe('HEngineer')
+      expect(workflow.stages.sddPlanGeneration.agent).toBe('HEngineer')
     })
   })
 
@@ -117,6 +119,7 @@ describe('Classic Workflow', () => {
       expect(workflow.stages.requirementDecomposition.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：需求分解')
       expect(workflow.stages.systemFunctionalDesign.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：系统功能设计')
       expect(workflow.stages.moduleFunctionalDesign.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：模块功能设计')
+      expect(workflow.stages.sddPlanGeneration.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]).toContain('## 当前阶段：SDD 开发计划生成')
     })
 
     it('should load prompt content for each stage', () => {
