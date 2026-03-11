@@ -58,17 +58,56 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
 
   const hdTools = {
     hd_workflow_state: tool({
-      description: "Get the current workflow state of the Hyper Designer project. Returns null if workflow has not been initialized.",
+      description: "Get the current workflow state of the Hyper Designer project. Returns uninitialized status if no workflow has been selected.",
       args: {},
       async execute() {
         const result = workflowService.hdGetWorkflowState()
         return JSON.stringify(result, null, 2)
       },
     }),
+    hd_workflow_list: tool({
+      description: "List all available workflows that can be selected for the Hyper Designer project. Use this to see what workflows are available before calling hd_workflow_select.",
+      args: {},
+      async execute() {
+        const workflows = workflowService.listWorkflows()
+        return JSON.stringify({ workflows }, null, 2)
+      },
+    }),
+    hd_workflow_detail: tool({
+      description: "Get detailed information about a specific workflow, including its stages, their descriptions, and which stages are required. Use this to understand a workflow before selecting it.",
+      args: {
+        type_id: tool.schema.string().describe("The ID of the workflow to get details for (e.g., 'classic')"),
+      },
+      async execute(params: { type_id: string }) {
+        const detail = workflowService.getWorkflowDetail(params.type_id)
+        if (!detail) {
+          return JSON.stringify({ error: `Workflow '${params.type_id}' not found`, availableWorkflows: workflowService.listWorkflows().map(w => w.id) }, null, 2)
+        }
+        return JSON.stringify(detail, null, 2)
+      },
+    }),
+    hd_workflow_select: tool({
+      description: "Select and initialize a workflow for the Hyper Designer project. This MUST be called before any workflow operations (hd_handover, etc.). The stages parameter allows selecting which stages to include - use [{ key, selected }] format. Required stages cannot be deselected.",
+      args: {
+        type_id: tool.schema.string().describe("The ID of the workflow to select (e.g., 'classic')"),
+        stages: tool.schema.array(tool.schema.object({ key: tool.schema.string(), selected: tool.schema.boolean() })).optional().describe("Stage selection array. If omitted, all stages are selected. Example: [{ key: 'IRAnalysis', selected: true }, { key: 'moduleFunctionalDesign', selected: false }]"),
+      },
+      async execute(params: { type_id: string; stages?: Array<{ key: string; selected: boolean }> }) {
+        // If stages not provided, select all stages
+        const detail = workflowService.getWorkflowDetail(params.type_id)
+        if (!detail) {
+          return JSON.stringify({ success: false, error: `Workflow '${params.type_id}' not found` }, null, 2)
+        }
+        
+        const stages = params.stages ?? detail.stageOrder.map(key => ({ key, selected: true }))
+        const result = workflowService.selectWorkflow({ typeId: params.type_id, stages })
+        return JSON.stringify(result, null, 2)
+      },
+    }),
     hd_handover: tool({
       description: "Set the handover workflow step of the Hyper Designer project. IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.",
       args: {
-        step_name: tool.schema.enum(workflowService.getDefinition().stageOrder).describe("The name of the workflow step to set as handover"),
+        step_name: tool.schema.string().describe("The name of the workflow step to set as handover"),
       },
       async execute(params: { step_name: string }) {
         const result = workflowService.hdScheduleHandover(params.step_name)

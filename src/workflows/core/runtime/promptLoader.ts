@@ -19,10 +19,6 @@ import { HyperDesignerLogger } from '../../../utils/logger'
 export const WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
 export const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
-interface LoadPromptBindingsOptions {
-  definition: WorkflowDefinition
-  stage: string | null
-}
 
 // Get the directory of the current module file
 const __filename = fileURLToPath(import.meta.url)
@@ -102,7 +98,14 @@ function getLegacyPromptBindings(definition: WorkflowDefinition, stage: string |
 export function loadPromptBindings({
   definition,
   stage,
-}: LoadPromptBindingsOptions): Record<string, string> {
+}: {
+  definition: WorkflowDefinition | undefined
+  stage: string | null
+}): Record<string, string> {
+  if (!definition) {
+    return {}
+  }
+
   const resolvedBindings = getLegacyPromptBindings(definition, stage)
 
   applyPromptBindings(

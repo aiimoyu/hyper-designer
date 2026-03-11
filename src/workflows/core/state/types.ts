@@ -26,6 +26,8 @@ export interface WorkflowStage {
   score?: number | null;
   /** 该阶段最近一次质量门评审评语 */
   comment?: string | null;
+  /** 是否被选中执行（用于工作流选择时跳过某些阶段） */
+  selected?: boolean;
 }
 
 /**
@@ -38,14 +40,18 @@ export interface CurrentStageState {
   gateResult: GateResult | null;
   /** Target stage for the next handover, if scheduled */
   handoverTo: string | null;
+  /** Failure count for this stage (resets on stage transition) */
+  failureCount?: number;
 }
 
 /**
  * Represents the overall state of a workflow
  */
 export interface WorkflowState {
-  /** Unique identifier for the workflow type */
-  typeId: string;
+  /** 是否已完成工作流选择初始化 */
+  initialized: boolean;
+  /** Unique identifier for the workflow type, null if not initialized */
+  typeId: string | null;
   /** Map of stage names to their historical/completion state */
   workflow: Record<string, WorkflowStage>;
   /** 
@@ -54,4 +60,3 @@ export interface WorkflowState {
    */
   current: CurrentStageState | null;
 }
-

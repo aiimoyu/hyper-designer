@@ -25,10 +25,9 @@ export function createSystemTransformer() {
     const currentStage = workflowState?.current?.name || null
 
     const promptBindings = loadPromptBindings({
-      definition: workflow,
+      definition: workflow ?? undefined,
       stage: currentStage,
     })
-
     const placeholderResolvers: PlaceholderResolver[] = [
       {
         token: WORKFLOW_OVERVIEW_PROMPT_TOKEN,

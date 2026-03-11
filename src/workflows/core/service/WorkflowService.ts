@@ -15,9 +15,11 @@ import {
   setWorkflowGateResult,
   setWorkflowHandover,
   executeWorkflowHandover,
+  writeWorkflowStateFile,
 } from "../state";
-import { getWorkflowDefinition } from "../registry";
+import { getWorkflowDefinition, getAvailableWorkflows } from "../registry";
 import { getHandoverAgent, getHandoverPrompt } from "../runtime/handover";
+import { HyperDesignerLogger } from "../../../utils/logger";
 
 /** 质量门通过分数阈值 */
 const GATE_PASS_THRESHOLD = 75;
@@ -26,11 +28,11 @@ const GATE_PASS_THRESHOLD = 75;
  * WorkflowService 事件类型映射
  */
 export interface WorkflowServiceEvents {
-stageCompleted: { stageName: string; isCompleted: boolean };
-currentChanged: { previousStep: string | null; newStep: string };
-handoverScheduled: { targetStep: string };
-handoverExecuted: { fromStep: string; toStep: string };
-gateChanged: { score: number | null; comment?: string | null; stage?: string | null };
+  stageCompleted: { stageName: string; isCompleted: boolean };
+  currentChanged: { previousStep: string | null; newStep: string };
+  handoverScheduled: { targetStep: string };
+  handoverExecuted: { fromStep: string; toStep: string };
+  gateChanged: { score: number | null; comment?: string | null; stage?: string | null };
 }
 
 /**
@@ -45,33 +47,100 @@ export interface HandoverResult {
 }
 
 /**
+ * 工作流摘要信息
+ */
+export interface WorkflowSummary {
+  id: string;
+  name: string;
+  description: string;
+  stageCount: number;
+}
+
+/**
+ * 阶段详情
+ */
+export interface StageDetail {
+  key: string;
+  name: string;
+  description: string;
+  required: boolean;
+  agent: string;
+  inputs?: Record<string, { required?: boolean }>;
+  outputs?: Record<string, { path: string; description?: string }>;
+}
+
+/**
+ * 工作流详情
+ */
+export interface WorkflowDetail {
+  id: string;
+  name: string;
+  description: string;
+  stages: StageDetail[];
+  stageOrder: string[];
+}
+
+/**
+ * 选择工作流参数
+ */
+export interface SelectWorkflowParams {
+  typeId: string;
+  stages: Array<{ key: string; selected: boolean }>;
+}
+
+/**
+ * 选择工作流结果
+ */
+export interface SelectWorkflowResult {
+  success: boolean;
+  state?: WorkflowState;
+  error?: string;
+}
+
+/**
  * 工作流服务类
  *
  * 提供工作流状态管理的统一接口，封装底层状态操作并提供事件通知机制。
  * 使用模块级单例模式确保全局状态一致性。
  */
 export class WorkflowService extends EventEmitter {
-  private definition: WorkflowDefinition;
+  private definition: WorkflowDefinition | null = null;
   /** 内存锁：防止 session.idle 在 afterStage 钩子执行期间触发重入交接 */
   private _handoverInProgress = false;
 
   /**
    * 创建工作流服务实例
-   * @param definition 可选的工作流定义，不提供时使用默认经典工作流
+   * 断点恢复时从 state 恢复 definition
    */
-  constructor(definition?: WorkflowDefinition) {
+  constructor() {
     super();
-    const defaultDefinition = getWorkflowDefinition("classic");
-    this.definition = definition ?? defaultDefinition ?? this.getDefaultFallback();
+    this.definition = this.tryRestoreDefinition();
   }
 
   /**
-   * 获取默认回退工作流定义
-   * 延迟导入避免循环依赖
+   * 断点恢复：从 state 读取 typeId 并获取 definition
    */
-  private getDefaultFallback(): WorkflowDefinition {
-    const { classicWorkflow } = require("../../plugins/classic");
-    return classicWorkflow;
+  private tryRestoreDefinition(): WorkflowDefinition | null {
+    const state = getWorkflowState();
+    if (state?.initialized && state.typeId) {
+      const definition = getWorkflowDefinition(state.typeId);
+      if (definition) {
+        HyperDesignerLogger.debug("Workflow", "断点恢复：从 state 恢复工作流定义", {
+          workflowId: state.typeId
+        });
+        return definition;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 检查工作流是否已初始化
+   * @returns 是否已初始化
+   */
+  isInitialized(): boolean {
+    const state = getWorkflowState();
+    return state?.initialized === true;
   }
 
   /**
@@ -86,9 +155,9 @@ export class WorkflowService extends EventEmitter {
 
   /**
    * 获取工作流定义
-   * @returns 当前工作流定义
+   * @returns 当前工作流定义或 null（未初始化）
    */
-  getDefinition(): WorkflowDefinition {
+  getDefinition(): WorkflowDefinition | null {
     return this.definition;
   }
 
@@ -100,6 +169,147 @@ export class WorkflowService extends EventEmitter {
     return getWorkflowState();
   }
 
+  // ─── 工作流选择 API ──────────────────────────────────────────────────────────────
+
+  /**
+   * 获取所有已注册的工作流列表
+   * @returns 工作流摘要列表
+   */
+  listWorkflows(): WorkflowSummary[] {
+    const workflowIds = getAvailableWorkflows();
+    return workflowIds.map(id => {
+      const definition = getWorkflowDefinition(id);
+      return {
+        id,
+        name: definition?.name ?? id,
+        description: definition?.description ?? '',
+        stageCount: definition?.stageOrder.length ?? 0,
+      };
+    });
+  }
+
+  /**
+   * 获取指定工作流的详情
+   * @param typeId 工作流类型 ID
+   * @returns 工作流详情或 null（不存在）
+   */
+  getWorkflowDetail(typeId: string): WorkflowDetail | null {
+    const definition = getWorkflowDefinition(typeId);
+    if (!definition) {
+      return null;
+    }
+
+    const stages: StageDetail[] = definition.stageOrder.map(stageKey => {
+      const stageDef = definition.stages[stageKey];
+      return {
+        key: stageKey,
+        name: stageDef.name,
+        description: stageDef.description,
+        required: stageDef.required ?? false,
+        agent: stageDef.agent,
+        ...(stageDef.inputs ? { inputs: stageDef.inputs } : {}),
+        ...(stageDef.outputs ? { outputs: stageDef.outputs } : {}),
+      };
+    });
+
+    return {
+      id: definition.id,
+      name: definition.name,
+      description: definition.description,
+      stages,
+      stageOrder: definition.stageOrder,
+    };
+  }
+
+  /**
+   * 选择并初始化工作流
+   * @param params 选择参数，包含 typeId 和 stages 选择
+   * @returns 选择结果
+   */
+  selectWorkflow(params: SelectWorkflowParams): SelectWorkflowResult {
+    const { typeId, stages } = params;
+
+    // 检查 typeId 是否有效
+    const definition = getWorkflowDefinition(typeId);
+    if (!definition) {
+      return {
+        success: false,
+        error: `Unknown workflow: ${typeId}`,
+      };
+    }
+
+    // 检查是否已初始化（不允许重复选择）
+    const currentState = getWorkflowState();
+    if (currentState?.initialized) {
+      return {
+        success: false,
+        error: `Workflow already initialized. Current workflow: ${currentState.typeId}`,
+      };
+    }
+
+    // 构建阶段选择映射
+    const stageSelectionMap = new Map<string, boolean>();
+    for (const { key, selected } of stages) {
+      stageSelectionMap.set(key, selected);
+    }
+
+    // 找出所有 required stages
+    const requiredStages = definition.stageOrder.filter(
+      stageKey => definition.stages[stageKey]?.required !== false
+    );
+
+    // 检查是否所有 required stages 都被选中
+    const missingRequiredStages = requiredStages.filter(
+      stageKey => stageSelectionMap.get(stageKey) !== true
+    );
+
+    if (missingRequiredStages.length > 0) {
+      return {
+        success: false,
+        error: `Missing required stages: ${missingRequiredStages.join(', ')}`,
+      };
+    }
+
+    // 获取选中的阶段列表（按 stageOrder 顺序）
+    const selectedStageKeys = definition.stageOrder.filter(
+      stageKey => stageSelectionMap.get(stageKey) === true
+    );
+
+    // 创建初始状态
+    const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null; selected?: boolean }> = {};
+    for (const stageKey of definition.stageOrder) {
+      workflow[stageKey] = {
+        isCompleted: false,
+        selected: stageSelectionMap.get(stageKey) ?? false,
+      };
+    }
+
+    const newState: WorkflowState = {
+      initialized: true,
+      typeId: definition.id,
+      workflow,
+      current: null,
+    };
+
+    // 缓存 definition
+    this.definition = definition;
+
+    // 写入状态
+    writeWorkflowStateFile(newState);
+
+    HyperDesignerLogger.info("Workflow", "工作流选择完成", {
+      workflowId: definition.id,
+      selectedStages: selectedStageKeys,
+    });
+
+    return {
+      success: true,
+      state: newState,
+    };
+  }
+
+  // ─── 阶段操作 API ──────────────────────────────────────────────────────────────
+
   /**
    * 设置阶段完成状态
    * @param stageName 阶段名称
@@ -107,7 +317,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setStage(stageName: string, isCompleted: boolean): WorkflowState {
-    const state = setWorkflowStage(stageName, isCompleted, this.definition);
+    const state = setWorkflowStage(stageName, isCompleted);
     if (state.workflow[stageName]) {
       this.emit('stageCompleted', { stageName, isCompleted });
     }
@@ -121,7 +331,7 @@ export class WorkflowService extends EventEmitter {
    */
   setCurrent(stepName: string): WorkflowState {
     const previousStep = this.getCurrentStage();
-    const state = setWorkflowCurrent(stepName, this.definition);
+    const state = setWorkflowCurrent(stepName);
     if (state.current?.name === stepName) {
       this.emit('currentChanged', { previousStep, newStep: stepName });
     }
@@ -135,6 +345,9 @@ export class WorkflowService extends EventEmitter {
    * @returns 更新后的工作流状态
    */
   setHandover(stepName: string | null): WorkflowState {
+    if (!this.definition) {
+      throw new Error("Workflow not initialized. Call selectWorkflow first.");
+    }
     const state = setWorkflowHandover(stepName, this.definition);
     if (stepName !== null && state.current?.handoverTo === stepName) {
       this.emit('handoverScheduled', { targetStep: stepName });
@@ -146,10 +359,13 @@ export class WorkflowService extends EventEmitter {
   /**
    * 执行工作流交接
    * @param sessionID 可选的会话ID
-   * @param capabilities 可选的阶段钩子能力
+   * @param adapter 可选的平台适配器
    * @returns 更新后的工作流状态
    */
   async executeHandover(sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
+    if (!this.definition) {
+      throw new Error("Workflow not initialized. Call selectWorkflow first.");
+    }
     const fromStep = this.getCurrentStage();
     const preState = this.getState();
     const toStep = preState?.current?.handoverTo ?? null;
@@ -175,7 +391,7 @@ export class WorkflowService extends EventEmitter {
   }
 
 
-  // ─── 质量门 API ──────────────────────────────────────────────────────────────
+  // ─── 质量门 API ──────────────────────────────────────────────────────────────────────
 
   /**
    * 检查质量门是否通过（score > 75）
@@ -232,10 +448,10 @@ export class WorkflowService extends EventEmitter {
    */
   hdGetWorkflowState(): WorkflowState | { initialized: false; message: string } {
     const state = getWorkflowState();
-    if (state === null) {
+    if (state === null || !state.initialized) {
       return {
         initialized: false,
-        message: "Workflow not initialized. Use hd_handover to start a workflow stage.",
+        message: "Workflow not initialized. Use hd_workflow_list to see available workflows, then use hd_workflow_select to choose one.",
       };
     }
     return state;
@@ -251,6 +467,14 @@ export class WorkflowService extends EventEmitter {
    * @returns 结构化结果对象
    */
   hdScheduleHandover(stepName: string): HandoverResult {
+    // 检查工作流是否已初始化
+    if (!this.definition) {
+      return {
+        success: false,
+        error: "Workflow not initialized. Use hd_workflow_select to choose a workflow first.",
+      };
+    }
+
     // 仅当当前阶段配置了质量门禁时才验证分数
     const currentStage = this.getCurrentStage();
     const stageDefinition = currentStage ? this.definition.stages[currentStage] : undefined;
@@ -293,6 +517,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 代理名称或 null（阶段不存在时）
    */
   getHandoverAgent(stage: string): string | null {
+    if (!this.definition) return null;
     return getHandoverAgent(this.definition, stage);
   }
 
@@ -303,6 +528,7 @@ export class WorkflowService extends EventEmitter {
    * @returns 交接提示词或 null
    */
   getHandoverPrompt(currentStage: string | null, nextStep: string): string | null {
+    if (!this.definition) return null;
     return getHandoverPrompt(this.definition, currentStage, nextStep);
   }
 

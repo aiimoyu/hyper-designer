@@ -13,7 +13,6 @@
 import type { WorkflowDefinition, PlatformAdapter } from "../types";
 import type { WorkflowState, GateResult } from "./types";
 import { readWorkflowStateFile, writeWorkflowStateFile } from "./persistence";
-import { getWorkflowDefinition } from "../registry";
 import { HyperDesignerLogger } from "../../../utils/logger";
 
 /**
@@ -25,20 +24,18 @@ export function getStageOrder(definition: WorkflowDefinition): string[] {
   return definition.stageOrder;
 }
 
-/**
- * Initializes a WorkflowState from a WorkflowDefinition
- * @param definition Workflow definition to create state from
- * @returns Newly initialized workflow state
- */
-export function initializeWorkflowState(definition: WorkflowDefinition): WorkflowState {
+export function initializeWorkflowState(definition: WorkflowDefinition, selectedStages?: string[]): WorkflowState {
   HyperDesignerLogger.debug("Workflow", "初始化工作流状态", { workflowId: definition.id });
 
-  const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null }> = {};
+  const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null; selected?: boolean }> = {};
   for (const stage of definition.stageOrder) {
-    workflow[stage] = { isCompleted: false };
+    // 如果提供了 selectedStages，则根据它设置 selected；否则默认全部选中
+    const isSelected = selectedStages ? selectedStages.includes(stage) : true;
+    workflow[stage] = { isCompleted: false, selected: isSelected };
   }
 
   const state: WorkflowState = {
+    initialized: true,
     typeId: definition.id,
     workflow,
     current: null,
@@ -46,7 +43,8 @@ export function initializeWorkflowState(definition: WorkflowDefinition): Workflo
 
   HyperDesignerLogger.debug("Workflow", "工作流状态初始化完成", {
     workflowId: definition.id,
-    stageCount: Object.keys(workflow).length
+    stageCount: Object.keys(workflow).length,
+    selectedStages: selectedStages ?? 'all'
   });
   return state;
 }
@@ -62,41 +60,26 @@ export function getWorkflowState(): WorkflowState | null {
 }
 
 /**
- * Ensures a workflow state exists, creating one if it doesn't
- * @param definition Optional workflow definition to use for initialization
- * @returns Existing or newly created workflow state
+ * Ensures a workflow state exists
+ * 如果状态文件不存在，返回未初始化状态
+ * @returns Existing workflow state or uninitialized state
  */
-export function ensureWorkflowStateExists(definition?: WorkflowDefinition): WorkflowState {
+export function ensureWorkflowStateExists(): WorkflowState {
   const state = readWorkflowStateFile();
   if (state !== null) {
-    HyperDesignerLogger.debug("Workflow", "使用现有工作流状态", { workflowId: state.typeId });
+    HyperDesignerLogger.debug("Workflow", "使用现有工作流状态", { workflowId: state.typeId, initialized: state.initialized });
     return state;
   }
 
-  HyperDesignerLogger.info("Workflow", "未找到工作流状态，创建新的状态");
-
-  const workflowDef = definition ?? getWorkflowDefinition("classic");
-
-  if (workflowDef) {
-    HyperDesignerLogger.debug("Workflow", "从定义初始化工作流状态", { workflowId: workflowDef.id });
-    const newState = initializeWorkflowState(workflowDef);
-    writeWorkflowStateFile(newState);
-    return newState;
-  }
-
-  HyperDesignerLogger.warn("Workflow", "获取工作流定义失败", {
-    workflowId: "classic",
-    action: "getWorkflowDefinition",
-    error: "Workflow definition 'classic' not found"
-  });
-
-  const fallbackState: WorkflowState = {
-    typeId: "classic",
+  // 状态文件不存在，返回未初始化状态
+  HyperDesignerLogger.info("Workflow", "未找到工作流状态文件，返回未初始化状态");
+  const uninitializedState: WorkflowState = {
+    initialized: false,
+    typeId: null,
     workflow: {},
     current: null,
   };
-  writeWorkflowStateFile(fallbackState);
-  return fallbackState;
+  return uninitializedState;
 }
 
 
@@ -104,16 +87,15 @@ export function ensureWorkflowStateExists(definition?: WorkflowDefinition): Work
  * Updates the completion status of a workflow stage
  * @param stageName Name of the stage to update
  * @param isCompleted Whether the stage is completed
- * @param definition Optional workflow definition
  * @returns Updated workflow state
  */
-export function setWorkflowStage(stageName: string, isCompleted: boolean, definition?: WorkflowDefinition): WorkflowState {
+export function setWorkflowStage(stageName: string, isCompleted: boolean): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置工作流阶段状态", {
     stage: stageName,
     status: isCompleted ? "completed" : "not completed"
   });
 
-  const state = ensureWorkflowStateExists(definition);
+  const state = ensureWorkflowStateExists();
 
   if (state.workflow[stageName]) {
     state.workflow[stageName].isCompleted = isCompleted;
@@ -136,13 +118,12 @@ export function setWorkflowStage(stageName: string, isCompleted: boolean, defini
 /**
  * Sets the currently active workflow step
  * @param stepName Name of the step to set as current, or null to clear
- * @param definition Optional workflow definition
  * @returns Updated workflow state
  */
-export function setWorkflowCurrent(stepName: string | null, definition?: WorkflowDefinition): WorkflowState {
+export function setWorkflowCurrent(stepName: string | null): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置当前工作流步骤", { step: stepName });
 
-  const state = ensureWorkflowStateExists(definition);
+  const state = ensureWorkflowStateExists();
 
   if (stepName === null) {
     state.current = null;
@@ -175,9 +156,9 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
  * Sets the workflow handover target
  * 
  * 交接验证逻辑：
- * 1. 如果当前没有活动步骤，只能交接给第一个步骤（确保工作流从正确位置开始）
- * 2. 如果有活动步骤，只能交接给下一个步骤或返回之前的步骤（防止跳过关键步骤）
- * 3. 不允许向前跳过步骤（确保工作流顺序执行）
+ * 1. 如果当前没有活动步骤，只能交接给第一个被选中的步骤
+ * 2. 如果有活动步骤，只能交接给下一个被选中的步骤或返回之前的步骤
+ * 3. 不允许向前跳过被选中的步骤
  * 
  * @param stepName Name of the step to hand over to, or null to clear
  * @param definition Workflow definition
@@ -186,7 +167,7 @@ export function setWorkflowCurrent(stepName: string | null, definition?: Workflo
 export function setWorkflowHandover(stepName: string | null, definition: WorkflowDefinition): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置工作流交接目标", { targetStep: stepName });
 
-  const state = ensureWorkflowStateExists(definition);
+  const state = ensureWorkflowStateExists();
 
   if (state.current === null) {
     // 初始逻辑：如果没有当前活动步骤，创建一个初始 current 对象
@@ -216,24 +197,37 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
     return state;
   }
 
-  const stageOrder = definition.stageOrder;
-  const firstStage = stageOrder[0];
+  // 获取被选中的阶段列表（按 stageOrder 顺序）
+  const selectedStages = definition.stageOrder.filter(s => state.workflow[s]?.selected !== false);
+  const firstSelectedStage = selectedStages[0];
 
   if (state.current.name === null) {
-    // 初始交接验证：只能交接给第一个步骤
-    if (stepName === firstStage) {
+    // 初始交接验证：只能交接给第一个被选中的步骤
+    if (stepName === firstSelectedStage) {
       state.current.handoverTo = stepName;
       writeWorkflowStateFile(state);
       HyperDesignerLogger.debug("Workflow", "初始交接目标设置完成", { targetStep: stepName });
       return state;
     }
 
-    HyperDesignerLogger.warn("Workflow", "无法设置交接：没有当前活动步骤且目标不是首个步骤");
+    HyperDesignerLogger.warn("Workflow", "无法设置交接：没有当前活动步骤且目标不是首个被选中的步骤", {
+      targetStep: stepName,
+      firstSelectedStage
+    });
     return state;
   }
 
-  const currentIndex = stageOrder.indexOf(state.current.name);
-  const targetIndex = stageOrder.indexOf(stepName);
+  const currentIndex = selectedStages.indexOf(state.current.name);
+  const targetIndex = selectedStages.indexOf(stepName);
+
+  // 目标步骤不在被选中列表中
+  if (targetIndex === -1) {
+    HyperDesignerLogger.warn("Workflow", "目标步骤未被选中", {
+      targetStep: stepName,
+      selectedStages
+    });
+    return state;
+  }
 
   // 正常逻辑：只允许下一个步骤或向后步骤
   const isNextStep = targetIndex === currentIndex + 1;
@@ -302,16 +296,20 @@ export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
  * Executes a pending workflow handover
  * @param definition Workflow definition
  * @returns Updated workflow state
+ * @throws Error if workflow not initialized
  */
 export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
   HyperDesignerLogger.info("Workflow", "执行工作流交接");
 
-  let state = readWorkflowStateFile();
+  const state = readWorkflowStateFile();
 
-  // 如果状态不存在，自动初始化
-  if (state === null) {
-    HyperDesignerLogger.debug("Workflow", "未找到工作流状态，初始化新状态");
-    state = initializeWorkflowState(definition);
+  // 检查工作流是否已初始化
+  if (state === null || !state.initialized) {
+    const error = "Workflow not initialized. Call selectWorkflow first.";
+    HyperDesignerLogger.error("Workflow", error, new Error(error), {
+      action: "executeHandover"
+    });
+    throw new Error(error);
   }
 
   if (state.current === null || state.current.handoverTo === null) {
@@ -323,17 +321,19 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     return state;
   }
 
-  const stageOrder = definition.stageOrder;
+  // 获取被选中的阶段列表（按 stageOrder 顺序）
+  const selectedStages = definition.stageOrder.filter(s => state.workflow[s]?.selected !== false);
   const fromStep = state.current.name;
   const toStep = state.current.handoverTo;
-  const fromIndex = fromStep ? stageOrder.indexOf(fromStep) : -1;
-  const toIndex = stageOrder.indexOf(toStep);
+  const fromIndex = fromStep ? selectedStages.indexOf(fromStep) : -1;
+  const toIndex = selectedStages.indexOf(toStep);
 
   HyperDesignerLogger.debug("Workflow", "交接详情", {
     fromStep,
     fromIndex,
     toStep,
-    toIndex
+    toIndex,
+    selectedStages
   });
 
   if (toIndex > fromIndex && fromStep !== null) {
@@ -343,7 +343,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   } else if (toIndex < fromIndex && fromStep !== null) {
     // 重置正在重新访问的步骤的完成状态
     for (let i = toIndex; i <= fromIndex; i++) {
-      const step = stageOrder[i];
+      const step = selectedStages[i];
       state.workflow[step].isCompleted = false;
       HyperDesignerLogger.debug("Workflow", "步骤标记为未完成", { step });
     }

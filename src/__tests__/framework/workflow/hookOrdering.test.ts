@@ -57,10 +57,11 @@ function makeAdapterWithSpy(
 
 function setupInitialState(def: WorkflowDefinition): void {
   writeWorkflowStateFile({
+    initialized: true,
     typeId: def.id,
     workflow: {
-      stage1: { isCompleted: false },
-      stage2: { isCompleted: false },
+      stage1: { isCompleted: false, selected: true },
+      stage2: { isCompleted: false, selected: true },
     },
     current: {
       name: "stage1",

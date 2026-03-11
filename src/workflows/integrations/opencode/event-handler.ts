@@ -26,7 +26,7 @@ export function createEventHandler(ctx: PluginInput) {
       const workflowState = workflowService.getState()
       const workflow = workflowService.getDefinition()
 
-      if (workflowState && workflowState.current?.handoverTo && workflowState.current !== null && !workflowService.isHandoverInProgress()) {
+      if (workflowState && workflowState.current?.handoverTo && workflowState.current !== null && !workflowService.isHandoverInProgress() && workflow) {
         const handoverPhase = workflowState.current.handoverTo
         const currentPhase = workflowState.current.name
 

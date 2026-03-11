@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { readWorkflowStateFile, writeWorkflowStateFile, getWorkflowStatePath } from "../../../workflows/core/state/persistence"
-import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs"
+import { rmSync, existsSync, mkdirSync, writeFileSync, readFileSync } from "fs"
 import { dirname } from "path"
 
 const STATE_FILE = getWorkflowStatePath()
 
-describe("workflow persistence migration", () => {
+describe("workflow persistence", () => {
   beforeEach(() => {
     if (existsSync(STATE_FILE)) {
       rmSync(STATE_FILE, { force: true })
@@ -37,13 +37,15 @@ describe("workflow persistence migration", () => {
 
     const state = readWorkflowStateFile()
     expect(state).not.toBeNull()
+    expect(state?.initialized).toBe(true)
     expect(state?.current).toEqual({
       name: "dataCollection",
       handoverTo: "IRAnalysis",
       gateResult: {
         score: 100,
         comment: "Passed (legacy)"
-      }
+      },
+      failureCount: 0
     })
   })
 
@@ -65,6 +67,7 @@ describe("workflow persistence migration", () => {
 
     const state = readWorkflowStateFile()
     expect(state).not.toBeNull()
+    expect(state?.initialized).toBe(true)
     expect(state?.current).toEqual({
       name: "IRAnalysis",
       handoverTo: null,
@@ -72,15 +75,17 @@ describe("workflow persistence migration", () => {
         score: 85,
         comment: "Good work",
         stage: "IRAnalysis"
-      }
+      },
+      failureCount: 0
     })
   })
 
   it("reads already canonical state correctly", () => {
     const canonicalState = {
+      initialized: true,
       typeId: "classic",
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { isCompleted: true, selected: true }
       },
       current: {
         name: "IRAnalysis",
@@ -88,7 +93,8 @@ describe("workflow persistence migration", () => {
         gateResult: {
           score: 90,
           comment: "Excellent"
-        }
+        },
+        failureCount: 0
       }
     }
 
@@ -96,30 +102,29 @@ describe("workflow persistence migration", () => {
 
     const state = readWorkflowStateFile()
     expect(state).not.toBeNull()
+    expect(state?.initialized).toBe(true)
     expect(state?.current).toEqual(canonicalState.current)
   })
 
   it("writes canonical state to disk", () => {
     const state = {
+      initialized: true,
       typeId: "classic",
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { isCompleted: true, selected: true }
       },
       current: {
         name: "IRAnalysis",
         handoverTo: null,
-        gateResult: null
+        gateResult: null,
+        failureCount: 0
       }
     }
 
     writeWorkflowStateFile(state)
 
     const raw = JSON.parse(readFileSync(STATE_FILE, "utf-8"))
+    expect(raw.initialized).toBe(true)
     expect(raw.current).toEqual(state.current)
-    // Legacy fields should still be present for backward compatibility if write logic includes them,
-    // but the primary should be 'current'.
-    // Looking at persistence.ts: writeWorkflowStateFile(state) just stringifies the state object.
   })
 })
-
-import { readFileSync } from "fs"

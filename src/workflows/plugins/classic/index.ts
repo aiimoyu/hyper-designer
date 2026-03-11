@@ -77,6 +77,11 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
       gate: true,
+      required: true,
+      inputs: {},
+      outputs: {
+        '需求信息': { path: '需求信息.md', description: 'Initial requirement analysis document' },
+      },
       beforeStage: [irAnalysisCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
@@ -91,6 +96,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
       gate: true,
+      required: true,
+      inputs: {
+        '需求信息': { required: true },
+      },
+      outputs: {
+        '功能场景': { path: '功能场景.md', description: 'Functional scenario specifications' },
+      },
       beforeStage: [scenarioAnalysisCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
@@ -105,6 +117,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
       gate: true,
+      required: true,
+      inputs: {
+        '功能场景': { required: true },
+      },
+      outputs: {
+        '用例': { path: '用例.md', description: 'Use case specifications' },
+      },
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '将场景细化为详细的用例规格说明，明确输入、输出与验收标准', currentName),
@@ -118,6 +137,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
       gate: true,
+      required: true,
+      inputs: {
+        '用例': { required: true },
+      },
+      outputs: {
+        '功能列表': { path: '功能列表.md', description: 'Refined functional requirements' },
+      },
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '提取完整功能列表，使用 MoSCoW 方法进行优先级排序，并执行 FMEA 分析', currentName),
@@ -131,6 +157,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
       gate: true,
+      required: true,
+      inputs: {
+        '功能列表': { required: true },
+      },
+      outputs: {
+        'SR-AR 分解': { path: 'SR-AR 分解.md', description: 'System-Allocation requirement decomposition' },
+      },
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '将功能列表映射并分解为模块级需求、子系统及接口定义', currentName),
@@ -144,6 +177,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
       gate: true,
+      required: true,
+      inputs: {
+        'SR-AR 分解': { required: true },
+      },
+      outputs: {
+        '系统功能设计': { path: '系统功能设计.md', description: 'System-level functional design' },
+      },
       beforeStage: [systemDesignCollectorHook],
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
@@ -158,6 +198,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
       gate: true,
+      required: true,
+      inputs: {
+        '系统功能设计': { required: true },
+      },
+      outputs: {
+        '模块功能设计': { path: '模块功能设计.md', description: 'Module-level functional design' },
+      },
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '为各模块输出详细技术规格说明，涵盖职责、接口、内部结构、算法、数据结构及测试策略', currentName),
@@ -171,6 +218,13 @@ export const classicWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
       gate: true,
+      required: false,
+      inputs: {
+        '模块功能设计': { required: true },
+      },
+      outputs: {
+        'SDD 计划': { path: 'SDD 计划.md', description: 'SDD development plan' },
+      },
       afterStage: [summarizeHook],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于模块功能设计说明书，生成可直接分发给 subagent 执行的 SDD 开发计划', currentName),

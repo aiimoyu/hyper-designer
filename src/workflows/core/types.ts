@@ -34,6 +34,12 @@ export interface WorkflowStageDefinition {
   afterStage?: StageHookFn[]
   /** Stage-level gate flag. If true, hd_handover checks score > 75 before allowing handover. */
   gate?: boolean
+  /** Whether this stage is required to be completed */
+  required?: boolean
+  /** Input specifications for this stage */
+  inputs?: Record<string, { required?: boolean }>
+  /** Output specifications for this stage */
+  outputs?: Record<string, { path: string; description?: string }>
   getHandoverPrompt: (currentStageName: string | null, thisStageName: string) => string
 }
 

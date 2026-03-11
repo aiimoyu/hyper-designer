@@ -1,5 +1,8 @@
-import { describe, it, expect, vi } from "vitest"
-import type { PluginInput } from "@opencode-ai/plugin"
+import { describe, it, expect, beforeEach, vi } from "vitest"
+import type { PluginInput, ToolContext } from "@opencode-ai/plugin"
+import { existsSync, rmSync } from "fs"
+import { join } from "path"
+import { workflowService } from "../../../workflows/core/service"
 
 vi.mock("@opencode-ai/plugin", () => {
   const tool = (definition: Record<string, unknown>) => definition
@@ -16,11 +19,48 @@ vi.mock("@opencode-ai/plugin", () => {
     boolean: () => chainable,
     number: () => chainable,
     string: () => chainable,
+    object: () => chainable,
+    array: () => chainable,
   }
   return { tool }
 })
 
+const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
+
+function initClassicWorkflowSelection(): void {
+  const detail = workflowService.getWorkflowDetail("classic")
+  if (!detail) {
+    throw new Error("Classic workflow detail should be defined")
+  }
+
+  const stages = detail.stageOrder.map(key => ({ key, selected: true }))
+  const result = workflowService.selectWorkflow({ typeId: "classic", stages })
+  if (!result.success && !result.error?.includes("already initialized")) {
+    throw new Error(result.error ?? "Failed to select classic workflow")
+  }
+}
+
+function createMockToolContext(): ToolContext {
+  return {
+    sessionID: "test-session",
+    messageID: "test-message",
+    agent: "HArchitect",
+    directory: process.cwd(),
+    worktree: process.cwd(),
+    abort: new AbortController().signal,
+    metadata: () => { },
+    ask: async () => { },
+  }
+}
+
 describe("HyperDesigner Plugin", () => {
+  beforeEach(() => {
+    if (existsSync(STATE_FILE)) {
+      rmSync(STATE_FILE, { force: true })
+    }
+    initClassicWorkflowSelection()
+  })
+
   it("should create plugin with required methods", async () => {
     const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
     const plugin = HyperDesignerPlugin
@@ -111,7 +151,7 @@ describe("HyperDesigner Plugin", () => {
 
     const output = await pluginInstance.tool!.hd_submit_evaluation.execute(
       { score: 85, comment: "评审通过" },
-      {} as any,
+      createMockToolContext(),
     )
     const result = JSON.parse(output) as { success: boolean; score: number; comment: string }
 
@@ -137,7 +177,7 @@ describe("HyperDesigner Plugin", () => {
 
     const output = await pluginInstance.tool!.hd_submit_evaluation.execute(
       { score: 60 },
-      {} as any,
+      createMockToolContext(),
     )
     const result = JSON.parse(output) as { success: boolean; score: number; comment: null }
 

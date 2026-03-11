@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
 
-const getDefinition = vi.fn<[], WorkflowDefinition>()
+const getDefinition = vi.fn<[], WorkflowDefinition | null>()
 const getState = vi.fn<[], WorkflowState | null>()
 
 vi.mock('../../../workflows/core/service', () => ({
@@ -72,9 +72,10 @@ describe('system transform', () => {
 
     getDefinition.mockReturnValue(workflow)
     getState.mockReturnValue({
+      initialized: true,
       typeId: workflow.id,
       workflow: {
-        stage1: { isCompleted: false },
+        stage1: { isCompleted: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -116,9 +117,10 @@ describe('system transform', () => {
 
     getDefinition.mockReturnValue(workflow)
     getState.mockReturnValue({
+      initialized: true,
       typeId: workflow.id,
       workflow: {
-        stage1: { isCompleted: false },
+        stage1: { isCompleted: false, selected: true },
       },
       current: null,
     })

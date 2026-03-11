@@ -53,11 +53,26 @@ export function readWorkflowStateFile(): WorkflowState | null {
             : null
       };
     }
+    // 为 failureCount 设置默认值（迁移逻辑）
+    if (current && current.failureCount === undefined) {
+      current.failureCount = 0;
+    }
+    // 迁移 workflow 中的 selected 字段
+    if (parsed.selectedStages && Array.isArray(parsed.selectedStages)) {
+      // 从旧的 selectedStages 迁移到 workflow[].selected
+      for (const stageKey of Object.keys(parsed.workflow || {})) {
+        if (!parsed.workflow[stageKey]) {
+          parsed.workflow[stageKey] = { isCompleted: false };
+        }
+        parsed.workflow[stageKey].selected = parsed.selectedStages.includes(stageKey);
+      }
+    }
 
     const state: WorkflowState = {
-      typeId: parsed.typeId ?? "classic",
-      workflow: parsed.workflow,
-      current
+      initialized: parsed.initialized ?? (parsed.typeId ? true : false),
+      typeId: parsed.typeId ?? null,
+      workflow: parsed.workflow || {},
+      current,
     };
 
     HyperDesignerLogger.debug("Workflow", `工作流状态读取完成`, {

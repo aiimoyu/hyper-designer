@@ -20,6 +20,8 @@ vi.mock("@opencode-ai/plugin", () => {
     boolean: () => chainable,
     number: () => chainable,
     string: () => chainable,
+    object: () => chainable,
+    array: () => chainable,
   }
   return { tool }
 })
@@ -76,6 +78,19 @@ function getClassicWorkflow(): WorkflowDefinition {
   return workflow
 }
 
+function initClassicWorkflowSelection(): void {
+  const detail = workflowService.getWorkflowDetail("classic")
+  if (!detail) {
+    throw new Error("Classic workflow detail should be defined")
+  }
+
+  const stages = detail.stageOrder.map(key => ({ key, selected: true }))
+  const result = workflowService.selectWorkflow({ typeId: "classic", stages })
+  if (!result.success) {
+    throw new Error(result.error ?? "Failed to select classic workflow")
+  }
+}
+
 describe("Integration Tests: Deep Decoupling System", () => {
   beforeEach(() => {
     snapshotConfigs()
@@ -129,6 +144,8 @@ describe("Integration Tests: Deep Decoupling System", () => {
     })
 
     it("should configure plugin agent handler with mapped agents", async () => {
+      initClassicWorkflowSelection()
+
       const mockCtx = {
         client: { session: { prompt: async () => { } } },
         directory: process.cwd(),
@@ -160,6 +177,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
   })
 
   describe("Workflow State Lifecycle Integration", () => {
+    beforeEach(() => {
+      initClassicWorkflowSelection()
+    })
+
     it("should manage workflow state lifecycle with classic workflow", () => {
       const workflow = getClassicWorkflow()
       const state = initializeWorkflowState(workflow)
@@ -197,6 +218,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
   })
 
   describe("Handover End-to-End Integration", () => {
+    beforeEach(() => {
+      initClassicWorkflowSelection()
+    })
+
     it("should get correct handover agent and prompt", () => {
 
       const nextAgent = workflowService.getHandoverAgent("IRAnalysis")
