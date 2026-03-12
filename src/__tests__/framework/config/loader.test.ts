@@ -218,5 +218,6 @@ describe("config constants", () => {
     expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HArchitect")
     expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HCritic")
     expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HEngineer")
+    expect(DEFAULT_AGENT_CONFIGS).toHaveProperty("HAnalysis")
   })
 })

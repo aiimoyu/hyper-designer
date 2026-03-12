@@ -6,7 +6,7 @@
  * 2. 代理创建：所有内置代理的创建函数
  * 3. 工作流管理：状态管理、阶段管理、交接处理
  * 4. 配置管理：配置文件加载和解析
- * 5. 工具函数：提示词生成、工作流注册等
+ * 5. 工具函数：：提示词生成、工作流注册等
  */
 
 // Types
@@ -25,6 +25,7 @@ export { createHCollectorAgent } from "./agents/HCollector"
 export { createHArchitectAgent } from "./agents/HArchitect"
 export { createHCriticAgent } from "./agents/HCritic"
 export { createHEngineerAgent } from "./agents/HEngineer"
+export { createHAnalysisAgent } from "./agents/HAnalysis"
 
 // Workflow state management
 export {

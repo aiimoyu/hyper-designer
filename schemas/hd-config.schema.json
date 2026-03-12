@@ -11,7 +11,7 @@
     },
     "workflow": {
       "type": "string",
-      "description": "Workflow type to use",
+      "description": "Workflow type to use (classic or projectAnalysis)",
       "default": "classic"
     },
     "agents": {
@@ -33,13 +33,17 @@
         "HEngineer": {
           "$ref": "#/definitions/agentConfig",
           "description": "System Engineer & Technical Design Specialist"
+        },
+        "HAnalysis": {
+          "$ref": "#/definitions/agentConfig",
+          "description": "Project Analysis Specialist"
         }
       },
       "additionalProperties": {
         "$ref": "#/definitions/agentConfig",
         "description": "Custom agent configuration"
       }
-    },
+    }
   },
   "required": [
     "agents"
@@ -77,11 +81,11 @@
         },
         "prompt_append": {
           "type": "string",
-          "description": "Additional prompt text to append to the agent's system prompt"
+          "description": "Additional prompt text to append to agent's system prompt"
         },
         "permission": {
           "type": "object",
-          "description": "Permission configuration for the agent (overrides default permissions)",
+          "description": "Permission configuration for agent (overrides default permissions)",
           "additionalProperties": {
             "type": "string"
           },

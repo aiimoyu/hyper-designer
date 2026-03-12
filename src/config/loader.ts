@@ -59,6 +59,7 @@ export const GLOBAL_CONFIG_PATH = join(GLOBAL_CONFIG_DIR, "hd-config.json")
  * - HArchitect (0.6): 较高温度，鼓励架构设计的创造性和多样性
  * - HCritic (0.1): 极低温度，确保评审的严格性和一致性
  * - HEngineer (0.4): 中等温度，平衡技术设计的严谨性和创造性
+ * - HAnalysis (0.5): 中等温度，平衡项目分析的准确性和创造性
  */
 export const DEFAULT_AGENT_CONFIGS: Record<string, AgentOverrideConfig> = {
   HCollector: {
@@ -72,6 +73,9 @@ export const DEFAULT_AGENT_CONFIGS: Record<string, AgentOverrideConfig> = {
   },
   HEngineer: {
     temperature: 0.4,
+  },
+  HAnalysis: {
+    temperature: 0.5,
   },
 }
 

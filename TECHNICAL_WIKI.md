@@ -11,10 +11,10 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 - **工作流标准化**：8 阶段标准化设计流程
 - **AI 能力专业化**：每个阶段通过 Skill 注入专属方法论
 - **输出件规范化**：每个阶段产出结构化设计文档
-- **Agent 专业协作**：4 个专业化 Agent 各司其职、无缝协作
+- **Agent 专业协作**：5 个专业化 Agent 各司其职、无缝协作
 - **质量门禁**：每个阶段完成后自动质量评审
 
-### 1.2 四大核心 Agent
+### 1.2 五大核心 Agent
 
 | Agent | Mode | 角色 | 职责范围 | 协作方式 |
 |-------|------|------|---------|---------|
@@ -22,8 +22,10 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 | **HArchitect** | primary | 系统架构师 | IR分析 → 场景分析 → 用例分析 → 功能细化 | 主流程协调员 |
 | **HEngineer** | primary | 系统工程师 | 需求分解 → 系统设计 → 模块设计 | 接收 HArchitect 交接 |
 | **HCritic** | subagent | 设计评审员 | 阶段文档质量审查、一致性检查 | 被动触发，只读审查 |
+| **HAnalysis** | primary | 项目分析专家 | 系统分析 → 组件分析 → 缺漏检查 | projectAnalysis 工作流专用 |
+### 1.3 工作流类型
 
-### 1.3 8 阶段工作流
+#### Classic 工作流（8 阶段）
 
 | 阶段 | Agent | 输入 | 输出 | 质量门 |
 |------|-------|------|------|--------|
@@ -35,7 +37,13 @@ Hyper Designer 是一个 OpenCode 插件，通过专业化 AI Agent 协作和标
 | 6. **系统功能设计** | HEngineer | SR-AR文档 | `system-design.md` | ✅ |
 | 7. **模块功能设计** | HEngineer | 系统架构 | `module-specs.md` | ✅ |
 | 8. **SDD 开发计划生成** | HEngineer | MFD文档 | `dev-plan/{模块名}-dev-plan.md` | ✅ |
+#### Project Analysis 工作流（3 阶段）
 
+| 阶段 | Agent | 输入 | 输出 | 质量门 |
+|------|-------|------|------|--------|
+| 1. **系统分析** | HAnalysis | 目标项目路径 | `architecture.md` + `_meta/*` | ❌ |
+| 2. **组件分析** | HAnalysis | `_meta/component-manifest.json` | `component/*.md` + `_meta/components/*` | ❌ |
+| 3. **缺漏检查** | HAnalysis | 所有分析产物 | `coverage-report.md` + `_meta/coverage-report.json` | ❌ |
 ---
 
 ## 2. 核心概念模型
@@ -244,6 +252,7 @@ promptGenerators: [
 | **HEngineer** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **HCritic** | ❌ (只读) | ✅ | ❌ | ❌ | ✅ | ❌ |
 | **HCollector** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **HAnalysis** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 
 ### 4.2 Workflow 工作流引擎
 
@@ -265,7 +274,7 @@ interface WorkflowStageDefinition {
   description: string             // 阶段描述
   agent: string                   // 负责该阶段的 Agent
   promptFile?: string             // 阶段专属提示词文件
-  gate?: boolean                  // 是否启用质量门禁
+
   beforeStage?: StageHookFn[]     // 进入阶段前执行的钩子
   afterStage?: StageHookFn[]      // 离开阶段后执行的钩子
   getHandoverPrompt: (currentStageName, thisStageName) => string  // 生成交接提示词
@@ -696,9 +705,9 @@ Hyper Designer 提供四个核心工具：
 | 工具名称 | 权限 | 描述 |
 |---------|------|------|
 | `hd_workflow_state` | 所有 Agent | 获取当前工作流状态 |
-| `hd_handover` | HArchitect, HEngineer | 设置交接目标（需通过质量门） |
-| `hd_record_milestone` | HArchitect, HEngineer, HCritic | 记录阶段里程碑 |
-| `hd_force_next_step` | HArchitect, HEngineer | 强制进入下一阶段（仅当 failureCount >= 3） |
+| `hd_handover` | HArchitect, HEngineer, HAnalysis | 设置交接目标（需通过质量门） |
+| `hd_record_milestone` | HArchitect, HEngineer, HCritic, HAnalysis | 记录阶段里程碑 |
+| `hd_force_next_step` | HArchitect, HEngineer, HAnalysis | 强制进入下一阶段（仅当 failureCount >= 3） |
 ### 7.2 工具调用流程
 
 ```typescript
@@ -894,7 +903,8 @@ src/
 │   ├── HArchitect/              # 系统架构师
 │   ├── HCollector/              # 需求收集专家
 │   ├── HEngineer/               # 系统工程师
-│   └── HCritic/                 # 设计评审员
+│   ├── HCritic/                 # 设计评审员
+│   └── HAnalysis/               # 项目分析专家
 │
 ├── workflows/
 │   ├── core/                    # 工作流核心引擎
@@ -920,7 +930,10 @@ src/
 │   │       └── index.ts
 │   │
 │   └── plugins/                 # 工作流插件
-│       └── classic/             # 经典工作流
+│       ├── classic/             # 经典工作流
+│       │   ├── index.ts         # 工作流定义
+│       │   └── prompts/         # 阶段提示词
+│       └── projectAnalysis/      # 项目分析工作流
 │           ├── index.ts         # 工作流定义
 │           └── prompts/         # 阶段提示词
 │
@@ -931,7 +944,11 @@ src/
 │       ├── use-case-analysis/
 │       ├── functional-refinement/
 │       ├── sr-ar-decomposition/
-│       └── functional-design/
+│       ├── functional-design/
+│       ├── project-analysis-concepts/ # 项目分析共享概念
+│       ├── system-analysis/        # 系统分析技能
+│       ├── component-analysis/      # 组件分析技能
+│       └── missing-coverage-check/ # 缺漏检查技能
 │
 ├── tools/                       # 工具定义
 │   ├── index.ts                 # 工具类型定义

@@ -155,10 +155,6 @@ export class WorkflowService extends EventEmitter {
       return [...stageDefinition.stageMilestones]
     }
 
-    if (stageDefinition.gate) {
-      return [GATE_MILESTONE_KEY]
-    }
-
     return []
   }
 

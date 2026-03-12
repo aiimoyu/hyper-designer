@@ -12,7 +12,7 @@ import { createHCollectorAgent } from "./HCollector"
 import { createHArchitectAgent } from "./HArchitect"
 import { createHCriticAgent } from "./HCritic"
 import { createHEngineerAgent } from "./HEngineer"
-
+import { createHAnalysisAgent } from "./HAnalysis"
 
 
 export const BUILTIN_AGENT_FACTORIES = {
@@ -20,6 +20,7 @@ export const BUILTIN_AGENT_FACTORIES = {
   HArchitect: createHArchitectAgent,
   HCritic: createHCriticAgent,
   HEngineer: createHEngineerAgent,
+  HAnalysis: createHAnalysisAgent,
 } as const
 
 /**

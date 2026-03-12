@@ -4,7 +4,7 @@
 
 ## 功能特性
 
-### 四大核心 Agent
+### 五大核心 Agent
 
 | Agent | 角色定位 | 主要职责 |
 |-------|---------|---------|
@@ -12,8 +12,11 @@
 | **HEngineer** | 系统工程师 | 系统级设计（SR-AR分解、架构设计）和模块级详细设计 |
 | **HCollector** | 需求收集专家 | 数据收集、用户访谈、参考资料整理 |
 | **HCritic** | 设计评审员 | 阶段文档质量检查、一致性验证、质量门评审 |
+| **HAnalysis** | 项目分析专家 | 项目架构分析、组件分析、覆盖率检查 |
 
-### 8 阶段标准化工作流
+### 工作流类型
+
+#### Classic 工作流（8 阶段）
 
 ```
 阶段1: 初始需求分析(IR)     @HArchitect  → ir-analysis
@@ -27,6 +30,25 @@
 ```
 
 每个阶段通过对应的 Skill 文件注入专属方法论，完成后需通过 HCritic 质量门评审。
+
+#### Project Analysis 工作流（3 阶段）
+
+```
+阶段1: 系统分析               @HAnalysis  → system-analysis
+阶段2: 组件分析               @HAnalysis  → component-analysis
+阶段3: 缺漏检查               @HAnalysis  → missing-coverage-check
+```
+
+**目标输出**：
+- 系统架构分析报告：`{项目根}/.hyper-designer/projectAnalysis/architecture.md`
+- 组件分析报告：`{项目根}/.hyper-designer/projectAnalysis/component/*.md`
+- 中间产物：`{项目根}/.hyper-designer/projectAnalysis/_meta/*`
+
+**特点**：
+- 适用于陌生项目的快速理解
+- 自动识别架构组件、技术栈、扩展性瓶颈
+- 严格的覆盖率检查，确保分析完整性
+- 输出包含 Mermaid 图表和代码引用
 
 ## 安装
 
@@ -68,6 +90,11 @@ Fetch and follow instructions from https://raw.atomgit.com/u011501137/hyper-desi
       "model": "your-model-id",
       "temperature": 0.4,
       "maxTokens": 200000
+    },
+    "HAnalysis": {
+      "model": "your-model-id",
+      "temperature": 0.5,
+      "maxTokens": 200000
     }
   }
 }
@@ -77,10 +104,11 @@ Fetch and follow instructions from https://raw.atomgit.com/u011501137/hyper-desi
 
 | 字段 | 说明 |
 |------|------|
-| `workflow` | 工作流类型，目前支持 `classic` |
+| `workflow` | 工作流类型，支持 `classic` 或 `projectAnalysis` |
 | `agents.{name}.model` | Agent 使用的模型 ID |
 | `agents.{name}.temperature` | 模型温度参数 |
 | `agents.{name}.maxTokens` | 最大输出 Token 数 |
+
 ## 日志配置
 
 ### 环境变量配置
@@ -116,7 +144,7 @@ export HD_STRICT_ERRORS=1
 ### 日志文件位置
 
 - **目录**：`.hyper-designer/logs/`（项目根目录）
-- **文件名**：`{timestamp}.log`（如 `2026-03-06T10-30-00.log`）
+- **文件名**：`{timestamp}.log`（如 `2026-03-06T10.30-00.log`）
 - **格式**：`2026-03-06T10:30:00 +100ms [hyper-designer:ModuleName:INFO] message key=value`
 
 ### 使用示例
@@ -221,11 +249,13 @@ hyper-designer/
 │   │   ├── HEngineer/             # 系统工程师
 │   │   ├── HCollector/            # 需求收集专家
 │   │   ├── HCritic/               # 设计评审员
+│   │   ├── HAnalysis/             # 项目分析专家
 │   │   └── factory.ts             # Agent 创建工厂
 │   │
 │   ├── workflows/                 # 工作流引擎
 │   │   ├── core/                  # 核心逻辑
-│   │   └── plugins/classic/       # 经典工作流
+│   │   ├── plugins/classic/       # 经典工作流（8 阶段）
+│   │   └── plugins/projectAnalysis/ # 项目分析工作流（3 阶段）
 │   │
 │   ├── skills/hyper-designer/     # 技能文件
 │   │   ├── ir-analysis/           # IR分析技能
@@ -233,7 +263,11 @@ hyper-designer/
 │   │   ├── use-case-analysis/     # 用例分析技能
 │   │   ├── functional-refinement/ # 功能细化技能
 │   │   ├── sr-ar-decomposition/   # SR-AR分解技能
-│   │   └── functional-design/     # 功能设计技能
+│   │   ├── functional-design/     # 功能设计技能
+│   │   ├── project-analysis-concepts/ # 项目分析共享概念
+│   │   ├── system-analysis/        # 系统分析技能
+│   │   ├── component-analysis/      # 组件分析技能
+│   │   └── missing-coverage-check/ # 缺漏检查技能
 │   │
 │   ├── tools/                     # 工具实现
 │   │   └── documentReview/        # 文档审核工具
