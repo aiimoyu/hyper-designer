@@ -5,6 +5,7 @@ import {
   setWorkflowCurrent,
   setWorkflowHandover,
   setWorkflowGatePassed,
+  forceWorkflowNextStep,
   executeWorkflowHandover,
   initializeWorkflowState,
   getStageOrder,
@@ -124,6 +125,55 @@ describe("workflow state management", () => {
       expect(state.workflow.dataCollection?.selected).toBe(true)
       expect(state.workflow.IRAnalysis?.selected).toBe(true)
       expect(state.workflow.scenarioAnalysis?.selected).toBe(false)
+      // Verify neighbor links for selected stages
+      expect(state.workflow.dataCollection?.previousStage).toBeNull()
+      expect(state.workflow.dataCollection?.nextStage).toBe("IRAnalysis")
+      expect(state.workflow.IRAnalysis?.previousStage).toBe("dataCollection")
+      expect(state.workflow.IRAnalysis?.nextStage).toBeNull()
+      // Deselected stages should not have neighbor links
+      expect(state.workflow.scenarioAnalysis?.previousStage).toBeUndefined()
+      expect(state.workflow.scenarioAnalysis?.nextStage).toBeUndefined()
+    })
+
+    it("creates state with all stages selected and correct neighbor links", () => {
+      const state = initializeWorkflowState(classicWorkflowDef)
+      // First stage: previousStage should be null
+      expect(state.workflow.dataCollection?.previousStage).toBeNull()
+      expect(state.workflow.dataCollection?.nextStage).toBe("IRAnalysis")
+      // Middle stages: should have both previous and next
+      expect(state.workflow.IRAnalysis?.previousStage).toBe("dataCollection")
+      expect(state.workflow.IRAnalysis?.nextStage).toBe("scenarioAnalysis")
+      expect(state.workflow.scenarioAnalysis?.previousStage).toBe("IRAnalysis")
+      expect(state.workflow.scenarioAnalysis?.nextStage).toBe("useCaseAnalysis")
+      expect(state.workflow.useCaseAnalysis?.previousStage).toBe("scenarioAnalysis")
+      expect(state.workflow.useCaseAnalysis?.nextStage).toBe("functionalRefinement")
+      expect(state.workflow.functionalRefinement?.previousStage).toBe("useCaseAnalysis")
+      expect(state.workflow.functionalRefinement?.nextStage).toBe("requirementDecomposition")
+      expect(state.workflow.requirementDecomposition?.previousStage).toBe("functionalRefinement")
+      expect(state.workflow.requirementDecomposition?.nextStage).toBe("systemFunctionalDesign")
+      expect(state.workflow.systemFunctionalDesign?.previousStage).toBe("requirementDecomposition")
+      expect(state.workflow.systemFunctionalDesign?.nextStage).toBe("moduleFunctionalDesign")
+      // Last stage: nextStage should be null
+      expect(state.workflow.moduleFunctionalDesign?.previousStage).toBe("systemFunctionalDesign")
+      expect(state.workflow.moduleFunctionalDesign?.nextStage).toBeNull()
+    })
+
+    it("creates state with non-contiguous selected stages", () => {
+      const state = initializeWorkflowState(classicWorkflowDef, ["dataCollection", "scenarioAnalysis", "moduleFunctionalDesign"])
+      // First selected stage
+      expect(state.workflow.dataCollection?.previousStage).toBeNull()
+      expect(state.workflow.dataCollection?.nextStage).toBe("scenarioAnalysis")
+      // Middle selected stage (skips IRAnalysis)
+      expect(state.workflow.scenarioAnalysis?.previousStage).toBe("dataCollection")
+      expect(state.workflow.scenarioAnalysis?.nextStage).toBe("moduleFunctionalDesign")
+      // Last selected stage
+      expect(state.workflow.moduleFunctionalDesign?.previousStage).toBe("scenarioAnalysis")
+      expect(state.workflow.moduleFunctionalDesign?.nextStage).toBeNull()
+      // Deselected stages should not have neighbor links
+      expect(state.workflow.IRAnalysis?.previousStage).toBeUndefined()
+      expect(state.workflow.IRAnalysis?.nextStage).toBeUndefined()
+      expect(state.workflow.useCaseAnalysis?.previousStage).toBeUndefined()
+      expect(state.workflow.useCaseAnalysis?.nextStage).toBeUndefined()
     })
 
     it("works with custom workflow definition", () => {
@@ -162,6 +212,13 @@ describe("workflow state management", () => {
       expect(state.typeId).toBe("custom")
       expect(Object.keys(state.workflow)).toHaveLength(3)
       expect(state.workflow.stage1?.selected).toBe(true)
+      // Verify neighbor links
+      expect(state.workflow.stage1?.previousStage).toBeNull()
+      expect(state.workflow.stage1?.nextStage).toBe("stage2")
+      expect(state.workflow.stage2?.previousStage).toBe("stage1")
+      expect(state.workflow.stage2?.nextStage).toBe("stage3")
+      expect(state.workflow.stage3?.previousStage).toBe("stage2")
+      expect(state.workflow.stage3?.nextStage).toBeNull()
     })
   })
 
@@ -249,9 +306,13 @@ describe("workflow state management", () => {
     it("resets gate status when stage changes", () => {
       setWorkflowCurrent("IRAnalysis")
       setWorkflowGatePassed(true)
-      const state = setWorkflowCurrent("scenarioAnalysis")
-      expect(state.current?.gateResult).toBeNull()
+      setWorkflowCurrent("scenarioAnalysis")
+      // Gate data is now in workflow[stageName].stageMilestones.gate
+      // Verify IRAnalysis has gate milestone
+      const state = getWorkflowState()
+      expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
     })
+
   })
 
   describe("setWorkflowGatePassed", () => {
@@ -262,9 +323,14 @@ describe("workflow state management", () => {
     it("updates gate pass status in state file", () => {
       setWorkflowCurrent("IRAnalysis")
       const state = setWorkflowGatePassed(true)
-      expect(state.current?.gateResult?.score).toBe(100)
+      // Gate data is now in workflow[stageName].stageMilestones.gate, NOT in current.gateResult
+      expect(state.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
+      expect(state.workflow.IRAnalysis?.stageMilestones?.gate?.isCompleted).toBe(true)
+      expect((state.workflow.IRAnalysis?.stageMilestones?.gate?.detail as any).score).toBe(100)
       const reloaded = getWorkflowState()
-      expect(reloaded?.current?.gateResult?.score).toBe(100)
+      expect(reloaded?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
+      expect(reloaded?.workflow.IRAnalysis?.stageMilestones?.gate?.isCompleted).toBe(true)
+      expect((reloaded?.workflow.IRAnalysis?.stageMilestones?.gate?.detail as any).score).toBe(100)
     })
   })
 
@@ -279,6 +345,23 @@ describe("workflow state management", () => {
       expect(updatedState).toHaveProperty("workflow")
       expect(updatedState).toHaveProperty("current")
       expect(updatedState.current?.handoverTo).toBe("IRAnalysis")
+    })
+
+    it('increments failureCount when handover target is invalid', () => {
+      setWorkflowCurrent('dataCollection')
+      const state = setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      expect(state.current?.handoverTo).toBeNull()
+      expect(state.current?.failureCount).toBe(1)
+    })
+
+    it('does not increment failureCount when handover scheduling succeeds', () => {
+      setWorkflowCurrent('dataCollection')
+      const afterReject = setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      expect(afterReject.current?.failureCount).toBe(1)
+
+      const successState = setWorkflowHandover('IRAnalysis', classicWorkflowDef)
+      expect(successState.current?.handoverTo).toBe('IRAnalysis')
+      expect(successState.current?.failureCount).toBe(1)
     })
 
     it("allows null to clear handover", () => {
@@ -318,7 +401,7 @@ describe("workflow state management", () => {
     it("throws error when workflow not initialized", async () => {
       // Remove state file to simulate uninitialized state
       rmSync(STATE_FILE, { force: true })
-      
+
       await expect(executeWorkflowHandover(classicWorkflowDef)).rejects.toThrow("Workflow not initialized")
     })
 
@@ -338,6 +421,87 @@ describe("workflow state management", () => {
       expect(state.current?.handoverTo).toBeNull()
       expect(state.workflow.IRAnalysis?.isCompleted).toBe(true)
     })
+
+    it('resets failureCount to 0 after successful stage transition', async () => {
+      setWorkflowCurrent('IRAnalysis')
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      const preTransition = getWorkflowState()
+      expect(preTransition?.current?.failureCount).toBe(1)
+
+      setWorkflowHandover('scenarioAnalysis', classicWorkflowDef)
+      const state = await executeWorkflowHandover(classicWorkflowDef)
+
+      expect(state.current?.name).toBe('scenarioAnalysis')
+      expect(state.current?.failureCount).toBe(0)
+      expect(state.current?.previousStage).toBe('IRAnalysis')
+      expect(state.current?.nextStage).toBe('useCaseAnalysis')
+    })
+  })
+
+  describe('forceWorkflowNextStep', () => {
+    beforeEach(() => {
+      writeWorkflowStateFile(initializeWorkflowState(classicWorkflowDef))
+      setWorkflowCurrent('IRAnalysis')
+    })
+
+    it('denies when failureCount is less than 3', () => {
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+
+      const result = forceWorkflowNextStep(classicWorkflowDef)
+
+      expect('error' in result).toBe(true)
+      if ('error' in result) {
+        expect(result.reason).toContain('failureCount')
+      }
+    })
+
+    it('denies when handover target is not next selected stage', () => {
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('dataCollection', classicWorkflowDef)
+
+      const result = forceWorkflowNextStep(classicWorkflowDef)
+
+      expect('error' in result).toBe(true)
+      if ('error' in result) {
+        expect(result.reason).toContain('next selected stage')
+      }
+    })
+
+    it('succeeds when failureCount >= 3 and target is next selected stage', () => {
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+
+      const result = forceWorkflowNextStep(classicWorkflowDef)
+
+      expect('error' in result).toBe(false)
+      if (!('error' in result)) {
+        expect(result.current?.name).toBe('scenarioAnalysis')
+        expect(result.current?.failureCount).toBe(0)
+      }
+    })
+
+    it('records auditable force_advance milestone without setting gate milestone', () => {
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+
+      const result = forceWorkflowNextStep(classicWorkflowDef)
+
+      expect('error' in result).toBe(false)
+      if (!('error' in result)) {
+        const milestone = result.workflow.IRAnalysis?.stageMilestones?.force_advance
+        expect(milestone?.type).toBe('force_advance')
+        expect(milestone?.isCompleted).toBe(true)
+        expect(milestone?.detail).toMatchObject({
+          reason: 'Forced transition after 3+ failed handover attempts',
+        })
+        expect(result.workflow.IRAnalysis?.stageMilestones?.gate).toBeUndefined()
+      }
+    })
   })
 
   describe("gateResult clearing", () => {
@@ -348,40 +512,48 @@ describe("workflow state management", () => {
     it("clears gateResult when currentStage is updated to a different stage", () => {
       setWorkflowCurrent("IRAnalysis")
       setWorkflowGatePassed(true)
-      
+
       let state = getWorkflowState()
-      expect(state?.current?.gateResult).not.toBeNull()
-      expect(state?.current?.gateResult?.score).toBe(100)
+      // Gate data is now in workflow[stageName].stageMilestones.gate, NOT in current.gateResult
+      expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
+      expect((state?.workflow.IRAnalysis?.stageMilestones?.gate?.detail as any).score).toBe(100)
 
       setWorkflowCurrent("scenarioAnalysis")
-      
+
       state = getWorkflowState()
-      expect(state?.current?.gateResult).toBeNull()
+      // Gate milestone should still exist on IRAnalysis stage
+      expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
+      // scenarioAnalysis should not have a gate milestone yet
+      expect(state?.workflow.scenarioAnalysis?.stageMilestones?.gate).toBeUndefined()
     })
 
     it("clears gateResult during executeWorkflowHandover", async () => {
       setWorkflowCurrent("IRAnalysis")
       setWorkflowGatePassed(true)
       setWorkflowHandover("scenarioAnalysis", classicWorkflowDef)
-      
       let state = getWorkflowState()
-      expect(state?.current?.gateResult).not.toBeNull()
+      // Gate data is now in workflow[stageName].stageMilestones.gate, NOT in current.gateResult
+      expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
 
       await executeWorkflowHandover(classicWorkflowDef)
-      
+
       state = getWorkflowState()
       expect(state?.current?.name).toBe("scenarioAnalysis")
-      expect(state?.current?.gateResult).toBeNull()
+      // Gate milestone should still exist on IRAnalysis stage after handover
+      expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
     })
 
     it("clears gateResult when currentStage is set to null", () => {
       setWorkflowCurrent("IRAnalysis")
       setWorkflowGatePassed(true)
-      
+
       setWorkflowCurrent(null)
-      
+
       const state = getWorkflowState()
       expect(state?.current).toBeNull()
+      // Gate milestone should still exist on IRAnalysis stage
+      expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeDefined()
     })
   })
+
 })

@@ -79,11 +79,9 @@ describe('system transform', () => {
       },
       current: {
         name: 'stage1',
-        gateResult: null,
         handoverTo: null,
       },
     })
-
     const transform = createSystemTransformer()
     const output = { system: ['{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'] }
 

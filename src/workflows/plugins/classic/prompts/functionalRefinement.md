@@ -55,6 +55,6 @@
 
 ## 📋 输出要求
 - 严格遵循审核报告格式输出
-- 在输出报告前调用 `hd_submit_evaluation` 工具提交评分
+#HJ|- 在输出报告前调用 `hd_record_milestone` 工具记录质量门里程碑
 - 专项维度中发现的问题须在最终报告的 Recommendations 中**明确标注所违反的专项维度名称**
 ```

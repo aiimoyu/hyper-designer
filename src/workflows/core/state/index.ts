@@ -5,7 +5,7 @@
  */
 
 // Types
-export type { WorkflowStage, WorkflowState } from "./types";
+export type { WorkflowStage, WorkflowState, StageMilestone, GateMilestoneDetail } from "./types";
 
 // Persistence
 export { readWorkflowStateFile, writeWorkflowStateFile, getWorkflowStatePath } from "./persistence";
@@ -21,5 +21,7 @@ export {
   setWorkflowHandover,
   setWorkflowGatePassed,
   setWorkflowGateResult,
+  setWorkflowStageMilestone,
   executeWorkflowHandover,
+  forceWorkflowNextStep,
 } from "./operations";

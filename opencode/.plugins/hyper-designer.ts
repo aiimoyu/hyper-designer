@@ -114,15 +114,42 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         return JSON.stringify(result, null, 2)
       },
     }),
-    hd_submit_evaluation: tool({
-      description: "[HCritic only] Submit quality evaluation for the current workflow stage. Only HCritic has permission to call this tool. Stores score and comment in the workflow state.",
+    hd_record_milestone: tool({
+      description: "Record or overwrite a milestone for a workflow stage. For gate milestones, detail may include score/comment and isCompleted should reflect pass/fail.",
       args: {
-        score: tool.schema.number().describe("Quality gate score from 0 to 100"),
-        comment: tool.schema.string().optional().describe("Review summary or comment"),
+        stage: tool.schema.string().describe("The stage key to record the milestone for (e.g., 'IRAnalysis')"),
+        milestone: tool.schema.object({
+          type: tool.schema.string().describe("The milestone type/key to record"),
+          isCompleted: tool.schema.boolean().describe("Whether this milestone item is completed"),
+          detail: tool.schema.object({}).describe("Milestone detail payload, e.g. gate: { score, comment }"),
+        }).describe("The milestone to record"),
       },
-      async execute(params: { score: number; comment?: string }) {
-        const state = workflowService.setGateResult({ score: params.score, comment: params.comment ?? null })
-        return JSON.stringify({ success: true, score: params.score, comment: params.comment ?? null, state }, null, 2)
+      async execute(params: { stage: string; milestone: { type: string; isCompleted: boolean; detail: unknown } }) {
+        const { stage, milestone } = params;
+        const timestamp = new Date().toISOString();
+        workflowService.setStageMilestone({
+          stage,
+          milestone,
+        })
+        
+        return JSON.stringify({
+          success: true,
+          stage,
+          milestone: {
+            type: milestone.type,
+            timestamp,
+            isCompleted: milestone.isCompleted,
+            detail: milestone.detail,
+          },
+        }, null, 2);
+      },
+    }),
+    hd_force_next_step: tool({
+      description: "Force advance to the next step in the workflow, bypassing gate checks. Use this when gate approval cannot be achieved after multiple attempts.",
+      args: {},
+      async execute() {
+        const result = workflowService.hdForceNextStep();
+        return JSON.stringify(result, null, 2);
       },
     }),
   }

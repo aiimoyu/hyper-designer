@@ -103,13 +103,14 @@ describe("HyperDesigner Plugin", () => {
     const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
     expect(pluginInstance.tool).toBeDefined()
+    expect(pluginInstance.tool).toBeDefined()
     expect(pluginInstance.tool).toHaveProperty("hd_workflow_state")
     expect(pluginInstance.tool).toHaveProperty("hd_handover")
-    expect(pluginInstance.tool).toHaveProperty("hd_submit_evaluation")
+    expect(pluginInstance.tool).toHaveProperty("hd_record_milestone")
 
     expect(typeof pluginInstance.tool!.hd_workflow_state.execute).toBe("function")
     expect(typeof pluginInstance.tool!.hd_handover.execute).toBe("function")
-    expect(typeof pluginInstance.tool!.hd_submit_evaluation.execute).toBe("function")
+    expect(typeof pluginInstance.tool!.hd_record_milestone.execute).toBe("function")
   })
 
   it("should handle config agent mapping", async () => {
@@ -134,55 +135,185 @@ describe("HyperDesigner Plugin", () => {
     }).not.toThrow()
   })
 
-  it("hd_submit_evaluation should store score and comment in workflow state", async () => {
+  it("should NOT have hd_submit_evaluation tool", async () => {
     const mockCtx = {
-      client: {
-        session: {
-          create: vi.fn(),
-          prompt: vi.fn(),
-          delete: vi.fn(),
-        },
-      },
+      client: { session: { prompt: async () => {} } },
       directory: process.cwd(),
     } as unknown as PluginInput
 
     const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
     const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
-    const output = await pluginInstance.tool!.hd_submit_evaluation.execute(
-      { score: 85, comment: "评审通过" },
-      createMockToolContext(),
-    )
-    const result = JSON.parse(output) as { success: boolean; score: number; comment: string }
-
-    expect(result.success).toBe(true)
-    expect(result.score).toBe(85)
-    expect(result.comment).toBe("评审通过")
+    expect(pluginInstance.tool).not.toHaveProperty("hd_submit_evaluation")
   })
 
-  it("hd_submit_evaluation should work with score only (no comment)", async () => {
-    const mockCtx = {
-      client: {
-        session: {
-          create: vi.fn(),
-          prompt: vi.fn(),
-          delete: vi.fn(),
+  describe("hd_record_milestone", () => {
+    it("should exist as a tool", async () => {
+      const mockCtx = {
+        client: { session: { prompt: async () => {} } },
+        directory: process.cwd(),
+      } as unknown as PluginInput
+
+      const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
+      const pluginInstance = await HyperDesignerPlugin(mockCtx)
+
+      expect(pluginInstance.tool).toHaveProperty("hd_record_milestone")
+      expect(typeof pluginInstance.tool!.hd_record_milestone.execute).toBe("function")
+    })
+
+    it("should record gate milestone with score and comment", async () => {
+      const mockCtx = {
+        client: {
+          session: {
+            create: vi.fn(),
+            prompt: vi.fn(),
+            delete: vi.fn(),
+          },
         },
-      },
-      directory: process.cwd(),
-    } as unknown as PluginInput
+        directory: process.cwd(),
+      } as unknown as PluginInput
 
-    const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
-    const pluginInstance = await HyperDesignerPlugin(mockCtx)
+      const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
+      const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
-    const output = await pluginInstance.tool!.hd_submit_evaluation.execute(
-      { score: 60 },
-      createMockToolContext(),
-    )
-    const result = JSON.parse(output) as { success: boolean; score: number; comment: null }
+      const output = await pluginInstance.tool!.hd_record_milestone.execute(
+        {
+          stage: "IRAnalysis",
+          milestone: {
+            type: "gate",
+            isCompleted: true,
+            detail: { score: 85, comment: "评审通过" }
+          }
+        },
+        createMockToolContext(),
+      )
+      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { type: string; timestamp: string; isCompleted: boolean; detail: { score: number; comment: string } } }
 
-    expect(result.success).toBe(true)
-    expect(result.score).toBe(60)
-    expect(result.comment).toBeNull()
+      expect(result.success).toBe(true)
+      expect(result.stage).toBe("IRAnalysis")
+      expect(result.milestone.type).toBe("gate")
+      expect(result.milestone.isCompleted).toBe(true)
+      expect(result.milestone.detail.score).toBe(85)
+      expect(result.milestone.detail.comment).toBe("评审通过")
+      expect(result.milestone.timestamp).toBeDefined()
+    })
+
+    it('should record non-gate milestone completion status', async () => {
+      const mockCtx = {
+        client: {
+          session: {
+            create: vi.fn(),
+            prompt: vi.fn(),
+            delete: vi.fn(),
+          },
+        },
+        directory: process.cwd(),
+      } as unknown as PluginInput
+
+      const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
+      const pluginInstance = await HyperDesignerPlugin(mockCtx)
+
+      const output = await pluginInstance.tool!.hd_record_milestone.execute(
+        {
+          stage: 'IRAnalysis',
+          milestone: {
+            type: 'doc_review',
+            isCompleted: false,
+            detail: { reason: 'Need revision' },
+          },
+        },
+        createMockToolContext(),
+      )
+
+      const result = JSON.parse(output) as {
+        success: boolean
+        stage: string
+        milestone: {
+          type: string
+          timestamp: string
+          isCompleted: boolean
+          detail: { reason: string }
+        }
+      }
+
+      expect(result.success).toBe(true)
+      expect(result.stage).toBe('IRAnalysis')
+      expect(result.milestone.type).toBe('doc_review')
+      expect(result.milestone.isCompleted).toBe(false)
+      expect(result.milestone.detail.reason).toBe('Need revision')
+    })
+
+    it("should record gate milestone with score only (no comment)", async () => {
+      const mockCtx = {
+        client: {
+          session: {
+            create: vi.fn(),
+            prompt: vi.fn(),
+            delete: vi.fn(),
+          },
+        },
+        directory: process.cwd(),
+      } as unknown as PluginInput
+
+      const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
+      const pluginInstance = await HyperDesignerPlugin(mockCtx)
+
+      const output = await pluginInstance.tool!.hd_record_milestone.execute(
+        {
+          stage: "IRAnalysis",
+          milestone: {
+            type: "gate",
+            isCompleted: false,
+            detail: { score: 60 }
+          }
+        },
+        createMockToolContext(),
+      )
+      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { type: string; timestamp: string; isCompleted: boolean; detail: { score: number; comment?: string | null } } }
+
+      expect(result.success).toBe(true)
+      expect(result.stage).toBe("IRAnalysis")
+      expect(result.milestone.type).toBe("gate")
+      expect(result.milestone.isCompleted).toBe(false)
+      expect(result.milestone.detail.score).toBe(60)
+      expect(result.milestone.detail.comment).toBeUndefined()
+      expect(result.milestone.timestamp).toBeDefined()
+    })
+
+    it("should record force_advance milestone", async () => {
+      const mockCtx = {
+        client: {
+          session: {
+            create: vi.fn(),
+            prompt: vi.fn(),
+            delete: vi.fn(),
+          },
+        },
+        directory: process.cwd(),
+      } as unknown as PluginInput
+
+      const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
+      const pluginInstance = await HyperDesignerPlugin(mockCtx)
+
+      const output = await pluginInstance.tool!.hd_record_milestone.execute(
+        {
+          stage: "IRAnalysis",
+          milestone: {
+            type: "force_advance",
+            isCompleted: true,
+            detail: { reason: "Three failed attempts" }
+          }
+        },
+        createMockToolContext(),
+      )
+      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { type: string; timestamp: string; isCompleted: boolean; detail: { reason: string } } }
+
+      expect(result.success).toBe(true)
+      expect(result.stage).toBe("IRAnalysis")
+      expect(result.milestone.type).toBe("force_advance")
+      expect(result.milestone.isCompleted).toBe(true)
+      expect(result.milestone.detail.reason).toBe("Three failed attempts")
+      expect(result.milestone.timestamp).toBeDefined()
+    })
   })
 })

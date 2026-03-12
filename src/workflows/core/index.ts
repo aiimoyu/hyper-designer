@@ -25,7 +25,7 @@ export { filePrompt, stringPrompt } from './utils'
 export { getWorkflowDefinition, getAvailableWorkflows } from './registry'
 
 // State module
-export type { WorkflowStage, WorkflowState, GateResult } from './state/types'
+export type { WorkflowStage, WorkflowState } from './state/types'
 export {
   getStageOrder,
   initializeWorkflowState,
@@ -35,6 +35,7 @@ export {
   setWorkflowHandover,
   setWorkflowGatePassed,
   setWorkflowGateResult,
+  setWorkflowStageMilestone,
   executeWorkflowHandover,
 } from './state'
 

@@ -7,22 +7,26 @@
 
 import { EventEmitter } from "events";
 import type { WorkflowDefinition, PlatformAdapter } from "../types";
-import type { WorkflowState, GateResult } from "../state/types";
+import type { WorkflowState, GateMilestoneDetail } from "../state/types";
 import {
   getWorkflowState,
   setWorkflowStage,
   setWorkflowCurrent,
-  setWorkflowGateResult,
+  setWorkflowStageMilestone,
   setWorkflowHandover,
   executeWorkflowHandover,
+  forceWorkflowNextStep,
   writeWorkflowStateFile,
 } from "../state";
 import { getWorkflowDefinition, getAvailableWorkflows } from "../registry";
 import { getHandoverAgent, getHandoverPrompt } from "../runtime/handover";
 import { HyperDesignerLogger } from "../../../utils/logger";
-
-/** 质量门通过分数阈值 */
-const GATE_PASS_THRESHOLD = 75;
+import {
+  GATE_MILESTONE_KEY,
+  GATE_PASS_THRESHOLD,
+  isGateMilestoneDetail,
+  listIncompleteMilestones,
+} from '../stageMilestone'
 
 /**
  * WorkflowService 事件类型映射
@@ -43,6 +47,13 @@ export interface HandoverResult {
   handover_to?: string;
   instruction?: string;
   error?: string;
+  state?: WorkflowState;
+}
+
+export interface ForceNextStepResult {
+  success: boolean;
+  error?: string;
+  reason?: string;
   state?: WorkflowState;
 }
 
@@ -107,6 +118,33 @@ export class WorkflowService extends EventEmitter {
   private definition: WorkflowDefinition | null = null;
   /** 内存锁：防止 session.idle 在 afterStage 钩子执行期间触发重入交接 */
   private _handoverInProgress = false;
+
+  private incrementCurrentFailureCount(): WorkflowState | null {
+    const state = getWorkflowState();
+    if (!state?.current) {
+      return state;
+    }
+
+    state.current.failureCount = (state.current.failureCount ?? 0) + 1;
+    writeWorkflowStateFile(state);
+    return state;
+  }
+
+  private getGateDetail(stageKey: string): GateMilestoneDetail | null {
+    const state = getWorkflowState();
+    const detail = state?.workflow[stageKey]?.stageMilestones?.[GATE_MILESTONE_KEY]?.detail;
+    if (!isGateMilestoneDetail(detail)) {
+      return null;
+    }
+    return {
+      score: detail.score,
+      ...(detail.comment === undefined ? {} : { comment: detail.comment ?? null }),
+    };
+  }
+
+  private getGateScore(stageKey: string): number | null {
+    return this.getGateDetail(stageKey)?.score ?? null;
+  }
 
   /**
    * 创建工作流服务实例
@@ -276,12 +314,24 @@ export class WorkflowService extends EventEmitter {
     );
 
     // 创建初始状态
-    const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null; selected?: boolean }> = {};
+    const workflow: Record<string, { isCompleted: boolean; selected?: boolean; previousStage?: string | null; nextStage?: string | null }> = {};
     for (const stageKey of definition.stageOrder) {
       workflow[stageKey] = {
         isCompleted: false,
         selected: stageSelectionMap.get(stageKey) ?? false,
       };
+    }
+
+    // Compute neighbor links for selected stages
+    for (let i = 0; i < selectedStageKeys.length; i++) {
+      const currentStage = selectedStageKeys[i]!;
+      const previousStage = i > 0 ? selectedStageKeys[i - 1]! : null;
+      const nextStage = i < selectedStageKeys.length - 1 ? selectedStageKeys[i + 1]! : null;
+      
+      if (workflow[currentStage]) {
+        workflow[currentStage].previousStage = previousStage;
+        workflow[currentStage].nextStage = nextStage;
+      }
     }
 
     const newState: WorkflowState = {
@@ -398,8 +448,11 @@ export class WorkflowService extends EventEmitter {
    * @returns 门禁是否通过
    */
   isGateApproved(): boolean {
-    const state = getWorkflowState();
-    const score = state?.current?.gateResult?.score;
+    const currentStage = this.getCurrentStage();
+    if (!currentStage) {
+      return false;
+    }
+    const score = this.getGateScore(currentStage);
     return typeof score === 'number' && score > GATE_PASS_THRESHOLD;
   }
 
@@ -419,14 +472,34 @@ export class WorkflowService extends EventEmitter {
    */
   setGateResult(params: { score: number | null; comment?: string | null; stage?: string | null }): WorkflowState {
     const currentStage = this.getCurrentStage();
-    const gateResult: GateResult = {
+    const targetStage = params.stage ?? currentStage;
+    const detail: GateMilestoneDetail = {
       score: params.score,
       comment: params.comment ?? null,
-      stage: params.stage ?? currentStage,
     };
-    const state = setWorkflowGateResult(gateResult);
-    this.emit('gateChanged', { score: gateResult.score, comment: gateResult.comment, stage: gateResult.stage });
+    if (!targetStage) {
+      return this.getState() ?? {
+        initialized: false,
+        typeId: null,
+        workflow: {},
+        current: null,
+      }
+    }
+    const isCompleted = typeof detail.score === 'number' && detail.score > GATE_PASS_THRESHOLD
+    const state = this.setStageMilestone({
+      stage: targetStage,
+      milestone: {
+        type: GATE_MILESTONE_KEY,
+        isCompleted,
+        detail,
+      },
+    })
+    this.emit('gateChanged', { score: detail.score, comment: detail.comment, stage: targetStage });
     return state;
+  }
+
+  setStageMilestone(params: { stage: string; milestone: { type: string; isCompleted: boolean; detail: unknown } }): WorkflowState {
+    return setWorkflowStageMilestone(params)
   }
 
   /**
@@ -475,17 +548,31 @@ export class WorkflowService extends EventEmitter {
       };
     }
 
-    // 仅当当前阶段配置了质量门禁时才验证分数
     const currentStage = this.getCurrentStage();
-    const stageDefinition = currentStage ? this.definition.stages[currentStage] : undefined;
-    const hasGate = Boolean(stageDefinition?.gate);
-
-    if (hasGate && !this.isGateApproved()) {
-      const state = getWorkflowState();
-      const score = state?.current?.gateResult?.score;
+    if (!currentStage) {
       return {
         success: false,
-        error: `质量门未通过。当前得分：${score !== null && score !== undefined ? score : '未评分'}（需要 > ${GATE_PASS_THRESHOLD}）。请先请求 HCritic 完成评审并调用 hd_submit_evaluation 记录得分，然后再进行工作流交接。`,
+        error: '当前阶段未设置，无法执行交接。',
+      }
+    }
+
+    const stageDefinition = this.definition.stages[currentStage]
+    const stageMilestones = this.getState()?.workflow[currentStage]?.stageMilestones
+    const gateMilestone = stageMilestones?.[GATE_MILESTONE_KEY]
+    if (stageDefinition?.gate && !gateMilestone?.isCompleted) {
+      this.incrementCurrentFailureCount();
+      return {
+        success: false,
+        error: '质量门里程碑未完成，请先完成 gate 里程碑后再进行交接。',
+      };
+    }
+
+    const incompleteMilestones = listIncompleteMilestones(stageMilestones)
+    if (incompleteMilestones.length > 0) {
+      this.incrementCurrentFailureCount();
+      return {
+        success: false,
+        error: `阶段里程碑未全部完成：${incompleteMilestones.join(', ')}。请先完成所有里程碑后再进行交接。`,
       };
     }
 
@@ -506,6 +593,30 @@ export class WorkflowService extends EventEmitter {
       instruction:
         "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
       state,
+    };
+  }
+
+  hdForceNextStep(): ForceNextStepResult {
+    if (!this.definition) {
+      return {
+        success: false,
+        error: "Workflow not initialized. Use hd_workflow_select to choose a workflow first.",
+        reason: "workflow not initialized",
+      };
+    }
+
+    const result = forceWorkflowNextStep(this.definition);
+    if ('error' in result) {
+      return {
+        success: false,
+        error: result.error,
+        reason: result.reason,
+      };
+    }
+
+    return {
+      success: true,
+      state: result,
     };
   }
 

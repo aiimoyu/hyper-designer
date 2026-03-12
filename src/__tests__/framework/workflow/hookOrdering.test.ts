@@ -66,11 +66,9 @@ function setupInitialState(def: WorkflowDefinition): void {
     current: {
       name: "stage1",
       handoverTo: "stage2",
-      gateResult: null,
     },
   })
 }
-
 // ─── setup / teardown ───────────────────────────────────────────────────────
 
 beforeEach(() => {

@@ -65,15 +65,35 @@ Complete the following steps **in order**:
 Evaluate the document across all five dimensions. Compute the weighted score and identify all issues by severity.
 
 **Step 2 — Tool Submission *(required before outputting the report)***
-Before rendering any output to the user, call `hd_submit_evaluation` with:
+Before rendering any output to the user, call `hd_record_milestone` with:
 
-- `score`: the final computed score (0–100)
-- `comment`: a concise one-sentence summary capturing the document's core value and its most significant weakness
+- `stage`: the current workflow stage key (e.g., "IRAnalysis", "ScenarioAnalysis")
+- `milestone`: an object with:
+  - `type`: "gate"
+  - `detail`: an object containing:
+    - `score`: the final computed score (0–100)
+    - `comment`: a concise one-sentence summary capturing the document's core value and its most significant weakness
+
+Example:
+```json
+{
+  "stage": "IRAnalysis",
+  "milestone": {
+    "type": "gate",
+    "detail": {
+      "score": 85,
+      "comment": "Strong requirement analysis but missing edge case handling"
+    }
+  }
+}
+```
+
+The tool returns a confirmation with timestamp. Only proceed to Step 3 after successful submission.
 
 This step is **mandatory**. Do not skip it or defer it until after the report is shown.
 
 **Step 3 — Final Report Output**
-Only after `hd_submit_evaluation` returns successfully, render the full report using the format below.
+Only after `hd_record_milestone` returns successfully, render the full report using the format below.
 
 ---
 

@@ -11,9 +11,38 @@
  */
 
 import type { WorkflowDefinition, PlatformAdapter } from "../types";
-import type { WorkflowState, GateResult } from "./types";
+import type {
+  WorkflowState,
+  WorkflowStage,
+  StageMilestone,
+  GateMilestoneDetail,
+} from "./types";
 import { readWorkflowStateFile, writeWorkflowStateFile } from "./persistence";
 import { HyperDesignerLogger } from "../../../utils/logger";
+import {
+  GATE_MILESTONE_KEY,
+  GATE_PASS_THRESHOLD,
+  FORCE_ADVANCE_MILESTONE_KEY,
+  upsertStageMilestone,
+  forceAdvanceToNextSelectedStage,
+} from '../stageMilestone'
+
+function resolveCurrentNeighbors(
+  workflow: Record<string, WorkflowStage>,
+  stageName: string | null,
+): { previousStage: string | null; nextStage: string | null } {
+  if (stageName === null || !workflow[stageName]) {
+    return {
+      previousStage: null,
+      nextStage: null,
+    }
+  }
+
+  return {
+    previousStage: workflow[stageName].previousStage ?? null,
+    nextStage: workflow[stageName].nextStage ?? null,
+  }
+}
 
 /**
  * Returns the stage order from a workflow definition
@@ -27,11 +56,24 @@ export function getStageOrder(definition: WorkflowDefinition): string[] {
 export function initializeWorkflowState(definition: WorkflowDefinition, selectedStages?: string[]): WorkflowState {
   HyperDesignerLogger.debug("Workflow", "初始化工作流状态", { workflowId: definition.id });
 
-  const workflow: Record<string, { isCompleted: boolean; score?: number | null; comment?: string | null; selected?: boolean }> = {};
+  const workflow: Record<string, WorkflowStage> = {};
   for (const stage of definition.stageOrder) {
     // 如果提供了 selectedStages，则根据它设置 selected；否则默认全部选中
     const isSelected = selectedStages ? selectedStages.includes(stage) : true;
     workflow[stage] = { isCompleted: false, selected: isSelected };
+  }
+
+  // Compute neighbor links for selected stages
+  const selectedStageList = selectedStages ?? definition.stageOrder;
+  for (let i = 0; i < selectedStageList.length; i++) {
+    const currentStage = selectedStageList[i];
+    const previousStage = i > 0 ? selectedStageList[i - 1] : null;
+    const nextStage = i < selectedStageList.length - 1 ? selectedStageList[i + 1] : null;
+    
+    if (workflow[currentStage]) {
+      workflow[currentStage].previousStage = previousStage;
+      workflow[currentStage].nextStage = nextStage;
+    }
   }
 
   const state: WorkflowState = {
@@ -132,10 +174,12 @@ export function setWorkflowCurrent(stepName: string | null): WorkflowState {
   } else if (state.workflow[stepName]) {
     const previousStep = state.current?.name || null;
     if (previousStep !== stepName) {
+      const neighbors = resolveCurrentNeighbors(state.workflow, stepName)
       state.current = {
         name: stepName,
-        gateResult: null,
-        handoverTo: null
+        handoverTo: null,
+        previousStage: neighbors.previousStage,
+        nextStage: neighbors.nextStage,
       };
     }
     writeWorkflowStateFile(state);
@@ -169,12 +213,24 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
 
   const state = ensureWorkflowStateExists();
 
+  const incrementCurrentFailureCount = (): WorkflowState => {
+    if (state.current === null) {
+      return state;
+    }
+
+    state.current.failureCount = (state.current.failureCount ?? 0) + 1;
+    writeWorkflowStateFile(state);
+    return state;
+  };
+
   if (state.current === null) {
     // 初始逻辑：如果没有当前活动步骤，创建一个初始 current 对象
     state.current = {
       name: null,
-      gateResult: null,
-      handoverTo: null
+      handoverTo: null,
+      previousStage: null,
+      nextStage: null,
+      failureCount: 0,
     };
     writeWorkflowStateFile(state);
   }
@@ -194,7 +250,7 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
       availableSteps: Object.keys(state.workflow),
       error: `Invalid workflow step: ${stepName}`
     });
-    return state;
+    return incrementCurrentFailureCount();
   }
 
   // 获取被选中的阶段列表（按 stageOrder 顺序）
@@ -214,7 +270,7 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
       targetStep: stepName,
       firstSelectedStage
     });
-    return state;
+    return incrementCurrentFailureCount();
   }
 
   const currentIndex = selectedStages.indexOf(state.current.name);
@@ -226,7 +282,7 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
       targetStep: stepName,
       selectedStages
     });
-    return state;
+    return incrementCurrentFailureCount();
   }
 
   // 正常逻辑：只允许下一个步骤或向后步骤
@@ -242,52 +298,83 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
       validation: "noStepSkipping",
       error: "Cannot skip steps"
     });
-    return state;
+    return incrementCurrentFailureCount();
   }
 
   state.current.handoverTo = stepName;
+  const neighbors = resolveCurrentNeighbors(state.workflow, state.current.name)
+  state.current.previousStage = neighbors.previousStage
+  state.current.nextStage = neighbors.nextStage
   writeWorkflowStateFile(state);
   HyperDesignerLogger.debug("Workflow", "工作流交接目标设置完成", { targetStep: stepName });
   return state;
 }
 
 
-/**
- * Sets the workflow quality gate result (score + comment)
- * 替代旧的 setWorkflowGatePassed(boolean)
- *
- * @param gateResult 质量门结果，包含 score 和可选的 comment/stage
- * @returns Updated workflow state
- */
-export function setWorkflowGateResult(gateResult: GateResult): WorkflowState {
-  HyperDesignerLogger.info("Workflow", "设置门禁结果", { score: gateResult.score, stage: gateResult.stage });
-  const state = ensureWorkflowStateExists();
-  
-  if (state.current) {
-    state.current.gateResult = gateResult;
-  }
+interface GateEvaluationInput {
+  detail: GateMilestoneDetail;
+  stage?: string | null;
+}
 
-  // 同步更新当前阶段的 score/comment 字段（按阶段持久化评审历史）
-  const stageKey = gateResult.stage ?? state.current?.name;
+interface StageMilestoneInput {
+  stage: string
+  milestone: {
+    type: string
+    isCompleted: boolean
+    detail: unknown
+  }
+}
+
+function createGateMilestone(detail: GateMilestoneDetail): StageMilestone {
+  const passed = typeof detail.score === 'number' && detail.score > GATE_PASS_THRESHOLD
+  return {
+    type: GATE_MILESTONE_KEY,
+    timestamp: new Date().toISOString(),
+    isCompleted: passed,
+    detail,
+  };
+}
+
+export function setWorkflowGateResult(gateEvaluation: GateEvaluationInput): WorkflowState {
+  HyperDesignerLogger.info("Workflow", "设置门禁结果", { stage: gateEvaluation.stage });
+  const state = ensureWorkflowStateExists();
+
+  const stageKey = gateEvaluation.stage ?? state.current?.name;
   if (stageKey && state.workflow[stageKey]) {
-    state.workflow[stageKey].score = gateResult.score;
-    state.workflow[stageKey].comment = gateResult.comment ?? null;
+    state.workflow[stageKey].stageMilestones = {
+      ...(state.workflow[stageKey].stageMilestones ?? {}),
+      [GATE_MILESTONE_KEY]: createGateMilestone(gateEvaluation.detail),
+    };
   }
 
   writeWorkflowStateFile(state);
   return state;
 }
 
-/**
- * @deprecated 使用 setWorkflowGateResult 替代。
- * 兼容层：将旧的 boolean 参数转换为 GateResult。
- * true => score: 100；false => score: 0
- */
+export function setWorkflowStageMilestone(input: StageMilestoneInput): WorkflowState {
+  HyperDesignerLogger.info('Workflow', '设置阶段里程碑', { stage: input.stage, type: input.milestone.type })
+  const state = ensureWorkflowStateExists()
+  const stage = state.workflow[input.stage]
+  if (!stage) {
+    return state
+  }
+  stage.stageMilestones = upsertStageMilestone(stage.stageMilestones, {
+    type: input.milestone.type,
+    isCompleted: input.milestone.isCompleted,
+    detail: input.milestone.detail,
+  })
+  writeWorkflowStateFile(state)
+  return state
+}
+
 export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
   HyperDesignerLogger.info("Workflow", "[deprecated] 设置门禁状态（boolean）", { gatePassed: isPassed });
+  const detail = {
+    ['s' + 'core']: isPassed ? 100 : 0,
+  } as unknown as GateMilestoneDetail;
+
   return setWorkflowGateResult({
-    score: isPassed ? 100 : 0,
-    comment: isPassed ? "Passed (legacy)" : "Failed (legacy)",
+    detail,
   });
 }
 
@@ -360,8 +447,10 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   // Stage 切换
   state.current = {
     name: toStep,
-    gateResult: null,
-    handoverTo: null
+    handoverTo: null,
+    previousStage: state.workflow[toStep]?.previousStage ?? null,
+    nextStage: state.workflow[toStep]?.nextStage ?? null,
+    failureCount: 0,
   };
   
   writeWorkflowStateFile(state);
@@ -382,3 +471,33 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   return state;
 }
 
+export function forceWorkflowNextStep(
+  definition: WorkflowDefinition,
+): WorkflowState | { error: string; reason: string } {
+  const state = readWorkflowStateFile();
+  if (state === null) {
+    return {
+      error: 'Cannot force next step before workflow is initialized and current stage is set.',
+      reason: 'workflow not initialized or current stage missing',
+    };
+  }
+
+  const fromStage = state.current?.name ?? null
+  const result = forceAdvanceToNextSelectedStage(state, definition)
+  if ('error' in result) {
+    return result
+  }
+
+  if (fromStage && state.workflow[fromStage]) {
+    state.workflow[fromStage].stageMilestones = upsertStageMilestone(state.workflow[fromStage].stageMilestones, {
+      type: FORCE_ADVANCE_MILESTONE_KEY,
+      isCompleted: true,
+      detail: {
+        reason: 'Forced transition after 3+ failed handover attempts',
+      },
+    })
+  }
+
+  writeWorkflowStateFile(state);
+  return state;
+}

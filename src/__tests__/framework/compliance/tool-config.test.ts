@@ -30,43 +30,47 @@ const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => 
 
 describe("tool config compliance", () => {
   describe("HArchitect", () => {
-    it("defaultTools has hd_workflow_state: true and hd_handover: true", () => {
+    it("defaultTools has hd_workflow_state: true, hd_handover: true, and hd_force_next_step: true", () => {
       const localAgent = createHArchitectAgent()
       const agent = toOpencodeAgentConfig(localAgent)
       expect(agent.tools).toBeDefined()
       expect(agent.tools!.hd_workflow_state).toBe(true)
       expect(agent.tools!.hd_handover).toBe(true)
+      expect(agent.tools!.hd_force_next_step).toBe(true)
     })
   })
 
   describe("HEngineer", () => {
-    it("defaultTools has hd_workflow_state: true and hd_handover: true", () => {
+    it("defaultTools has hd_workflow_state: true, hd_handover: true, and hd_force_next_step: true", () => {
       const localAgent = createHEngineerAgent()
       const agent = toOpencodeAgentConfig(localAgent)
       expect(agent.tools).toBeDefined()
       expect(agent.tools!.hd_workflow_state).toBe(true)
       expect(agent.tools!.hd_handover).toBe(true)
+      expect(agent.tools!.hd_force_next_step).toBe(true)
     })
   })
 
   describe("HCritic", () => {
-    it("defaultTools has hd_submit_evaluation: true", () => {
+    it("defaultTools has hd_record_milestone: true", () => {
       const localAgent = createHCriticAgent()
       const agent = toOpencodeAgentConfig(localAgent)
       expect(agent.tools).toBeDefined()
-      expect(agent.tools!.hd_submit_evaluation).toBe(true)
+      expect(agent.tools!.hd_record_milestone).toBe(true)
     })
 
-    it("defaultTools has hd_submit_evaluation: false for HArchitect and HEngineer", () => {
-      const localArchitect = createHArchitectAgent()
-      const localEngineer = createHEngineerAgent()
-      const architect = toOpencodeAgentConfig(localArchitect)
-      const engineer = toOpencodeAgentConfig(localEngineer)
-      expect(architect.tools).toBeDefined()
+    it("defaultTools does NOT have hd_force_next_step (undefined)", () => {
+      const localCritic = createHCriticAgent()
+      const critic = toOpencodeAgentConfig(localCritic)
+      expect(critic.tools).toBeDefined()
+      expect(critic.tools!.hd_force_next_step).toBeUndefined()
+    })
 
-      expect(engineer.tools).toBeDefined()
-      expect(architect.tools!.hd_submit_evaluation).toBe(false)
-      expect(engineer.tools!.hd_submit_evaluation).toBe(false)
+    it("defaultTools does NOT have hd_submit_evaluation (undefined)", () => {
+      const localCritic = createHCriticAgent()
+      const critic = toOpencodeAgentConfig(localCritic)
+      expect(critic.tools).toBeDefined()
+      expect(critic.tools!.hd_submit_evaluation).toBeUndefined()
     })
   })
 })

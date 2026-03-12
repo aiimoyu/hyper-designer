@@ -65,6 +65,6 @@ In addition to the standard evaluation framework (Completeness / Accuracy / Clar
 ## 📋 Output Requirements
 
 - Output the review report strictly following the standard report format
-- Call the `hd_submit_evaluation` tool to submit scores **before** generating the report
+#WJ|- Call the `hd_record_milestone` tool to record the quality gate milestone **before** generating the report
 - Any issue found in the focused dimensions must be **explicitly labeled with the violated dimension name** in the Recommendations section of the final report
 ```

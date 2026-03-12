@@ -38,20 +38,6 @@ export {
  */
 export async function createWorkflowHooks(ctx: PluginInput) {
   const config = loadHDConfig()
-  const workflow = workflowService.getDefinition()
-
-  if (!workflow) {
-    HyperDesignerLogger.error("OpenCode", `加载工作流失败`, new Error(`Failed to load workflow: ${config.workflow || "classic"}`), {
-      workflowId: config.workflow || "classic",
-      action: "loadWorkflowDefinition",
-      recovery: "returnEmptyHooks"
-    })
-
-    return {
-      event: async () => { },
-      "experimental.chat.system.transform": async () => { },
-    }
-  }
 
   // 注册 WorkflowService 事件监听器（用于可观测性）
   workflowService.on('handoverExecuted', ({ fromStep, toStep }: { fromStep: string; toStep: string }) => {
@@ -61,6 +47,14 @@ export async function createWorkflowHooks(ctx: PluginInput) {
   workflowService.on('stageCompleted', ({ stageName, isCompleted }: { stageName: string; isCompleted: boolean }) => {
     HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
   })
+
+  if (!workflowService.getDefinition()) {
+    HyperDesignerLogger.warn('OpenCode', '工作流未初始化，进入 fallback 模式，等待 hd_workflow_select。', {
+      configuredWorkflow: config.workflow || 'classic',
+      action: 'createWorkflowHooks',
+      mode: 'fallback',
+    })
+  }
 
   return {
     /** 事件处理器：监听 session.idle 触发工作流交接 */

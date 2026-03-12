@@ -161,6 +161,139 @@ describe("WorkflowService", () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain("not initialized");
     });
+
+    it('increments failureCount when handover is rejected by gate', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 60, comment: 'need work' });
+
+      const firstAttempt = service.hdScheduleHandover('scenarioAnalysis');
+      expect(firstAttempt.success).toBe(false);
+      expect(service.getState()?.current?.failureCount).toBe(1);
+
+      const secondAttempt = service.hdScheduleHandover('scenarioAnalysis');
+      expect(secondAttempt.success).toBe(false);
+      expect(service.getState()?.current?.failureCount).toBe(2);
+    });
+
+    it('does not increment failureCount when handover scheduling succeeds', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 70, comment: 'first reject' });
+
+      const rejected = service.hdScheduleHandover('scenarioAnalysis');
+      expect(rejected.success).toBe(false);
+      expect(service.getState()?.current?.failureCount).toBe(1);
+
+      service.setGateResult({ score: 90, comment: 'approved' });
+      const accepted = service.hdScheduleHandover('scenarioAnalysis');
+
+      expect(accepted.success).toBe(true);
+      expect(accepted.state?.current?.handoverTo).toBe('scenarioAnalysis');
+      expect(accepted.state?.current?.failureCount).toBe(1);
+      expect(service.getState()?.current?.failureCount).toBe(1);
+    });
+
+    it('rejects handover when any stage milestone is incomplete', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 90, comment: 'gate approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'doc_review',
+          isCompleted: false,
+          detail: { reason: 'Document needs revision' },
+        },
+      });
+
+      const result = service.hdScheduleHandover('scenarioAnalysis');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('里程碑');
+      expect(service.getState()?.current?.failureCount).toBe(1);
+    });
+
+    it('allows handover only when all milestones are completed', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 90, comment: 'gate approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'doc_review',
+          isCompleted: true,
+          detail: { reviewer: 'HCritic' },
+        },
+      });
+
+      const result = service.hdScheduleHandover('scenarioAnalysis');
+
+      expect(result.success).toBe(true);
+      expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
+    });
+  });
+
+  describe('hdForceNextStep', () => {
+    it('denies force-next-step when failureCount is below threshold', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+
+      const result = service.hdForceNextStep();
+
+      expect(result.success).toBe(false);
+      expect(result.reason).toContain('failureCount');
+    });
+
+    it('denies force-next-step when handover target is not the next selected stage', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+      service.setHandover('IRAnalysis');
+
+      const result = service.hdForceNextStep();
+
+      expect(result.success).toBe(false);
+      expect(result.reason).toContain('next selected stage');
+    });
+
+    it('forces transition when threshold met and target is the next selected stage', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+
+      const result = service.hdForceNextStep();
+
+      expect(result.success).toBe(true);
+      expect(result.state?.current?.name).toBe('scenarioAnalysis');
+      expect(result.state?.current?.failureCount).toBe(0);
+      expect(result.state?.workflow.IRAnalysis?.stageMilestones?.force_advance).toBeDefined();
+    });
+
+    it('records auditable force_advance milestone and does not mark gate as passed', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+      service.setHandover('invalid-stage');
+
+      const result = service.hdForceNextStep();
+
+      const milestone = result.state?.workflow.IRAnalysis?.stageMilestones?.force_advance;
+      expect(result.success).toBe(true);
+      expect(milestone?.type).toBe('force_advance');
+      expect(milestone?.isCompleted).toBe(true);
+      expect(milestone?.detail).toMatchObject({
+        reason: 'Forced transition after 3+ failed handover attempts',
+      });
+      expect(result.state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeUndefined();
+    });
   });
 
   describe("setStage", () => {
@@ -172,12 +305,15 @@ describe("WorkflowService", () => {
   });
 
   describe("setGateResult", () => {
-    it("sets gate result", () => {
+    it("records gate milestone on the current stage", () => {
       initWithWorkflow(service);
       service.setCurrent("IRAnalysis");
       service.setGateResult({ score: 85, comment: "Good work" });
       const state = service.getState();
-      expect(state?.current?.gateResult?.score).toBe(85);
+      const gateMilestone = state?.workflow.IRAnalysis?.stageMilestones?.gate;
+      expect(gateMilestone?.type).toBe('gate');
+      expect(gateMilestone?.isCompleted).toBe(true);
+      expect(gateMilestone?.detail).toMatchObject({ score: 85, comment: 'Good work' });
     });
   });
 
