@@ -5,6 +5,7 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const CLASSIC_HANDOVER_MILESTONES = ['gate']
 
 /** 阶段钩子定义 */
 const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })
@@ -76,7 +77,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {},
       outputs: {
@@ -95,7 +96,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '需求信息': { required: true },
@@ -116,7 +117,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '功能场景': { required: true },
@@ -136,7 +137,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '用例': { required: true },
@@ -156,7 +157,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '功能列表': { required: true },
@@ -176,7 +177,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         'SR-AR 分解': { required: true },
@@ -197,7 +198,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '系统功能设计': { required: true },
@@ -217,7 +218,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
-      gate: true,
+      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: false,
       inputs: {
         '模块功能设计': { required: true },

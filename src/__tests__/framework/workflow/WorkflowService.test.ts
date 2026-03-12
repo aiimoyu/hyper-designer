@@ -1,16 +1,40 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { WorkflowService } from '../../../workflows/core/service/WorkflowService'
+import { initializeWorkflowState, writeWorkflowStateFile } from '../../../workflows/core/state'
 import { rmSync, existsSync } from "fs";
 import { join } from "path";
+import type { WorkflowDefinition } from '../../../workflows/core/types'
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json");
 
-// Helper to initialize service with workflow
-// Helper to initialize service with workflow
+const handoverMilestoneWorkflow: WorkflowDefinition = {
+  id: 'handover-milestone-test',
+  name: 'Handover Milestone Test Workflow',
+  description: 'Validates workflow-defined handover milestone requirements',
+  stageOrder: ['stageA', 'stageB'],
+  stages: {
+    stageA: {
+      name: 'Stage A',
+      description: 'Source stage',
+      agent: 'HArchitect',
+      stageMilestones: ['gate', 'doc_review'],
+      required: true,
+      getHandoverPrompt: () => 'handover to stage A',
+    },
+    stageB: {
+      name: 'Stage B',
+      description: 'Target stage',
+      agent: 'HEngineer',
+      required: true,
+      getHandoverPrompt: () => 'handover to stage B',
+    },
+  },
+}
+
 function initWithWorkflow(service: WorkflowService, workflowId: string = "classic"): void {
   const detail = service.getWorkflowDetail(workflowId);
   if (!detail) throw new Error(`Workflow ${workflowId} not found`);
-  
+
   // Select all stages
   const stages = detail.stageOrder.map(key => ({ key, selected: true }));
   const result = service.selectWorkflow({ typeId: workflowId, stages });
@@ -70,9 +94,9 @@ describe("WorkflowService", () => {
     it("initializes workflow with all stages selected", () => {
       const detail = service.getWorkflowDetail("classic")!;
       const stages = detail.stageOrder.map(key => ({ key, selected: true }));
-      
+
       const result = service.selectWorkflow({ typeId: "classic", stages });
-      
+
       expect(result.success).toBe(true);
       expect(result.state?.initialized).toBe(true);
       expect(result.state?.typeId).toBe("classic");
@@ -85,20 +109,20 @@ describe("WorkflowService", () => {
       const stages = detail.stages
         .filter(s => !s.required)
         .map(s => ({ key: s.key, selected: true }));
-      
+
       const result = service.selectWorkflow({ typeId: "classic", stages });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain("Missing required stages");
     });
 
     it("fails when already initialized", () => {
       initWithWorkflow(service);
-      
+
       const detail = service.getWorkflowDetail("classic")!;
       const stages = detail.stageOrder.map(key => ({ key, selected: true }));
       const result = service.selectWorkflow({ typeId: "classic", stages });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain("already initialized");
     });
@@ -194,7 +218,37 @@ describe("WorkflowService", () => {
       expect(service.getState()?.current?.failureCount).toBe(1);
     });
 
-    it('rejects handover when any stage milestone is incomplete', () => {
+    it('rejects handover when a required handover milestone is incomplete', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'gate',
+          isCompleted: false,
+          detail: { score: 60, comment: 'Document needs revision' },
+        },
+      });
+
+      const result = service.hdScheduleHandover('scenarioAnalysis');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('gate');
+      expect(service.getState()?.current?.failureCount).toBe(1);
+    });
+
+    it('allows handover when required handover milestones are completed', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 90, comment: 'gate approved' });
+
+      const result = service.hdScheduleHandover('scenarioAnalysis');
+
+      expect(result.success).toBe(true);
+      expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
+    });
+
+    it('allows handover when non-required milestones are incomplete', () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
@@ -203,26 +257,6 @@ describe("WorkflowService", () => {
         milestone: {
           type: 'doc_review',
           isCompleted: false,
-          detail: { reason: 'Document needs revision' },
-        },
-      });
-
-      const result = service.hdScheduleHandover('scenarioAnalysis');
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('里程碑');
-      expect(service.getState()?.current?.failureCount).toBe(1);
-    });
-
-    it('allows handover only when all milestones are completed', () => {
-      initWithWorkflow(service);
-      service.setCurrent('IRAnalysis');
-      service.setGateResult({ score: 90, comment: 'gate approved' });
-      service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'doc_review',
-          isCompleted: true,
           detail: { reviewer: 'HCritic' },
         },
       });
@@ -231,6 +265,56 @@ describe("WorkflowService", () => {
 
       expect(result.success).toBe(true);
       expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
+    });
+
+    it('checks every milestone listed in workflow stage stageMilestones', () => {
+      writeWorkflowStateFile(initializeWorkflowState(handoverMilestoneWorkflow));
+      Reflect.set(service, 'definition', handoverMilestoneWorkflow);
+      service.setCurrent('stageA');
+      service.setStageMilestone({
+        stage: 'stageA',
+        milestone: {
+          type: 'gate',
+          isCompleted: true,
+          detail: { score: 90, comment: 'approved' },
+        },
+      });
+      service.setStageMilestone({
+        stage: 'stageA',
+        milestone: {
+          type: 'doc_review',
+          isCompleted: false,
+          detail: { reviewer: 'HCritic' },
+        },
+      });
+      service.setStageMilestone({
+        stage: 'stageA',
+        milestone: {
+          type: 'traceability',
+          isCompleted: false,
+          detail: { status: 'pending' },
+        },
+      });
+
+      const rejected = service.hdScheduleHandover('stageB');
+
+      expect(rejected.success).toBe(false);
+      expect(rejected.error).toContain('doc_review');
+      expect(rejected.error).not.toContain('traceability');
+
+      service.setStageMilestone({
+        stage: 'stageA',
+        milestone: {
+          type: 'doc_review',
+          isCompleted: true,
+          detail: { reviewer: 'HCritic' },
+        },
+      });
+
+      const accepted = service.hdScheduleHandover('stageB');
+
+      expect(accepted.success).toBe(true);
+      expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });
   });
 

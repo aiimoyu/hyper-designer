@@ -56,6 +56,18 @@ describe('workflow type definitions', () => {
       expect(stage.outputs?.output2.description).toBeUndefined()
     })
 
+    it('should support workflow-defined handover milestone requirements', () => {
+      const stage: WorkflowStageDefinition = {
+        name: 'Test Stage',
+        description: 'Test description',
+        agent: 'TestAgent',
+        getHandoverPrompt: (from, to) => `${from} -> ${to}`,
+        stageMilestones: ['gate', 'doc_review'],
+      }
+
+      expect(stage.stageMilestones).toEqual(['gate', 'doc_review'])
+    })
+
     it('should work without optional fields', () => {
       const stage: WorkflowStageDefinition = {
         name: 'Test Stage',

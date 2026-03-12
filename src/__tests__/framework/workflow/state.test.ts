@@ -45,7 +45,7 @@ const classicWorkflowDef: WorkflowDefinition = {
       description: "Initial requirements analysis",
       agent: "HArchitect",
       promptFile: "ir_analysis.md",
-      gate: true,
+      stageMilestones: ['gate'],
       getHandoverPrompt: (from) => `Handover from ${from ?? "dataCollection"} to IRAnalysis`
     },
     scenarioAnalysis: {

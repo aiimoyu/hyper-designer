@@ -32,8 +32,7 @@ export interface WorkflowStageDefinition {
   beforeStage?: StageHookFn[]
   /** Hooks to run after the stage completes (future use) */
   afterStage?: StageHookFn[]
-  /** Stage-level gate flag. If true, hd_handover checks score > 75 before allowing handover. */
-  gate?: boolean
+  stageMilestones?: string[]
   /** Whether this stage is required to be completed */
   required?: boolean
   /** Input specifications for this stage */

@@ -25,7 +25,6 @@ import {
   GATE_MILESTONE_KEY,
   GATE_PASS_THRESHOLD,
   isGateMilestoneDetail,
-  listIncompleteMilestones,
 } from '../stageMilestone'
 
 /**
@@ -144,6 +143,23 @@ export class WorkflowService extends EventEmitter {
 
   private getGateScore(stageKey: string): number | null {
     return this.getGateDetail(stageKey)?.score ?? null;
+  }
+
+  private getRequiredHandoverMilestones(stageKey: string): string[] {
+    const stageDefinition = this.definition?.stages[stageKey]
+    if (!stageDefinition) {
+      return []
+    }
+
+    if (stageDefinition.stageMilestones !== undefined) {
+      return [...stageDefinition.stageMilestones]
+    }
+
+    if (stageDefinition.gate) {
+      return [GATE_MILESTONE_KEY]
+    }
+
+    return []
   }
 
   /**
@@ -327,7 +343,7 @@ export class WorkflowService extends EventEmitter {
       const currentStage = selectedStageKeys[i]!;
       const previousStage = i > 0 ? selectedStageKeys[i - 1]! : null;
       const nextStage = i < selectedStageKeys.length - 1 ? selectedStageKeys[i + 1]! : null;
-      
+
       if (workflow[currentStage]) {
         workflow[currentStage].previousStage = previousStage;
         workflow[currentStage].nextStage = nextStage;
@@ -556,23 +572,18 @@ export class WorkflowService extends EventEmitter {
       }
     }
 
-    const stageDefinition = this.definition.stages[currentStage]
     const stageMilestones = this.getState()?.workflow[currentStage]?.stageMilestones
-    const gateMilestone = stageMilestones?.[GATE_MILESTONE_KEY]
-    if (stageDefinition?.gate && !gateMilestone?.isCompleted) {
-      this.incrementCurrentFailureCount();
-      return {
-        success: false,
-        error: '质量门里程碑未完成，请先完成 gate 里程碑后再进行交接。',
-      };
-    }
+    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage)
+    const incompleteRequiredMilestones = requiredMilestones.filter(milestoneType => {
+      const milestone = stageMilestones?.[milestoneType]
+      return milestone?.isCompleted !== true
+    })
 
-    const incompleteMilestones = listIncompleteMilestones(stageMilestones)
-    if (incompleteMilestones.length > 0) {
+    if (incompleteRequiredMilestones.length > 0) {
       this.incrementCurrentFailureCount();
       return {
         success: false,
-        error: `阶段里程碑未全部完成：${incompleteMilestones.join(', ')}。请先完成所有里程碑后再进行交接。`,
+        error: `阶段交接所需里程碑未完成：${incompleteRequiredMilestones.join(', ')}。请先完成这些里程碑后再进行交接。`,
       };
     }
 
