@@ -77,7 +77,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition, selected
   }
 
   const state: WorkflowState = {
-    initialized: true,
+    initialized: false,
     typeId: definition.id,
     workflow,
     current: null,
@@ -390,9 +390,9 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
 
   const state = readWorkflowStateFile();
 
-  // 检查工作流是否已初始化
-  if (state === null || !state.initialized) {
-    const error = "Workflow not initialized. Call selectWorkflow first.";
+  // 检查工作流是否已选择（允许首次交接：initialized 为 false 但 typeId 已设置）
+  if (state === null || !state.typeId) {
+    const error = "Workflow not selected. Call hd_workflow_select first.";
     HyperDesignerLogger.error("Workflow", error, new Error(error), {
       action: "executeHandover"
     });
@@ -452,6 +452,12 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     nextStage: state.workflow[toStep]?.nextStage ?? null,
     failureCount: 0,
   };
+  
+  // 首次交接：设置 initialized 为 true
+  if (!state.initialized) {
+    state.initialized = true;
+    HyperDesignerLogger.info("Workflow", "工作流首次交接完成，初始化状态已设置");
+  }
   
   writeWorkflowStateFile(state);
   HyperDesignerLogger.info("Workflow", "工作流交接执行完成", {

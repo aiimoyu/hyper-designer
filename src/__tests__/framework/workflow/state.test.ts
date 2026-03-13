@@ -110,7 +110,7 @@ describe("workflow state management", () => {
     it("creates state from workflow definition with all stages selected", () => {
       const state = initializeWorkflowState(classicWorkflowDef)
 
-      expect(state.initialized).toBe(true)
+      expect(state.initialized).toBe(false)
       expect(state.typeId).toBe("classic")
       expect(Object.keys(state.workflow)).toHaveLength(8)
       expect(state.workflow.dataCollection?.selected).toBe(true)
@@ -121,7 +121,7 @@ describe("workflow state management", () => {
     it("creates state with selected stages", () => {
       const state = initializeWorkflowState(classicWorkflowDef, ["dataCollection", "IRAnalysis"])
 
-      expect(state.initialized).toBe(true)
+      expect(state.initialized).toBe(false)
       expect(state.workflow.dataCollection?.selected).toBe(true)
       expect(state.workflow.IRAnalysis?.selected).toBe(true)
       expect(state.workflow.scenarioAnalysis?.selected).toBe(false)
@@ -208,7 +208,7 @@ describe("workflow state management", () => {
       }
 
       const state = initializeWorkflowState(customDef)
-      expect(state.initialized).toBe(true)
+      expect(state.initialized).toBe(false)
       expect(state.typeId).toBe("custom")
       expect(Object.keys(state.workflow)).toHaveLength(3)
       expect(state.workflow.stage1?.selected).toBe(true)
@@ -398,11 +398,11 @@ describe("workflow state management", () => {
       writeWorkflowStateFile(initializeWorkflowState(classicWorkflowDef))
     })
 
-    it("throws error when workflow not initialized", async () => {
+    it("throws error when workflow not selected", async () => {
       // Remove state file to simulate uninitialized state
       rmSync(STATE_FILE, { force: true })
 
-      await expect(executeWorkflowHandover(classicWorkflowDef)).rejects.toThrow("Workflow not initialized")
+      await expect(executeWorkflowHandover(classicWorkflowDef)).rejects.toThrow("Workflow not selected")
     })
 
     it("returns state when handover is not set", async () => {
@@ -440,7 +440,10 @@ describe("workflow state management", () => {
 
   describe('forceWorkflowNextStep', () => {
     beforeEach(() => {
-      writeWorkflowStateFile(initializeWorkflowState(classicWorkflowDef))
+      const state = initializeWorkflowState(classicWorkflowDef)
+      // forceWorkflowNextStep 需要 initialized: true（模拟已完成首次交接）
+      state.initialized = true
+      writeWorkflowStateFile(state)
       setWorkflowCurrent('IRAnalysis')
     })
 

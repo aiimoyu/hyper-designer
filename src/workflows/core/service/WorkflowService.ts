@@ -174,11 +174,13 @@ export class WorkflowService extends EventEmitter {
    */
   private tryRestoreDefinition(): WorkflowDefinition | null {
     const state = getWorkflowState();
-    if (state?.initialized && state.typeId) {
+    // 恢复条件：typeId 已设置即可（initialized 可能为 false，在首次 handover 前）
+    if (state?.typeId) {
       const definition = getWorkflowDefinition(state.typeId);
       if (definition) {
         HyperDesignerLogger.debug("Workflow", "断点恢复：从 state 恢复工作流定义", {
-          workflowId: state.typeId
+          workflowId: state.typeId,
+          initialized: state.initialized
         });
         return definition;
       }
@@ -290,12 +292,12 @@ export class WorkflowService extends EventEmitter {
       };
     }
 
-    // 检查是否已初始化（不允许重复选择）
+    // 检查是否已选择（不允许重复选择）
     const currentState = getWorkflowState();
-    if (currentState?.initialized) {
+    if (currentState?.typeId) {
       return {
         success: false,
-        error: `Workflow already initialized. Current workflow: ${currentState.typeId}`,
+        error: `Workflow already selected. Current workflow: ${currentState.typeId}`,
       };
     }
 
@@ -349,7 +351,7 @@ export class WorkflowService extends EventEmitter {
     }
 
     const newState: WorkflowState = {
-      initialized: true,
+      initialized: false,
       typeId: definition.id,
       workflow,
       current: null,
@@ -562,7 +564,43 @@ export class WorkflowService extends EventEmitter {
       };
     }
 
+    const state = this.getState();
     const currentStage = this.getCurrentStage();
+    
+    // 初始状态：允许从无阶段进入第一个被选中的阶段
+    if (!currentStage && state?.current === null) {
+      // 获取第一个被选中的阶段
+      const selectedStages = this.definition.stageOrder.filter(
+        s => state?.workflow[s]?.selected !== false
+      );
+      const firstSelectedStage = selectedStages[0];
+      
+      if (stepName !== firstSelectedStage) {
+        return {
+          success: false,
+          error: `初始交接只能进入第一个阶段 "${firstSelectedStage}"，不能直接进入 "${stepName}"。`,
+        };
+      }
+      
+      // 设置交接目标（setWorkflowHandover 会创建 current 对象并设置 handoverTo）
+      const newState = this.setHandover(stepName);
+      
+      if (newState.current?.handoverTo !== stepName) {
+        return {
+          success: false,
+          error: `无法设置初始交接目标 "${stepName}"。`,
+        };
+      }
+      
+      return {
+        success: true,
+        handover_to: stepName,
+        instruction:
+          "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
+        state: newState,
+      };
+    }
+    
     if (!currentStage) {
       return {
         success: false,
@@ -586,10 +624,10 @@ export class WorkflowService extends EventEmitter {
     }
 
     // 调度交接
-    const state = this.setHandover(stepName);
+    const handoverState = this.setHandover(stepName);
 
     // 如果 handoverTo 没有设置成功（被验证逻辑拒绝），返回错误
-    if (state.current?.handoverTo !== stepName) {
+    if (handoverState.current?.handoverTo !== stepName) {
       return {
         success: false,
         error: `无法设置交接目标 "${stepName}"。请检查目标步骤是否有效，或是否试图跳过步骤。`,
@@ -601,7 +639,7 @@ export class WorkflowService extends EventEmitter {
       handover_to: stepName,
       instruction:
         "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
-      state,
+      state: handoverState,
     };
   }
 

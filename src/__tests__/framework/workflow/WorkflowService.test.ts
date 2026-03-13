@@ -41,6 +41,17 @@ function initWithWorkflow(service: WorkflowService, workflowId: string = "classi
   if (!result.success) throw new Error(result.error ?? "Failed to select workflow");
 }
 
+// 模拟已完成首次交接的初始化状态（initialized: true）
+function initWithHandover(service: WorkflowService, workflowId: string = "classic"): void {
+  initWithWorkflow(service, workflowId);
+  // 手动设置 initialized: true 模拟已完成首次交接
+  const state = service.getState();
+  if (state) {
+    state.initialized = true;
+    writeWorkflowStateFile(state);
+  }
+}
+
 describe("WorkflowService", () => {
   let service: WorkflowService;
 
@@ -91,14 +102,14 @@ describe("WorkflowService", () => {
   });
 
   describe("selectWorkflow", () => {
-    it("initializes workflow with all stages selected", () => {
+    it("selects workflow with all stages selected but not initialized", () => {
       const detail = service.getWorkflowDetail("classic")!;
       const stages = detail.stageOrder.map(key => ({ key, selected: true }));
 
       const result = service.selectWorkflow({ typeId: "classic", stages });
 
       expect(result.success).toBe(true);
-      expect(result.state?.initialized).toBe(true);
+      expect(result.state?.initialized).toBe(false);
       expect(result.state?.typeId).toBe("classic");
       expect(service.getDefinition()).not.toBeNull();
     });
@@ -116,7 +127,7 @@ describe("WorkflowService", () => {
       expect(result.error).toContain("Missing required stages");
     });
 
-    it("fails when already initialized", () => {
+    it("fails when workflow already selected", () => {
       initWithWorkflow(service);
 
       const detail = service.getWorkflowDetail("classic")!;
@@ -124,7 +135,7 @@ describe("WorkflowService", () => {
       const result = service.selectWorkflow({ typeId: "classic", stages });
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain("already initialized");
+      expect(result.error).toContain("already selected");
     });
 
     it("fails for invalid workflow ID", () => {
@@ -171,11 +182,12 @@ describe("WorkflowService", () => {
       });
     });
 
-    it("returns state when initialized", () => {
+    it("returns uninitialized message after selectWorkflow (initialized still false)", () => {
       initWithWorkflow(service);
       const result = service.hdGetWorkflowState();
-      expect(result).toHaveProperty("initialized", true);
-      expect(result).toHaveProperty("typeId", "classic");
+      expect(result).toHaveProperty("initialized", false);
+      // hdGetWorkflowState returns message object when initialized is false
+      expect(result).toHaveProperty("message");
     });
   });
 
@@ -320,7 +332,7 @@ describe("WorkflowService", () => {
 
   describe('hdForceNextStep', () => {
     it('denies force-next-step when failureCount is below threshold', () => {
-      initWithWorkflow(service);
+      initWithHandover(service);
       service.setCurrent('IRAnalysis');
       service.setHandover('invalid-stage');
       service.setHandover('invalid-stage');
@@ -332,7 +344,7 @@ describe("WorkflowService", () => {
     });
 
     it('denies force-next-step when handover target is not the next selected stage', () => {
-      initWithWorkflow(service);
+      initWithHandover(service);
       service.setCurrent('IRAnalysis');
       service.setHandover('invalid-stage');
       service.setHandover('invalid-stage');
@@ -346,7 +358,7 @@ describe("WorkflowService", () => {
     });
 
     it('forces transition when threshold met and target is the next selected stage', () => {
-      initWithWorkflow(service);
+      initWithHandover(service);
       service.setCurrent('IRAnalysis');
       service.setHandover('invalid-stage');
       service.setHandover('invalid-stage');
@@ -361,7 +373,7 @@ describe("WorkflowService", () => {
     });
 
     it('records auditable force_advance milestone and does not mark gate as passed', () => {
-      initWithWorkflow(service);
+      initWithHandover(service);
       service.setCurrent('IRAnalysis');
       service.setHandover('invalid-stage');
       service.setHandover('invalid-stage');
@@ -406,8 +418,13 @@ describe("WorkflowService", () => {
       expect(service.isInitialized()).toBe(false);
     });
 
-    it("returns true after selectWorkflow", () => {
+    it("returns false after selectWorkflow (before first handover)", () => {
       initWithWorkflow(service);
+      expect(service.isInitialized()).toBe(false);
+    });
+
+    it("returns true after first handover", () => {
+      initWithHandover(service);
       expect(service.isInitialized()).toBe(true);
     });
   });

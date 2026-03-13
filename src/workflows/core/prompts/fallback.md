@@ -26,8 +26,9 @@ Use the user's first sentence to identify the most suitable registered workflow,
 
 **Step 3 — Initialize the chosen workflow**
 
-1. Call `hd_workflow_select` with the chosen workflow ID.
-2. If no explicit stage selection is provided by the user, keep the default selection returned by the workflow definition (that is, all default-selected stages).
+1. After the user chooses a workflow, call `hd_workflow_detail` for that workflow if you need the stage list or required-stage information.
+2. Call `hd_workflow_select` with the chosen workflow ID.
+3. If no explicit stage selection is provided by the user, keep the default selection returned by the workflow definition (that is, all default-selected stages).
 
 **Step 4 — Hand off to the first selected phase**
 

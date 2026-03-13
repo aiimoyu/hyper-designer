@@ -105,7 +105,7 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     const workflow = getProjectAnalysisWorkflow()
     const state = initializeWorkflowState(workflow)
 
-    expect(state.initialized).toBe(true)
+    expect(state.initialized).toBe(false)
     expect(state.typeId).toBe('projectAnalysis')
     expect(Object.keys(state.workflow)).toEqual(workflow.stageOrder)
     expect(state.current).toBeNull()
