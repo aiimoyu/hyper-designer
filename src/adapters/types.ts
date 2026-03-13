@@ -56,4 +56,42 @@ export interface PlatformAdapter {
 
   /** 清空指定会话上下文并切换到新会话 */
   clearSession: (sessionId: string) => Promise<string>
+
+  /**
+   * 向平台注册工具（可选）
+   *
+   * 各平台通过实现此方法将工具注册到自己的工具系统。
+   * 如果平台不支持动态注册，可省略此方法。
+   *
+   * @param tools - 要注册的工具列表
+   */
+  registerTools?: (tools: PlatformToolRegistration[]) => void
+
+  /**
+   * 从平台注销工具（可选）
+   *
+   * @param toolNames - 要注销的工具名称列表
+   */
+  unregisterTools?: (toolNames: string[]) => void
+}
+
+/**
+ * 平台无关的工具注册格式
+ *
+ * PlatformAdapter.registerTools 接收此格式的工具列表。
+ * 框架负责将 WorkflowDefinition.tools 转换为此格式。
+ */
+export interface PlatformToolRegistration {
+  /** 工具名称 */
+  name: string
+  /** 工具描述 */
+  description: string
+  /** 参数 schema（JSON Schema 子集） */
+  params: Record<string, {
+    type: string
+    description?: string
+    optional?: boolean
+  }>
+  /** 执行函数 */
+  handler: (params: Record<string, unknown>) => Promise<string>
 }

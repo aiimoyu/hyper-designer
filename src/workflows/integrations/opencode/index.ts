@@ -30,6 +30,8 @@ export {
   type HdToolPlaceholder,
 } from "./tool-transform"
 
+export { convertWorkflowToolsToOpenCode } from './workflow-tools'
+
 /**
  * 创建 OpenCode 平台集成钩子
  *

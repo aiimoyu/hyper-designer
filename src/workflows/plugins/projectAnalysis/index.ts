@@ -1,3 +1,5 @@
+import { projectAnalysisTools } from './tools/handlers'
+
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -140,4 +142,6 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
         buildHandoverPrompt(thisName, '执行缺失覆盖率检查', currentName),
     },
   },
+
+  tools: projectAnalysisTools,
 }

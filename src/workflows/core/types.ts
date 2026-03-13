@@ -1,3 +1,5 @@
+import type { ToolDefinition } from './toolTypes'
+
 import type { PlatformAdapter } from '../../adapters/types'
 
 // 重新导出供上层直接使用
@@ -60,4 +62,9 @@ export interface WorkflowDefinition {
   stageOrder: string[]
   /** Stage definitions keyed by stage name */
   stages: Record<string, WorkflowStageDefinition>
+  /**
+   * 该工作流提供的工具列表
+   * 框架会自动将这些工具注册到运行平台（OpenCode、Claude Code 等）
+   */
+  tools?: ToolDefinition[]
 }

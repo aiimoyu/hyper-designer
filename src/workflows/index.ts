@@ -34,3 +34,14 @@ export { classicWorkflow } from "./plugins/classic"
 export { projectAnalysisWorkflow } from "./plugins/projectAnalysis"
 
 export { WorkflowService, workflowService } from "./core/service"
+
+
+// 工具注册系统
+export type {
+  ToolDefinition,
+  ToolContext,
+  ToolParamSchema,
+  ToolParamsSchema,
+  ToolRegistration,
+} from './core/toolTypes'
+export { ToolRegistry, toolRegistry } from './core/toolRegistry'

@@ -27,6 +27,10 @@ vi.mock('../../../workflows/integrations/opencode/system-transform', () => ({
   createSystemTransformer: () => systemTransformer,
 }))
 
+vi.mock('../../../workflows/integrations/opencode/workflow-tools', () => ({
+  convertWorkflowToolsToOpenCode: () => ({}),
+}))
+
 describe('createWorkflowHooks', () => {
   beforeEach(() => {
     vi.clearAllMocks()

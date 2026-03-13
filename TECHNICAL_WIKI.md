@@ -274,6 +274,7 @@ interface WorkflowStageDefinition {
   description: string             // 阶段描述
   agent: string                   // 负责该阶段的 Agent
   promptFile?: string             // 阶段专属提示词文件
+  gate?: boolean                  // 是否启用质量门禁（classic 工作流使用，projectAnalysis 不使用）
 
   beforeStage?: StageHookFn[]     // 进入阶段前执行的钩子
   afterStage?: StageHookFn[]      // 离开阶段后执行的钩子

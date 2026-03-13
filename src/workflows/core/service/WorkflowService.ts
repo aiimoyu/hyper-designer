@@ -1,3 +1,5 @@
+import type { ToolDefinition } from '../toolTypes'
+
 /**
  * WorkflowService - 工作流服务类
  *
@@ -648,6 +650,27 @@ export class WorkflowService extends EventEmitter {
   getHandoverPrompt(currentStage: string | null, nextStep: string): string | null {
     if (!this.definition) return null;
     return getHandoverPrompt(this.definition, currentStage, nextStep);
+  }
+
+  /**
+   * 获取所有已注册工作流的工具列表
+   * 
+   * 从工作流注册表中收集所有工作流定义的 tools 字段，
+   * 供插件入口在初始化时注册到平台。
+   * 
+   * @returns 所有工作流提供的工具定义列表
+   */
+  listAllTools(): ToolDefinition[] {
+    const allTools: ToolDefinition[] = []
+    
+    for (const workflowId of getAvailableWorkflows()) {
+      const definition = getWorkflowDefinition(workflowId)
+      if (definition?.tools) {
+        allTools.push(...definition.tools)
+      }
+    }
+    
+    return allTools
   }
 
   /**

@@ -1,3 +1,6 @@
+import { convertWorkflowToolsToOpenCode } from '../../src/workflows/integrations/opencode'
+import type { ToolContext } from '../../src/workflows/core/toolTypes'
+
 import type { Plugin } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
@@ -154,11 +157,31 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     }),
   }
 
+  // ── 收集工作流工具 ─────────────────────────────────────────────────────────
+  // 从所有已注册工作流中收集工具定义，转换为 OpenCode 工具格式
+  const workflowTools = (() => {
+    const allWorkflowTools = workflowService.listAllTools()
+    if (allWorkflowTools.length === 0) {
+      return {}
+    }
+
+    // 创建 ToolContext 工厂（每次工具执行时获取最新上下文）
+    const getContext = (): ToolContext => ({
+      workflowId: workflowService.getDefinition()?.id ?? '',
+      currentStage: workflowService.getCurrentStage(),
+      state: workflowService.getState() as unknown as Record<string, unknown> | null,
+    })
+
+    return convertWorkflowToolsToOpenCode(allWorkflowTools, getContext)
+  })()
+  // ── 工作流工具收集完成 ─────────────────────────────────────────────────────
+
   return {
     config: agentHandler,
     tool: {
       ...hdTools,
       ...documentReviewTools,
+      ...workflowTools,
     },
     event: async (input) => {
       await workflowHooks.event(input)
