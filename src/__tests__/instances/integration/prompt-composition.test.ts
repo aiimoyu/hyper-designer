@@ -35,6 +35,7 @@ describe("Integration Tests: Prompt Composition", () => {
     expectNoToolPlaceholders(agent.prompt!)
     expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}")
     expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}")
+    expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}")
   })
 
   it("creates HEngineer agent with valid configuration", () => {
@@ -44,6 +45,7 @@ describe("Integration Tests: Prompt Composition", () => {
     expect(agent.prompt).toBeTruthy()
     expect(agent.prompt!.length).toBeGreaterThan(0)
     expectNoToolPlaceholders(agent.prompt!)
+    expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}")
   })
 
   it("creates HCritic agent with valid configuration", () => {

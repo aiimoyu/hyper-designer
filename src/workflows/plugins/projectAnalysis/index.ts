@@ -34,10 +34,6 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
     '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(join(__dirname, 'prompts', 'workflow.md')),
   },
 
-  fallbackPromptBindings: {
-    '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'fallback.md')),
-  },
-
   stageOrder: [
     'systemAnalysis',
     'componentAnalysis',

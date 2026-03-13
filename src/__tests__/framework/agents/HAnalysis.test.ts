@@ -92,6 +92,15 @@ describe("HAnalysis agent - RED tests", () => {
       expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}")
     })
 
+    it("includes framework fallback token placeholder", () => {
+      expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
+      const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
+      const agent = factory()
+
+      expect(agent.prompt).toBeDefined()
+      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}")
+    })
+
     it("has non-empty prompt content", () => {
       expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
       const factory = BUILTIN_AGENT_FACTORIES.HAnalysis

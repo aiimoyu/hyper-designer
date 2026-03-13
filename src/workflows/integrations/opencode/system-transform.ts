@@ -7,11 +7,18 @@
 import { workflowService } from '../../core/service'
 import {
   loadPromptBindings,
-  WORKFLOW_OVERVIEW_PROMPT_TOKEN,
-  WORKFLOW_STEP_PROMPT_TOKEN,
+  resolvePromptBindingsForMode,
 } from '../../core/runtime'
 import { replacePlaceholders, type PlaceholderResolver } from './utils'
 import { replaceToolPlaceholders, OPENCODE_TOOL_MAPPING } from './tool-transform'
+
+const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_[A-Z0-9_]+_PROMPT\}/g
+
+function clearUnresolvedWorkflowPromptTokens(systemMessages: string[]): void {
+  for (let index = 0; index < systemMessages.length; index += 1) {
+    systemMessages[index] = systemMessages[index].replace(WORKFLOW_PROMPT_TOKEN_PATTERN, '')
+  }
+}
 
 /**
  * 创建系统消息转换器
@@ -28,18 +35,21 @@ export function createSystemTransformer() {
       definition: workflow ?? undefined,
       stage: currentStage,
     })
-    const placeholderResolvers: PlaceholderResolver[] = [
-      {
-        token: WORKFLOW_OVERVIEW_PROMPT_TOKEN,
-        resolve: () => promptBindings[WORKFLOW_OVERVIEW_PROMPT_TOKEN] ?? '',
-      },
-      {
-        token: WORKFLOW_STEP_PROMPT_TOKEN,
-        resolve: () => promptBindings[WORKFLOW_STEP_PROMPT_TOKEN] ?? '',
-      },
-    ]
+    const resolvedBindings = resolvePromptBindingsForMode({
+      bindings: promptBindings,
+      isFallbackMode: currentStage === null,
+    })
+
+    const placeholderResolvers: PlaceholderResolver[] = Object.keys(resolvedBindings).map(token => ({
+      token,
+      resolve: () => resolvedBindings[token] ?? '',
+    }))
 
     replacePlaceholders(output.system, placeholderResolvers)
+
+    if (currentStage === null) {
+      clearUnresolvedWorkflowPromptTokens(output.system)
+    }
 
     for (let index = 0; index < output.system.length; index += 1) {
       output.system[index] = replaceToolPlaceholders(output.system[index], OPENCODE_TOOL_MAPPING)

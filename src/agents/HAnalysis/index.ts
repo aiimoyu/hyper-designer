@@ -58,6 +58,7 @@ const DEFINITION: AgentDefinition = {
     stringPrompt(BASE_PROMPT),
     stringPrompt('{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'),
     stringPrompt('{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'),
+    stringPrompt('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'),
   ],
   defaultPermission: {
     bash: 'deny',

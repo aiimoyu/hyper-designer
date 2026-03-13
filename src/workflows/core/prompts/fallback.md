@@ -5,82 +5,42 @@
 
 ### Objective
 
-Cold-start the workflow: generate a reference materials form, guide the user to fill it in, then hand off to the first phase (`IRAnalysis`).
+Use the user's first sentence to identify the most suitable registered workflow, let the user choose which workflow to enter, initialize that workflow, then hand off to its first selected phase.
 
 ---
 
 ### Execution Steps
 
-**Step 1 — Check for existing checklist**
+**Step 1 — Inspect registered workflows**
 
-- If `REFERENCE.md` exists in the project root → skip creation, go to Step 3
-- If not → proceed to Step 2
+1. Call `hd_workflow_list` immediately to retrieve every registered workflow.
+2. If the list is empty, report that no workflow is registered and stop.
+3. For each candidate workflow, summarize in one short sentence why it matches or does not match the user's first sentence.
 
-**Step 2 — Create `REFERENCE.md`**
+**Step 2 — Recommend and confirm a workflow**
 
-Write the following to the project root immediately, no commentary:
+1. Pick the best-fit workflow as the recommendation.
+2. Present the available workflows to the user in one concise prompt.
+3. Ask the user to choose which workflow to enter. If only one workflow is registered, present it as the recommended default and ask for confirmation.
+4. Do **not** create `REFERENCE.md` in this phase. `REFERENCE.md` setup belongs to `HCollector` after the workflow begins.
 
-```markdown
-# 项目资料清单
+**Step 3 — Initialize the chosen workflow**
 
-> 本资料清单用于收集工作流各阶段所需的参考资料。
-> 请在对应阶段开始前填写该阶段所需的资料信息。
-> 每项资料可填写：文件路径、URL链接、或文字描述。
-> 如无可用资料，请留空，系统会在该阶段提示您补充。
+1. Call `hd_workflow_select` with the chosen workflow ID.
+2. If no explicit stage selection is provided by the user, keep the default selection returned by the workflow definition (that is, all default-selected stages).
 
----
+**Step 4 — Hand off to the first selected phase**
 
-## 1. Codebase (代码库) `[domain: codebase]`
-
-| 子类别 | 说明 | 您的资料（路径/链接/描述） |
-| --- | --- | --- |
-| 本项目代码 | 当前开发项目的源代码 | |
-| 参考项目代码 | 用于参考对比的外部或遗留项目 | |
-
-## 2. Domain Analysis Materials (领域分析资料) `[domain: domainAnalysis]`
-
-| 子类别 | 说明 | 您的资料（路径/链接/描述） |
-| --- | --- | --- |
-| 领域架构分析 | 架构图、领域模型、边界上下文 | |
-| 领域威胁分析 | 安全威胁、风险评估、缓解策略 | |
-| 规范管理 | 行业标准、监管要求、编码规范 | |
-| 特殊领域需求 | 领域特定约束、业务规则、边界情况 | |
-| 需求评审分析 | 评审记录、审批记录、变更请求 | |
-
-## 3. System Requirement Analysis Materials (系统需求分析资料) `[domain: systemRequirementAnalysis]`
-
-| 子类别 | 说明 | 您的资料（路径/链接/描述） |
-| --- | --- | --- |
-| 场景库 | 用户场景、用例、业务流程 | |
-| FMEA库 | 故障模式、影响分析、预防措施 | |
-| 功能库 | 功能列表、需求规格、验收标准 | |
-
-## 4. System Design Materials (系统设计资料) `[domain: systemDesign]`
-
-| 子类别 | 说明 | 您的资料（路径/链接/描述） |
-| --- | --- | --- |
-| 业界设计参考 | 最佳实践、设计模式、行业案例 | |
-| 系统设计说明书 | 高层系统架构、组件交互 | |
-| 模块功能设计说明书 | 详细模块设计、接口、数据结构 | |
-```
-
-**Step 3 — User confirmation**
-
-Prompt the user once, directly:
-
-> `REFERENCE.md` is ready. Fill in whatever reference materials you have on hand — you don't need to complete everything now, only the relevant section is needed before each phase starts. Select **"Done, proceed"** when ready.
-
-Options: `已完成，进入下一步` | `查看资料清单`
-
-**Step 4 — Hand off**
-
-Upon "Done, proceed": call `hd_handover("IRAnalysis")` immediately, then enter Idle state.
+1. Determine the first selected stage of the workflow.
+2. Call `hd_handover` with that stage key immediately after `hd_workflow_select` succeeds.
+3. Then enter Idle state.
 
 ---
 
 ### Behavioral Rules
 
-- No explanations, no summaries — execute steps in sequence
-- Do not ask clarifying questions
-- Do not repeat or confirm file contents back to the user unless they select "View checklist"
-- Minimize turns: this phase should complete in **1–2 interactions**
+- Recommendation should be based on the user's first sentence, not a generic default explanation.
+- Keep the interaction minimal: recommend, let the user choose, initialize, hand off.
+- Do not ask unrelated clarifying questions.
+- If `hd_workflow_select` fails, explain the failure briefly and ask the user to choose again.
+- After `hd_handover`, stop immediately.

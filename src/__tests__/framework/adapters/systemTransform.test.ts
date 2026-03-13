@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
 
+const FRAMEWORK_FALLBACK_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'
+
 const getDefinition = vi.fn<[], WorkflowDefinition | null>()
 const getState = vi.fn<[], WorkflowState | null>()
 
@@ -37,7 +39,17 @@ describe('system transform', () => {
     }
 
     getDefinition.mockReturnValue(workflow)
-    getState.mockReturnValue(null)
+    getState.mockReturnValue({
+      initialized: true,
+      typeId: workflow.id,
+      workflow: {
+        stage1: { isCompleted: false, selected: true },
+      },
+      current: {
+        name: 'stage1',
+        handoverTo: null,
+      },
+    })
 
     const transform = createSystemTransformer()
     const output = { system: ['prefix {HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT} suffix'] }
@@ -90,7 +102,7 @@ describe('system transform', () => {
     expect(output.system[0]).toBe('stage step')
   })
 
-  it('lets fallback prompt bindings override workflow bindings for the same token', async () => {
+  it('injects framework fallback prompt and clears workflow tokens when no active stage', async () => {
     const { createSystemTransformer } = await import('../../../workflows/integrations/opencode/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
@@ -98,10 +110,9 @@ describe('system transform', () => {
       description: 'Test workflow',
       stageOrder: ['stage1'],
       promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': 'workflow overview',
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'workflow step',
-      },
-      fallbackPromptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'fallback step',
+        '{HYPER_DESIGNER_CUSTOM_PROMPT}': 'custom prompt',
       },
       stages: {
         stage1: {
@@ -124,14 +135,24 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'] }
+    const output = {
+      system: [
+        '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}',
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
+        '{HYPER_DESIGNER_CUSTOM_PROMPT}',
+        FRAMEWORK_FALLBACK_PROMPT_TOKEN,
+      ],
+    }
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system[0]).toBe('fallback step')
+    expect(output.system[0]).toBe('')
+    expect(output.system[1]).toBe('')
+    expect(output.system[2]).toBe('')
+    expect(output.system[3]).toContain('当前阶段：工作流初始化')
   })
 
-  it('does not depend on system prompt text to decide replacements', async () => {
+  it('resolves dynamic workflow/stage tokens and clears fallback token in active stage', async () => {
     const { createSystemTransformer } = await import('../../../workflows/integrations/opencode/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
@@ -140,34 +161,74 @@ describe('system transform', () => {
       stageOrder: ['stage1'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': 'shared overview',
-      },
-      fallbackPromptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'shared fallback',
+        '{HYPER_DESIGNER_CUSTOM_PROMPT}': 'workflow custom',
       },
       stages: {
         stage1: {
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
+          promptBindings: {
+            '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'stage step',
+            '{HYPER_DESIGNER_CUSTOM_PROMPT}': 'stage custom',
+          },
           getHandoverPrompt: () => 'handover',
         },
       },
     }
 
     getDefinition.mockReturnValue(workflow)
-    getState.mockReturnValue(null)
+    getState.mockReturnValue({
+      initialized: true,
+      typeId: workflow.id,
+      workflow: {
+        stage1: { isCompleted: false, selected: true },
+      },
+      current: {
+        name: 'stage1',
+        handoverTo: null,
+      },
+    })
 
     const transform = createSystemTransformer()
     const output = {
       system: [
         '## Role Definition\n\nYou are **HArchitect**, collaborating with HEngineer.\n\n{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}',
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
+        '{HYPER_DESIGNER_CUSTOM_PROMPT}',
+        FRAMEWORK_FALLBACK_PROMPT_TOKEN,
       ],
     }
 
     await transform({ model: {} } as never, output)
 
     expect(output.system[0]).toContain('shared overview')
-    expect(output.system[1]).toBe('shared fallback')
+    expect(output.system[1]).toBe('stage step')
+    expect(output.system[2]).toBe('stage custom')
+    expect(output.system[3]).toBe('')
+  })
+
+  it('clears default workflow tokens and injects framework fallback when workflow is undefined', async () => {
+    const { createSystemTransformer } = await import('../../../workflows/integrations/opencode/system-transform')
+
+    getDefinition.mockReturnValue(null)
+    getState.mockReturnValue(null)
+
+    const transform = createSystemTransformer()
+    const output = {
+      system: [
+        '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}',
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
+        '{HYPER_DESIGNER_WORKFLOW_CUSTOM_DYNAMIC_PROMPT}',
+        FRAMEWORK_FALLBACK_PROMPT_TOKEN,
+      ],
+    }
+
+    await transform({ model: {} } as never, output)
+
+    expect(output.system[0]).toBe('')
+    expect(output.system[1]).toBe('')
+    expect(output.system[2]).toBe('')
+    expect(output.system[3]).toContain('当前阶段：工作流初始化')
   })
 })

@@ -37,7 +37,7 @@ describe('workflow prompt bindings', () => {
     expect(loadPromptForStage('stage1', workflow)).toBe('workflow overview\n\nstage step')
   })
 
-  it('composes workflow and fallback prompt bindings when there is no active stage', () => {
+  it('composes workflow prompt bindings when there is no active stage', () => {
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -46,9 +46,6 @@ describe('workflow prompt bindings', () => {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': stringPrompt('workflow overview'),
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('workflow step'),
-      },
-      fallbackPromptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('fallback step'),
       },
       stages: {
         stage1: {
@@ -60,7 +57,7 @@ describe('workflow prompt bindings', () => {
       },
     }
 
-    expect(loadPromptForStage(null, workflow)).toBe('workflow overview\n\nfallback step')
+    expect(loadPromptForStage(null, workflow)).toBe('workflow overview\n\nworkflow step')
   })
 
   it('loads prompt binding content from workflow-relative files', () => {

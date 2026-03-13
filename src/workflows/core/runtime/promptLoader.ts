@@ -18,6 +18,7 @@ import { HyperDesignerLogger } from '../../../utils/logger'
 
 export const WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
 export const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
+export const FRAMEWORK_FALLBACK_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'
 
 
 // Get the directory of the current module file
@@ -30,6 +31,32 @@ const WORKFLOWS_PLUGINS_DIR = join(__dirname, '..', '..', 'plugins')
 function getWorkflowDir(definition: WorkflowDefinition): string {
   return join(WORKFLOWS_PLUGINS_DIR, definition.id)
 }
+
+const FRAMEWORK_FALLBACK_PROMPT_FILE = join(__dirname, '../prompts/fallback.md')
+
+function loadFrameworkFallbackPrompt(): string {
+  try {
+    const content = readFileSync(FRAMEWORK_FALLBACK_PROMPT_FILE, 'utf-8')
+    if (!content.trim()) {
+      HyperDesignerLogger.warn('Workflow', '框架 fallback 提示词文件为空', {
+        path: FRAMEWORK_FALLBACK_PROMPT_FILE,
+        action: 'loadFrameworkFallbackPrompt',
+      })
+      return ''
+    }
+    return content
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error))
+    HyperDesignerLogger.warn('Workflow', '加载框架 fallback 提示词失败', {
+      path: FRAMEWORK_FALLBACK_PROMPT_FILE,
+      action: 'loadFrameworkFallbackPrompt',
+      error: err.message,
+    })
+    return ''
+  }
+}
+
+const FRAMEWORK_FALLBACK_PROMPT_CONTENT = loadFrameworkFallbackPrompt()
 
 function loadPromptFile(
   definition: WorkflowDefinition,
@@ -106,23 +133,19 @@ export function loadPromptBindings({
     return {}
   }
 
-  const resolvedBindings = getLegacyPromptBindings(definition, stage)
+  const normalizedStage = stage !== null && definition.stages[stage] ? stage : null
+  const resolvedBindings = getLegacyPromptBindings(definition, normalizedStage)
 
   applyPromptBindings(
     resolvedBindings,
     definition.promptBindings,
   )
 
-  if (stage !== null) {
-    const stageConfig = definition.stages[stage]
+  if (normalizedStage !== null) {
+    const stageConfig = definition.stages[normalizedStage]
     applyPromptBindings(
       resolvedBindings,
       stageConfig?.promptBindings,
-    )
-  } else {
-    applyPromptBindings(
-      resolvedBindings,
-      definition.fallbackPromptBindings,
     )
   }
 
@@ -183,26 +206,36 @@ export function loadStagePrompt(stage: string | null, definition: WorkflowDefini
     })
   }
 
-  if (!definition.stageFallbackPromptFile) {
-    HyperDesignerLogger.debug('Workflow', '未找到阶段提示词', {
-      workflowId: definition.id,
-      stage,
-      action: 'noPromptFound',
-    })
-    return ''
-  }
-
-  HyperDesignerLogger.debug('Workflow', '加载回退提示词', {
+  HyperDesignerLogger.debug('Workflow', '未激活阶段，不加载阶段提示词', {
     workflowId: definition.id,
     stage,
-    fallbackFile: definition.stageFallbackPromptFile,
-    action: 'loadFallbackPrompt',
+    action: 'skipStagePromptInFallback',
   })
+  return ''
+}
 
-  return loadPromptFile(definition, definition.stageFallbackPromptFile, {
-    action: 'loadFallbackPrompt',
-    stage,
-  })
+export function getFrameworkFallbackPrompt(): string {
+  return FRAMEWORK_FALLBACK_PROMPT_CONTENT
+}
+
+export function resolvePromptBindingsForMode({
+  bindings,
+  isFallbackMode,
+}: {
+  bindings: Record<string, string>
+  isFallbackMode: boolean
+}): Record<string, string> {
+  const resolved: Record<string, string> = {}
+
+  for (const token of Object.keys(bindings)) {
+    resolved[token] = isFallbackMode ? '' : bindings[token] ?? ''
+  }
+
+  resolved[FRAMEWORK_FALLBACK_PROMPT_TOKEN] = isFallbackMode
+    ? FRAMEWORK_FALLBACK_PROMPT_CONTENT
+    : ''
+
+  return resolved
 }
 
 export function loadPromptForStage(stage: string | null, definition: WorkflowDefinition): string {
