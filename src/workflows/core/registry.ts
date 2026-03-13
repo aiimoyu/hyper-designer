@@ -9,11 +9,13 @@
 
 import type { WorkflowDefinition } from './types'
 import { classicWorkflow } from '../plugins/classic'
+import { liteWorkflow } from '../plugins/lite'
 import { projectAnalysisWorkflow } from '../plugins/projectAnalysis'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 const workflowRegistry: Record<string, WorkflowDefinition> = {
   classic: classicWorkflow,
+  lite: liteWorkflow,
   projectAnalysis: projectAnalysisWorkflow,
 }
 

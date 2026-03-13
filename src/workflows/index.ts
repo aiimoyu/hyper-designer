@@ -31,6 +31,7 @@ export { getHandoverAgent, getHandoverPrompt } from "./core/runtime"
 export { loadPromptForStage } from "./core/runtime"
 
 export { classicWorkflow } from "./plugins/classic"
+export { liteWorkflow } from './plugins/lite'
 export { projectAnalysisWorkflow } from "./plugins/projectAnalysis"
 
 export { WorkflowService, workflowService } from "./core/service"

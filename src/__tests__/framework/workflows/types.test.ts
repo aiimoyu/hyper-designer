@@ -47,6 +47,7 @@ describe('getAvailableWorkflows', () => {
     expect(result.every(item => typeof item === 'string')).toBe(true)
     expect(result).toContain('classic')
     expect(result).toContain('projectAnalysis')
+    expect(result).toContain('lite')
   })
 })
 
@@ -60,5 +61,18 @@ describe('projectAnalysis workflow registry integration', () => {
     const workflow = getWorkflowDefinition('projectAnalysis')
     expect(workflow).toBeDefined()
     expect(workflow?.id).toBe('projectAnalysis')
+  })
+})
+
+describe('lite workflow registry integration', () => {
+  it('should be registered in workflow registry', () => {
+    const available = getAvailableWorkflows()
+    expect(available).toContain('lite')
+  })
+
+  it('should be retrievable via getWorkflowDefinition', () => {
+    const workflow = getWorkflowDefinition('lite')
+    expect(workflow).toBeDefined()
+    expect(workflow?.id).toBe('lite')
   })
 })
