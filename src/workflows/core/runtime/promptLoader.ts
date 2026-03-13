@@ -15,10 +15,10 @@ import type {
   WorkflowPromptBindings,
 } from '../types'
 import { HyperDesignerLogger } from '../../../utils/logger'
+import { FRAMEWORK_FALLBACK_PROMPT_TOKEN } from './tokens'
 
-export const WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
-export const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
-export const FRAMEWORK_FALLBACK_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'
+const LEGACY_WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
+const LEGACY_WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
 
 // Get the directory of the current module file
@@ -111,12 +111,12 @@ function getLegacyPromptBindings(definition: WorkflowDefinition, stage: string |
 
   const workflowPrompt = loadWorkflowPrompt(definition)
   if (workflowPrompt) {
-    result[WORKFLOW_OVERVIEW_PROMPT_TOKEN] = workflowPrompt
+    result[LEGACY_WORKFLOW_OVERVIEW_PROMPT_TOKEN] = workflowPrompt
   }
 
   const stagePrompt = loadStagePrompt(stage, definition)
   if (stagePrompt) {
-    result[WORKFLOW_STEP_PROMPT_TOKEN] = stagePrompt
+    result[LEGACY_WORKFLOW_STEP_PROMPT_TOKEN] = stagePrompt
   }
 
   return result
@@ -244,15 +244,35 @@ export function loadPromptForStage(stage: string | null, definition: WorkflowDef
     stage,
   })
 
-  const workflowPrompt = bindings[WORKFLOW_OVERVIEW_PROMPT_TOKEN] ?? ''
-  const stagePrompt = bindings[WORKFLOW_STEP_PROMPT_TOKEN] ?? ''
-
   const parts: string[] = []
-  if (workflowPrompt) {
-    parts.push(workflowPrompt)
+  const orderedTokens: string[] = []
+  const normalizedStage = stage !== null && definition.stages[stage] ? stage : null
+
+  const workflowBindings = definition.promptBindings
+  if (workflowBindings) {
+    for (const token of Object.keys(workflowBindings)) {
+      if (!orderedTokens.includes(token)) {
+        orderedTokens.push(token)
+      }
+    }
   }
-  if (stagePrompt) {
-    parts.push(stagePrompt)
+
+  if (normalizedStage !== null) {
+    const stageBindings = definition.stages[normalizedStage]?.promptBindings
+    if (stageBindings) {
+      for (const token of Object.keys(stageBindings)) {
+        if (!orderedTokens.includes(token)) {
+          orderedTokens.push(token)
+        }
+      }
+    }
+  }
+
+  for (const token of orderedTokens) {
+    const content = bindings[token]
+    if (content) {
+      parts.push(content)
+    }
   }
 
   return parts.join('\n\n')

@@ -3,9 +3,10 @@ import {
   loadPromptForStage,
   getWorkflowDefinition,
   getAvailableWorkflows,
-  WORKFLOW_OVERVIEW_PROMPT_TOKEN,
-  WORKFLOW_STEP_PROMPT_TOKEN,
 } from '../../../workflows/core'
+
+const WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
+const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
 import { classicWorkflow } from '../../../workflows/plugins/classic'
 import type { WorkflowDefinition } from '../../../workflows/core'

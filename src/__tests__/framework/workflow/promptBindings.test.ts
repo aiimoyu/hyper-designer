@@ -91,4 +91,29 @@ describe('workflow prompt bindings', () => {
     expect(prompt).toContain('#')
     expect(prompt).toContain('Initial Requirements Analysis')
   })
+
+  it('composes prompts dynamically from workflow-defined placeholder keys', () => {
+    const workflow: WorkflowDefinition = {
+      id: 'test-workflow',
+      name: 'Test Workflow',
+      description: 'Test workflow',
+      stageOrder: ['stage1'],
+      promptBindings: {
+        '{CUSTOM_OVERVIEW_PROMPT}': stringPrompt('custom workflow overview'),
+      },
+      stages: {
+        stage1: {
+          name: 'Stage 1',
+          description: 'Stage 1',
+          agent: 'HArchitect',
+          promptBindings: {
+            '{CUSTOM_STEP_PROMPT}': stringPrompt('custom stage step'),
+          },
+          getHandoverPrompt: () => 'handover',
+        },
+      },
+    }
+
+    expect(loadPromptForStage('stage1', workflow)).toBe('custom workflow overview\n\ncustom stage step')
+  })
 })

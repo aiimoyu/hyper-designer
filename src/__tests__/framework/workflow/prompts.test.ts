@@ -1,10 +1,9 @@
 import { describe, it, expect } from "vitest"
-import {
-  loadPromptForStage,
-  WORKFLOW_STEP_PROMPT_TOKEN,
-} from '../../../workflows/core'
+import { loadPromptForStage } from '../../../workflows/core'
 import { classicWorkflow } from "../../../workflows/plugins/classic"
 import type { WorkflowDefinition } from '../../../workflows/core'
+
+const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
 describe("workflow/prompts", () => {
   describe("loadPromptForStage", () => {

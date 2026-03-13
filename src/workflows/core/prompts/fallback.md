@@ -36,6 +36,7 @@ Use the user's first sentence to identify the most suitable registered workflow,
 2. Call `hd_handover` with that stage key immediately after `hd_workflow_select` succeeds.
 3. Then enter Idle state.
 
+
 ---
 
 ### Behavioral Rules
@@ -45,3 +46,5 @@ Use the user's first sentence to identify the most suitable registered workflow,
 - Do not ask unrelated clarifying questions.
 - If `hd_workflow_select` fails, explain the failure briefly and ask the user to choose again.
 - After `hd_handover`, stop immediately.
+- ⚠️ **User interactions must use `HD_TOOL_ASK_USER` tool** (maps to `question`), NOT direct text output expecting user response.
+

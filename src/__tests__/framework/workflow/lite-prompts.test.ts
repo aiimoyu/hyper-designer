@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { loadPromptForStage, WORKFLOW_STEP_PROMPT_TOKEN } from '../../../workflows/core'
+import { loadPromptForStage } from '../../../workflows/core'
 import { liteWorkflow } from '../../../workflows/plugins/lite'
+
+const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
 describe('lite workflow prompts', () => {
   it('loads all stage prompt bindings', () => {
