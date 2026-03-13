@@ -73,7 +73,7 @@ const DEFINITION: AgentDefinition = {
     external_directory: "allow",
     hd_workflow_state: "allow",
     hd_handover: "allow",
-    hd_force_next_step: "allow",
+    hd_force_next_step: "ask",
   },
 }
 
