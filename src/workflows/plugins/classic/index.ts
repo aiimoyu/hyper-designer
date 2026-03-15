@@ -79,8 +79,8 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '需求信息': { path: '需求信息.md', description: 'Initial requirement analysis document' },
       },
-      beforeStage: [irAnalysisCollectorHook],
-      afterStage: [summarizeHook],
+      beforeStage: [{ fn: irAnalysisCollectorHook }],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行严格的需求分析', currentName),
     },
@@ -100,8 +100,8 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '功能场景': { path: '功能场景.md', description: 'Functional scenario specifications' },
       },
-      beforeStage: [scenarioAnalysisCollectorHook],
-      afterStage: [summarizeHook],
+      beforeStage: [{ fn: scenarioAnalysisCollectorHook }],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '分析系统使用场景，识别参与者与业务流程', currentName),
     },
@@ -121,7 +121,7 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '用例': { path: '用例.md', description: 'Use case specifications' },
       },
-      afterStage: [summarizeHook],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '将场景细化为详细的用例规格说明，明确输入、输出与验收标准', currentName),
     },
@@ -141,7 +141,7 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '功能列表': { path: '功能列表.md', description: 'Refined functional requirements' },
       },
-      afterStage: [summarizeHook],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '提取完整功能列表，使用 MoSCoW 方法进行优先级排序，并执行 FMEA 分析', currentName),
     },
@@ -161,7 +161,7 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         'SR-AR 分解': { path: 'SR-AR 分解.md', description: 'System-Allocation requirement decomposition' },
       },
-      afterStage: [summarizeHook],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '将功能列表映射并分解为模块级需求、子系统及接口定义', currentName),
     },
@@ -181,8 +181,8 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '系统功能设计': { path: '系统功能设计.md', description: 'System-level functional design' },
       },
-      beforeStage: [systemDesignCollectorHook],
-      afterStage: [summarizeHook],
+      beforeStage: [{ fn: systemDesignCollectorHook }],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于已分解的需求，设计系统架构、选择技术栈，并定义数据模型与交互协议', currentName),
     },
@@ -202,7 +202,7 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '模块功能设计': { path: '模块功能设计.md', description: 'Module-level functional design' },
       },
-      afterStage: [summarizeHook],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '为各模块输出详细技术规格说明，涵盖职责、接口、内部结构、算法、数据结构及测试策略', currentName),
     },
@@ -222,7 +222,7 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         'SDD 计划': { path: 'SDD 计划.md', description: 'SDD development plan' },
       },
-      afterStage: [summarizeHook],
+      afterStage: [{ fn: summarizeHook }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于模块功能设计说明书，生成可直接分发给 subagent 执行的 SDD 开发计划', currentName),
     },

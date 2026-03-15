@@ -11,7 +11,7 @@ import { existsSync, rmSync } from "fs"
 import { join } from "path"
 import { executeWorkflowHandover } from "../../../workflows/core"
 import { readWorkflowStateFile, writeWorkflowStateFile } from "../../../workflows/core/state"
-import type { WorkflowDefinition, StageHookFn, PlatformAdapter } from "../../../workflows/core"
+import type { WorkflowDefinition, StageHookFn, StageHook, PlatformAdapter } from "../../../workflows/core"
 import { createMockAdapter } from "../../helpers/mockAdapter"
 import type { SendPromptParams, SendPromptResult } from "../../../adapters/types"
 
@@ -20,8 +20,8 @@ const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function makeWorkflow(overrides?: {
-  afterStage?: StageHookFn[],
-  beforeStage?: StageHookFn[],
+  afterStage?: StageHook[],
+  beforeStage?: StageHook[],
 }): WorkflowDefinition {
   return {
     id: "test-ordering",
@@ -97,7 +97,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
       callOrder.push("beforeStage:stage2")
     }
 
-    const def = makeWorkflow({ afterStage: [afterHook], beforeStage: [beforeHook] })
+    const def = makeWorkflow({ afterStage: [{ fn: afterHook }], beforeStage: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
@@ -117,7 +117,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
       callOrder.push("beforeStage:stage2")
     }
 
-    const def = makeWorkflow({ afterStage: [afterHook], beforeStage: [beforeHook] })
+    const def = makeWorkflow({ afterStage: [{ fn: afterHook }], beforeStage: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
@@ -134,7 +134,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
       beforeStageDone = true
     }
 
-    const def = makeWorkflow({ beforeStage: [beforeHook] })
+    const def = makeWorkflow({ beforeStage: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
@@ -152,8 +152,8 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
     const beforeHook2: StageHookFn = async () => { callOrder.push("before2") }
 
     const def = makeWorkflow({
-      afterStage: [afterHook1, afterHook2],
-      beforeStage: [beforeHook1, beforeHook2],
+      afterStage: [{ fn: afterHook1 }, { fn: afterHook2 }],
+      beforeStage: [{ fn: beforeHook1 }, { fn: beforeHook2 }],
     })
     setupInitialState(def)
 
@@ -171,7 +171,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
 
     }
 
-    const def = makeWorkflow({ afterStage: [afterHook] })
+    const def = makeWorkflow({ afterStage: [{ fn: afterHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
@@ -189,7 +189,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
 
     }
 
-    const def = makeWorkflow({ beforeStage: [beforeHook] })
+    const def = makeWorkflow({ beforeStage: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
@@ -215,7 +215,7 @@ describe("event-handler ordering: sendPrompt called after executeHandover comple
       callOrder.push("beforeStage:done")
     }
 
-    const def = makeWorkflow({ beforeStage: [beforeHook] })
+    const def = makeWorkflow({ beforeStage: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     const sendPromptSpy = vi.fn<[SendPromptParams], Promise<SendPromptResult>>(async () => {

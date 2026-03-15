@@ -1,0 +1,346 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { existsSync, rmSync, writeFileSync } from 'fs'
+import { join } from 'path'
+import type { PluginInput } from '@opencode-ai/plugin'
+
+import type { WorkflowDefinition } from '../../../workflows/core'
+import {
+  executeWorkflowHandover,
+  forceWorkflowNextStep,
+  readWorkflowStateFile,
+  writeWorkflowStateFile,
+} from '../../../workflows/core/state'
+import { workflowService } from '../../../workflows/core/service'
+import { createAgentTransformer } from '../../../workflows/integrations/opencode/agent-transform'
+
+const STATE_FILE = join(process.cwd(), '.hyper-designer', 'workflow_state.json')
+
+function makeTwoStageWorkflow(overrides?: {
+  beforeStageAgentOverride?: string
+  onBeforeStage?: () => Promise<void>
+}): WorkflowDefinition {
+  return {
+    id: 'hyper-agent-routing-test',
+    name: 'Hyper Agent Routing Test Workflow',
+    description: 'Workflow for compatibility and edge cases',
+    stageOrder: ['stage1', 'stage2'],
+    stages: {
+      stage1: {
+        name: 'Stage 1',
+        description: 'First stage',
+        agent: 'HArchitect',
+        getHandoverPrompt: () => 'handover to stage1',
+      },
+      stage2: {
+        name: 'Stage 2',
+        description: 'Second stage',
+        agent: 'HEngineer',
+        getHandoverPrompt: () => 'handover to stage2',
+        ...(overrides?.onBeforeStage
+          ? {
+              beforeStage: [{ fn: overrides.onBeforeStage, ...(overrides.beforeStageAgentOverride ? { agent: overrides.beforeStageAgentOverride } : {}) }],
+            }
+          : {}),
+      },
+    },
+  }
+}
+
+describe('hyper agent routing: backward compatibility and edge cases', () => {
+  beforeEach(() => {
+    if (existsSync(STATE_FILE)) {
+      rmSync(STATE_FILE, { force: true })
+    }
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    if (existsSync(STATE_FILE)) {
+      rmSync(STATE_FILE, { force: true })
+    }
+  })
+
+  describe('backward compatibility', () => {
+    it('reads old state file (without agent/phase) successfully', () => {
+      writeFileSync(
+        STATE_FILE,
+        JSON.stringify(
+          {
+            initialized: true,
+            typeId: 'classic',
+            workflow: {
+              stage1: { isCompleted: false, selected: true },
+            },
+            current: {
+              name: 'stage1',
+              handoverTo: null,
+            },
+          },
+          null,
+          2,
+        ),
+        'utf-8',
+      )
+
+      const state = readWorkflowStateFile()
+
+      expect(state).not.toBeNull()
+      expect(state?.current?.name).toBe('stage1')
+    })
+
+    it('keeps agent/phase undefined when reading old state', () => {
+      writeFileSync(
+        STATE_FILE,
+        JSON.stringify(
+          {
+            initialized: true,
+            typeId: 'classic',
+            workflow: {
+              stage1: { isCompleted: false, selected: true },
+            },
+            current: {
+              name: 'stage1',
+              handoverTo: null,
+            },
+          },
+          null,
+          2,
+        ),
+        'utf-8',
+      )
+
+      const state = readWorkflowStateFile()
+
+      expect(state?.current?.agent).toBeUndefined()
+      expect(state?.current?.phase).toBeUndefined()
+    })
+
+    it('round-trip: write new state then read back keeps workflow stable (agent/phase remain optional)', () => {
+      writeWorkflowStateFile({
+        initialized: true,
+        typeId: 'classic',
+        workflow: {
+          stage1: {
+            isCompleted: false,
+            selected: true,
+            previousStage: null,
+            nextStage: 'stage2',
+          },
+          stage2: {
+            isCompleted: false,
+            selected: true,
+            previousStage: 'stage1',
+            nextStage: null,
+          },
+        },
+        current: {
+          name: 'stage1',
+          handoverTo: 'stage2',
+          agent: 'HArchitect',
+          phase: 'inStage',
+          previousStage: null,
+          nextStage: 'stage2',
+          failureCount: 0,
+        },
+      })
+
+      const state = readWorkflowStateFile()
+
+      expect(state?.current?.name).toBe('stage1')
+      expect(state?.current?.handoverTo).toBe('stage2')
+      expect(state?.current?.agent).toBeUndefined()
+      expect(state?.current?.phase).toBeUndefined()
+    })
+  })
+
+  describe('edge cases', () => {
+    it('chat.message keeps Hyper unchanged when workflow state is null', async () => {
+      vi.spyOn(workflowService, 'getState').mockReturnValue(null)
+
+      const transformer = createAgentTransformer({} as PluginInput)
+      const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
+      const output = {
+        message: { agent: 'Hyper' },
+      } as Parameters<ReturnType<typeof createAgentTransformer>>[1]
+
+      await transformer(input, output)
+
+      expect(input.agent).toBe('Hyper')
+      expect(output.message.agent).toBe('Hyper')
+    })
+
+    it('chat.message keeps Hyper unchanged when current stage is null', async () => {
+      vi.spyOn(workflowService, 'getState').mockReturnValue({
+        initialized: true,
+        typeId: 'classic',
+        workflow: {},
+        current: null,
+      })
+
+      const transformer = createAgentTransformer({} as PluginInput)
+      const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
+      const output = {
+        message: { agent: 'Hyper' },
+      } as Parameters<ReturnType<typeof createAgentTransformer>>[1]
+
+      await transformer(input, output)
+
+      expect(input.agent).toBe('Hyper')
+      expect(output.message.agent).toBe('Hyper')
+    })
+
+    it('chat.message keeps Hyper unchanged when current.agent is undefined', async () => {
+      vi.spyOn(workflowService, 'getState').mockReturnValue({
+        initialized: true,
+        typeId: 'classic',
+        workflow: {},
+        current: {
+          name: 'IRAnalysis',
+          handoverTo: null,
+          previousStage: null,
+          nextStage: null,
+          failureCount: 0,
+        },
+      })
+
+      const transformer = createAgentTransformer({} as PluginInput)
+      const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
+      const output = {
+        message: { agent: 'Hyper' },
+      } as Parameters<ReturnType<typeof createAgentTransformer>>[1]
+
+      await transformer(input, output)
+
+      expect(input.agent).toBe('Hyper')
+      expect(output.message.agent).toBe('Hyper')
+    })
+
+    it('unknown stage handover gracefully handles missing stage definition by failing predictably', async () => {
+      const incompleteDefinition: WorkflowDefinition = {
+        id: 'incomplete-definition',
+        name: 'Incomplete Definition Workflow',
+        description: 'Missing stage2 definition intentionally',
+        stageOrder: ['stage1', 'stage2'],
+        stages: {
+          stage1: {
+            name: 'Stage 1',
+            description: 'First stage',
+            agent: 'HArchitect',
+            getHandoverPrompt: () => 'handover to stage1',
+          },
+        },
+      }
+
+      writeWorkflowStateFile({
+        initialized: true,
+        typeId: incompleteDefinition.id,
+        workflow: {
+          stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
+          stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
+        },
+        current: {
+          name: 'stage1',
+          handoverTo: 'stage2',
+          previousStage: null,
+          nextStage: 'stage2',
+          failureCount: 0,
+        },
+      })
+
+      await expect(executeWorkflowHandover(incompleteDefinition)).rejects.toThrow(TypeError)
+    })
+
+    it('forceWorkflowNextStep correctly updates current stage and clears stale current.agent', () => {
+      const definition = makeTwoStageWorkflow()
+
+      writeWorkflowStateFile({
+        initialized: true,
+        typeId: definition.id,
+        workflow: {
+          stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
+          stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
+        },
+        current: {
+          name: 'stage1',
+          handoverTo: null,
+          agent: 'HArchitect',
+          phase: 'inStage',
+          previousStage: null,
+          nextStage: 'stage2',
+          failureCount: 3,
+        },
+      })
+
+      const result = forceWorkflowNextStep(definition)
+
+      expect('error' in result).toBe(false)
+      if (!('error' in result)) {
+        expect(result.current?.name).toBe('stage2')
+        expect(result.current?.agent).toBeUndefined()
+      }
+    })
+
+    it('hook-level agent override sets HCollector in write payload during hook phase', async () => {
+      vi.resetModules()
+
+      interface CapturedState {
+        current?: {
+          phase?: string
+          agent?: string
+        } | null
+      }
+
+      const capturedStates: CapturedState[] = []
+
+      vi.doMock('../../../workflows/core/state/persistence', async () => {
+        const actual = await vi.importActual<typeof import('../../../workflows/core/state/persistence')>(
+          '../../../workflows/core/state/persistence',
+        )
+        return {
+          ...actual,
+          writeWorkflowStateFile: (state: Parameters<typeof actual.writeWorkflowStateFile>[0]) => {
+            const currentSnapshot = state.current
+              ? {
+                  ...(state.current.phase !== undefined ? { phase: state.current.phase } : {}),
+                  ...(state.current.agent !== undefined ? { agent: state.current.agent } : {}),
+                }
+              : null
+            capturedStates.push({
+              current: currentSnapshot,
+            })
+            actual.writeWorkflowStateFile(state)
+          },
+        }
+      })
+
+      const stateModule = await import('../../../workflows/core/state')
+      const definition = makeTwoStageWorkflow({
+        beforeStageAgentOverride: 'HCollector',
+        onBeforeStage: async () => {},
+      })
+
+      stateModule.writeWorkflowStateFile({
+        initialized: true,
+        typeId: definition.id,
+        workflow: {
+          stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
+          stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
+        },
+        current: {
+          name: 'stage1',
+          handoverTo: 'stage2',
+          previousStage: null,
+          nextStage: 'stage2',
+          failureCount: 0,
+        },
+      })
+
+      await stateModule.executeWorkflowHandover(definition)
+
+      const beforeHookWrite = capturedStates.find((entry) => entry.current?.phase === 'beforeStage:0')
+      expect(beforeHookWrite?.current?.agent).toBe('HCollector')
+
+      vi.doUnmock('../../../workflows/core/state/persistence')
+    })
+  })
+})

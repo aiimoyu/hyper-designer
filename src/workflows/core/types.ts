@@ -19,6 +19,11 @@ export type StageHookFn = (ctx: {
   adapter?: PlatformAdapter
 }) => Promise<void>
 
+export interface StageHook {
+  fn: StageHookFn
+  agent?: string
+}
+
 export interface WorkflowStageDefinition {
   /** Display name for this stage */
   name: string
@@ -31,9 +36,9 @@ export interface WorkflowStageDefinition {
   /** Placeholder bindings applied when this stage is active */
   promptBindings?: WorkflowPromptBindings
   /** Hooks to run before the stage's primary agent starts */
-  beforeStage?: StageHookFn[]
+  beforeStage?: StageHook[]
   /** Hooks to run after the stage completes (future use) */
-  afterStage?: StageHookFn[]
+  afterStage?: StageHook[]
   stageMilestones?: string[]
   /** Whether this stage is required to be completed */
   required?: boolean

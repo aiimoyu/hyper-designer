@@ -5,8 +5,10 @@ import type { Plugin } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
 import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
+import { createHyperAgent } from "../../src/agents/Hyper"
 import { createBuiltinAgents } from "../../src/agents/utils"
 import { workflowService } from "../../src/workflows/core/service"
+import { createAgentTransformer } from "../../src/workflows/integrations/opencode/agent-transform"
 import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
 import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
 import { initLogger } from "../../src/utils/logger"
@@ -47,7 +49,20 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   initLogger()
 
   const agents = await createBuiltinAgents()
-  const mappedAgents = toOpencodeAgents(agents)
+  const mappedBuiltinAgents = Object.fromEntries(
+    Object.entries(toOpencodeAgents(agents)).map(([name, config]) => [
+      name,
+      {
+        ...config,
+        hidden: true,
+      },
+    ]),
+  ) as Record<string, OpencodeAgentConfig & { hidden?: boolean }>
+
+  const mappedAgents: Record<string, OpencodeAgentConfig & { hidden?: boolean }> = {
+    ...mappedBuiltinAgents,
+    Hyper: toOpencodeAgentConfig(createHyperAgent()),
+  }
   const agentHandler = async (config: Record<string, unknown>) => {
     config.agent = {
       ...(config.agent ?? {}),
@@ -186,6 +201,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     event: async (input) => {
       await workflowHooks.event(input)
     },
+    "chat.message": createAgentTransformer(ctx),
     "experimental.chat.system.transform": async (input: unknown, output: { system: string[] }) => {
       await workflowHooks["experimental.chat.system.transform"](input, output)
     },

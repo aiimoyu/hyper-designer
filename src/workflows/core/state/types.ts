@@ -31,6 +31,8 @@ export interface CurrentStageState {
   name: string | null;
   /** Target stage for the next handover, if scheduled */
   handoverTo: string | null;
+  agent?: string;
+  phase?: string;
   previousStage?: string | null;
   nextStage?: string | null;
   /** Failure count for this stage (resets on stage transition) */

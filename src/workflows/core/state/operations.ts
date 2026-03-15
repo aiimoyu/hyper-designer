@@ -438,16 +438,24 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
 
   // Phase 1: afterStage 钩子在 stage 切换之前执行（重入由 WorkflowService 内存锁保护）
   const departingStage = fromStep ? definition.stages[fromStep] : null;
+  const incomingStage = definition.stages[toStep];
   if (departingStage?.afterStage && departingStage.afterStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 afterStage 钩子", { step: fromStep, hookCount: departingStage.afterStage.length });
-    for (const hook of departingStage.afterStage) {
-      await hook({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+    for (const [i, hook] of departingStage.afterStage.entries()) {
+      const { fn, agent: hookAgent } = hook;
+      if (state.current) {
+        state.current.agent = hookAgent ?? departingStage.agent;
+        state.current.phase = `afterStage:${i}`;
+        writeWorkflowStateFile(state);
+      }
+      await fn({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
     }
   }
   // Stage 切换
   state.current = {
     name: toStep,
     handoverTo: null,
+    agent: incomingStage.agent,
     previousStage: state.workflow[toStep]?.previousStage ?? null,
     nextStage: state.workflow[toStep]?.nextStage ?? null,
     failureCount: 0,
@@ -466,12 +474,22 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   });
 
   // Phase 2: beforeStage 钩子在 stage 切换之后执行
-  const incomingStage = definition.stages[toStep];
   if (incomingStage?.beforeStage && incomingStage.beforeStage.length > 0) {
     HyperDesignerLogger.debug("Workflow", "执行 beforeStage 钩子", { step: toStep, hookCount: incomingStage.beforeStage.length });
-    for (const hook of incomingStage.beforeStage) {
-      await hook({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+    for (const [i, hook] of incomingStage.beforeStage.entries()) {
+      const { fn, agent: hookAgent } = hook;
+      if (state.current) {
+        state.current.agent = hookAgent ?? incomingStage.agent;
+        state.current.phase = `beforeStage:${i}`;
+        writeWorkflowStateFile(state);
+      }
+      await fn({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
     }
+  }
+
+  if (state.current) {
+    state.current.phase = 'inStage';
+    writeWorkflowStateFile(state);
   }
 
   return state;

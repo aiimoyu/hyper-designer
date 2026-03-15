@@ -15,6 +15,7 @@
 export type {
   PlatformAdapter,
   StageHookFn,
+  StageHook,
   WorkflowPromptBindings,
   WorkflowStageDefinition,
   WorkflowDefinition,
