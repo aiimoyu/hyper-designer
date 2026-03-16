@@ -12,6 +12,7 @@ import { join } from 'path'
 
 import { createHAnalysisAgent } from '../../../agents/HAnalysis'
 import {
+  getStageOrder,
   getWorkflowDefinition,
   initializeWorkflowState,
   loadPromptForStage,
@@ -60,10 +61,11 @@ afterEach(() => {
 describe('Integration Tests: projectAnalysis workflow', () => {
   it('registers and retrieves the projectAnalysis workflow with expected stage order', () => {
     const workflow = getProjectAnalysisWorkflow()
+    const stageOrder = getStageOrder(workflow)
 
     expect(workflow.id).toBe('projectAnalysis')
     expect(workflow.name).toBe('Project Analysis')
-    expect(workflow.stageOrder).toEqual([
+    expect(stageOrder).toEqual([
       'systemAnalysis',
       'componentAnalysis',
       'missingCoverageCheck',
@@ -104,10 +106,11 @@ describe('Integration Tests: projectAnalysis workflow', () => {
   it('initializes workflow state for projectAnalysis with ordered stage links', () => {
     const workflow = getProjectAnalysisWorkflow()
     const state = initializeWorkflowState(workflow)
+    const stageOrder = getStageOrder(workflow)
 
     expect(state.initialized).toBe(false)
     expect(state.typeId).toBe('projectAnalysis')
-    expect(Object.keys(state.workflow)).toEqual(workflow.stageOrder)
+    expect(Object.keys(state.workflow)).toEqual(stageOrder)
     expect(state.current).toBeNull()
 
     expect(state.workflow.systemAnalysis).toMatchObject({

@@ -7,10 +7,10 @@
  * 3. 设置当前步骤
  * 4. 设置交接目标
  * 5. 执行交接
- * 6. 设置质量门结果（替代旧的 setWorkflowGatePassed）
+ * 6. 设置质量门结果
  */
 
-import type { WorkflowDefinition, PlatformAdapter } from "../types";
+import type { WorkflowDefinition, PlatformAdapter, StageTransitionDefinition } from "../types";
 import type {
   WorkflowState,
   WorkflowStage,
@@ -23,9 +23,167 @@ import {
   GATE_MILESTONE_KEY,
   GATE_PASS_THRESHOLD,
   FORCE_ADVANCE_MILESTONE_KEY,
-  upsertStageMilestone,
   forceAdvanceToNextSelectedStage,
 } from '../stageMilestone'
+import {
+  appendHistoryEvent,
+  flushCurrentNodeContextToHistory,
+  patchCurrentNodeInfo,
+  setCurrentNodeContext,
+  setCurrentNodeMilestone,
+} from './history'
+
+function getDefinitionStageOrder(definition: WorkflowDefinition): string[] {
+  const visited = new Set<string>()
+  const order: string[] = []
+
+  const walk = (stageId: string): void => {
+    if (visited.has(stageId) || !definition.stages[stageId]) {
+      return
+    }
+    visited.add(stageId)
+    order.push(stageId)
+    const stage = definition.stages[stageId]
+    const transitions = stage.transitions ?? []
+    const autoTransitions = [...transitions]
+      .filter(item => item.mode === 'auto')
+      .sort((a, b) => a.priority - b.priority)
+    for (const transition of autoTransitions) {
+      walk(transition.toStageId)
+    }
+  }
+
+  const entry = definition.entryStageId
+  if (typeof entry === 'string') {
+    walk(entry)
+  }
+
+  for (const stageId of Object.keys(definition.stages)) {
+    if (!visited.has(stageId)) {
+      walk(stageId)
+    }
+  }
+
+  return order
+}
+
+function resolveNextSelectedStage(
+  definition: WorkflowDefinition,
+  selectedSet: Set<string>,
+  fromStageId: string,
+): string | null {
+  const visited = new Set<string>()
+  let cursor: string | null = fromStageId
+
+  while (cursor !== null) {
+    if (visited.has(cursor)) {
+      throw new Error(`Detected transition cycle while resolving next stage from ${fromStageId}`)
+    }
+    visited.add(cursor)
+
+    const stage = definition.stages[cursor]
+    if (!stage) {
+      return null
+    }
+
+    const transitions: StageTransitionDefinition[] = stage.transitions ?? []
+    const nextTransition = [...transitions]
+      .filter(item => item.mode === 'auto')
+      .sort((a, b) => a.priority - b.priority)[0]
+
+    if (!nextTransition) {
+      return null
+    }
+
+    const nextStageId: string = nextTransition.toStageId
+    if (selectedSet.has(nextStageId)) {
+      return nextStageId
+    }
+    cursor = nextStageId
+  }
+
+  return null
+}
+
+function createHookNodeId(stageKey: string, lane: 'before' | 'after', hookId: string): string {
+  return `workflow.${stageKey}.${lane}.${hookId}`
+}
+
+function createMainNodeId(stageKey: string): string {
+  return `workflow.${stageKey}.main`
+}
+
+function getRequiredMilestones(definition: WorkflowDefinition, stageKey: string): string[] {
+  const stage = definition.stages[stageKey]
+  if (!stage || !Array.isArray(stage.requiredMilestones)) {
+    return []
+  }
+  return [...stage.requiredMilestones]
+}
+
+function ensureRuntimeInitialized(state: WorkflowState): void {
+  if (!state.runtime) {
+    state.runtime = {
+      status: 'running',
+      flow: {
+        fromNodeId: null,
+        currentNodeId: null,
+        nextNodeId: null,
+        lastEventSeq: 0,
+      },
+      currentNodeContext: null,
+    }
+  }
+
+  if (!state.history) {
+    state.history = { events: [] }
+  }
+}
+
+function getLatestNodeMilestone(
+  state: WorkflowState,
+  nodeId: string,
+  key: string,
+): { isCompleted?: boolean; detail?: unknown } | null {
+  const events = state.history?.events
+  if (!events) {
+    return null
+  }
+
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const event = events[i]
+    if (event.type !== 'milestone.set' || event.nodeId !== nodeId || event.key !== key) {
+      continue
+    }
+    if (typeof event.value === 'object' && event.value !== null) {
+      return event.value as { isCompleted?: boolean; detail?: unknown }
+    }
+    return null
+  }
+
+  return null
+}
+
+function createNodeContextSetters(state: WorkflowState): {
+  setMilestone: (input: { key: string; isCompleted: boolean; detail: unknown }) => void
+  setInfo: (patch: Record<string, unknown>) => void
+} {
+  return {
+    setMilestone: ({ key, isCompleted, detail }) => {
+      setCurrentNodeMilestone(state, {
+        key,
+        milestone: {
+          isCompleted,
+          detail,
+          updatedAt: new Date().toISOString(),
+        },
+      })
+    },
+    setInfo: patch => {
+      patchCurrentNodeInfo(state, patch)
+    },
+  }
+}
 
 function resolveCurrentNeighbors(
   workflow: Record<string, WorkflowStage>,
@@ -50,21 +208,23 @@ function resolveCurrentNeighbors(
  * @returns Array of stage names in the order they should be executed
  */
 export function getStageOrder(definition: WorkflowDefinition): string[] {
-  return definition.stageOrder;
+  return getDefinitionStageOrder(definition);
 }
 
 export function initializeWorkflowState(definition: WorkflowDefinition, selectedStages?: string[]): WorkflowState {
   HyperDesignerLogger.debug("Workflow", "初始化工作流状态", { workflowId: definition.id });
 
+  const stageOrder = getDefinitionStageOrder(definition)
+  const selectedSet = new Set(selectedStages ?? stageOrder)
   const workflow: Record<string, WorkflowStage> = {};
-  for (const stage of definition.stageOrder) {
+  for (const stage of stageOrder) {
     // 如果提供了 selectedStages，则根据它设置 selected；否则默认全部选中
     const isSelected = selectedStages ? selectedStages.includes(stage) : true;
     workflow[stage] = { isCompleted: false, selected: isSelected };
   }
 
   // Compute neighbor links for selected stages
-  const selectedStageList = selectedStages ?? definition.stageOrder;
+  const selectedStageList = selectedStages ?? stageOrder;
   for (let i = 0; i < selectedStageList.length; i++) {
     const currentStage = selectedStageList[i];
     const previousStage = i > 0 ? selectedStageList[i - 1] : null;
@@ -72,7 +232,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition, selected
     
     if (workflow[currentStage]) {
       workflow[currentStage].previousStage = previousStage;
-      workflow[currentStage].nextStage = nextStage;
+      workflow[currentStage].nextStage = resolveNextSelectedStage(definition, selectedSet, currentStage) ?? nextStage;
     }
   }
 
@@ -82,6 +242,8 @@ export function initializeWorkflowState(definition: WorkflowDefinition, selected
     workflow,
     current: null,
   };
+  ensureRuntimeInitialized(state)
+  state.runtime!.flow.nextNodeId = typeof definition.entryStageId === 'string' ? createMainNodeId(definition.entryStageId) : null
 
   HyperDesignerLogger.debug("Workflow", "工作流状态初始化完成", {
     workflowId: definition.id,
@@ -253,8 +415,9 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
     return incrementCurrentFailureCount();
   }
 
-  // 获取被选中的阶段列表（按 stageOrder 顺序）
-  const selectedStages = definition.stageOrder.filter(s => state.workflow[s]?.selected !== false);
+  // 获取被选中的阶段列表（按拓扑顺序）
+  const stageOrder = getDefinitionStageOrder(definition)
+  const selectedStages = stageOrder.filter(s => state.workflow[s]?.selected !== false);
   const firstSelectedStage = selectedStages[0];
 
   if (state.current.name === null) {
@@ -317,7 +480,7 @@ interface GateEvaluationInput {
 }
 
 interface StageMilestoneInput {
-  stage: string
+  nodeId: string
   milestone: {
     type: string
     isCompleted: boolean
@@ -334,17 +497,30 @@ function createGateMilestone(detail: GateMilestoneDetail): StageMilestone {
     detail,
   };
 }
-
 export function setWorkflowGateResult(gateEvaluation: GateEvaluationInput): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置门禁结果", { stage: gateEvaluation.stage });
   const state = ensureWorkflowStateExists();
 
   const stageKey = gateEvaluation.stage ?? state.current?.name;
-  if (stageKey && state.workflow[stageKey]) {
-    state.workflow[stageKey].stageMilestones = {
-      ...(state.workflow[stageKey].stageMilestones ?? {}),
-      [GATE_MILESTONE_KEY]: createGateMilestone(gateEvaluation.detail),
-    };
+  if (stageKey) {
+    const nodeId = createMainNodeId(stageKey)
+    setCurrentNodeMilestone(state, {
+      key: GATE_MILESTONE_KEY,
+      milestone: {
+        isCompleted: createGateMilestone(gateEvaluation.detail).isCompleted,
+        detail: gateEvaluation.detail,
+        updatedAt: new Date().toISOString(),
+      },
+    })
+    appendHistoryEvent(state, {
+      type: 'milestone.set',
+      nodeId,
+      key: GATE_MILESTONE_KEY,
+      value: {
+        isCompleted: createGateMilestone(gateEvaluation.detail).isCompleted,
+        detail: gateEvaluation.detail,
+      },
+    })
   }
 
   writeWorkflowStateFile(state);
@@ -352,32 +528,28 @@ export function setWorkflowGateResult(gateEvaluation: GateEvaluationInput): Work
 }
 
 export function setWorkflowStageMilestone(input: StageMilestoneInput): WorkflowState {
-  HyperDesignerLogger.info('Workflow', '设置阶段里程碑', { stage: input.stage, type: input.milestone.type })
+  HyperDesignerLogger.info('Workflow', '设置节点里程碑', { nodeId: input.nodeId, type: input.milestone.type })
   const state = ensureWorkflowStateExists()
-  const stage = state.workflow[input.stage]
-  if (!stage) {
-    return state
-  }
-  stage.stageMilestones = upsertStageMilestone(stage.stageMilestones, {
-    type: input.milestone.type,
-    isCompleted: input.milestone.isCompleted,
-    detail: input.milestone.detail,
+  setCurrentNodeMilestone(state, {
+    key: input.milestone.type,
+    milestone: {
+      isCompleted: input.milestone.isCompleted,
+      detail: input.milestone.detail,
+      updatedAt: new Date().toISOString(),
+    },
+  })
+  appendHistoryEvent(state, {
+    type: 'milestone.set',
+    nodeId: input.nodeId,
+    key: input.milestone.type,
+    value: {
+      isCompleted: input.milestone.isCompleted,
+      detail: input.milestone.detail,
+    },
   })
   writeWorkflowStateFile(state)
   return state
 }
-
-export function setWorkflowGatePassed(isPassed: boolean): WorkflowState {
-  HyperDesignerLogger.info("Workflow", "[deprecated] 设置门禁状态（boolean）", { gatePassed: isPassed });
-  const detail = {
-    ['s' + 'core']: isPassed ? 100 : 0,
-  } as unknown as GateMilestoneDetail;
-
-  return setWorkflowGateResult({
-    detail,
-  });
-}
-
 
 /**
  * Executes a pending workflow handover
@@ -408,8 +580,10 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     return state;
   }
 
-  // 获取被选中的阶段列表（按 stageOrder 顺序）
-  const selectedStages = definition.stageOrder.filter(s => state.workflow[s]?.selected !== false);
+  ensureRuntimeInitialized(state)
+
+  // 获取被选中的阶段列表（按拓扑顺序）
+  const selectedStages = getDefinitionStageOrder(definition).filter(s => state.workflow[s]?.selected !== false);
   const fromStep = state.current.name;
   const toStep = state.current.handoverTo;
   const fromIndex = fromStep ? selectedStages.indexOf(fromStep) : -1;
@@ -431,27 +605,49 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     // 重置正在重新访问的步骤的完成状态
     for (let i = toIndex; i <= fromIndex; i++) {
       const step = selectedStages[i];
-      state.workflow[step].isCompleted = false;
+      if (step) {
+        state.workflow[step].isCompleted = false;
+      }
       HyperDesignerLogger.debug("Workflow", "步骤标记为未完成", { step });
     }
   }
 
-  // Phase 1: afterStage 钩子在 stage 切换之前执行（重入由 WorkflowService 内存锁保护）
+  // Phase 1: after 钩子在 stage 切换之前执行（重入由 WorkflowService 内存锁保护）
   const departingStage = fromStep ? definition.stages[fromStep] : null;
   const incomingStage = definition.stages[toStep];
-  if (departingStage?.afterStage && departingStage.afterStage.length > 0) {
-    HyperDesignerLogger.debug("Workflow", "执行 afterStage 钩子", { step: fromStep, hookCount: departingStage.afterStage.length });
-    for (const [i, hook] of departingStage.afterStage.entries()) {
+  const departingAfterHooks = departingStage ? departingStage.after ?? [] : []
+  if (departingStage && departingAfterHooks.length > 0) {
+    HyperDesignerLogger.debug("Workflow", "执行 after 钩子", { step: fromStep, hookCount: departingAfterHooks.length });
+    for (const [i, hook] of departingAfterHooks.entries()) {
       const { fn, agent: hookAgent } = hook;
+      const hookId = hook.id
+      const nodeId = createHookNodeId(fromStep!, 'after', hookId ?? `after-${i}`)
+      setCurrentNodeContext(state, { nodeId, visit: 1, attempt: 1 })
+      appendHistoryEvent(state, { type: 'node.entered', nodeId })
+      const setters = createNodeContextSetters(state)
       if (state.current) {
         state.current.agent = hookAgent ?? departingStage.agent;
-        state.current.phase = `afterStage:${i}`;
+        if (state.runtime) {
+          state.runtime.flow.fromNodeId = state.runtime.flow.currentNodeId
+          state.runtime.flow.currentNodeId = nodeId
+          state.runtime.flow.nextNodeId = createMainNodeId(toStep)
+        }
         writeWorkflowStateFile(state);
       }
-      await fn({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+      await fn({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, nodeId, setMilestone: setters.setMilestone, setInfo: setters.setInfo, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+      flushCurrentNodeContextToHistory(state)
+      appendHistoryEvent(state, { type: 'node.completed', nodeId })
     }
   }
   // Stage 切换
+  const previousNodeId = state.runtime?.flow.currentNodeId ?? null
+  const nextMainNodeId = createMainNodeId(toStep)
+  appendHistoryEvent(state, {
+    type: 'transition',
+    fromNodeId: previousNodeId,
+    toNodeId: nextMainNodeId,
+    reason: 'normal',
+  })
   state.current = {
     name: toStep,
     handoverTo: null,
@@ -466,6 +662,14 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     state.initialized = true;
     HyperDesignerLogger.info("Workflow", "工作流首次交接完成，初始化状态已设置");
   }
+
+  setCurrentNodeContext(state, { nodeId: nextMainNodeId, visit: 1, attempt: 1 })
+  appendHistoryEvent(state, { type: 'node.entered', nodeId: nextMainNodeId })
+  if (state.runtime) {
+    state.runtime.flow.fromNodeId = previousNodeId
+    state.runtime.flow.currentNodeId = nextMainNodeId
+    state.runtime.flow.nextNodeId = null
+  }
   
   writeWorkflowStateFile(state);
   HyperDesignerLogger.info("Workflow", "工作流交接执行完成", {
@@ -473,22 +677,51 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     workflowId: state.typeId
   });
 
-  // Phase 2: beforeStage 钩子在 stage 切换之后执行
-  if (incomingStage?.beforeStage && incomingStage.beforeStage.length > 0) {
-    HyperDesignerLogger.debug("Workflow", "执行 beforeStage 钩子", { step: toStep, hookCount: incomingStage.beforeStage.length });
-    for (const [i, hook] of incomingStage.beforeStage.entries()) {
+  // Phase 2: before 钩子在 stage 切换之后执行
+  const incomingBeforeHooks = incomingStage ? incomingStage.before ?? [] : []
+  if (incomingStage && incomingBeforeHooks.length > 0) {
+    HyperDesignerLogger.debug("Workflow", "执行 before 钩子", { step: toStep, hookCount: incomingBeforeHooks.length });
+    for (const [i, hook] of incomingBeforeHooks.entries()) {
       const { fn, agent: hookAgent } = hook;
+      const hookId = hook.id
+      const nodeId = createHookNodeId(toStep, 'before', hookId ?? `before-${i}`)
+      appendHistoryEvent(state, {
+        type: 'transition',
+        fromNodeId: state.runtime?.flow.currentNodeId ?? null,
+        toNodeId: nodeId,
+        reason: 'normal',
+      })
+      setCurrentNodeContext(state, { nodeId, visit: 1, attempt: 1 })
+      appendHistoryEvent(state, { type: 'node.entered', nodeId })
+      const setters = createNodeContextSetters(state)
       if (state.current) {
         state.current.agent = hookAgent ?? incomingStage.agent;
-        state.current.phase = `beforeStage:${i}`;
+        if (state.runtime) {
+          state.runtime.flow.fromNodeId = createMainNodeId(toStep)
+          state.runtime.flow.currentNodeId = nodeId
+          state.runtime.flow.nextNodeId = createMainNodeId(toStep)
+        }
         writeWorkflowStateFile(state);
       }
-      await fn({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+      await fn({ stageKey: toStep, stageName: incomingStage.name, workflow: definition, nodeId, setMilestone: setters.setMilestone, setInfo: setters.setInfo, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+      flushCurrentNodeContextToHistory(state)
+      appendHistoryEvent(state, { type: 'node.completed', nodeId })
     }
   }
 
   if (state.current) {
-    state.current.phase = 'inStage';
+    appendHistoryEvent(state, {
+      type: 'transition',
+      fromNodeId: state.runtime?.flow.currentNodeId ?? null,
+      toNodeId: nextMainNodeId,
+      reason: 'normal',
+    })
+    setCurrentNodeContext(state, { nodeId: nextMainNodeId, visit: 1, attempt: 1 })
+    if (state.runtime) {
+      state.runtime.flow.fromNodeId = state.runtime.flow.currentNodeId
+      state.runtime.flow.currentNodeId = nextMainNodeId
+      state.runtime.flow.nextNodeId = state.current.nextStage ? createMainNodeId(state.current.nextStage) : null
+    }
     writeWorkflowStateFile(state);
   }
 
@@ -512,16 +745,33 @@ export function forceWorkflowNextStep(
     return result
   }
 
-  if (fromStage && state.workflow[fromStage]) {
-    state.workflow[fromStage].stageMilestones = upsertStageMilestone(state.workflow[fromStage].stageMilestones, {
-      type: FORCE_ADVANCE_MILESTONE_KEY,
-      isCompleted: true,
-      detail: {
-        reason: 'Forced transition after 3+ failed handover attempts',
+  if (fromStage) {
+    appendHistoryEvent(state, {
+      type: 'milestone.set',
+      nodeId: createMainNodeId(fromStage),
+      key: FORCE_ADVANCE_MILESTONE_KEY,
+      value: {
+        isCompleted: true,
+        detail: {
+          reason: 'Forced transition after 3+ failed handover attempts',
+        },
       },
     })
   }
 
   writeWorkflowStateFile(state);
   return state;
+}
+
+export function areRequiredMilestonesCompletedForStage(state: WorkflowState, definition: WorkflowDefinition, stageKey: string): boolean {
+  const requiredMilestones = getRequiredMilestones(definition, stageKey)
+  if (requiredMilestones.length === 0) {
+    return true
+  }
+
+  const mainNodeId = createMainNodeId(stageKey)
+  return requiredMilestones.every(key => {
+    const milestone = getLatestNodeMilestone(state, mainNodeId, key)
+    return milestone?.isCompleted === true
+  })
 }

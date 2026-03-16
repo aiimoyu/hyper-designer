@@ -28,6 +28,7 @@ vi.mock("@opencode-ai/plugin", () => {
 import type { WorkflowDefinition } from "../../../workflows"
 
 import {
+  getStageOrder,
   initializeWorkflowState,
   loadPromptForStage,
   workflowService,
@@ -84,7 +85,7 @@ function initClassicWorkflowSelection(): void {
     throw new Error("Classic workflow detail should be defined")
   }
 
-  const stages = detail.stageOrder.map(key => ({ key, selected: true }))
+  const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }))
   const result = workflowService.selectWorkflow({ typeId: "classic", stages })
   if (!result.success) {
     throw new Error(result.error ?? "Failed to select classic workflow")
@@ -122,8 +123,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(workflow).not.toBeNull()
       expect(workflow!.id).toBe("classic")
       expect(workflow!.name).toBe("Classic Requirements Engineering")
-      expect(workflow!.stageOrder).toHaveLength(8)
-      expect(workflow!.stageOrder).toEqual([
+      const stageOrder = getStageOrder(workflow!)
+      expect(stageOrder).toHaveLength(8)
+      expect(stageOrder).toEqual([
         "IRAnalysis",
         "scenarioAnalysis",
         "useCaseAnalysis",
@@ -253,7 +255,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
     it("should load prompts for all stages", () => {
       const workflow = getClassicWorkflow()
 
-      for (const stage of workflow.stageOrder) {
+      for (const stage of getStageOrder(workflow)) {
         const prompt = loadPromptForStage(stage, workflow)
         expect(prompt).toBeTruthy()
         expect(prompt.length).toBeGreaterThan(0)
@@ -301,10 +303,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(workflow).toHaveProperty("id")
       expect(workflow).toHaveProperty("name")
       expect(workflow).toHaveProperty("description")
-      expect(workflow).toHaveProperty("stageOrder")
       expect(workflow).toHaveProperty("stages")
 
-      for (const stageName of workflow.stageOrder) {
+      for (const stageName of getStageOrder(workflow)) {
         const stage = workflow.stages[stageName]
         expect(stage).toHaveProperty("name")
         expect(stage).toHaveProperty("description")
@@ -330,7 +331,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(state).toHaveProperty("workflow")
       expect(state).toHaveProperty("current")
       
-      for (const stageName of workflow.stageOrder) {
+      for (const stageName of getStageOrder(workflow)) {
         expect(state.workflow[stageName]).toHaveProperty("isCompleted")
         expect(typeof state.workflow[stageName].isCompleted).toBe("boolean")
       }

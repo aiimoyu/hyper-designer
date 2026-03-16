@@ -16,29 +16,33 @@ import { createAgentTransformer } from '../../../workflows/integrations/opencode
 const STATE_FILE = join(process.cwd(), '.hyper-designer', 'workflow_state.json')
 
 function makeTwoStageWorkflow(overrides?: {
-  beforeStageAgentOverride?: string
-  onBeforeStage?: () => Promise<void>
+  beforeAgentOverride?: string
+  onBefore?: () => Promise<void>
 }): WorkflowDefinition {
   return {
     id: 'hyper-agent-routing-test',
     name: 'Hyper Agent Routing Test Workflow',
     description: 'Workflow for compatibility and edge cases',
-    stageOrder: ['stage1', 'stage2'],
+    entryStageId: 'stage1',
     stages: {
       stage1: {
+        stageId: 'stage1',
         name: 'Stage 1',
         description: 'First stage',
         agent: 'HArchitect',
+        transitions: [{ id: 'to-stage2', toStageId: 'stage2', mode: 'auto', priority: 0 }],
         getHandoverPrompt: () => 'handover to stage1',
       },
       stage2: {
+        stageId: 'stage2',
         name: 'Stage 2',
         description: 'Second stage',
         agent: 'HEngineer',
+        transitions: [],
         getHandoverPrompt: () => 'handover to stage2',
-        ...(overrides?.onBeforeStage
+        ...(overrides?.onBefore
           ? {
-              beforeStage: [{ fn: overrides.onBeforeStage, ...(overrides.beforeStageAgentOverride ? { agent: overrides.beforeStageAgentOverride } : {}) }],
+              before: [{ fn: overrides.onBefore, ...(overrides.beforeAgentOverride ? { agent: overrides.beforeAgentOverride } : {}) }],
             }
           : {}),
       },
@@ -88,7 +92,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       expect(state?.current?.name).toBe('stage1')
     })
 
-    it('keeps agent/phase undefined when reading old state', () => {
+    it('keeps agent undefined when reading old state', () => {
       writeFileSync(
         STATE_FILE,
         JSON.stringify(
@@ -112,10 +116,9 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       const state = readWorkflowStateFile()
 
       expect(state?.current?.agent).toBeUndefined()
-      expect(state?.current?.phase).toBeUndefined()
     })
 
-    it('round-trip: write new state then read back keeps workflow stable (agent/phase remain optional)', () => {
+    it('round-trip: write new state then read back keeps workflow stable (agent remains optional)', () => {
       writeWorkflowStateFile({
         initialized: true,
         typeId: 'classic',
@@ -137,7 +140,6 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           name: 'stage1',
           handoverTo: 'stage2',
           agent: 'HArchitect',
-          phase: 'inStage',
           previousStage: null,
           nextStage: 'stage2',
           failureCount: 0,
@@ -149,7 +151,6 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       expect(state?.current?.name).toBe('stage1')
       expect(state?.current?.handoverTo).toBe('stage2')
       expect(state?.current?.agent).toBeUndefined()
-      expect(state?.current?.phase).toBeUndefined()
     })
   })
 
@@ -220,12 +221,14 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         id: 'incomplete-definition',
         name: 'Incomplete Definition Workflow',
         description: 'Missing stage2 definition intentionally',
-        stageOrder: ['stage1', 'stage2'],
+        entryStageId: 'stage1',
         stages: {
           stage1: {
+            stageId: 'stage1',
             name: 'Stage 1',
             description: 'First stage',
             agent: 'HArchitect',
+            transitions: [{ id: 'to-stage2', toStageId: 'stage2', mode: 'auto', priority: 0 }],
             getHandoverPrompt: () => 'handover to stage1',
           },
         },
@@ -264,7 +267,6 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           name: 'stage1',
           handoverTo: null,
           agent: 'HArchitect',
-          phase: 'inStage',
           previousStage: null,
           nextStage: 'stage2',
           failureCount: 3,
@@ -285,7 +287,6 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
 
       interface CapturedState {
         current?: {
-          phase?: string
           agent?: string
         } | null
       }
@@ -301,7 +302,6 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           writeWorkflowStateFile: (state: Parameters<typeof actual.writeWorkflowStateFile>[0]) => {
             const currentSnapshot = state.current
               ? {
-                  ...(state.current.phase !== undefined ? { phase: state.current.phase } : {}),
                   ...(state.current.agent !== undefined ? { agent: state.current.agent } : {}),
                 }
               : null
@@ -315,8 +315,8 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
 
       const stateModule = await import('../../../workflows/core/state')
       const definition = makeTwoStageWorkflow({
-        beforeStageAgentOverride: 'HCollector',
-        onBeforeStage: async () => {},
+        beforeAgentOverride: 'HCollector',
+        onBefore: async () => {},
       })
 
       stateModule.writeWorkflowStateFile({
@@ -337,8 +337,8 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
 
       await stateModule.executeWorkflowHandover(definition)
 
-      const beforeHookWrite = capturedStates.find((entry) => entry.current?.phase === 'beforeStage:0')
-      expect(beforeHookWrite?.current?.agent).toBe('HCollector')
+      const beforeHookWrite = capturedStates.find((entry) => entry.current?.agent === 'HCollector')
+      expect(beforeHookWrite).toBeDefined()
 
       vi.doUnmock('../../../workflows/core/state/persistence')
     })

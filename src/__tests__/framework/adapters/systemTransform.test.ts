@@ -24,12 +24,13 @@ describe('system transform', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': 'workflow overview',
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
@@ -65,12 +66,13 @@ describe('system transform', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'workflow step',
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
@@ -108,7 +110,7 @@ describe('system transform', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': 'workflow overview',
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'workflow step',
@@ -116,6 +118,7 @@ describe('system transform', () => {
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
@@ -158,13 +161,14 @@ describe('system transform', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': 'shared overview',
         '{HYPER_DESIGNER_CUSTOM_PROMPT}': 'workflow custom',
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',

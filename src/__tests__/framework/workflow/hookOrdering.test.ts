@@ -2,8 +2,8 @@
  * Tests for lifecycle hook execution ordering during workflow handover.
  *
  * Guarantees:
- * 1. afterStage hooks of the departing stage run first
- * 2. beforeStage hooks of the incoming stage run second
+ * 1. after hooks of the departing stage run first
+ * 2. before hooks of the incoming stage run second
  * 3. adapter.sendPrompt() is called only AFTER both hook phases complete
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
@@ -20,28 +20,32 @@ const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function makeWorkflow(overrides?: {
-  afterStage?: StageHook[],
-  beforeStage?: StageHook[],
+  after?: StageHook[],
+  before?: StageHook[],
 }): WorkflowDefinition {
   return {
     id: "test-ordering",
     name: "Test Ordering Workflow",
     description: "Workflow for testing hook ordering",
-    stageOrder: ["stage1", "stage2"],
+    entryStageId: 'stage1',
     stages: {
       stage1: {
+        stageId: 'stage1',
         name: "Stage 1",
         description: "First stage",
         agent: "AgentA",
+        transitions: [{ id: 'to-stage2', toStageId: 'stage2', mode: 'auto', priority: 0 }],
         getHandoverPrompt: () => "Enter stage 1",
-        ...(overrides?.afterStage !== undefined ? { afterStage: overrides.afterStage } : {}),
+        ...(overrides?.after !== undefined ? { after: overrides.after } : {}),
       },
       stage2: {
+        stageId: 'stage2',
         name: "Stage 2",
         description: "Second stage",
         agent: "AgentB",
         getHandoverPrompt: () => "Enter stage 2",
-        ...(overrides?.beforeStage !== undefined ? { beforeStage: overrides.beforeStage } : {}),
+        transitions: [],
+        ...(overrides?.before !== undefined ? { before: overrides.before } : {}),
       },
     },
   }
@@ -87,63 +91,63 @@ afterEach(() => {
 
 describe("hook execution ordering during executeWorkflowHandover", () => {
 
-  it("calls afterStage of departing stage before beforeStage of incoming stage", async () => {
+  it("calls after hook of departing stage before before hook of incoming stage", async () => {
     const callOrder: string[] = []
 
     const afterHook: StageHookFn = async () => {
-      callOrder.push("afterStage:stage1")
+      callOrder.push("after:stage1")
     }
     const beforeHook: StageHookFn = async () => {
-      callOrder.push("beforeStage:stage2")
+      callOrder.push("before:stage2")
     }
 
-    const def = makeWorkflow({ afterStage: [{ fn: afterHook }], beforeStage: [{ fn: beforeHook }] })
+    const def = makeWorkflow({ after: [{ fn: afterHook }], before: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
 
-    expect(callOrder).toEqual(["afterStage:stage1", "beforeStage:stage2"])
+    expect(callOrder).toEqual(["after:stage1", "before:stage2"])
   })
 
-  it("awaits afterStage hooks fully before running beforeStage hooks", async () => {
+  it("awaits after hooks fully before running before hooks", async () => {
     const callOrder: string[] = []
 
-    // afterStage that completes asynchronously after a small delay
+    // after hook that completes asynchronously after a small delay
     const afterHook: StageHookFn = async () => {
       await new Promise<void>((resolve) => setTimeout(resolve, 10))
-      callOrder.push("afterStage:stage1-done")
+      callOrder.push("after:stage1-done")
     }
     const beforeHook: StageHookFn = async () => {
-      callOrder.push("beforeStage:stage2")
+      callOrder.push("before:stage2")
     }
 
-    const def = makeWorkflow({ afterStage: [{ fn: afterHook }], beforeStage: [{ fn: beforeHook }] })
+    const def = makeWorkflow({ after: [{ fn: afterHook }], before: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
 
-    expect(callOrder[0]).toBe("afterStage:stage1-done")
-    expect(callOrder[1]).toBe("beforeStage:stage2")
+    expect(callOrder[0]).toBe("after:stage1-done")
+    expect(callOrder[1]).toBe("before:stage2")
   })
 
-  it("awaits beforeStage hooks fully before executeWorkflowHandover returns", async () => {
-    let beforeStageDone = false
+  it("awaits before hooks fully before executeWorkflowHandover returns", async () => {
+    let beforeDone = false
 
     const beforeHook: StageHookFn = async () => {
       await new Promise<void>((resolve) => setTimeout(resolve, 10))
-      beforeStageDone = true
+      beforeDone = true
     }
 
-    const def = makeWorkflow({ beforeStage: [{ fn: beforeHook }] })
+    const def = makeWorkflow({ before: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
 
-    // The function has returned — beforeStage must be complete
-    expect(beforeStageDone).toBe(true)
+    // The function has returned — before hook must be complete
+    expect(beforeDone).toBe(true)
   })
 
-  it("runs multiple afterStage hooks in order before any beforeStage hook", async () => {
+  it("runs multiple after hooks in order before any before hook", async () => {
     const callOrder: string[] = []
 
     const afterHook1: StageHookFn = async () => { callOrder.push("after1") }
@@ -152,8 +156,8 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
     const beforeHook2: StageHookFn = async () => { callOrder.push("before2") }
 
     const def = makeWorkflow({
-      afterStage: [{ fn: afterHook1 }, { fn: afterHook2 }],
-      beforeStage: [{ fn: beforeHook1 }, { fn: beforeHook2 }],
+      after: [{ fn: afterHook1 }, { fn: afterHook2 }],
+      before: [{ fn: beforeHook1 }, { fn: beforeHook2 }],
     })
     setupInitialState(def)
 
@@ -162,7 +166,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
     expect(callOrder).toEqual(["after1", "after2", "before1", "before2"])
   })
 
-  it("afterStage 看到的 currentStage 是离开的阶段（fromStep）", async () => {
+  it("after hook 看到的 currentStage 是离开的阶段（fromStep）", async () => {
     let currentStageDuringAfterHook: string | null = "not-set"
 
     const afterHook: StageHookFn = async () => {
@@ -171,16 +175,16 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
 
     }
 
-    const def = makeWorkflow({ afterStage: [{ fn: afterHook }] })
+    const def = makeWorkflow({ after: [{ fn: afterHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
 
-    // afterStage 尚未切换，应该看到尚未更新的 currentStage（离开的阶段）
+    // after 尚未切换，应该看到尚未更新的 currentStage（离开的阶段）
     expect(currentStageDuringAfterHook).toBe("stage1")
   })
 
-  it("beforeStage 看到的 currentStage 是进入的阶段（toStep）", async () => {
+  it("before hook 看到的 currentStage 是进入的阶段（toStep）", async () => {
     let currentStageDuringBeforeHook: string | null = "not-set"
 
     const beforeHook: StageHookFn = async () => {
@@ -189,7 +193,7 @@ describe("hook execution ordering during executeWorkflowHandover", () => {
 
     }
 
-    const def = makeWorkflow({ beforeStage: [{ fn: beforeHook }] })
+    const def = makeWorkflow({ before: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     await executeWorkflowHandover(def)
@@ -202,9 +206,9 @@ describe("event-handler ordering: sendPrompt called after executeHandover comple
   /**
    * This is a unit test of the event-handler contract:
    * The adapter.sendPrompt() must be called AFTER executeWorkflowHandover resolves,
-   * meaning all beforeStage hooks have completed.
+   * meaning all before hooks have completed.
    */
-  it("sendPrompt is not called until beforeStage hooks complete", async () => {
+  it("sendPrompt is not called until before hooks complete", async () => {
     const callOrder: string[] = []
     let resolveBeforeHook!: () => void
 
@@ -212,10 +216,10 @@ describe("event-handler ordering: sendPrompt called after executeHandover comple
       await new Promise<void>((resolve) => {
         resolveBeforeHook = resolve
       })
-      callOrder.push("beforeStage:done")
+      callOrder.push("before:done")
     }
 
-    const def = makeWorkflow({ beforeStage: [{ fn: beforeHook }] })
+    const def = makeWorkflow({ before: [{ fn: beforeHook }] })
     setupInitialState(def)
 
     const sendPromptSpy = vi.fn<[SendPromptParams], Promise<SendPromptResult>>(async () => {
@@ -237,6 +241,6 @@ describe("event-handler ordering: sendPrompt called after executeHandover comple
     resolveBeforeHook()
     await handoverPromise
 
-    expect(callOrder).toEqual(["beforeStage:done", "sendPrompt:called"])
+    expect(callOrder).toEqual(["before:done", "sendPrompt:called"])
   })
 })

@@ -49,50 +49,43 @@ export const classicWorkflow: WorkflowDefinition = {
   id: 'classic',
   name: 'Classic Requirements Engineering',
   description: '8-stage workflow: IR analysis → scenario analysis → use case analysis → functional refinement → requirement decomposition → system functional design → module functional design → SDD plan generation',
+  entryStageId: 'IRAnalysis',
 
   promptBindings: {
     '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(join(__dirname, 'prompts', 'workflow.md')),
   },
 
-  stageOrder: [
-    'IRAnalysis',
-    'scenarioAnalysis',
-    'useCaseAnalysis',
-    'functionalRefinement',
-    'requirementDecomposition',
-    'systemFunctionalDesign',
-    'moduleFunctionalDesign',
-    'sddPlanGeneration',
-  ],
-
   stages: {
     IRAnalysis: {
+      stageId: 'IRAnalysis',
       name: 'Initial Requirement Analysis',
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {},
       outputs: {
         '需求信息': { path: '需求信息.md', description: 'Initial requirement analysis document' },
       },
-      beforeStage: [{ fn: irAnalysisCollectorHook }],
-      afterStage: [{ fn: summarizeHook }],
+      before: [{ id: 'collect-ir', description: 'Collect IR references', fn: irAnalysisCollectorHook }],
+      after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
+      transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行严格的需求分析', currentName),
     },
 
     scenarioAnalysis: {
+      stageId: 'scenarioAnalysis',
       name: 'Scenario Analysis',
       description: 'Analyze system usage scenarios, identify actors and business processes',
       agent: 'HArchitect',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '需求信息': { required: true },
@@ -100,20 +93,22 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '功能场景': { path: '功能场景.md', description: 'Functional scenario specifications' },
       },
-      beforeStage: [{ fn: scenarioAnalysisCollectorHook }],
-      afterStage: [{ fn: summarizeHook }],
+      before: [{ id: 'collect-scenario', description: 'Collect scenario references', fn: scenarioAnalysisCollectorHook }],
+      after: [{ id: 'summarize-scenario', description: 'Summarize scenario context', fn: summarizeHook }],
+      transitions: [{ id: 'to-usecase', toStageId: 'useCaseAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '分析系统使用场景，识别参与者与业务流程', currentName),
     },
 
     useCaseAnalysis: {
+      stageId: 'useCaseAnalysis',
       name: 'Use Case Analysis',
       description: 'Refine scenarios into detailed use case specifications with inputs, outputs, and acceptance criteria',
       agent: 'HArchitect',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '功能场景': { required: true },
@@ -121,19 +116,21 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '用例': { path: '用例.md', description: 'Use case specifications' },
       },
-      afterStage: [{ fn: summarizeHook }],
+      after: [{ id: 'summarize-usecase', description: 'Summarize use-case context', fn: summarizeHook }],
+      transitions: [{ id: 'to-functional', toStageId: 'functionalRefinement', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '将场景细化为详细的用例规格说明，明确输入、输出与验收标准', currentName),
     },
 
     functionalRefinement: {
+      stageId: 'functionalRefinement',
       name: 'Functional Refinement',
       description: 'Extract complete functional list, prioritize using MoSCoW method, and perform FMEA analysis',
       agent: 'HArchitect',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '用例': { required: true },
@@ -141,19 +138,21 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '功能列表': { path: '功能列表.md', description: 'Refined functional requirements' },
       },
-      afterStage: [{ fn: summarizeHook }],
+      after: [{ id: 'summarize-functional', description: 'Summarize functional context', fn: summarizeHook }],
+      transitions: [{ id: 'to-decompose', toStageId: 'requirementDecomposition', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '提取完整功能列表，使用 MoSCoW 方法进行优先级排序，并执行 FMEA 分析', currentName),
     },
 
     requirementDecomposition: {
+      stageId: 'requirementDecomposition',
       name: 'Requirement Decomposition',
       description: 'Map and decompose functional list into module-level requirements, subsystems, and interface definitions',
       agent: 'HEngineer',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '功能列表': { required: true },
@@ -161,19 +160,21 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         'SR-AR 分解': { path: 'SR-AR 分解.md', description: 'System-Allocation requirement decomposition' },
       },
-      afterStage: [{ fn: summarizeHook }],
+      after: [{ id: 'summarize-decompose', description: 'Summarize decomposition context', fn: summarizeHook }],
+      transitions: [{ id: 'to-system-design', toStageId: 'systemFunctionalDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '将功能列表映射并分解为模块级需求、子系统及接口定义', currentName),
     },
 
     systemFunctionalDesign: {
+      stageId: 'systemFunctionalDesign',
       name: 'System Functional Design',
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         'SR-AR 分解': { required: true },
@@ -181,20 +182,22 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '系统功能设计': { path: '系统功能设计.md', description: 'System-level functional design' },
       },
-      beforeStage: [{ fn: systemDesignCollectorHook }],
-      afterStage: [{ fn: summarizeHook }],
+      before: [{ id: 'collect-system-design', description: 'Collect system-design references', fn: systemDesignCollectorHook }],
+      after: [{ id: 'summarize-system-design', description: 'Summarize system-design context', fn: summarizeHook }],
+      transitions: [{ id: 'to-module-design', toStageId: 'moduleFunctionalDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于已分解的需求，设计系统架构、选择技术栈，并定义数据模型与交互协议', currentName),
     },
 
     moduleFunctionalDesign: {
+      stageId: 'moduleFunctionalDesign',
       name: 'Module Functional Design',
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
       inputs: {
         '系统功能设计': { required: true },
@@ -202,19 +205,21 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '模块功能设计': { path: '模块功能设计.md', description: 'Module-level functional design' },
       },
-      afterStage: [{ fn: summarizeHook }],
+      after: [{ id: 'summarize-module-design', description: 'Summarize module-design context', fn: summarizeHook }],
+      transitions: [{ id: 'to-sdd-plan', toStageId: 'sddPlanGeneration', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '为各模块输出详细技术规格说明，涵盖职责、接口、内部结构、算法、数据结构及测试策略', currentName),
     },
 
     sddPlanGeneration: {
+      stageId: 'sddPlanGeneration',
       name: 'SDD Plan Generation',
       description: 'Generate specification-driven development (SDD) plans from module functional design docs: task waves, complexity ratings, subagent dispatch strategy, interface cards, acceptance criteria and TDD scenarios',
       agent: 'HEngineer',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
-      stageMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: false,
       inputs: {
         '模块功能设计': { required: true },
@@ -222,7 +227,8 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         'SDD 计划': { path: 'SDD 计划.md', description: 'SDD development plan' },
       },
-      afterStage: [{ fn: summarizeHook }],
+      after: [{ id: 'summarize-sdd-plan', description: 'Summarize SDD planning context', fn: summarizeHook }],
+      transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于模块功能设计说明书，生成可直接分发给 subagent 执行的 SDD 开发计划', currentName),
     },

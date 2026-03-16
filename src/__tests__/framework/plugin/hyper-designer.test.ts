@@ -33,7 +33,7 @@ function initClassicWorkflowSelection(): void {
     throw new Error("Classic workflow detail should be defined")
   }
 
-  const stages = detail.stageOrder.map(key => ({ key, selected: true }))
+  const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }))
   const result = workflowService.selectWorkflow({ typeId: "classic", stages })
   if (!result.success && !result.error?.includes("already initialized")) {
     throw new Error(result.error ?? "Failed to select classic workflow")

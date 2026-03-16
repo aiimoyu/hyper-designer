@@ -1,6 +1,6 @@
 import type { AgentConfig } from '../types'
 import type { AgentDefinition } from '../factory'
-import { createAgent, filePrompt } from '../factory'
+import { createAgent, filePrompt, stringPrompt } from '../factory'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -13,7 +13,10 @@ const DEFINITION: AgentDefinition = {
   mode: 'primary',
   color: '#2563EB',
   defaultTemperature: 0.4,
-  promptGenerators: [filePrompt(join(__dirname, 'prompt.md'))],
+  promptGenerators: [
+    filePrompt(join(__dirname, 'prompt.md')),
+    stringPrompt('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'),
+  ],
   defaultPermission: {
     bash: 'deny',
     edit: 'allow',

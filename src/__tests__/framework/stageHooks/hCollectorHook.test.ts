@@ -23,9 +23,10 @@ const stubWorkflow: WorkflowDefinition = {
   id: 'test',
   name: 'Test Workflow',
   description: 'For testing',
-  stageOrder: ['stage1'],
+  entryStageId: 'stage1',
   stages: {
     stage1: {
+      stageId: 'stage1',
       name: 'Stage 1',
       description: 'Test stage',
       agent: 'TestAgent',

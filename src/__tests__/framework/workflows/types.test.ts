@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { WorkflowDefinition } from '../../../workflows/core'
-import { getWorkflowDefinition, getAvailableWorkflows } from '../../../workflows/core'
+import { getWorkflowDefinition, getAvailableWorkflows, getStageOrder } from '../../../workflows/core'
 
 describe('WorkflowDefinition', () => {
   it('can be constructed with valid data', () => {
@@ -8,16 +8,19 @@ describe('WorkflowDefinition', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'A test workflow',
-      stageOrder: ['stage1', 'stage2'],
+      entryStageId: 'stage1',
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'First stage',
           agent: 'test-agent',
           promptFile: 'stage1.md',
+          transitions: [{ id: 'to-stage2', toStageId: 'stage2', mode: 'auto', priority: 0 }],
           getHandoverPrompt: (current) => `Handover from ${current ?? 'start'} to stage1`
         },
         stage2: {
+          stageId: 'stage2',
           name: 'Stage 2',
           description: 'Second stage',
           agent: 'test-agent',
@@ -28,7 +31,7 @@ describe('WorkflowDefinition', () => {
     }
 
     expect(workflow.id).toBe('test-workflow')
-    expect(workflow.stageOrder).toEqual(['stage1', 'stage2'])
+    expect(getStageOrder(workflow)).toEqual(['stage1', 'stage2'])
     expect(Object.keys(workflow.stages)).toHaveLength(2)
   })
 })

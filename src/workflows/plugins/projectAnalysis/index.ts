@@ -29,26 +29,22 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
   id: 'projectAnalysis',
   name: 'Project Analysis',
   description: '3-stage workflow shell: system analysis → component analysis → missing coverage check',
+  entryStageId: 'systemAnalysis',
 
   promptBindings: {
     '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(join(__dirname, 'prompts', 'workflow.md')),
   },
 
-  stageOrder: [
-    'systemAnalysis',
-    'componentAnalysis',
-    'missingCoverageCheck',
-  ],
-
   stages: {
     systemAnalysis: {
+      stageId: 'systemAnalysis',
       name: 'System Analysis',
       description: 'Analyze the target project at system level and produce the system analysis report',
       agent: 'HAnalysis',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
       },
-      stageMilestones: [],
+      requiredMilestones: [],
       required: true,
       inputs: {},
       outputs: {
@@ -77,18 +73,20 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
           description: 'Source inventory',
         },
       },
+      transitions: [{ id: 'to-component', toStageId: 'componentAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行系统级分析', currentName),
     },
 
     componentAnalysis: {
+      stageId: 'componentAnalysis',
       name: 'Component Analysis',
       description: 'Analyze project components based on the system analysis report',
       agent: 'HAnalysis',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'componentAnalysis.md')),
       },
-      stageMilestones: [],
+      requiredMilestones: [],
       required: true,
       inputs: {
         '组件清单': { required: true },
@@ -107,18 +105,20 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
           description: 'Component analysis summary',
         },
       },
+      transitions: [{ id: 'to-coverage', toStageId: 'missingCoverageCheck', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于系统分析报告执行组件分析', currentName),
     },
 
     missingCoverageCheck: {
+      stageId: 'missingCoverageCheck',
       name: 'Missing Coverage Check',
       description: 'Check missing analysis coverage based on the component analysis report',
       agent: 'HAnalysis',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'missingCoverageCheck.md')),
       },
-      stageMilestones: [],
+      requiredMilestones: [],
       required: true,
       inputs: {
         '系统架构分析报告': { required: true },
@@ -134,6 +134,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
           description: 'Coverage report metadata',
         },
       },
+      transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行缺失覆盖率检查', currentName),
     },

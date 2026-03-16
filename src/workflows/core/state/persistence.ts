@@ -9,57 +9,233 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
-import type { CurrentStageState, StageMilestone, WorkflowStage, WorkflowState } from './types'
+import type {
+  CurrentStageState,
+  WorkflowCurrentMilestone,
+  WorkflowHistoryEvent,
+  WorkflowStage,
+  WorkflowState,
+} from './types'
 import { HyperDesignerLogger } from '../../../utils/logger'
-import { GATE_MILESTONE_KEY, GATE_PASS_THRESHOLD } from '../stageMilestone'
 
 /** Path to the workflow state file */
 const WORKFLOW_STATE_PATH = join(process.cwd(), '.hyper-designer', 'workflow_state.json')
 
 interface ParsedWorkflowState {
+  schemaVersion?: number;
   initialized?: boolean;
   typeId?: string;
+  plan?: unknown;
+  execution?: unknown;
   workflow?: Record<string, unknown>;
   current?: Record<string, unknown>;
   currentStage?: string;
   handoverTo?: string | null;
   selectedStages?: string[];
+  instance?: unknown;
+  runtime?: unknown;
+  history?: unknown;
+}
+
+interface PersistedPlanStage {
+  inclusion: 'selected' | 'skipped';
+  completed: boolean;
+  previous?: string | null;
+  next?: string | null;
+}
+
+interface PersistedPlan {
+  instanceId?: string;
+  workflowId?: string;
+  workflowVersion?: string;
+  entryNodeId?: string;
+  nodePlan?: WorkflowState['instance'] extends infer T
+    ? T extends { nodePlan: infer N }
+      ? N
+      : never
+    : never;
+  stages: Record<string, PersistedPlanStage>;
+}
+
+interface PersistedExecution {
+  status: 'running' | 'completed' | 'failed';
+  stage: {
+    current: string | null;
+    previous: string | null;
+    next: string | null;
+    handoverTo: string | null;
+    failureCount: number;
+    agent?: string;
+  };
+  node: {
+    from: string | null;
+    current: string | null;
+    next: string | null;
+    lastEventSeq: number;
+    context: WorkflowState['runtime'] extends infer T
+      ? T extends { currentNodeContext: infer C }
+        ? C
+        : null
+      : null;
+  };
+}
+
+function sanitizeHistory(value: unknown): { events: WorkflowHistoryEvent[] } | undefined {
+  if (!isObjectRecord(value)) {
+    return undefined
+  }
+  const rawEvents = Array.isArray(value.events) ? value.events : []
+  const events: WorkflowHistoryEvent[] = []
+  for (const item of rawEvents) {
+    if (!isObjectRecord(item)) {
+      continue
+    }
+    if (typeof item.seq !== 'number' || typeof item.at !== 'string' || typeof item.type !== 'string' || typeof item.runId !== 'string') {
+      continue
+    }
+    const event: WorkflowHistoryEvent = {
+      seq: item.seq,
+      at: item.at,
+      type: item.type,
+      runId: item.runId,
+    }
+    if (typeof item.nodeId === 'string') {
+      event.nodeId = item.nodeId
+    }
+    if (typeof item.fromNodeId === 'string' || item.fromNodeId === null) {
+      event.fromNodeId = item.fromNodeId
+    }
+    if (typeof item.toNodeId === 'string' || item.toNodeId === null) {
+      event.toNodeId = item.toNodeId
+    }
+    if (typeof item.reason === 'string') {
+      event.reason = item.reason
+    }
+    if (typeof item.key === 'string') {
+      event.key = item.key
+    }
+    if ('value' in item) {
+      event.value = item.value
+    }
+    if (isObjectRecord(item.patch)) {
+      event.patch = item.patch
+    }
+    events.push(event)
+  }
+  return { events }
+}
+
+function sanitizeRuntime(value: unknown): WorkflowState['runtime'] {
+  if (!isObjectRecord(value)) {
+    return undefined
+  }
+
+  const status = value.status
+  const flow = isObjectRecord(value.flow) ? value.flow : null
+  if ((status !== 'running' && status !== 'completed' && status !== 'failed') || !flow) {
+    return undefined
+  }
+
+  const fromNodeId = typeof flow.fromNodeId === 'string' || flow.fromNodeId === null ? flow.fromNodeId : null
+  const currentNodeId = typeof flow.currentNodeId === 'string' || flow.currentNodeId === null ? flow.currentNodeId : null
+  const nextNodeId = typeof flow.nextNodeId === 'string' || flow.nextNodeId === null ? flow.nextNodeId : null
+  const lastEventSeq = typeof flow.lastEventSeq === 'number' ? flow.lastEventSeq : 0
+
+  const rawContext = isObjectRecord(value.currentNodeContext) ? value.currentNodeContext : null
+  const milestones: Record<string, WorkflowCurrentMilestone> = {}
+  if (rawContext && isObjectRecord(rawContext.milestones)) {
+    for (const [key, milestone] of Object.entries(rawContext.milestones)) {
+      if (!isObjectRecord(milestone)) {
+        continue
+      }
+      if (typeof milestone.isCompleted !== 'boolean' || typeof milestone.updatedAt !== 'string') {
+        continue
+      }
+      milestones[key] = {
+        isCompleted: milestone.isCompleted,
+        detail: 'detail' in milestone ? milestone.detail : null,
+        updatedAt: milestone.updatedAt,
+      }
+    }
+  }
+
+  const currentNodeContext = rawContext && typeof rawContext.nodeId === 'string'
+    ? {
+        nodeId: rawContext.nodeId,
+        visit: typeof rawContext.visit === 'number' ? rawContext.visit : 1,
+        attempt: typeof rawContext.attempt === 'number' ? rawContext.attempt : 1,
+        milestones,
+        info: isObjectRecord(rawContext.info) ? rawContext.info : {},
+      }
+    : null
+
+  return {
+    status,
+    flow: {
+      fromNodeId,
+      currentNodeId,
+      nextNodeId,
+      lastEventSeq,
+    },
+    currentNodeContext,
+  }
+}
+
+function sanitizeInstance(value: unknown): WorkflowState['instance'] {
+  if (!isObjectRecord(value)) {
+    return undefined
+  }
+  if (
+    typeof value.instanceId !== 'string'
+    || typeof value.workflowId !== 'string'
+    || typeof value.workflowVersion !== 'string'
+    || !Array.isArray(value.selectedStageIds)
+    || !Array.isArray(value.skippedStageIds)
+    || typeof value.entryNodeId !== 'string'
+    || !isObjectRecord(value.nodePlan)
+  ) {
+    return undefined
+  }
+
+  const selectedStageIds = value.selectedStageIds.filter((item): item is string => typeof item === 'string')
+  const skippedStageIds = value.skippedStageIds.filter((item): item is string => typeof item === 'string')
+  const nodePlan: NonNullable<WorkflowState['instance']>['nodePlan'] = {}
+  for (const [key, node] of Object.entries(value.nodePlan)) {
+    if (!isObjectRecord(node)) {
+      continue
+    }
+    if (
+      typeof node.nodeId !== 'string'
+      || typeof node.stageId !== 'string'
+      || (node.kind !== 'before' && node.kind !== 'main' && node.kind !== 'after')
+      || (typeof node.fromNodeId !== 'string' && node.fromNodeId !== null)
+      || (typeof node.nextNodeId !== 'string' && node.nextNodeId !== null)
+    ) {
+      continue
+    }
+    nodePlan[key] = {
+      nodeId: node.nodeId,
+      stageId: node.stageId,
+      kind: node.kind,
+      ...(typeof node.hookId === 'string' ? { hookId: node.hookId } : {}),
+      fromNodeId: node.fromNodeId,
+      nextNodeId: node.nextNodeId,
+    }
+  }
+
+  return {
+    instanceId: value.instanceId,
+    workflowId: value.workflowId,
+    workflowVersion: value.workflowVersion,
+    selectedStageIds,
+    skippedStageIds,
+    entryNodeId: value.entryNodeId,
+    nodePlan,
+  }
 }
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function sanitizeMilestones(value: unknown): Record<string, StageMilestone> {
-  if (!isObjectRecord(value)) {
-    return {}
-  }
-
-  const milestones: Record<string, StageMilestone> = {}
-  for (const [key, milestone] of Object.entries(value)) {
-    if (!isObjectRecord(milestone)) {
-      continue
-    }
-    if (typeof milestone.type !== 'string' || typeof milestone.timestamp !== 'string' || !('detail' in milestone)) {
-      continue
-    }
-
-    const providedCompletion = (milestone as { isCompleted?: unknown }).isCompleted
-    const score = (milestone as { detail?: { score?: unknown } }).detail?.score
-    const inferredCompletion =
-      milestone.type === GATE_MILESTONE_KEY && typeof score === 'number'
-        ? score > GATE_PASS_THRESHOLD
-        : true
-
-    milestones[key] = {
-      type: milestone.type,
-      timestamp: milestone.timestamp,
-      isCompleted: typeof providedCompletion === 'boolean' ? providedCompletion : inferredCompletion,
-      detail: milestone.detail,
-    }
-  }
-
-  return milestones
 }
 
 function sanitizeWorkflowStage(value: unknown): WorkflowStage {
@@ -81,12 +257,113 @@ function sanitizeWorkflowStage(value: unknown): WorkflowStage {
     normalized.nextStage = stage.nextStage
   }
 
-  const milestones = sanitizeMilestones(stage.stageMilestones)
-  if (Object.keys(milestones).length > 0) {
-    normalized.stageMilestones = milestones
+  return normalized
+}
+
+function sanitizePlanState(plan: unknown): {
+  workflow: Record<string, WorkflowStage>;
+  instance?: WorkflowState['instance'];
+} | null {
+  if (!isObjectRecord(plan) || !isObjectRecord(plan.stages)) {
+    return null
   }
 
-  return normalized
+  const workflow: Record<string, WorkflowStage> = {}
+  for (const [stageKey, rawStage] of Object.entries(plan.stages)) {
+    if (!isObjectRecord(rawStage)) {
+      continue
+    }
+    const inclusion = rawStage.inclusion === 'selected' ? 'selected' : 'skipped'
+    const stage: WorkflowStage = {
+      isCompleted: Boolean(rawStage.completed),
+      selected: inclusion === 'selected',
+    }
+    if (typeof rawStage.previous === 'string' || rawStage.previous === null) {
+      stage.previousStage = rawStage.previous
+    }
+    if (typeof rawStage.next === 'string' || rawStage.next === null) {
+      stage.nextStage = rawStage.next
+    }
+    workflow[stageKey] = stage
+  }
+
+  const hasInstanceFields =
+    typeof plan.instanceId === 'string'
+    || typeof plan.workflowId === 'string'
+    || typeof plan.workflowVersion === 'string'
+    || typeof plan.entryNodeId === 'string'
+    || isObjectRecord(plan.nodePlan)
+
+  if (!hasInstanceFields) {
+    return { workflow }
+  }
+
+  const selectedStageIds = Object.entries(workflow)
+    .filter(([, stage]) => stage.selected !== false)
+    .map(([stageKey]) => stageKey)
+  const skippedStageIds = Object.entries(workflow)
+    .filter(([, stage]) => stage.selected === false)
+    .map(([stageKey]) => stageKey)
+
+  const nodePlanValue = isObjectRecord(plan.nodePlan) ? plan.nodePlan : {}
+  const instance = sanitizeInstance({
+    instanceId: typeof plan.instanceId === 'string' ? plan.instanceId : 'legacy-instance',
+    workflowId: typeof plan.workflowId === 'string' ? plan.workflowId : 'legacy-workflow',
+    workflowVersion: typeof plan.workflowVersion === 'string' ? plan.workflowVersion : '1.0.0',
+    selectedStageIds,
+    skippedStageIds,
+    entryNodeId: typeof plan.entryNodeId === 'string' ? plan.entryNodeId : 'workflow.entry',
+    nodePlan: nodePlanValue,
+  })
+
+  return {
+    workflow,
+    ...(instance ? { instance } : {}),
+  }
+}
+
+function sanitizeExecutionState(execution: unknown): {
+  current: CurrentStageState | null;
+  runtime?: WorkflowState['runtime'];
+} | null {
+  if (!isObjectRecord(execution) || !isObjectRecord(execution.stage) || !isObjectRecord(execution.node)) {
+    return null
+  }
+
+  const stage = execution.stage
+  const node = execution.node
+  const runtime = sanitizeRuntime({
+    status: execution.status,
+    flow: {
+      fromNodeId: node.from,
+      currentNodeId: node.current,
+      nextNodeId: node.next,
+      lastEventSeq: node.lastEventSeq,
+    },
+    currentNodeContext: node.context,
+  })
+
+  const current: CurrentStageState = {
+    name: typeof stage.current === 'string' || stage.current === null ? stage.current : null,
+    handoverTo: typeof stage.handoverTo === 'string' || stage.handoverTo === null ? stage.handoverTo : null,
+    previousStage: typeof stage.previous === 'string' || stage.previous === null ? stage.previous : null,
+    nextStage: typeof stage.next === 'string' || stage.next === null ? stage.next : null,
+    failureCount: typeof stage.failureCount === 'number' ? stage.failureCount : 0,
+    ...(typeof stage.agent === 'string' ? { agent: stage.agent } : {}),
+  }
+
+  const isEmptyCurrent =
+    current.name === null
+    && current.handoverTo === null
+    && (current.previousStage ?? null) === null
+    && (current.nextStage ?? null) === null
+    && (current.failureCount ?? 0) === 0
+    && current.agent === undefined
+
+  return {
+    current: isEmptyCurrent ? null : current,
+    ...(runtime ? { runtime } : {}),
+  }
 }
 
 function sanitizeCurrentState(parsed: ParsedWorkflowState): CurrentStageState | null {
@@ -140,10 +417,6 @@ function sanitizeStateForWrite(state: WorkflowState): WorkflowState {
     if (typeof stageValue.nextStage === 'string' || stageValue.nextStage === null) {
       stage.nextStage = stageValue.nextStage
     }
-    if (stageValue.stageMilestones && Object.keys(stageValue.stageMilestones).length > 0) {
-      stage.stageMilestones = stageValue.stageMilestones
-    }
-
     sanitizedWorkflow[stageKey] = stage
   }
 
@@ -160,6 +433,56 @@ function sanitizeStateForWrite(state: WorkflowState): WorkflowState {
           failureCount: state.current.failureCount ?? 0,
         }
       : null,
+    ...(state.instance ? { instance: state.instance } : {}),
+    ...(state.runtime ? { runtime: state.runtime } : {}),
+    ...(state.history ? { history: state.history } : {}),
+  }
+}
+
+function buildPlanForWrite(state: WorkflowState): PersistedPlan {
+  const stages: Record<string, PersistedPlanStage> = {}
+  for (const [stageKey, stage] of Object.entries(state.workflow)) {
+    const normalized: PersistedPlanStage = {
+      inclusion: stage.selected === false ? 'skipped' : 'selected',
+      completed: Boolean(stage.isCompleted),
+    }
+    if (typeof stage.previousStage === 'string' || stage.previousStage === null) {
+      normalized.previous = stage.previousStage
+    }
+    if (typeof stage.nextStage === 'string' || stage.nextStage === null) {
+      normalized.next = stage.nextStage
+    }
+    stages[stageKey] = normalized
+  }
+
+  return {
+    ...(state.instance?.instanceId ? { instanceId: state.instance.instanceId } : {}),
+    ...(state.instance?.workflowId ? { workflowId: state.instance.workflowId } : {}),
+    ...(state.instance?.workflowVersion ? { workflowVersion: state.instance.workflowVersion } : {}),
+    ...(state.instance?.entryNodeId ? { entryNodeId: state.instance.entryNodeId } : {}),
+    ...(state.instance?.nodePlan ? { nodePlan: state.instance.nodePlan } : {}),
+    stages,
+  }
+}
+
+function buildExecutionForWrite(state: WorkflowState): PersistedExecution {
+  return {
+    status: state.runtime?.status ?? 'running',
+    stage: {
+      current: state.current?.name ?? null,
+      previous: state.current?.previousStage ?? null,
+      next: state.current?.nextStage ?? null,
+      handoverTo: state.current?.handoverTo ?? null,
+      failureCount: state.current?.failureCount ?? 0,
+      ...(state.current?.agent ? { agent: state.current.agent } : {}),
+    },
+    node: {
+      from: state.runtime?.flow.fromNodeId ?? null,
+      current: state.runtime?.flow.currentNodeId ?? null,
+      next: state.runtime?.flow.nextNodeId ?? null,
+      lastEventSeq: state.runtime?.flow.lastEventSeq ?? 0,
+      context: state.runtime?.currentNodeContext ?? null,
+    },
   }
 }
 
@@ -186,6 +509,33 @@ export function readWorkflowStateFile(): WorkflowState | null {
     const data = readFileSync(WORKFLOW_STATE_PATH, 'utf-8')
     const parsed = JSON.parse(data) as ParsedWorkflowState
 
+    if (parsed.schemaVersion === 2) {
+      const parsedPlan = sanitizePlanState(parsed.plan)
+      const parsedExecution = sanitizeExecutionState(parsed.execution)
+
+      const workflow = parsedPlan?.workflow ?? {}
+      const current = parsedExecution?.current ?? null
+      const instance = parsedPlan?.instance
+      const runtime = parsedExecution?.runtime
+      const history = sanitizeHistory(parsed.history)
+
+      const state: WorkflowState = {
+        initialized: parsed.initialized ?? (typeof parsed.typeId === 'string'),
+        typeId: typeof parsed.typeId === 'string' ? parsed.typeId : null,
+        workflow,
+        current,
+        ...(instance !== undefined ? { instance } : {}),
+        ...(runtime !== undefined ? { runtime } : {}),
+        ...(history !== undefined ? { history } : {}),
+      }
+
+      HyperDesignerLogger.debug('Workflow', '工作流状态读取完成(v2)', {
+        currentStage: state.current?.name || null,
+        workflowId: state.typeId,
+      })
+      return state
+    }
+
     const workflow: Record<string, WorkflowStage> = {}
     if (isObjectRecord(parsed.workflow)) {
       for (const [stageKey, stageValue] of Object.entries(parsed.workflow)) {
@@ -202,11 +552,18 @@ export function readWorkflowStateFile(): WorkflowState | null {
 
     const current = sanitizeCurrentState(parsed)
 
+    const instance = sanitizeInstance(parsed.instance)
+    const runtime = sanitizeRuntime(parsed.runtime)
+    const history = sanitizeHistory(parsed.history)
+
     const state: WorkflowState = {
       initialized: parsed.initialized ?? (typeof parsed.typeId === 'string'),
       typeId: typeof parsed.typeId === 'string' ? parsed.typeId : null,
       workflow,
       current,
+      ...(instance !== undefined ? { instance } : {}),
+      ...(runtime !== undefined ? { runtime } : {}),
+      ...(history !== undefined ? { history } : {}),
     }
 
     HyperDesignerLogger.debug('Workflow', '工作流状态读取完成', {
@@ -241,7 +598,15 @@ export function writeWorkflowStateFile(state: WorkflowState): void {
     }
 
     const sanitizedState = sanitizeStateForWrite(state)
-    writeFileSync(WORKFLOW_STATE_PATH, JSON.stringify(sanitizedState, null, 2), 'utf-8')
+    const persisted = {
+      schemaVersion: 2,
+      initialized: sanitizedState.initialized,
+      typeId: sanitizedState.typeId,
+      plan: buildPlanForWrite(sanitizedState),
+      execution: buildExecutionForWrite(sanitizedState),
+      ...(sanitizedState.history ? { history: sanitizedState.history } : {}),
+    }
+    writeFileSync(WORKFLOW_STATE_PATH, JSON.stringify(persisted, null, 2), 'utf-8')
     HyperDesignerLogger.debug('Workflow', '工作流状态写入完成', {
       currentStage: state.current?.name || null,
       workflowId: state.typeId,

@@ -62,10 +62,10 @@ describe('workflow type definitions', () => {
         description: 'Test description',
         agent: 'TestAgent',
         getHandoverPrompt: (from, to) => `${from} -> ${to}`,
-        stageMilestones: ['gate', 'doc_review'],
+        requiredMilestones: ['gate', 'doc_review'],
       }
 
-      expect(stage.stageMilestones).toEqual(['gate', 'doc_review'])
+      expect(stage.requiredMilestones).toEqual(['gate', 'doc_review'])
     })
 
     it('should work without optional fields', () => {
@@ -131,22 +131,12 @@ describe('workflow type definitions', () => {
       expect(stage.selected).toBeUndefined()
     })
 
-    it('should have stageMilestones field', () => {
+    it('should not include legacy milestone map field on stage state', () => {
       const stage: WorkflowStage = {
         isCompleted: false,
-        stageMilestones: {
-          gate: {
-            type: 'gate',
-            timestamp: '2026-03-12T10:00:00Z',
-            isCompleted: true,
-            detail: { score: 85, comment: 'Good quality' },
-          },
-        },
       }
 
-      expect(stage.stageMilestones).toBeDefined()
-      expect(stage.stageMilestones?.gate).toBeDefined()
-      expect(stage.stageMilestones?.gate.type).toBe('gate')
+      expect((stage as unknown as { legacyMilestones?: unknown }).legacyMilestones).toBeUndefined()
     })
 
     it('should have previousStage and nextStage fields', () => {

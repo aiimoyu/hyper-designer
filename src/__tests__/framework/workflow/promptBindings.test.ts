@@ -16,13 +16,14 @@ describe('workflow prompt bindings', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': stringPrompt('workflow overview'),
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('workflow step'),
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
@@ -42,13 +43,14 @@ describe('workflow prompt bindings', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': stringPrompt('workflow overview'),
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('workflow step'),
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
@@ -65,7 +67,7 @@ describe('workflow prompt bindings', () => {
       id: 'classic',
       name: 'Classic Requirements Engineering',
       description: 'Test workflow',
-      stageOrder: ['IRAnalysis'],
+      entryStageId: 'IRAnalysis',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(
           join(__dirname, '..', '..', '..', 'workflows', 'plugins', 'classic', 'prompts', 'workflow.md'),
@@ -73,6 +75,7 @@ describe('workflow prompt bindings', () => {
       },
       stages: {
         IRAnalysis: {
+          stageId: 'IRAnalysis',
           name: 'Initial Requirement Analysis',
           description: 'IR',
           agent: 'HArchitect',
@@ -97,12 +100,13 @@ describe('workflow prompt bindings', () => {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
-      stageOrder: ['stage1'],
+      entryStageId: 'stage1',
       promptBindings: {
         '{CUSTOM_OVERVIEW_PROMPT}': stringPrompt('custom workflow overview'),
       },
       stages: {
         stage1: {
+          stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',

@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import type { WorkflowDefinition } from '../../../workflows/core'
+import { getStageOrder } from '../../../workflows/core'
 import { projectAnalysisWorkflow } from '../../../workflows/plugins/projectAnalysis'
 
 function getProjectAnalysisWorkflow(): WorkflowDefinition {
@@ -30,8 +31,9 @@ describe('projectAnalysis workflow stage metadata', () => {
 
     it('has stageOrder matching stage keys', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stageOrder).toHaveLength(3)
-      expect(workflow.stageOrder).toEqual(stageKeys)
+      const stageOrder = getStageOrder(workflow)
+      expect(stageOrder).toHaveLength(3)
+      expect(stageOrder).toEqual(stageKeys)
     })
   })
 
@@ -67,7 +69,7 @@ describe('projectAnalysis workflow stage metadata', () => {
 
       it('does not have gate milestone enabled', () => {
         const workflow = getProjectAnalysisWorkflow()
-        expect(workflow.stages[key].stageMilestones).not.toContain('gate')
+        expect(workflow.stages[key].requiredMilestones ?? []).not.toContain('gate')
       })
     })
   }

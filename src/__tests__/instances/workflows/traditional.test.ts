@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  getStageOrder,
   loadPromptForStage,
   getWorkflowDefinition,
   getAvailableWorkflows,
@@ -41,22 +42,22 @@ describe('Classic Workflow', () => {
   describe('stage order', () => {
     it('should have exactly 8 stages', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder).toHaveLength(8)
+      expect(getStageOrder(workflow)).toHaveLength(8)
     })
 
     it('should start with IRAnalysis', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder[0]).toBe('IRAnalysis')
+      expect(getStageOrder(workflow)[0]).toBe('IRAnalysis')
     })
 
     it('should end with sddPlanGeneration', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder[7]).toBe('sddPlanGeneration')
+      expect(getStageOrder(workflow)[7]).toBe('sddPlanGeneration')
     })
 
     it('should have correct order', () => {
       const workflow = getClassicWorkflow()
-      expect(workflow.stageOrder).toEqual([
+      expect(getStageOrder(workflow)).toEqual([
         'IRAnalysis',
         'scenarioAnalysis',
         'useCaseAnalysis',
@@ -72,17 +73,18 @@ describe('Classic Workflow', () => {
   describe('stage definitions', () => {
     it('should have stage definitions for all stages in stageOrder', () => {
       const workflow = getClassicWorkflow()
-      workflow.stageOrder.forEach((stageName) => {
+      getStageOrder(workflow).forEach((stageName) => {
         expect(workflow.stages[stageName]).toBeDefined()
       })
     })
 
     it('should have no extra stages', () => {
       const workflow = getClassicWorkflow()
+      const stageOrder = getStageOrder(workflow)
       const stageKeys = Object.keys(workflow.stages)
-      expect(stageKeys).toHaveLength(workflow.stageOrder.length)
+      expect(stageKeys).toHaveLength(stageOrder.length)
       stageKeys.forEach((key) => {
-        expect(workflow.stageOrder).toContain(key)
+        expect(stageOrder).toContain(key)
       })
     })
   })
@@ -125,7 +127,7 @@ describe('Classic Workflow', () => {
 
     it('should load prompt content for each stage', () => {
       const workflow = getClassicWorkflow()
-      workflow.stageOrder.forEach((stageName) => {
+      getStageOrder(workflow).forEach((stageName) => {
         const prompt = loadPromptForStage(stageName, workflow)
         expect(prompt).toBeTruthy()
         expect(prompt.length).toBeGreaterThan(0)
@@ -136,7 +138,7 @@ describe('Classic Workflow', () => {
   describe('handover prompts', () => {
     it('should generate handover prompts for all stages', () => {
       const workflow = getClassicWorkflow()
-      workflow.stageOrder.forEach((stageName) => {
+      getStageOrder(workflow).forEach((stageName) => {
         const stage = workflow.stages[stageName]
         const prompt = stage.getHandoverPrompt(null, stage.name)
         expect(prompt).toBeTruthy()
@@ -200,7 +202,7 @@ describe('Classic Workflow', () => {
   describe('stage properties', () => {
     it('should have name for all stages', () => {
       const workflow = getClassicWorkflow()
-      workflow.stageOrder.forEach((stageName) => {
+      getStageOrder(workflow).forEach((stageName) => {
         expect(workflow.stages[stageName].name).toBeTruthy()
         expect(typeof workflow.stages[stageName].name).toBe('string')
       })
@@ -208,7 +210,7 @@ describe('Classic Workflow', () => {
 
     it('should have description for all stages', () => {
       const workflow = getClassicWorkflow()
-      workflow.stageOrder.forEach((stageName) => {
+      getStageOrder(workflow).forEach((stageName) => {
         expect(workflow.stages[stageName].description).toBeTruthy()
         expect(typeof workflow.stages[stageName].description).toBe('string')
       })

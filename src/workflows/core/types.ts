@@ -14,17 +14,33 @@ export type StageHookFn = (ctx: {
   stageKey: string
   stageName: string
   workflow: WorkflowDefinition
+  nodeId?: string
+  setMilestone?: (input: { key: string; isCompleted: boolean; detail: unknown }) => void
+  setInfo?: (patch: Record<string, unknown>) => void
   sessionID?: string
   /** 平台适配器（平台注入），提供会话管理与 prompt 能力 */
   adapter?: PlatformAdapter
 }) => Promise<void>
 
-export interface StageHook {
+export interface WorkflowHookDefinition {
+  id?: string
+  description?: string
   fn: StageHookFn
   agent?: string
 }
 
+export type StageHook = WorkflowHookDefinition
+
+export interface StageTransitionDefinition {
+  id: string
+  toStageId: string
+  mode: 'auto' | 'manual'
+  priority: number
+  description?: string
+}
+
 export interface WorkflowStageDefinition {
+  stageId?: string
   /** Display name for this stage */
   name: string
   /** Description of what this stage does */
@@ -36,16 +52,16 @@ export interface WorkflowStageDefinition {
   /** Placeholder bindings applied when this stage is active */
   promptBindings?: WorkflowPromptBindings
   /** Hooks to run before the stage's primary agent starts */
-  beforeStage?: StageHook[]
-  /** Hooks to run after the stage completes (future use) */
-  afterStage?: StageHook[]
-  stageMilestones?: string[]
+  before?: WorkflowHookDefinition[]
+  after?: WorkflowHookDefinition[]
+  requiredMilestones?: string[]
   /** Whether this stage is required to be completed */
   required?: boolean
   /** Input specifications for this stage */
   inputs?: Record<string, { required?: boolean }>
   /** Output specifications for this stage */
   outputs?: Record<string, { path: string; description?: string }>
+  transitions?: StageTransitionDefinition[]
   getHandoverPrompt: (currentStageName: string | null, thisStageName: string) => string
 }
 
@@ -56,13 +72,12 @@ export interface WorkflowDefinition {
   name: string
   /** Description */
   description: string
+  version?: string
   /** Prompt file path relative to the workflow directory for the entire process */
   promptFile?: string
   /** Placeholder bindings shared by all stages in this workflow */
   promptBindings?: WorkflowPromptBindings
-  /** Ordered list of stage keys */
-  stageOrder: string[]
-  /** Stage definitions keyed by stage name */
+  entryStageId: string
   stages: Record<string, WorkflowStageDefinition>
   /**
    * 该工作流提供的工具列表
