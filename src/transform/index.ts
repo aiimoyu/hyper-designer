@@ -12,6 +12,10 @@ export {
 export { PromptInjectionRegistry } from './injectionRegistry'
 export { stageConfigInjectionProvider } from './injections/stageConfigInjection'
 export { stageMilestonesInjectionProvider } from './injections/stageMilestonesInjection'
+export {
+  createPromptInjectionRegistry,
+  DEFAULT_PROMPT_INJECTION_PROVIDER_IDS,
+} from './injections/factory'
 export { createAgentTransformer } from './opencode/agent-transform'
 export { createSystemTransformer } from './opencode/system-transform'
 export { createTransformHooks } from './opencode/hooks'

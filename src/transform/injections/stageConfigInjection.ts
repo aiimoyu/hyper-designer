@@ -8,7 +8,7 @@ function formatStageInjectionContents(items: string[]): string {
 export const stageConfigInjectionProvider: PromptInjectionProvider = {
   id: 'stage-config',
   inject: ({ stageDefinition }) => {
-    const entries = stageDefinition?.注入内容
+    const entries = stageDefinition?.injectContent
     if (!entries || entries.length === 0) {
       return null
     }

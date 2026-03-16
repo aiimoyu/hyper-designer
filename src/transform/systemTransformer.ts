@@ -1,17 +1,16 @@
 import type { WorkflowDefinition } from '../workflows/core/types'
 import type { WorkflowState } from '../workflows/core/state/types'
 import {
-  FRAMEWORK_FALLBACK_PROMPT_TOKEN,
   loadPromptBindings,
   resolvePromptBindingsForMode,
 } from '../workflows/core/runtime'
 import { replacePlaceholders, type PlaceholderResolver } from './placeholder'
 import { OPENCODE_TOOL_MAPPING, replaceToolPlaceholders } from './toolTransform'
-import { PromptInjectionRegistry } from './injectionRegistry'
-import { stageConfigInjectionProvider } from './injections/stageConfigInjection'
-import { stageMilestonesInjectionProvider } from './injections/stageMilestonesInjection'
+import {
+  createPromptInjectionRegistry,
+} from './injections/factory'
 
-const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_[A-Z0-9_]+_PROMPT\}/g
+const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_(?!FALLBACK_PROMPT\})[A-Z0-9_]+_PROMPT\}/g
 
 function clearUnresolvedWorkflowPromptTokens(systemMessages: string[]): void {
   for (let index = 0; index < systemMessages.length; index += 1) {
@@ -43,7 +42,7 @@ function getCurrentStageContext(state: WorkflowState | null): string | null {
   return state?.current?.name ?? null
 }
 
-function appendStageInjectionsIfEnabled(
+function appendStageInjections(
   systemMessages: string[],
   workflow: WorkflowDefinition | null,
   state: WorkflowState | null,
@@ -53,28 +52,17 @@ function appendStageInjectionsIfEnabled(
     return
   }
 
-  const injectConfig = workflow.promptTransform?.inject
-  if (!injectConfig?.enabled) {
-    return
-  }
-
   const stageDefinition = workflow.stages[currentStage] ?? null
   if (!stageDefinition) {
     return
   }
 
-  const registry = new PromptInjectionRegistry()
-  registry.register(stageConfigInjectionProvider)
-  registry.register(stageMilestonesInjectionProvider)
+  const providerIds = stageDefinition.inject
+  if (!providerIds || providerIds.length === 0) {
+    return
+  }
 
-  const defaultProviders = [
-    stageConfigInjectionProvider.id,
-    stageMilestonesInjectionProvider.id,
-  ]
-
-  const providerIds = injectConfig.providers && injectConfig.providers.length > 0
-    ? injectConfig.providers
-    : defaultProviders
+  const registry = createPromptInjectionRegistry()
 
   const chunks = registry.run(providerIds, {
     workflow,
@@ -109,10 +97,6 @@ export function transformSystemMessages(
     systemMessages[index] = replaceToolPlaceholders(systemMessages[index], OPENCODE_TOOL_MAPPING)
   }
 
-  appendStageInjectionsIfEnabled(systemMessages, workflow, state, currentStage)
+  appendStageInjections(systemMessages, workflow, state, currentStage)
 
-  const fallbackIndex = systemMessages.findIndex(message => message.includes(FRAMEWORK_FALLBACK_PROMPT_TOKEN))
-  if (fallbackIndex >= 0) {
-    systemMessages[fallbackIndex] = systemMessages[fallbackIndex].replace(FRAMEWORK_FALLBACK_PROMPT_TOKEN, '')
-  }
 }

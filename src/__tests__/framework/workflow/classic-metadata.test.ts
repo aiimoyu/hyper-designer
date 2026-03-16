@@ -35,6 +35,10 @@ describe('classic workflow stage metadata', () => {
         expect(stages[key].outputs).toBeDefined()
         expect(typeof stages[key].outputs).toBe('object')
       })
+
+      it('enables stage-milestones injection', () => {
+        expect(stages[key].inject).toContain('stage-milestones')
+      })
     })
   }
 

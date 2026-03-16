@@ -153,6 +153,7 @@ describe('system transform', () => {
     expect(output.system[1]).toBe('')
     expect(output.system[2]).toBe('')
     expect(output.system[3]).toContain('当前阶段：工作流初始化')
+    expect(output.system[3]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
   })
 
   it('resolves dynamic workflow/stage tokens and clears fallback token in active stage', async () => {
@@ -234,28 +235,25 @@ describe('system transform', () => {
     expect(output.system[1]).toBe('')
     expect(output.system[2]).toBe('')
     expect(output.system[3]).toContain('当前阶段：工作流初始化')
+    expect(output.system[3]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
   })
 
-  it('appends stage injection content when workflow injection is enabled', async () => {
+  it('appends stage injection content when stage has inject configured', async () => {
     const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
       entryStageId: 'stage1',
-      promptTransform: {
-        inject: {
-          enabled: true,
-        },
-      },
       stages: {
         stage1: {
           stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
+          inject: ['stage-config', 'stage-milestones'],
           requiredMilestones: ['gate'],
-          注入内容: ['输入文件', 'xxx', 'yyy'],
+          injectContent: ['输入文件', 'xxx', 'yyy'],
           getHandoverPrompt: () => 'handover',
         },
       },
@@ -288,25 +286,20 @@ describe('system transform', () => {
     expect(output.system[1]).toContain('gate')
   })
 
-  it('does not append stage injection content when workflow injection is disabled', async () => {
+  it('does not append injection when stage has no inject configured', async () => {
     const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
       description: 'Test workflow',
       entryStageId: 'stage1',
-      promptTransform: {
-        inject: {
-          enabled: false,
-        },
-      },
       stages: {
         stage1: {
           stageId: 'stage1',
           name: 'Stage 1',
           description: 'Stage 1',
           agent: 'HArchitect',
-          注入内容: ['输入文件', 'xxx', 'yyy'],
+          injectContent: ['输入文件', 'xxx', 'yyy'],
           getHandoverPrompt: () => 'handover',
         },
       },
@@ -331,5 +324,98 @@ describe('system transform', () => {
     await transform({ model: {} } as never, output)
 
     expect(output.system).toEqual(['base system prompt'])
+  })
+
+  it('injects only selected provider content when providers are explicitly configured', async () => {
+    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const workflow: WorkflowDefinition = {
+      id: 'test-workflow',
+      name: 'Test Workflow',
+      description: 'Test workflow',
+      entryStageId: 'stage1',
+      stages: {
+        stage1: {
+          stageId: 'stage1',
+          name: 'Stage 1',
+          description: 'Stage 1',
+          agent: 'HArchitect',
+          inject: ['stage-milestones'],
+          requiredMilestones: ['gate', 'doc_review'],
+          injectContent: ['输入文件', 'xxx', 'yyy'],
+          getHandoverPrompt: () => 'handover',
+        },
+      },
+    }
+
+    getDefinition.mockReturnValue(workflow)
+    getState.mockReturnValue({
+      initialized: true,
+      typeId: workflow.id,
+      workflow: {
+        stage1: { isCompleted: false, selected: true },
+      },
+      current: {
+        name: 'stage1',
+        handoverTo: null,
+      },
+    })
+
+    const transform = createSystemTransformer()
+    const output = { system: ['base system prompt'] }
+
+    await transform({ model: {} } as never, output)
+
+    expect(output.system).toHaveLength(2)
+    expect(output.system[1]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[1]).toContain('gate')
+    expect(output.system[1]).toContain('doc_review')
+    expect(output.system[1]).not.toContain('Workflow Stage Injections')
+    expect(output.system[1]).not.toContain('输入文件')
+  })
+
+  it('injects both providers when multiple are configured', async () => {
+    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const workflow: WorkflowDefinition = {
+      id: 'test-workflow',
+      name: 'Test Workflow',
+      description: 'Test workflow',
+      entryStageId: 'stage1',
+      stages: {
+        stage1: {
+          stageId: 'stage1',
+          name: 'Stage 1',
+          description: 'Stage 1',
+          agent: 'HArchitect',
+          inject: ['stage-milestones', 'stage-config'],
+          requiredMilestones: ['gate'],
+          injectContent: ['输入文件'],
+          getHandoverPrompt: () => 'handover',
+        },
+      },
+    }
+
+    getDefinition.mockReturnValue(workflow)
+    getState.mockReturnValue({
+      initialized: true,
+      typeId: workflow.id,
+      workflow: {
+        stage1: { isCompleted: false, selected: true },
+      },
+      current: {
+        name: 'stage1',
+        handoverTo: null,
+      },
+    })
+
+    const transform = createSystemTransformer()
+    const output = { system: ['base system prompt'] }
+
+    await transform({ model: {} } as never, output)
+
+    expect(output.system).toHaveLength(2)
+    expect(output.system[1]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[1]).toContain('gate')
+    expect(output.system[1]).toContain('Workflow Stage Injections')
+    expect(output.system[1]).toContain('输入文件')
   })
 })

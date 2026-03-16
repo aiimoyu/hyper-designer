@@ -51,7 +51,10 @@ export interface WorkflowStageDefinition {
   promptFile?: string
   /** Placeholder bindings applied when this stage is active */
   promptBindings?: WorkflowPromptBindings
-  注入内容?: string[]
+  /** Injection provider IDs to enable for this stage (e.g., ['stage-milestones', 'stage-config']) */
+  inject?: string[]
+  /** Custom content items to inject into system prompt (used by stage-config provider) */
+  injectContent?: string[]
   /** Hooks to run before the stage's primary agent starts */
   before?: WorkflowHookDefinition[]
   after?: WorkflowHookDefinition[]
