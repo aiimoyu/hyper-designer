@@ -51,6 +51,10 @@ export interface WorkflowStageDefinition {
   promptFile?: string
   /** Placeholder bindings applied when this stage is active */
   promptBindings?: WorkflowPromptBindings
+  /** Injection provider IDs to enable for this stage (e.g., ['stage-milestones', 'stage-config']) */
+  inject?: string[]
+  /** Custom content items to inject into system prompt (used by stage-config provider) */
+  injectContent?: string[]
   /** Hooks to run before the stage's primary agent starts */
   before?: WorkflowHookDefinition[]
   after?: WorkflowHookDefinition[]
@@ -65,6 +69,15 @@ export interface WorkflowStageDefinition {
   getHandoverPrompt: (currentStageName: string | null, thisStageName: string) => string
 }
 
+export interface WorkflowPromptInjectionConfig {
+  enabled?: boolean
+  providers?: string[]
+}
+
+export interface WorkflowPromptTransformConfig {
+  inject?: WorkflowPromptInjectionConfig
+}
+
 export interface WorkflowDefinition {
   /** Unique workflow identifier */
   id: string
@@ -77,6 +90,7 @@ export interface WorkflowDefinition {
   promptFile?: string
   /** Placeholder bindings shared by all stages in this workflow */
   promptBindings?: WorkflowPromptBindings
+  promptTransform?: WorkflowPromptTransformConfig
   entryStageId: string
   stages: Record<string, WorkflowStageDefinition>
   /**

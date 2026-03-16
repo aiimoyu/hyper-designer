@@ -8,7 +8,8 @@ import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
 import { createHyperAgent } from "../../src/agents/Hyper"
 import { createBuiltinAgents } from "../../src/agents/utils"
 import { workflowService } from "../../src/workflows/core/service"
-import { createAgentTransformer } from "../../src/workflows/integrations/opencode/agent-transform"
+import { createAgentTransformer } from '../../src/transform/opencode/agent-transform'
+import { createTransformHooks } from '../../src/transform/opencode/hooks'
 import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
 import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
 import { initLogger } from "../../src/utils/logger"
@@ -72,6 +73,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
 
 
   const workflowHooks = await createWorkflowHooks(ctx)
+  const transformHooks = await createTransformHooks(ctx)
   const documentReviewTools = createDocumentReviewTools()
 
   const hdTools = {
@@ -205,7 +207,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     },
     "chat.message": createAgentTransformer(ctx),
     "experimental.chat.system.transform": async (input: unknown, output: { system: string[] }) => {
-      await workflowHooks["experimental.chat.system.transform"](input, output)
+      await transformHooks['experimental.chat.system.transform'](input, output)
     },
   }
 }

@@ -4,9 +4,6 @@ import type { PluginInput } from '@opencode-ai/plugin'
 const getDefinition = vi.fn<[], { id: string } | null>()
 const on = vi.fn()
 const eventHandler = vi.fn(async () => {})
-const systemTransformer = vi.fn(async (_input: unknown, output: { system: string[] }) => {
-  output.system[0] = 'transformed'
-})
 
 vi.mock('../../../workflows/core/service', () => ({
   workflowService: {
@@ -21,10 +18,6 @@ vi.mock('../../../config/loader', () => ({
 
 vi.mock('../../../workflows/integrations/opencode/event-handler', () => ({
   createEventHandler: () => eventHandler,
-}))
-
-vi.mock('../../../workflows/integrations/opencode/system-transform', () => ({
-  createSystemTransformer: () => systemTransformer,
 }))
 
 vi.mock('../../../workflows/integrations/opencode/workflow-tools', () => ({
@@ -44,10 +37,5 @@ describe('createWorkflowHooks', () => {
 
     await hooks.event({ event: { type: 'session.idle', properties: {} } })
     expect(eventHandler).toHaveBeenCalledTimes(1)
-
-    const output = { system: ['raw'] }
-    await hooks['experimental.chat.system.transform']({}, output)
-    expect(systemTransformer).toHaveBeenCalledTimes(1)
-    expect(output.system[0]).toBe('transformed')
   })
 })
