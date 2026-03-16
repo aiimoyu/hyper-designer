@@ -1,5 +1,19 @@
 ## 当前阶段：功能细化
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="functionalRefinement"/>
+    <pre_stage>useCaseAnalysis</pre_stage>
+  </pipeline>
+  <executing_agent>HArchitect</executing_agent>
+  <core_objective>
+    Extract complete function lists from use case outputs, prioritize using
+    MoSCoW method, and perform FMEA risk analysis.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `functionalRefinement`  
 **执行Agent**: HArchitect  
 **核心目标**: 从用例输出中提取完整功能列表，按 MoSCoW 方法做优先级排序，并进行 FMEA 风险分析。
