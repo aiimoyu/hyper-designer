@@ -18,17 +18,6 @@ import { workflowService } from "../../core/service"
 import { loadHDConfig } from "../../../config/loader"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { createEventHandler } from "./event-handler"
-import { createSystemTransformer } from "./system-transform"
-
-export { replacePlaceholders, type PlaceholderResolver } from "./utils"
-export {
-  HD_TOOL_PLACEHOLDERS,
-  OPENCODE_TOOL_MAPPING,
-  replaceToolPlaceholders,
-  createToolTransformer,
-  type ToolNameMapping,
-  type HdToolPlaceholder,
-} from "./tool-transform"
 
 export { convertWorkflowToolsToOpenCode } from './workflow-tools'
 
@@ -61,8 +50,5 @@ export async function createWorkflowHooks(ctx: PluginInput) {
   return {
     /** 事件处理器：监听 session.idle 触发工作流交接 */
     event: createEventHandler(ctx),
-
-    /** 系统消息转换器：注入工作流提示词并替换工具名称占位符 */
-    "experimental.chat.system.transform": createSystemTransformer(),
   }
 }
