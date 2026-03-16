@@ -1,165 +1,274 @@
-## Current Phase: Missing Coverage Check
+## 当前阶段：缺漏覆盖率检查
 
-```xml
-<workflow_context>
-  <pipeline>
-    <curr_stage id="missingCoverageCheck"/>
-    <pre_stage>componentAnalysis</pre_stage>
-  </pipeline>
-  <executing_agent>HAnalysis</executing_agent>
-  <core_objective>
-    Perform strict coverage validation across 7 categories, generate coverage report
-    with structured verdict, and provide remediation guidance.
-  </core_objective>
-</workflow_context>
+### 1. 执行标准
+
+**核心方法论**：
+
+本阶段内嵌完整的方法论，无需加载外部技能文件：
+
+- 共享术语和工件位置
+- 覆盖率验证方法论和检查算法
+- 严重性级别和修复建议模式
+- 覆盖率报告和判定的输出契约
+
+**关键说明**：这不是工作流门控检查。
+
+本阶段的输出用于：
+- 覆盖率报告和文档
+- 测试断言和验证
+- 修复建议
+
+工作流不将这些检查作为门控强制执行。这是一个诊断工具，而不是阻塞性验证。
+
+---
+
+### 2. 严格的覆盖率类别
+
+对以下 7 个严格的覆盖率类别执行验证：
+
+#### 1. 缺失组件（Missing Components）
+
+验证组件清单中的所有组件都有对应的分析输出：
+
+**检查方法**：
+- 遍历组件清单中的每个组件
+- 检查是否存在对应的 Markdown 分析文件
+- 检查是否存在对应的元数据文件
+- 标记清单中有但分析输出缺失的组件
+
+**检查项**：
+- [ ] 组件清单中的每个组件都有 `{组件Slug}.md` 分析文件
+- [ ] 组件清单中的每个组件都有对应的元数据文件
+- [ ] 组件名称在清单和分析文件之间匹配
+- [ ] 组件元数据格式有效
+
+**严重性**：HIGH
+
+#### 2. 缺失文件（Missing Files）
+
+验证组件分析中引用的所有源文件在代码库中存在：
+
+**检查方法**：
+- 遍历组件分析中的每个文件引用
+- 验证文件在目标项目根目录下存在
+- 尊重排除模式
+- 标记引用但不存在的文件
+
+**检查项**：
+- [ ] 组件分析中引用的源文件存在
+- [ ] 文件路径相对于目标项目根目录
+- [ ] 排除模式得到遵守（如 node_modules、dist 等）
+- [ ] 不引用排除目录中的文件
+
+**严重性**：MEDIUM
+
+#### 3. 缺失文件夹（Missing Folders）
+
+验证目标项目中是否存在预期的目录结构：
+
+**检查方法**：
+- 检查标准项目目录（如 src/、tests/、docs/）
+- 验证分析中引用的模块特定目录存在
+- 检查资源目录和构建/输出目录
+
+**检查项**：
+- [ ] 标准项目目录存在（src/、tests/、docs/）
+- [ ] 分析中引用的模块特定目录存在
+- [ ] 资源目录存在
+- [ ] 构建/输出目录已配置
+
+**严重性**：LOW
+
+#### 4. API 识别遗漏（Missed API Identification）
+
+识别代码中存在但未在 API 清单中记录的 API：
+
+**检查方法**：
+- 从代码中提取所有公开 API
+- 与 API 清单进行交叉引用
+- 验证 API 签名在代码和清单之间匹配
+- 标记代码中使用但清单中缺失的 API
+
+**检查项**：
+- [ ] 代码中的所有公开 API 都已在 API 清单中记录
+- [ ] API 签名在代码和清单之间匹配
+- [ ] API 清单中的组件映射有效
+- [ ] API 类型（REST/GraphQL/RPC/事件/库）分类正确
+
+**严重性**：HIGH
+
+#### 5. Mermaid 覆盖不足（Insufficient Mermaid Coverage）
+
+验证关键图表在架构文档和组件分析中存在且完整：
+
+**检查方法**：
+- 检查架构文档中的系统架构图
+- 验证关键流程的组件交互图
+- 检查组件分析中的序列图覆盖关键用例
+- 验证数据流图显示数据移动
+- 验证 Mermaid 语法有效
+
+**检查项**：
+- [ ] 架构文档中存在系统架构图
+- [ ] 关键流程存在组件交互图
+- [ ] 组件分析中的序列图覆盖关键用例
+- [ ] 数据流图显示数据移动
+- [ ] Mermaid 语法有效
+
+**严重性**：MEDIUM
+
+#### 6. 交叉引用损坏（Broken Cross References）
+
+验证项目分析文档之间的所有内部引用有效：
+
+**检查方法**：
+- 遍历所有文档中的内部引用
+- 验证引用指向有效的目标
+- 检查组件引用指向有效的组件 Slug
+- 验证 API 引用指向 API 清单中的有效 Slug
+
+**检查项**：
+- [ ] 架构文档与组件分析之间的内部链接可解析
+- [ ] 文档内的章节引用存在
+- [ ] 组件引用指向有效的组件 Slug
+- [ ] API 引用指向 API 清单中的有效 Slug
+
+**严重性**：MEDIUM
+
+#### 7. 系统/组件不一致（System/Component Inconsistency）
+
+验证架构文档与组件分析之间的对齐：
+
+**检查方法**：
+- 遍历组件清单中的每个组件
+- 加载对应的组件分析
+- 检查一致性（名称、依赖、维度）
+- 标记不一致的项目
+
+**检查项**：
+- [ ] 组件名称在清单和分析之间匹配
+- [ ] 清单中的组件依赖关系反映在分析中
+- [ ] 系统分析中的架构维度与架构文档对齐
+- [ ] API 清单引用与组件分析一致
+
+**严重性**：HIGH
+
+---
+
+### 3. 输出
+
+**覆盖率报告**：`.hyper-designer/projectAnalysis/coverage-report.md`
+
+纯 Markdown 格式的覆盖率报告，包含：
+- 摘要部分（总检查数、通过数、失败数、警告数）
+- 7 个覆盖率类别的各自部分
+- 每个问题标记严重性级别：[HIGH]、[MEDIUM] 或 [LOW]
+- 缺失或损坏内容的清晰描述
+- 受影响工件的引用（文件、组件、图表）
+
+---
+
+### 4. 覆盖率报告模板
+
+生成的 `coverage-report.md` 应遵循以下模板：
+
+```markdown
+# 覆盖率报告
+
+## 摘要
+- 总检查数：N
+- 通过：N
+- 失败：N
+- 警告：N
+
+## 判定
+- 总体：通过/失败/警告
+- 严重性：高/中/低
+- 受影响工件：[文件路径列表]
+
+## 1. 缺失组件
+[检查结果 + 发现列表]
+
+## 2. 缺失文件
+[检查结果 + 发现列表]
+
+## 3. 缺失文件夹
+[检查结果 + 发现列表]
+
+## 4. API 识别遗漏
+[检查结果 + 发现列表]
+
+## 5. Mermaid 覆盖不足
+[检查结果 + 发现列表]
+
+## 6. 交叉引用损坏
+[检查结果 + 发现列表]
+
+## 7. 系统/组件不一致
+[检查结果 + 发现列表]
+
+## 修复建议
+### 立即修复
+[立即修复项]
+
+### 短期改进
+[短期改进项]
+
+### 长期方向
+[长期方向]
+
+---
+> **注意**：这是一个诊断工具，不是工作流门控。结果仅用于报告和测试断言。
 ```
 
-### 1. Execution Standards
+---
 
-**Core Skills**:
-- `project-analysis-concepts` - Shared concepts, terminology, and artifact contracts
-- `missing-coverage-check` - Strict coverage validation methodology across 7 categories
+### 5. 严重性级别定义
 
-Load both skills to access:
-- Shared terminology and artifact locations
-- Coverage validation methodology and check algorithms
-- Severity levels and remediation guidance patterns
-- Output contracts for coverage report and verdict
+- **HIGH（高）**：阻止分析完整性或导致数据不一致
+- **MEDIUM（中）**：损害分析质量或产生技术债
+- **LOW（低）**：有益但对分析完整性不关键
 
-**Critical Note**: This is NOT a workflow gate check.
+### 6. 修复建议模式
 
-The outputs from this stage are used for:
-- Coverage reporting and documentation
-- Test assertions and validation
-- Remediation guidance
+根据问题的紧急程度生成修复建议：
 
-The workflow does NOT enforce these checks as gates. This is a diagnostic tool, not a blocking validation.
+- **立即修复（Immediate）**：必须马上修复的问题，通常与 HIGH 严重性问题相关
+- **短期改进（Short-term）**：应该在下次迭代中修复，通常与 MEDIUM 严重性问题相关
+- **长期方向（Long-term）**：持续改进方向，通常与 LOW 严重性问题或系统性改进相关
+
+### 7. 判定逻辑
+
+根据检查结果生成总体判定：
+
+1. **通过（PASSED）**：所有 7 个类别的检查均无 HIGH 严重性问题
+2. **失败（FAILED）**：任何类别存在 HIGH 严重性问题
+3. **警告（WARNING）**：存在 MEDIUM 或 LOW 严重性问题，但无 HIGH 严重性问题
+
+判定结果应包含：
+- 总体状态（通过/失败/警告）
+- 最高严重性级别
+- 受影响的工件列表
+- 摘要描述
+- 分层修复建议（立即/短期/长期）
 
 ---
 
-### 2. Strict Coverage Categories
+### 8. 质量检查清单
 
-Perform validation across these 7 strict coverage categories:
+完成阶段 3 之前，验证：
 
-1. **Missing Components**
-   - Verify all components in component-manifest.json have corresponding analysis outputs
-   - Check for both markdown (`component/{componentSlug}.md`) and metadata (`_meta/components/{componentSlug}.json`)
-   - Flag components in manifest but without analysis outputs
+| 要求 | 验证 |
+|------|------|
+| 检查所有 7 个类别 | 每个覆盖率类别都已验证 |
+| 覆盖率报告存在 | `.hyper-designer/projectAnalysis/coverage-report.md` 可读 |
+| 判定存在 | 报告中包含判定部分 |
+| 判定包含通过/失败 | 判定部分包含总体状态 |
+| 判定包含严重性 | 判定部分包含严重性级别 |
+| 判定包含受影响工件 | 判定部分包含受影响工件列表 |
+| 判定包含修复建议 | 判定部分包含分层修复建议 |
+| 非门控声明清晰 | 报告明确说明这不是工作流门控 |
+| 所有引用有效 | 报告中的链接和路径可解析 |
+| 严重性适当 | 问题按正确的严重性级别分类 |
+| 输出路径正确 | 所有文件位于 `.hyper-designer/projectAnalysis/` 下 |
 
-2. **Missing Files**
-   - Verify all source files referenced in component analyses exist in the codebase
-   - Check file paths are relative to target project root
-   - Respect excluded patterns from source-inventory.json
-
-3. **Missing Folders**
-   - Verify expected directory structures exist in the target project
-   - Check for standard project directories (src/, tests/, docs/)
-   - Validate module-specific directories referenced in analyses are present
-
-4. **Missed API Identification**
-   - Identify APIs in code that are not documented in the API manifest
-   - Cross-reference code usage with api-manifest.json
-   - Verify API signatures match between code and manifest
-
-5. **Insufficient Mermaid Coverage**
-   - Verify critical diagrams exist and are complete in architecture.md and component analyses
-   - Check for system architecture diagram in architecture.md
-   - Verify component interaction diagrams for critical flows
-   - Validate Mermaid syntax is correct
-
-6. **Broken Cross References**
-   - Verify all internal references between project-analysis documents are valid
-   - Check internal links between architecture.md and component/*.md resolve
-   - Validate component references point to valid componentSlugs
-   - Verify API references point to valid apiSlugs in API manifest
-
-7. **System/Component Inconsistency**
-   - Verify alignment between architecture.md and component analyses
-   - Check component names match between manifest and analyses
-   - Validate component dependencies in manifest are reflected in analyses
-   - Verify architecture dimensions in system-analysis.json align with architecture.md
-
----
-
-### 3. Deliverables
-
-| File | Path | Format Requirements |
-|------|------|---------------------|
-| **Coverage Report** | `.hyper-designer/projectAnalysis/coverage-report.md` | Markdown, human-readable summary of all 7 coverage categories with severity levels |
-| **Machine-Readable Report** | `.hyper-designer/projectAnalysis/_meta/coverage-report.json` | JSON, structured data with summary, category results, and embedded verdict |
-| **Structured Verdict** | Embedded in coverage-report.json | JSON object with pass/fail status, severity, affected artifacts, and remediation guidance |
-
-**Coverage Report Markdown Structure**:
-
-The `coverage-report.md` should include:
-
-- Summary section with total checks, passed, failed, and warnings counts
-- Individual sections for each of the 7 coverage categories
-- Each issue marked with severity level: [HIGH], [MEDIUM], or [LOW]
-- Clear descriptions of what is missing or broken
-- References to affected artifacts (files, components, diagrams)
-
-**Machine-Readable Coverage Report Structure**:
-
-The `coverage-report.json` must contain:
-
-```json
-{
-  "version": "1.0",
-  "timestamp": "ISO-8601-timestamp",
-  "summary": {
-    "totalChecks": number,
-    "passed": number,
-    "failed": number,
-    "warnings": number
-  },
-  "categories": {
-    "missingComponents": { "status": "passed|failed|warning", "items": [...] },
-    "missingFiles": { "status": "passed|failed|warning", "items": [...] },
-    "missingFolders": { "status": "passed|failed|warning", "items": [...] },
-    "missedAPIs": { "status": "passed|failed|warning", "items": [...] },
-    "insufficientMermaid": { "status": "passed|failed|warning", "items": [...] },
-    "brokenReferences": { "status": "passed|failed|warning", "items": [...] },
-    "systemComponentInconsistency": { "status": "passed|failed|warning", "items": [...] }
-  },
-  "verdict": {
-    "overall": "passed|failed|warning",
-    "pass": boolean,
-    "severity": "high|medium|low",
-    "affectedArtifacts": ["artifact-path-1", "artifact-path-2", ...],
-    "summary": "string describing overall result",
-    "remediation": {
-      "immediate": ["fix-1", "fix-2", ...],
-      "shortTerm": ["fix-1", "fix-2", ...],
-      "longTerm": ["fix-1", "fix-2", ...]
-    }
-  }
-}
-```
-
-**Severity Levels**:
-
-- **HIGH**: Blocks analysis completeness or causes data inconsistency
-- **MEDIUM**: Impairs analysis quality or creates technical debt
-- **LOW**: Nice to have but not critical for analysis completeness
-
----
-
-### 4. Quality Checklist
-
-Before completing Stage 3, verify:
-
-| Requirement | Verification |
-|-------------|--------------|
-| All 7 categories checked | Each coverage category has been validated |
-| Coverage report markdown exists | `.hyper-designer/projectAnalysis/coverage-report.md` is human-readable |
-| Machine-readable report valid | `.hyper-designer/projectAnalysis/_meta/coverage-report.json` parses correctly |
-| Verdict present | `verdict` object embedded in coverage-report.json |
-| Verdict has pass/fail | `verdict.pass` is boolean |
-| Verdict has severity | `verdict.severity` is one of: high, medium, low |
-| Verdict has affected artifacts | `verdict.affectedArtifacts` is array of file paths |
-| Verdict has remediation | `verdict.remediation` has immediate, shortTerm, longTerm arrays |
-| Non-gate wording clear | Report explicitly states this is NOT a workflow gate |
-| All references valid | Links and paths in report resolve correctly |
-| Severity appropriate | Issues are categorized with correct severity levels |
-| Output paths correct | All files under `.hyper-designer/projectAnalysis/` |

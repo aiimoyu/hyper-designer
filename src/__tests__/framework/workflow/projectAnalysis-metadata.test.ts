@@ -1,6 +1,7 @@
 /**
  * Tests for projectAnalysis workflow stage metadata fields.
  * Verifies that all 3 stages have required, inputs, outputs, promptBindings defined.
+ * Updated for prompt-driven (pure Markdown) workflow.
  */
 import { describe, it, expect } from 'vitest'
 import type { WorkflowDefinition } from '../../../workflows/core'
@@ -32,6 +33,11 @@ describe('projectAnalysis workflow stage metadata', () => {
       const workflow = getProjectAnalysisWorkflow()
       expect(workflow.stageOrder).toHaveLength(3)
       expect(workflow.stageOrder).toEqual(stageKeys)
+    })
+
+    it('has no tools defined (prompt-driven workflow)', () => {
+      const workflow = getProjectAnalysisWorkflow()
+      expect(workflow.tools).toBeUndefined()
     })
   })
 
@@ -65,9 +71,15 @@ describe('projectAnalysis workflow stage metadata', () => {
         expect(workflow.stages[key].agent).toBe('HAnalysis')
       })
 
-      it('does not have gate milestone enabled', () => {
+      it('has pure Markdown output paths', () => {
         const workflow = getProjectAnalysisWorkflow()
-        expect(workflow.stages[key].stageMilestones).not.toContain('gate')
+        const outputs = workflow.stages[key].outputs
+        if (outputs) {
+          for (const [, output] of Object.entries(outputs)) {
+            expect(output.path).not.toContain('_meta/')
+            expect(output.path).not.toContain('.json')
+          }
+        }
       })
     })
   }
@@ -83,34 +95,13 @@ describe('projectAnalysis workflow stage metadata', () => {
       expect(workflow.stages['systemAnalysis'].inputs).toEqual({})
     })
 
-    it('outputs the canonical system-analysis artifact set', () => {
+    it('outputs Markdown-only artifact set', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['systemAnalysis'].outputs).toEqual({
-        '系统架构分析报告': {
-          path: '.hyper-designer/projectAnalysis/architecture.md',
-          description: 'System architecture analysis report',
-        },
-        '项目分析清单': {
-          path: '.hyper-designer/projectAnalysis/_meta/manifest.json',
-          description: 'Project analysis manifest',
-        },
-        '系统分析清单': {
-          path: '.hyper-designer/projectAnalysis/_meta/system-analysis.json',
-          description: 'System analysis manifest',
-        },
-        '组件清单': {
-          path: '.hyper-designer/projectAnalysis/_meta/component-manifest.json',
-          description: 'Component manifest',
-        },
-        'API清单': {
-          path: '.hyper-designer/projectAnalysis/_meta/api-manifest.json',
-          description: 'API manifest',
-        },
-        '源码清单': {
-          path: '.hyper-designer/projectAnalysis/_meta/source-inventory.json',
-          description: 'Source inventory',
-        },
-      })
+      const outputs = workflow.stages['systemAnalysis'].outputs!
+      expect(outputs['系统架构分析报告'].path).toBe('.hyper-designer/projectAnalysis/architecture.md')
+      expect(outputs['组件清单'].path).toBe('.hyper-designer/projectAnalysis/components-manifest.md')
+      expect(outputs['API目录'].path).toBe('.hyper-designer/projectAnalysis/api-catalog.md')
+      expect(outputs['源码概览'].path).toBe('.hyper-designer/projectAnalysis/source-overview.md')
     })
   })
 
@@ -125,22 +116,11 @@ describe('projectAnalysis workflow stage metadata', () => {
       expect(workflow.stages['componentAnalysis'].inputs!['组件清单']).toEqual({ required: true })
     })
 
-    it('outputs the canonical component-analysis artifact set', () => {
+    it('outputs Markdown-only artifact set', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['componentAnalysis'].outputs).toEqual({
-        '组件分析文档目录': {
-          path: '.hyper-designer/projectAnalysis/component/',
-          description: 'Component analysis markdown outputs',
-        },
-        '组件分析元数据目录': {
-          path: '.hyper-designer/projectAnalysis/_meta/components/',
-          description: 'Component analysis metadata outputs',
-        },
-        '组件分析汇总': {
-          path: '.hyper-designer/projectAnalysis/_meta/component-analysis-summary.json',
-          description: 'Component analysis summary',
-        },
-      })
+      const outputs = workflow.stages['componentAnalysis'].outputs!
+      expect(outputs['组件分析文档目录'].path).toBe('.hyper-designer/projectAnalysis/components/')
+      expect(outputs['组件分析汇总'].path).toBe('.hyper-designer/projectAnalysis/component-analysis-summary.md')
     })
   })
 
@@ -150,24 +130,17 @@ describe('projectAnalysis workflow stage metadata', () => {
       expect(workflow.stages['missingCoverageCheck'].required).toBe(true)
     })
 
-    it('inputs 系统架构分析报告 and 组件分析汇总 as required', () => {
+    it('inputs 系统架构分析报告 and 组件清单 as required', () => {
       const workflow = getProjectAnalysisWorkflow()
       expect(workflow.stages['missingCoverageCheck'].inputs!['系统架构分析报告']).toEqual({ required: true })
-      expect(workflow.stages['missingCoverageCheck'].inputs!['组件分析汇总']).toEqual({ required: true })
+      expect(workflow.stages['missingCoverageCheck'].inputs!['组件清单']).toEqual({ required: true })
     })
 
-    it('outputs the canonical coverage-check artifact set', () => {
+    it('outputs Markdown-only coverage report', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['missingCoverageCheck'].outputs).toEqual({
-        '覆盖率检查报告': {
-          path: '.hyper-designer/projectAnalysis/coverage-report.md',
-          description: 'Coverage report',
-        },
-        '覆盖率检查数据': {
-          path: '.hyper-designer/projectAnalysis/_meta/coverage-report.json',
-          description: 'Coverage report metadata',
-        },
-      })
+      const outputs = workflow.stages['missingCoverageCheck'].outputs!
+      expect(Object.keys(outputs)).toHaveLength(1)
+      expect(outputs['覆盖率检查报告'].path).toBe('.hyper-designer/projectAnalysis/coverage-report.md')
     })
   })
 })
