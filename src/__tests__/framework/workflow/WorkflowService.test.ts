@@ -328,6 +328,40 @@ describe("WorkflowService", () => {
       expect(accepted.success).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });
+
+    it('auto-selects first stage when stepName is omitted and currentStage is null', () => {
+      initWithWorkflow(service);
+      // 初始状态：currentStage 为 null
+
+      const result = service.hdScheduleHandover(); // 不传参数
+
+      expect(result.success).toBe(true);
+      expect(result.handover_to).toBe('IRAnalysis'); // classic workflow 的第一个阶段
+    });
+
+    it('auto-selects next stage when stepName is omitted and currentStage is set', () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 90, comment: 'approved' });
+
+      const result = service.hdScheduleHandover(); // 不传参数
+
+      expect(result.success).toBe(true);
+      expect(result.handover_to).toBe('scenarioAnalysis'); // IRAnalysis 的下一个阶段
+    });
+
+    it('fails when stepName is omitted and currentStage is the last stage', () => {
+      initWithWorkflow(service);
+      // 设置到最后一个阶段
+      const lastStage = 'sddPlanGeneration';
+      service.setCurrent(lastStage);
+      service.setGateResult({ score: 90, comment: 'approved' });
+
+      const result = service.hdScheduleHandover(); // 不传参数
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('最后一个阶段');
+    });
   });
 
   describe('hdForceNextStep', () => {

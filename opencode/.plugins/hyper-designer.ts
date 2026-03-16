@@ -123,11 +123,13 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
       },
     }),
     hd_handover: tool({
-      description: "Set the handover workflow step of the Hyper Designer project. IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.",
+      description: `Set the handover workflow step of the Hyper Designer project.
+- If step_name is omitted: automatically selects the next stage (first stage if current is null, next stage otherwise)
+- IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.`,
       args: {
-        step_name: tool.schema.string().describe("The name of the workflow step to set as handover"),
+        step_name: tool.schema.string().optional().describe("The name of the workflow step to set as handover. If omitted, automatically selects the next stage."),
       },
-      async execute(params: { step_name: string }) {
+      async execute(params: { step_name?: string }) {
         const result = workflowService.hdScheduleHandover(params.step_name)
         return JSON.stringify(result, null, 2)
       },

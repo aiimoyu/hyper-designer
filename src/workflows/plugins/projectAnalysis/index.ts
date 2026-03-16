@@ -1,10 +1,9 @@
-import { projectAnalysisTools } from './tools/handlers'
-
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 import { filePrompt } from '../../core/utils'
 import type { WorkflowDefinition } from '../../core/types'
+import { projectAnalysisTools } from './tools/handlers'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -49,7 +48,6 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
       },
       stageMilestones: [],
-      required: true,
       inputs: {},
       outputs: {
         '系统架构分析报告': {
@@ -91,6 +89,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       stageMilestones: [],
       required: true,
       inputs: {
+        '系统架构分析报告': { required: true },
         '组件清单': { required: true },
       },
       outputs: {

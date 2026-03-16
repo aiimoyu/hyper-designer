@@ -552,10 +552,12 @@ export class WorkflowService extends EventEmitter {
    * 在调度交接前验证质量门是否通过（score > 75）。
    * 成功时返回包含 instruction 的对象，要求 Agent 立即停止所有工作。
    *
-   * @param stepName 目标步骤名称
+   * @param stepName 目标步骤名称（可选）。若省略，自动计算下一阶段：
+   *                 - 当前阶段为 null → 第一个被选中的阶段
+   *                 - 当前阶段不为 null → 下一个被选中的阶段
    * @returns 结构化结果对象
    */
-  hdScheduleHandover(stepName: string): HandoverResult {
+  hdScheduleHandover(stepName?: string): HandoverResult {
     // 检查工作流是否已初始化
     if (!this.definition) {
       return {
@@ -566,54 +568,84 @@ export class WorkflowService extends EventEmitter {
 
     const state = this.getState();
     const currentStage = this.getCurrentStage();
-    
+    const selectedStages = this.definition.stageOrder.filter(
+      s => state?.workflow[s]?.selected !== false
+    );
+
+    // 计算目标阶段：若未提供 stepName，自动选择下一阶段
+    let targetStep: string;
+    if (stepName) {
+      targetStep = stepName;
+    } else if (!currentStage && state?.current === null) {
+      // 初始状态：选择第一个被选中的阶段
+      targetStep = selectedStages[0];
+    } else if (currentStage) {
+      // 有当前阶段：选择下一个被选中的阶段
+      const currentIndex = selectedStages.indexOf(currentStage);
+      if (currentIndex === -1) {
+        return {
+          success: false,
+          error: `当前阶段 "${currentStage}" 不在被选中的阶段列表中。`,
+        };
+      }
+      const nextIndex = currentIndex + 1;
+      if (nextIndex >= selectedStages.length) {
+        return {
+          success: false,
+          error: `当前阶段 "${currentStage}" 已是最后一个阶段，无法继续交接。`,
+        };
+      }
+      targetStep = selectedStages[nextIndex];
+    } else {
+      return {
+        success: false,
+        error: '当前阶段未设置，无法执行交接。',
+      };
+    }
+
     // 初始状态：允许从无阶段进入第一个被选中的阶段
     if (!currentStage && state?.current === null) {
-      // 获取第一个被选中的阶段
-      const selectedStages = this.definition.stageOrder.filter(
-        s => state?.workflow[s]?.selected !== false
-      );
       const firstSelectedStage = selectedStages[0];
-      
-      if (stepName !== firstSelectedStage) {
+
+      if (targetStep !== firstSelectedStage) {
         return {
           success: false,
-          error: `初始交接只能进入第一个阶段 "${firstSelectedStage}"，不能直接进入 "${stepName}"。`,
+          error: `初始交接只能进入第一个阶段 "${firstSelectedStage}"，不能直接进入 "${targetStep}"。`,
         };
       }
-      
+
       // 设置交接目标（setWorkflowHandover 会创建 current 对象并设置 handoverTo）
-      const newState = this.setHandover(stepName);
-      
-      if (newState.current?.handoverTo !== stepName) {
+      const newState = this.setHandover(targetStep);
+
+      if (newState.current?.handoverTo !== targetStep) {
         return {
           success: false,
-          error: `无法设置初始交接目标 "${stepName}"。`,
+          error: `无法设置初始交接目标 "${targetStep}"。`,
         };
       }
-      
+
       return {
         success: true,
-        handover_to: stepName,
+        handover_to: targetStep,
         instruction:
           "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
         state: newState,
       };
     }
-    
+
     if (!currentStage) {
       return {
         success: false,
         error: '当前阶段未设置，无法执行交接。',
-      }
+      };
     }
 
-    const stageMilestones = this.getState()?.workflow[currentStage]?.stageMilestones
-    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage)
+    const stageMilestones = this.getState()?.workflow[currentStage]?.stageMilestones;
+    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage);
     const incompleteRequiredMilestones = requiredMilestones.filter(milestoneType => {
-      const milestone = stageMilestones?.[milestoneType]
-      return milestone?.isCompleted !== true
-    })
+      const milestone = stageMilestones?.[milestoneType];
+      return milestone?.isCompleted !== true;
+    });
 
     if (incompleteRequiredMilestones.length > 0) {
       this.incrementCurrentFailureCount();
@@ -624,19 +656,19 @@ export class WorkflowService extends EventEmitter {
     }
 
     // 调度交接
-    const handoverState = this.setHandover(stepName);
+    const handoverState = this.setHandover(targetStep);
 
     // 如果 handoverTo 没有设置成功（被验证逻辑拒绝），返回错误
-    if (handoverState.current?.handoverTo !== stepName) {
+    if (handoverState.current?.handoverTo !== targetStep) {
       return {
         success: false,
-        error: `无法设置交接目标 "${stepName}"。请检查目标步骤是否有效，或是否试图跳过步骤。`,
+        error: `无法设置交接目标 "${targetStep}"。请检查目标步骤是否有效，或是否试图跳过步骤。`,
       };
     }
 
     return {
       success: true,
-      handover_to: stepName,
+      handover_to: targetStep,
       instruction:
         "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
       state: handoverState,
