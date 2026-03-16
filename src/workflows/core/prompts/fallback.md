@@ -1,7 +1,20 @@
 ## 当前阶段：工作流初始化
 
-**Phase State**: Uninitialized  
-**Trigger**: `currentStage === null` or first launch
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage>null</curr_stage>
+    <pre_stage>null</pre_stage>
+  </pipeline>
+  <executing_agent>Hyper</executing_agent>
+  <core_objective>
+    Identify the most suitable workflow based on user intent, initialize it,
+    and hand off to the first selected phase. Do NOT execute any user tasks
+    in this phase — all work must be performed within the target workflow stage
+    after handover.
+  </core_objective>
+</workflow_context>
+```
 
 ### Objective
 
@@ -26,15 +39,13 @@ Use the user's first sentence to identify the most suitable registered workflow,
 
 **Step 3 — Initialize the chosen workflow**
 
-1. After the user chooses a workflow, call `hd_workflow_detail` for that workflow if you need the stage list or required-stage information.
-2. Call `hd_workflow_select` with the chosen workflow ID.
-3. If no explicit stage selection is provided by the user, keep the default selection returned by the workflow definition (that is, all default-selected stages).
+1. Call `hd_workflow_select` with the chosen workflow ID.
+2. If no explicit stage selection is provided by the user, keep the default selection returned by the workflow definition (that is, all default-selected stages).
 
 **Step 4 — Hand off to the first selected phase**
 
-1. Determine the first selected stage of the workflow.
-2. Call `hd_handover` with that stage key immediately after `hd_workflow_select` succeeds.
-3. Then enter Idle state.
+1. Call `hd_handover` **without any parameters** — it will automatically select the first stage.
+2. Then enter Idle state.
 
 
 ---
