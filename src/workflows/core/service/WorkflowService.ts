@@ -8,10 +8,11 @@ import type { ToolDefinition } from '../toolTypes'
  */
 
 import { EventEmitter } from "events";
-import type { WorkflowDefinition, PlatformAdapter } from "../types";
+import type { StageTransitionDefinition, WorkflowDefinition, PlatformAdapter } from "../types";
 import type { WorkflowState, GateMilestoneDetail } from "../state/types";
 import {
   getWorkflowState,
+  areRequiredMilestonesCompletedForStage,
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowStageMilestone,
@@ -28,6 +29,206 @@ import {
   GATE_PASS_THRESHOLD,
   isGateMilestoneDetail,
 } from '../stageMilestone'
+
+function getStageOrder(definition: WorkflowDefinition): string[] {
+  const visited = new Set<string>()
+  const order: string[] = []
+  const walk = (stageId: string): void => {
+    if (visited.has(stageId) || !definition.stages[stageId]) {
+      return
+    }
+    visited.add(stageId)
+    order.push(stageId)
+    const transitions: StageTransitionDefinition[] = definition.stages[stageId].transitions ?? []
+    const autoTransitions = [...transitions]
+      .filter(item => item.mode === 'auto')
+      .sort((a, b) => a.priority - b.priority)
+    for (const transition of autoTransitions) {
+      walk(transition.toStageId)
+    }
+  }
+  if (typeof definition.entryStageId === 'string') {
+    walk(definition.entryStageId)
+  }
+  for (const stageId of Object.keys(definition.stages)) {
+    if (!visited.has(stageId)) {
+      walk(stageId)
+    }
+  }
+  return order
+}
+
+function resolveNextSelectedStage(
+  definition: WorkflowDefinition,
+  selectedSet: Set<string>,
+  fromStageId: string,
+): string | null {
+  const visited = new Set<string>()
+  let current: string | null = fromStageId
+
+  while (current !== null) {
+    if (visited.has(current)) {
+      throw new Error(`Detected transition cycle while resolving next stage from ${fromStageId}`)
+    }
+    visited.add(current)
+
+    const stage = definition.stages[current]
+    if (!stage) {
+      return null
+    }
+
+    const transitions: StageTransitionDefinition[] = stage.transitions ?? []
+    const nextTransition = [...transitions]
+      .filter(item => item.mode === 'auto')
+      .sort((a, b) => a.priority - b.priority)[0]
+
+    if (!nextTransition) {
+      return null
+    }
+
+    const candidate = nextTransition.toStageId
+    if (selectedSet.has(candidate)) {
+      return candidate
+    }
+    current = candidate
+  }
+
+  return null
+}
+
+function createMainNodeId(stageId: string): string {
+  return `workflow.${stageId}.main`
+}
+
+function createBeforeNodeId(stageId: string, hookId: string): string {
+  return `workflow.${stageId}.before.${hookId}`
+}
+
+function createAfterNodeId(stageId: string, hookId: string): string {
+  return `workflow.${stageId}.after.${hookId}`
+}
+
+function buildInstancePlan(
+  definition: WorkflowDefinition,
+  selectedStageKeys: string[],
+): {
+  entryNodeId: string
+  nodePlan: Record<string, {
+    nodeId: string
+    stageId: string
+    kind: 'before' | 'main' | 'after'
+    hookId?: string
+    fromNodeId: string | null
+    nextNodeId: string | null
+  }>
+} {
+  const stageOrder = getStageOrder(definition)
+  const selectedSet = new Set(selectedStageKeys)
+  const nodePlan: Record<string, {
+    nodeId: string
+    stageId: string
+    kind: 'before' | 'main' | 'after'
+    hookId?: string
+    fromNodeId: string | null
+    nextNodeId: string | null
+  }> = {}
+
+  const stageEntryNode = (stageId: string): string => {
+    const stage = definition.stages[stageId]
+    const beforeHooks = stage ? (stage.before ?? []) : []
+    if (beforeHooks.length > 0) {
+      const hookId = beforeHooks[0]?.id ?? 'before-0'
+      return createBeforeNodeId(stageId, hookId)
+    }
+    return createMainNodeId(stageId)
+  }
+
+  for (const stageId of selectedStageKeys) {
+    const stage = definition.stages[stageId]
+    if (!stage) {
+      continue
+    }
+    const beforeHooks = stage.before ?? []
+    const afterHooks = stage.after ?? []
+
+    const beforeNodeIds = beforeHooks.map((hook, index) =>
+      createBeforeNodeId(stageId, hook.id ?? `before-${index}`),
+    )
+    const mainNodeId = createMainNodeId(stageId)
+    const afterNodeIds = afterHooks.map((hook, index) =>
+      createAfterNodeId(stageId, hook.id ?? `after-${index}`),
+    )
+
+    for (let i = 0; i < beforeNodeIds.length; i += 1) {
+      const nodeId = beforeNodeIds[i]!
+      const hookId = beforeHooks[i]?.id
+      nodePlan[nodeId] = {
+        nodeId,
+        stageId,
+        kind: 'before',
+        ...(hookId ? { hookId } : {}),
+        fromNodeId: i === 0 ? null : beforeNodeIds[i - 1]!,
+        nextNodeId: i < beforeNodeIds.length - 1 ? beforeNodeIds[i + 1]! : mainNodeId,
+      }
+    }
+
+    nodePlan[mainNodeId] = {
+      nodeId: mainNodeId,
+      stageId,
+      kind: 'main',
+      fromNodeId: beforeNodeIds.length > 0 ? beforeNodeIds[beforeNodeIds.length - 1]! : null,
+      nextNodeId: null,
+    }
+
+    for (let i = 0; i < afterNodeIds.length; i += 1) {
+      const nodeId = afterNodeIds[i]!
+      const hookId = afterHooks[i]?.id
+      nodePlan[nodeId] = {
+        nodeId,
+        stageId,
+        kind: 'after',
+        ...(hookId ? { hookId } : {}),
+        fromNodeId: i === 0 ? mainNodeId : afterNodeIds[i - 1]!,
+        nextNodeId: i < afterNodeIds.length - 1 ? afterNodeIds[i + 1]! : null,
+      }
+    }
+
+    if (afterNodeIds.length > 0) {
+      nodePlan[mainNodeId].nextNodeId = afterNodeIds[0]!
+    }
+
+  const fallbackNext = (() => {
+      const idx = stageOrder.indexOf(stageId)
+      if (idx < 0) {
+        return null
+      }
+      for (let i = idx + 1; i < stageOrder.length; i += 1) {
+        const candidate = stageOrder[i]!
+        if (selectedSet.has(candidate)) {
+          return candidate
+        }
+      }
+      return null
+    })()
+
+  const resolvedNextStage = resolveNextSelectedStage(definition, selectedSet, stageId) ?? fallbackNext
+    const resolvedNextNode = resolvedNextStage ? stageEntryNode(resolvedNextStage) : null
+
+    if (afterNodeIds.length > 0) {
+      const terminalAfterNode = afterNodeIds[afterNodeIds.length - 1]!
+      nodePlan[terminalAfterNode].nextNodeId = resolvedNextNode
+    } else {
+      nodePlan[mainNodeId].nextNodeId = resolvedNextNode
+    }
+  }
+
+  const firstStage = selectedStageKeys[0]
+  const entryNodeId = firstStage ? stageEntryNode(firstStage) : ''
+  return {
+    entryNodeId,
+    nodePlan,
+  }
+}
 
 /**
  * WorkflowService 事件类型映射
@@ -89,7 +290,6 @@ export interface WorkflowDetail {
   name: string;
   description: string;
   stages: StageDetail[];
-  stageOrder: string[];
 }
 
 /**
@@ -117,7 +317,7 @@ export interface SelectWorkflowResult {
  */
 export class WorkflowService extends EventEmitter {
   private definition: WorkflowDefinition | null = null;
-  /** 内存锁：防止 session.idle 在 afterStage 钩子执行期间触发重入交接 */
+  /** 内存锁：防止 session.idle 在 after 钩子执行期间触发重入交接 */
   private _handoverInProgress = false;
 
   private incrementCurrentFailureCount(): WorkflowState | null {
@@ -133,7 +333,19 @@ export class WorkflowService extends EventEmitter {
 
   private getGateDetail(stageKey: string): GateMilestoneDetail | null {
     const state = getWorkflowState();
-    const detail = state?.workflow[stageKey]?.stageMilestones?.[GATE_MILESTONE_KEY]?.detail;
+    const mainNodeId = createMainNodeId(stageKey)
+    const events = state?.history?.events ?? []
+    let detail: unknown = null
+    for (let i = events.length - 1; i >= 0; i -= 1) {
+      const event = events[i]
+      if (event.type !== 'milestone.set' || event.nodeId !== mainNodeId || event.key !== GATE_MILESTONE_KEY) {
+        continue
+      }
+      if (typeof event.value === 'object' && event.value !== null && 'detail' in event.value) {
+        detail = (event.value as { detail?: unknown }).detail
+      }
+      break
+    }
     if (!isGateMilestoneDetail(detail)) {
       return null;
     }
@@ -153,8 +365,8 @@ export class WorkflowService extends EventEmitter {
       return []
     }
 
-    if (stageDefinition.stageMilestones !== undefined) {
-      return [...stageDefinition.stageMilestones]
+    if (stageDefinition.requiredMilestones !== undefined) {
+      return [...stageDefinition.requiredMilestones]
     }
 
     return []
@@ -237,7 +449,7 @@ export class WorkflowService extends EventEmitter {
         id,
         name: definition?.name ?? id,
         description: definition?.description ?? '',
-        stageCount: definition?.stageOrder.length ?? 0,
+        stageCount: definition ? getStageOrder(definition).length : 0,
       };
     });
   }
@@ -253,7 +465,8 @@ export class WorkflowService extends EventEmitter {
       return null;
     }
 
-    const stages: StageDetail[] = definition.stageOrder.map(stageKey => {
+    const stageOrder = getStageOrder(definition)
+    const stages: StageDetail[] = stageOrder.map(stageKey => {
       const stageDef = definition.stages[stageKey];
       return {
         key: stageKey,
@@ -271,7 +484,6 @@ export class WorkflowService extends EventEmitter {
       name: definition.name,
       description: definition.description,
       stages,
-      stageOrder: definition.stageOrder,
     };
   }
 
@@ -308,7 +520,8 @@ export class WorkflowService extends EventEmitter {
     }
 
     // 找出所有 required stages
-    const requiredStages = definition.stageOrder.filter(
+    const stageOrder = getStageOrder(definition)
+    const requiredStages = stageOrder.filter(
       stageKey => definition.stages[stageKey]?.required !== false
     );
 
@@ -324,14 +537,14 @@ export class WorkflowService extends EventEmitter {
       };
     }
 
-    // 获取选中的阶段列表（按 stageOrder 顺序）
-    const selectedStageKeys = definition.stageOrder.filter(
+    // 获取选中的阶段列表（按拓扑顺序）
+    const selectedStageKeys = stageOrder.filter(
       stageKey => stageSelectionMap.get(stageKey) === true
     );
 
     // 创建初始状态
     const workflow: Record<string, { isCompleted: boolean; selected?: boolean; previousStage?: string | null; nextStage?: string | null }> = {};
-    for (const stageKey of definition.stageOrder) {
+    for (const stageKey of stageOrder) {
       workflow[stageKey] = {
         isCompleted: false,
         selected: stageSelectionMap.get(stageKey) ?? false,
@@ -356,6 +569,31 @@ export class WorkflowService extends EventEmitter {
       workflow,
       current: null,
     };
+
+    const instancePlan = buildInstancePlan(definition, selectedStageKeys)
+    newState.instance = {
+      instanceId: `${definition.id}-${Date.now()}`,
+      workflowId: definition.id,
+      workflowVersion: definition.version ?? 'v1',
+      selectedStageIds: selectedStageKeys,
+      skippedStageIds: stageOrder.filter(stageKey => !selectedStageKeys.includes(stageKey)),
+      entryNodeId: instancePlan.entryNodeId,
+      nodePlan: instancePlan.nodePlan,
+    }
+
+    newState.runtime = {
+      status: 'running',
+      flow: {
+        fromNodeId: null,
+        currentNodeId: null,
+        nextNodeId: instancePlan.entryNodeId || null,
+        lastEventSeq: 0,
+      },
+      currentNodeContext: null,
+    }
+    newState.history = {
+      events: [],
+    }
 
     // 缓存 definition
     this.definition = definition;
@@ -472,14 +710,6 @@ export class WorkflowService extends EventEmitter {
     return typeof score === 'number' && score > GATE_PASS_THRESHOLD;
   }
 
-
-  /**
-   * @deprecated 使用 isGateApproved() 替代。保留以兼容旧代码。
-   */
-  isGatePassed(): boolean {
-    return this.isGateApproved();
-  }
-
   /**
    * 设置质量门结果（score + comment）
    * 仅供 HCritic 调用。
@@ -515,20 +745,9 @@ export class WorkflowService extends EventEmitter {
   }
 
   setStageMilestone(params: { stage: string; milestone: { type: string; isCompleted: boolean; detail: unknown } }): WorkflowState {
-    return setWorkflowStageMilestone(params)
+    const nodeId = `workflow.${params.stage}.main`
+    return setWorkflowStageMilestone({ nodeId, milestone: params.milestone })
   }
-
-  /**
-   * @deprecated 使用 setGateResult 替代。保留以兼容旧代码。
-   * 将 boolean 转换为 score（true=100，false=0）后调用 setGateResult。
-   */
-  setGatePassed(passed: boolean): WorkflowState {
-    return this.setGateResult({
-      score: passed ? 100 : 0,
-      comment: passed ? 'Passed (legacy)' : 'Failed (legacy)',
-    });
-  }
-
   // ─── 平台无关工具方法（供 plugin 工具直接调用）─────────────────────────────────
 
   /**
@@ -568,7 +787,7 @@ export class WorkflowService extends EventEmitter {
 
     const state = this.getState();
     const currentStage = this.getCurrentStage();
-    const selectedStages = this.definition.stageOrder.filter(
+    const selectedStages = getStageOrder(this.definition).filter(
       s => state?.workflow[s]?.selected !== false
     );
 
@@ -640,12 +859,29 @@ export class WorkflowService extends EventEmitter {
       };
     }
 
-    const stageMilestones = this.getState()?.workflow[currentStage]?.stageMilestones;
-    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage);
+    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage)
+    const stateForCheck = this.getState()
     const incompleteRequiredMilestones = requiredMilestones.filter(milestoneType => {
-      const milestone = stageMilestones?.[milestoneType];
-      return milestone?.isCompleted !== true;
-    });
+      if (!stateForCheck || !this.definition) {
+        return true
+      }
+      const completed = areRequiredMilestonesCompletedForStage(stateForCheck, this.definition, currentStage)
+      if (milestoneType === GATE_MILESTONE_KEY) {
+        return !completed
+      }
+      const mainNodeId = `workflow.${currentStage}.main`
+      const events = stateForCheck.history?.events ?? []
+      for (let i = events.length - 1; i >= 0; i -= 1) {
+        const event = events[i]
+        if (event.type !== 'milestone.set' || event.nodeId !== mainNodeId || event.key !== milestoneType) {
+          continue
+        }
+        if (typeof event.value === 'object' && event.value !== null && 'isCompleted' in event.value) {
+          return (event.value as { isCompleted?: unknown }).isCompleted !== true
+        }
+      }
+      return true
+    })
 
     if (incompleteRequiredMilestones.length > 0) {
       this.incrementCurrentFailureCount();

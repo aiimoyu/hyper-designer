@@ -34,7 +34,6 @@ export {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
-  setWorkflowGatePassed,
   setWorkflowGateResult,
   setWorkflowStageMilestone,
   executeWorkflowHandover,

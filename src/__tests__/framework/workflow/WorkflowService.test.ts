@@ -11,21 +11,57 @@ const handoverMilestoneWorkflow: WorkflowDefinition = {
   id: 'handover-milestone-test',
   name: 'Handover Milestone Test Workflow',
   description: 'Validates workflow-defined handover milestone requirements',
-  stageOrder: ['stageA', 'stageB'],
+  entryStageId: 'stageA',
   stages: {
     stageA: {
+      stageId: 'stageA',
       name: 'Stage A',
       description: 'Source stage',
       agent: 'HArchitect',
-      stageMilestones: ['gate', 'doc_review'],
+      requiredMilestones: ['gate', 'doc_review'],
       required: true,
+      transitions: [{ id: 'to-stageB', toStageId: 'stageB', mode: 'auto', priority: 0 }],
       getHandoverPrompt: () => 'handover to stage A',
     },
     stageB: {
+      stageId: 'stageB',
       name: 'Stage B',
       description: 'Target stage',
       agent: 'HEngineer',
       required: true,
+      getHandoverPrompt: () => 'handover to stage B',
+    },
+  },
+}
+
+const transitionOnlyWorkflow: WorkflowDefinition = {
+  id: 'transition-only-service',
+  name: 'Transition Only Service Workflow',
+  description: 'Uses transition graph for execution order',
+  entryStageId: 'stageA',
+  stages: {
+    stageA: {
+      stageId: 'stageA',
+      name: 'Stage A',
+      description: 'Source stage',
+      agent: 'HArchitect',
+      requiredMilestones: ['gate'],
+      transitions: [{ id: 'A-B', toStageId: 'stageB', mode: 'auto', priority: 0 }],
+      getHandoverPrompt: () => 'handover to stage A',
+    },
+    stageB: {
+      stageId: 'stageB',
+      name: 'Stage B',
+      description: 'Target stage',
+      agent: 'HEngineer',
+      before: [{
+        id: 'before-b',
+        description: 'before hook',
+        fn: async ({ setMilestone }) => {
+          setMilestone?.({ key: 'hook_milestone', isCompleted: false, detail: { marker: true } })
+        },
+      }],
+      transitions: [],
       getHandoverPrompt: () => 'handover to stage B',
     },
   },
@@ -36,7 +72,7 @@ function initWithWorkflow(service: WorkflowService, workflowId: string = "classi
   if (!detail) throw new Error(`Workflow ${workflowId} not found`);
 
   // Select all stages
-  const stages = detail.stageOrder.map(key => ({ key, selected: true }));
+  const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }));
   const result = service.selectWorkflow({ typeId: workflowId, stages });
   if (!result.success) throw new Error(result.error ?? "Failed to select workflow");
 }
@@ -104,7 +140,7 @@ describe("WorkflowService", () => {
   describe("selectWorkflow", () => {
     it("selects workflow with all stages selected but not initialized", () => {
       const detail = service.getWorkflowDetail("classic")!;
-      const stages = detail.stageOrder.map(key => ({ key, selected: true }));
+      const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }));
 
       const result = service.selectWorkflow({ typeId: "classic", stages });
 
@@ -131,7 +167,7 @@ describe("WorkflowService", () => {
       initWithWorkflow(service);
 
       const detail = service.getWorkflowDetail("classic")!;
-      const stages = detail.stageOrder.map(key => ({ key, selected: true }));
+      const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }));
       const result = service.selectWorkflow({ typeId: "classic", stages });
 
       expect(result.success).toBe(false);
@@ -279,7 +315,7 @@ describe("WorkflowService", () => {
       expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
     });
 
-    it('checks every milestone listed in workflow stage stageMilestones', () => {
+    it('checks every milestone listed in workflow stage requiredMilestones', () => {
       writeWorkflowStateFile(initializeWorkflowState(handoverMilestoneWorkflow));
       Reflect.set(service, 'definition', handoverMilestoneWorkflow);
       service.setCurrent('stageA');
@@ -362,6 +398,29 @@ describe("WorkflowService", () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('最后一个阶段');
     });
+
+    it('checks requiredMilestones and ignores hook-local milestones for handover blocking', () => {
+      writeWorkflowStateFile(initializeWorkflowState(transitionOnlyWorkflow));
+      Reflect.set(service, 'definition', transitionOnlyWorkflow);
+      service.setCurrent('stageA');
+
+      const rejected = service.hdScheduleHandover('stageB');
+      expect(rejected.success).toBe(false);
+      expect(rejected.error).toContain('gate');
+
+      service.setStageMilestone({
+        stage: 'stageA',
+        milestone: {
+          type: 'gate',
+          isCompleted: true,
+          detail: { score: 90 },
+        },
+      });
+
+      const accepted = service.hdScheduleHandover('stageB');
+      expect(accepted.success).toBe(true);
+      expect(accepted.state?.current?.handoverTo).toBe('stageB');
+    });
   });
 
   describe('hdForceNextStep', () => {
@@ -403,7 +462,11 @@ describe("WorkflowService", () => {
       expect(result.success).toBe(true);
       expect(result.state?.current?.name).toBe('scenarioAnalysis');
       expect(result.state?.current?.failureCount).toBe(0);
-      expect(result.state?.workflow.IRAnalysis?.stageMilestones?.force_advance).toBeDefined();
+      const events = result.state?.history?.events ?? [];
+      const forceAdvanceEvent = events.find(
+        event => event.type === 'milestone.set' && event.nodeId === 'workflow.IRAnalysis.main' && event.key === 'force_advance',
+      );
+      expect(forceAdvanceEvent).toBeDefined();
     });
 
     it('records auditable force_advance milestone and does not mark gate as passed', () => {
@@ -415,14 +478,20 @@ describe("WorkflowService", () => {
 
       const result = service.hdForceNextStep();
 
-      const milestone = result.state?.workflow.IRAnalysis?.stageMilestones?.force_advance;
+      const events = result.state?.history?.events ?? [];
+      const forceAdvanceEvent = events.find(
+        event => event.type === 'milestone.set' && event.nodeId === 'workflow.IRAnalysis.main' && event.key === 'force_advance',
+      );
+      const gateEvent = events.find(
+        event => event.type === 'milestone.set' && event.nodeId === 'workflow.IRAnalysis.main' && event.key === 'gate',
+      );
       expect(result.success).toBe(true);
-      expect(milestone?.type).toBe('force_advance');
-      expect(milestone?.isCompleted).toBe(true);
-      expect(milestone?.detail).toMatchObject({
+      expect(forceAdvanceEvent).toBeDefined();
+      expect((forceAdvanceEvent?.value as { isCompleted?: boolean } | undefined)?.isCompleted).toBe(true);
+      expect((forceAdvanceEvent?.value as { detail?: unknown } | undefined)?.detail).toMatchObject({
         reason: 'Forced transition after 3+ failed handover attempts',
       });
-      expect(result.state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeUndefined();
+      expect(gateEvent).toBeUndefined();
     });
   });
 
@@ -440,10 +509,12 @@ describe("WorkflowService", () => {
       service.setCurrent("IRAnalysis");
       service.setGateResult({ score: 85, comment: "Good work" });
       const state = service.getState();
-      const gateMilestone = state?.workflow.IRAnalysis?.stageMilestones?.gate;
-      expect(gateMilestone?.type).toBe('gate');
-      expect(gateMilestone?.isCompleted).toBe(true);
-      expect(gateMilestone?.detail).toMatchObject({ score: 85, comment: 'Good work' });
+      const gateEvent = (state?.history?.events ?? []).find(
+        event => event.type === 'milestone.set' && event.nodeId === 'workflow.IRAnalysis.main' && event.key === 'gate',
+      )
+      expect(gateEvent).toBeDefined();
+      expect((gateEvent?.value as { isCompleted?: boolean } | undefined)?.isCompleted).toBe(true);
+      expect((gateEvent?.value as { detail?: unknown } | undefined)?.detail).toMatchObject({ score: 85, comment: 'Good work' });
     });
   });
 

@@ -16,7 +16,6 @@ export interface WorkflowStage {
   isCompleted: boolean;
   /** 是否被选中执行（用于工作流选择时跳过某些阶段） */
   selected?: boolean;
-  stageMilestones?: Record<string, StageMilestone>;
   /** 前一个阶段的 key（null 表示无前驱） */
   previousStage?: string | null;
   /** 后一个阶段的 key（null 表示无后继） */
@@ -32,7 +31,6 @@ export interface CurrentStageState {
   /** Target stage for the next handover, if scheduled */
   handoverTo: string | null;
   agent?: string;
-  phase?: string;
   previousStage?: string | null;
   nextStage?: string | null;
   /** Failure count for this stage (resets on stage transition) */
@@ -53,4 +51,74 @@ export interface WorkflowState {
    * Null if no stage is active.
    */
   current: CurrentStageState | null;
+  instance?: WorkflowInstanceState | null;
+  runtime?: WorkflowRuntimeState | null;
+  history?: WorkflowHistoryState;
+}
+
+export interface WorkflowCurrentMilestone {
+  isCompleted: boolean;
+  detail: unknown;
+  updatedAt: string;
+}
+
+export interface WorkflowCurrentNodeContext {
+  nodeId: string;
+  visit: number;
+  attempt: number;
+  milestones: Record<string, WorkflowCurrentMilestone>;
+  info: Record<string, unknown>;
+}
+
+export interface WorkflowFlowState {
+  fromNodeId: string | null;
+  currentNodeId: string | null;
+  nextNodeId: string | null;
+  lastEventSeq: number;
+}
+
+export interface WorkflowRuntimeState {
+  status: 'running' | 'completed' | 'failed';
+  flow: WorkflowFlowState;
+  currentNodeContext: WorkflowCurrentNodeContext | null;
+}
+
+export interface WorkflowInstanceNodePlan {
+  nodeId: string;
+  stageId: string;
+  kind: 'before' | 'main' | 'after';
+  hookId?: string;
+  fromNodeId: string | null;
+  nextNodeId: string | null;
+}
+
+export interface WorkflowInstanceState {
+  instanceId: string;
+  workflowId: string;
+  workflowVersion: string;
+  selectedStageIds: string[];
+  skippedStageIds: string[];
+  entryNodeId: string;
+  nodePlan: Record<string, WorkflowInstanceNodePlan>;
+}
+
+export interface WorkflowHistoryBaseEvent {
+  seq: number;
+  at: string;
+  type: string;
+  runId: string;
+}
+
+export interface WorkflowHistoryEvent extends WorkflowHistoryBaseEvent {
+  nodeId?: string;
+  fromNodeId?: string | null;
+  toNodeId?: string | null;
+  reason?: string;
+  key?: string;
+  value?: unknown;
+  patch?: Record<string, unknown>;
+}
+
+export interface WorkflowHistoryState {
+  events: WorkflowHistoryEvent[];
 }

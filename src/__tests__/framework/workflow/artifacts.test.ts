@@ -12,18 +12,21 @@ function createDefinition(): WorkflowDefinition {
     id: 'classic',
     name: 'Classic',
     description: 'test workflow',
-    stageOrder: ['IRAnalysis', 'scenarioAnalysis', 'useCaseAnalysis'],
+    entryStageId: 'IRAnalysis',
     stages: {
       IRAnalysis: {
+        stageId: 'IRAnalysis',
         name: 'IR Analysis',
         description: 'IR',
         agent: 'HArchitect',
+        transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
         outputs: {
           需求信息: { path: 'docs/需求信息.md' },
         },
         getHandoverPrompt: () => 'to IRAnalysis',
       },
       scenarioAnalysis: {
+        stageId: 'scenarioAnalysis',
         name: 'Scenario Analysis',
         description: 'Scenario',
         agent: 'HArchitect',
@@ -33,9 +36,11 @@ function createDefinition(): WorkflowDefinition {
         outputs: {
           功能场景: { path: 'docs/功能场景.md' },
         },
+        transitions: [{ id: 'to-usecase', toStageId: 'useCaseAnalysis', mode: 'auto', priority: 0 }],
         getHandoverPrompt: () => 'to scenarioAnalysis',
       },
       useCaseAnalysis: {
+        stageId: 'useCaseAnalysis',
         name: 'Use Case Analysis',
         description: 'UseCase',
         agent: 'HArchitect',

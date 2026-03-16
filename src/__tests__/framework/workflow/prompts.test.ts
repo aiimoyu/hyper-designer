@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { loadPromptForStage } from '../../../workflows/core'
+import { getStageOrder, loadPromptForStage } from '../../../workflows/core'
 import { classicWorkflow } from "../../../workflows/plugins/classic"
 import type { WorkflowDefinition } from '../../../workflows/core'
 
@@ -17,9 +17,10 @@ describe("workflow/prompts", () => {
         id: "test",
         name: "Test Workflow",
         description: "Test",
-        stageOrder: ["stage1"],
+        entryStageId: "stage1",
         stages: {
           stage1: {
+            stageId: "stage1",
             name: "Stage 1",
             description: "Test stage",
             agent: "TestAgent",
@@ -43,7 +44,8 @@ describe("workflow/prompts", () => {
     it("should verify all classic workflow prompt files exist and are readable", () => {
       const workflow = classicWorkflow
 
-      workflow.stageOrder.forEach(stage => {
+      const stageOrder = getStageOrder(workflow)
+      stageOrder.forEach(stage => {
         const stageDef = workflow.stages[stage]
         const promptBinding = stageDef.promptBindings?.[WORKFLOW_STEP_PROMPT_TOKEN]
         expect(promptBinding).toBeDefined()

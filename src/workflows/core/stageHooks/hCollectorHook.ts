@@ -1,7 +1,7 @@
 /**
  * HCollector 资料收集钩子
  *
- * 预设的 beforeStage/afterStage 钩子，通过 ctx.adapter 获取平台能力，
+ * 预设的 before/after 钩子，通过 ctx.adapter 获取平台能力，
  * 与具体 AI 框架（OpenCode 等）解耦，可在不同平台实现中复用。
  */
 

@@ -9,7 +9,7 @@ import type { StageHookFn } from '../types'
 import { HyperDesignerLogger } from '../../../utils/logger'
 
 /**
- * 上下文压缩钩子（afterStage）
+ * 上下文压缩钩子（after）
  */
 export const summarizeHook: StageHookFn = async ({ stageKey, stageName, sessionID, adapter }) => {
   if (!adapter || !sessionID) {

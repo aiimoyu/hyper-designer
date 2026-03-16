@@ -2,6 +2,36 @@ import type { WorkflowDefinition } from '../types'
 import type { WorkflowState } from '../state/types'
 import { HyperDesignerLogger } from '../../../utils/logger'
 
+function getStageOrder(definition: WorkflowDefinition): string[] {
+  const visited = new Set<string>()
+  const order: string[] = []
+  const walk = (stageId: string): void => {
+    if (visited.has(stageId) || !definition.stages[stageId]) {
+      return
+    }
+    visited.add(stageId)
+    order.push(stageId)
+    const transitions = definition.stages[stageId].transitions ?? []
+    const autoTransitions = [...transitions]
+      .filter(item => item.mode === 'auto')
+      .sort((a, b) => a.priority - b.priority)
+    for (const transition of autoTransitions) {
+      walk(transition.toStageId)
+    }
+  }
+
+  if (typeof definition.entryStageId === 'string') {
+    walk(definition.entryStageId)
+  }
+
+  for (const stageId of Object.keys(definition.stages)) {
+    if (!visited.has(stageId)) {
+      walk(stageId)
+    }
+  }
+  return order
+}
+
 export function forceAdvanceToNextSelectedStage(
   state: WorkflowState,
   definition: WorkflowDefinition,
@@ -38,7 +68,7 @@ export function forceAdvanceToNextSelectedStage(
     }
   }
 
-  const selectedStages = definition.stageOrder.filter(s => state.workflow[s]?.selected !== false)
+  const selectedStages = getStageOrder(definition).filter(s => state.workflow[s]?.selected !== false)
   const fromIndex = selectedStages.indexOf(currentStage)
   const toIndex = selectedStages.indexOf(targetStage)
   if (toIndex === -1) {

@@ -25,16 +25,19 @@ describe("workflow/handover", () => {
         id: "custom",
         name: "Custom Workflow",
         description: "Test workflow",
-        stageOrder: ["stage1", "stage2"],
+        entryStageId: "stage1",
         stages: {
           stage1: {
+            stageId: "stage1",
             name: "Stage 1",
             description: "First stage",
             agent: "Agent1",
             promptFile: "prompts/stage1.md",
+            transitions: [{ id: "to-stage2", toStageId: "stage2", mode: "auto", priority: 0 }],
             getHandoverPrompt: () => "Handover to stage 1",
           },
           stage2: {
+            stageId: "stage2",
             name: "Stage 2",
             description: "Second stage",
             agent: "Agent2",
@@ -79,16 +82,19 @@ describe("workflow/handover", () => {
         id: "custom",
         name: "Custom Workflow",
         description: "Test workflow",
-        stageOrder: ["stage1", "stage2"],
+        entryStageId: "stage1",
         stages: {
           stage1: {
+            stageId: "stage1",
             name: "Stage 1",
             description: "First stage",
             agent: "Agent1",
             promptFile: "prompts/stage1.md",
+            transitions: [{ id: "to-stage2", toStageId: "stage2", mode: "auto", priority: 0 }],
             getHandoverPrompt: () => "Moving from start to stage1",
           },
           stage2: {
+            stageId: "stage2",
             name: "Stage 2",
             description: "Second stage",
             agent: "Agent2",

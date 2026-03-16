@@ -10,9 +10,10 @@ const stubWorkflow: WorkflowDefinition = {
   id: 'test',
   name: 'Test Workflow',
   description: 'stub for summarizeHook tests',
-  stageOrder: ['testStage'],
+  entryStageId: 'testStage',
   stages: {
     testStage: {
+      stageId: 'testStage',
       name: 'Test Stage',
       description: 'stub stage',
       agent: 'TestAgent',

@@ -5,6 +5,21 @@ import { dirname } from 'path'
 
 const STATE_FILE = getWorkflowStatePath()
 
+function findLatestNodeMilestone(
+  state: ReturnType<typeof readWorkflowStateFile>,
+  nodeId: string,
+  key: string,
+): { isCompleted?: boolean; detail?: unknown } | undefined {
+  const events = state?.history?.events ?? []
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const event = events[i]
+    if (event.type === 'milestone.set' && event.nodeId === nodeId && event.key === key) {
+      return event.value as { isCompleted?: boolean; detail?: unknown } | undefined
+    }
+  }
+  return undefined
+}
+
 describe('workflow persistence migration', () => {
   beforeEach(() => {
     if (existsSync(STATE_FILE)) {
@@ -72,7 +87,6 @@ describe('workflow persistence migration', () => {
       current: {
         name: 'IRAnalysis',
         handoverTo: null,
-        stageMilestones: {}
       }
     }
 
@@ -161,7 +175,7 @@ describe('workflow persistence migration', () => {
       previousStage: null,
       nextStage: null,
     })
-    expect(state?.workflow.IRAnalysis?.stageMilestones?.gate).toBeUndefined()
+    expect(findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')).toBeUndefined()
   })
 
   it('roundtrip: write with milestone fields, read back preserves all fields', () => {
@@ -174,28 +188,18 @@ describe('workflow persistence migration', () => {
           selected: true,
           previousStage: null,
           nextStage: 'scenarioAnalysis',
-          stageMilestones: {
-            gate: {
-              type: 'gate',
-              timestamp: '2026-01-01T00:00:00.000Z',
-              isCompleted: true,
-              detail: { score: 90, comment: 'Good' }
-            }
-          }
         },
         scenarioAnalysis: {
           isCompleted: false,
           selected: true,
           previousStage: 'IRAnalysis',
           nextStage: 'useCaseAnalysis',
-          stageMilestones: {}
         },
         useCaseAnalysis: {
           isCompleted: false,
           selected: false,
           previousStage: 'scenarioAnalysis',
           nextStage: null,
-          stageMilestones: {}
         }
       },
       current: {
@@ -235,14 +239,6 @@ describe('workflow persistence migration', () => {
           selected: true,
           previousStage: null,
           nextStage: null,
-          stageMilestones: {
-            gate: {
-              type: 'gate',
-              timestamp: '2026-01-01T00:00:00.000Z',
-              isCompleted: false,
-              detail: { score: 75, comment: 'Borderline' }
-            }
-          }
         }
       },
       current: {
@@ -254,8 +250,11 @@ describe('workflow persistence migration', () => {
 
     writeWorkflowStateFile(stateToWrite)
     const raw = JSON.parse(readFileSync(STATE_FILE, 'utf-8'))
-    expect(raw.current.gateResult).toBeUndefined()
-    expect(raw.workflow.IRAnalysis.score).toBeUndefined()
-    expect(raw.workflow.IRAnalysis.comment).toBeUndefined()
+    expect(raw.schemaVersion).toBe(2)
+    expect(raw.execution.stage.gateResult).toBeUndefined()
+    expect(raw.plan.stages.IRAnalysis.score).toBeUndefined()
+    expect(raw.plan.stages.IRAnalysis.comment).toBeUndefined()
+    expect(raw.current).toBeUndefined()
+    expect(raw.workflow).toBeUndefined()
   })
 })

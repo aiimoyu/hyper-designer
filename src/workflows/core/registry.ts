@@ -19,6 +19,35 @@ const workflowRegistry: Record<string, WorkflowDefinition> = {
   projectAnalysis: projectAnalysisWorkflow,
 }
 
+function getStageOrder(definition: WorkflowDefinition): string[] {
+  const visited = new Set<string>()
+  const order: string[] = []
+  const walk = (stageId: string): void => {
+    if (visited.has(stageId) || !definition.stages[stageId]) {
+      return
+    }
+    visited.add(stageId)
+    order.push(stageId)
+    const transitions = definition.stages[stageId].transitions ?? []
+    const autoTransitions = [...transitions]
+      .filter(item => item.mode === 'auto')
+      .sort((a, b) => a.priority - b.priority)
+    for (const transition of autoTransitions) {
+      walk(transition.toStageId)
+    }
+  }
+
+  if (typeof definition.entryStageId === 'string') {
+    walk(definition.entryStageId)
+  }
+  for (const stageId of Object.keys(definition.stages)) {
+    if (!visited.has(stageId)) {
+      walk(stageId)
+    }
+  }
+  return order
+}
+
 /**
  * Returns the workflow definition for the given workflow ID
  * @param typeId - The unique identifier of the workflow
@@ -38,7 +67,7 @@ export function getWorkflowDefinition(typeId: string): WorkflowDefinition | null
   
   HyperDesignerLogger.debug("Workflow", `获取工作流定义`, {
     workflowId: typeId,
-    stageCount: workflow.stageOrder.length
+    stageCount: getStageOrder(workflow).length
   })
   
   return workflow

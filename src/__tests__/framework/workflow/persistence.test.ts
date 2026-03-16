@@ -5,6 +5,21 @@ import { dirname } from 'path'
 
 const STATE_FILE = getWorkflowStatePath()
 
+function findLatestNodeMilestone(
+  state: ReturnType<typeof readWorkflowStateFile>,
+  nodeId: string,
+  key: string,
+): { isCompleted?: boolean; detail?: unknown } | undefined {
+  const events = state?.history?.events ?? []
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const event = events[i]
+    if (event.type === 'milestone.set' && event.nodeId === nodeId && event.key === key) {
+      return event.value as { isCompleted?: boolean; detail?: unknown } | undefined
+    }
+  }
+  return undefined
+}
+
 describe('workflow persistence', () => {
   beforeEach(() => {
     if (existsSync(STATE_FILE)) {
@@ -45,7 +60,7 @@ describe('workflow persistence', () => {
       previousStage: null,
       nextStage: null,
     })
-    expect(state?.workflow.dataCollection?.stageMilestones?.gate).toBeUndefined()
+    expect(findLatestNodeMilestone(state, 'workflow.dataCollection.main', 'gate')).toBeUndefined()
   })
 
   it('ignores legacy top-level gateResult object while still reading currentStage', () => {
@@ -75,7 +90,7 @@ describe('workflow persistence', () => {
       nextStage: null,
     })
     expect(state?.workflow.IRAnalysis).toBeUndefined()
-    expect(state?.workflow.dataCollection?.stageMilestones?.gate).toBeUndefined()
+    expect(findLatestNodeMilestone(state, 'workflow.dataCollection.main', 'gate')).toBeUndefined()
   })
 
   it('reads already canonical state correctly', () => {
@@ -87,18 +102,7 @@ describe('workflow persistence', () => {
           isCompleted: true,
           selected: true,
           previousStage: null,
-          nextStage: 'IRAnalysis',
-          stageMilestones: {
-            gate: {
-              type: 'gate',
-              timestamp: '2026-01-01T00:00:00.000Z',
-              isCompleted: true,
-              detail: {
-                score: 90,
-                comment: 'Excellent'
-              }
-            }
-          }
+            nextStage: 'IRAnalysis',
         }
       },
       current: {
@@ -128,18 +132,7 @@ describe('workflow persistence', () => {
           isCompleted: true,
           selected: true,
           previousStage: null,
-          nextStage: 'IRAnalysis',
-          stageMilestones: {
-            gate: {
-              type: 'gate',
-              timestamp: '2026-01-01T00:00:00.000Z',
-              isCompleted: true,
-              detail: {
-                score: 95,
-                comment: 'Strong quality'
-              }
-            }
-          }
+            nextStage: 'IRAnalysis',
         }
       },
       current: {
@@ -155,10 +148,24 @@ describe('workflow persistence', () => {
 
     const raw = JSON.parse(readFileSync(STATE_FILE, 'utf-8'))
     expect(raw.initialized).toBe(true)
-    expect(raw.current).toEqual(state.current)
-    expect(raw.workflow).toEqual(state.workflow)
-    expect(raw.current.gateResult).toBeUndefined()
-    expect(raw.workflow.dataCollection.score).toBeUndefined()
-    expect(raw.workflow.dataCollection.comment).toBeUndefined()
+    expect(raw.schemaVersion).toBe(2)
+    expect(raw.execution.stage).toEqual({
+      current: 'IRAnalysis',
+      previous: 'dataCollection',
+      next: 'scenarioAnalysis',
+      handoverTo: null,
+      failureCount: 0,
+    })
+    expect(raw.plan.stages.dataCollection).toEqual({
+      inclusion: 'selected',
+      completed: true,
+      previous: null,
+      next: 'IRAnalysis',
+    })
+    expect(raw.current).toBeUndefined()
+    expect(raw.workflow).toBeUndefined()
+    expect(raw.execution.stage.gateResult).toBeUndefined()
+    expect(raw.plan.stages.dataCollection.score).toBeUndefined()
+    expect(raw.plan.stages.dataCollection.comment).toBeUndefined()
   })
 })

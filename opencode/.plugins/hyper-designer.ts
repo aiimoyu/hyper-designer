@@ -117,7 +117,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
           return JSON.stringify({ success: false, error: `Workflow '${params.type_id}' not found` }, null, 2)
         }
         
-        const stages = params.stages ?? detail.stageOrder.map(key => ({ key, selected: true }))
+        const stages = params.stages ?? detail.stages.map(stage => ({ key: stage.key, selected: true }))
         const result = workflowService.selectWorkflow({ typeId: params.type_id, stages })
         return JSON.stringify(result, null, 2)
       },

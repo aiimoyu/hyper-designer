@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createHAnalysisAgent } from '../../../agents/HAnalysis'
 import {
+  getStageOrder,
   getWorkflowDefinition,
   initializeWorkflowState,
   loadPromptForStage,
@@ -19,10 +20,11 @@ function getProjectAnalysisWorkflow() {
 describe('Integration Tests: projectAnalysis workflow', () => {
   it('registers and retrieves the projectAnalysis workflow with expected stage order', () => {
     const workflow = getProjectAnalysisWorkflow()
+    const stageOrder = getStageOrder(workflow)
 
     expect(workflow.id).toBe('projectAnalysis')
     expect(workflow.name).toBe('Project Analysis')
-    expect(workflow.stageOrder).toEqual([
+    expect(stageOrder).toEqual([
       'systemAnalysis',
       'componentAnalysis',
       'missingCoverageCheck',
@@ -40,8 +42,9 @@ describe('Integration Tests: projectAnalysis workflow', () => {
 
   it('has pure Markdown output paths (no _meta/ or .json)', () => {
     const workflow = getProjectAnalysisWorkflow()
+    const stageOrder = getStageOrder(workflow)
 
-    for (const stageKey of workflow.stageOrder) {
+    for (const stageKey of stageOrder) {
       const stage = workflow.stages[stageKey]
       if (stage.outputs) {
         for (const [_name, output] of Object.entries(stage.outputs)) {
@@ -84,10 +87,11 @@ describe('Integration Tests: projectAnalysis workflow', () => {
   it('initializes workflow state for projectAnalysis with ordered stage links', () => {
     const workflow = getProjectAnalysisWorkflow()
     const state = initializeWorkflowState(workflow)
+    const stageOrder = getStageOrder(workflow)
 
     expect(state.initialized).toBe(false)
     expect(state.typeId).toBe('projectAnalysis')
-    expect(Object.keys(state.workflow)).toEqual(workflow.stageOrder)
+    expect(Object.keys(state.workflow)).toEqual(stageOrder)
     expect(state.current).toBeNull()
 
     expect(state.workflow.systemAnalysis).toMatchObject({

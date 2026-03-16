@@ -10,6 +10,14 @@ export type { WorkflowStage, WorkflowState, StageMilestone, GateMilestoneDetail 
 // Persistence
 export { readWorkflowStateFile, writeWorkflowStateFile, getWorkflowStatePath } from "./persistence";
 
+export {
+  appendHistoryEvent,
+  flushCurrentNodeContextToHistory,
+  patchCurrentNodeInfo,
+  setCurrentNodeContext,
+  setCurrentNodeMilestone,
+} from './history'
+
 // Operations
 export {
   getStageOrder,
@@ -19,9 +27,9 @@ export {
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
-  setWorkflowGatePassed,
   setWorkflowGateResult,
   setWorkflowStageMilestone,
   executeWorkflowHandover,
   forceWorkflowNextStep,
+  areRequiredMilestonesCompletedForStage,
 } from "./operations";
