@@ -1,5 +1,21 @@
 ## 当前阶段：SDD 开发计划生成
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="sddPlanGeneration"/>
+    <pre_stage>moduleFunctionalDesign</pre_stage>
+  </pipeline>
+  <executing_agent>HEngineer</executing_agent>
+  <core_objective>
+    Based on completed Module Functional Design (MFD) documents, generate
+    Specification-Driven Development (SDD) plans ready for subagent execution,
+    including task wave partitioning, complexity rating, acceptance criteria,
+    and TDD test scenarios.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `sddPlanGeneration`  
 **执行Agent**: HEngineer  
 **核心目标**: 基于已完成的模块功能设计说明书（MFD），生成可直接分发给 subagent 执行的规格驱动开发（SDD）计划，包括任务波次划分、复杂度评级、验收标准和 TDD 测试场景。

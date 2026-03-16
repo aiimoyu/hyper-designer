@@ -1,5 +1,20 @@
 ## 当前阶段：用例分析
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="useCaseAnalysis"/>
+    <pre_stage>scenarioAnalysis</pre_stage>
+  </pipeline>
+  <executing_agent>HArchitect</executing_agent>
+  <core_objective>
+    Refine functional scenarios from the scenario library into executable,
+    verifiable use case specifications, including use case tables, PlantUML
+    diagrams, data dictionaries, and architecture impact assessment.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `useCaseAnalysis`  
 **执行Agent**: HArchitect  
 **核心目标**: 将场景库中的功能场景细化为可执行、可验收的用例规格，明确用例表格、PlantUML图、数据字典与架构影响。

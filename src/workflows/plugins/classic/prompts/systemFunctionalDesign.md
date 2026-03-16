@@ -1,5 +1,20 @@
 ## 当前阶段：系统功能设计
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="systemFunctionalDesign"/>
+    <pre_stage>requirementDecomposition</pre_stage>
+  </pipeline>
+  <executing_agent>HEngineer</executing_agent>
+  <core_objective>
+    Complete system-level architecture design, including architecture selection,
+    module partitioning, data modeling, component boundaries, communication
+    protocols, and non-functional requirements.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `systemFunctionalDesign`  
 **执行Agent**: HEngineer  
 **核心目标**: 完成系统级架构设计，包括架构选型、模块划分、数据模型、组件边界、通信协议与非功能性要求。

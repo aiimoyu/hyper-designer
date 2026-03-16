@@ -1,5 +1,20 @@
 ## 当前阶段：场景分析
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="scenarioAnalysis"/>
+    <pre_stage>IRAnalysis</pre_stage>
+  </pipeline>
+  <executing_agent>HArchitect</executing_agent>
+  <core_objective>
+    Identify system actors and analyze functional usage scenarios by type
+    (business/operation/maintenance/manufacturing/other), generating functional
+    scenario documents.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `scenarioAnalysis`  
 **执行Agent**: HArchitect  
 **核心目标**: 识别系统参与者、按场景类型（业务/操作/维护/制造/其他）分析功能使用场景，生成功能场景文档。

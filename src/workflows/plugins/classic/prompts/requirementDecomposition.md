@@ -1,5 +1,20 @@
 ## 当前阶段：需求分解
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="requirementDecomposition"/>
+    <pre_stage>functionalRefinement</pre_stage>
+  </pipeline>
+  <executing_agent>HEngineer</executing_agent>
+  <core_objective>
+    Apply Domain-Driven Design (DDD) to refine system-level requirements (SR)
+    into module-level requirements and executable implementation requirements (AR),
+    defining subsystem interfaces and dependencies.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `requirementDecomposition`  
 **执行Agent**: HEngineer  
 **核心目标**: 应用领域驱动设计（DDD）将系统级需求（SR）细化为模块级需求与可执行实现要求（AR），定义子系统接口与依赖关系。

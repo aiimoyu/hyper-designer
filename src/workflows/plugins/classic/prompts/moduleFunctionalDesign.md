@@ -1,5 +1,20 @@
 ## 当前阶段：模块功能设计
 
+```xml
+<workflow_context>
+  <pipeline>
+    <curr_stage id="moduleFunctionalDesign"/>
+    <pre_stage>systemFunctionalDesign</pre_stage>
+  </pipeline>
+  <executing_agent>HEngineer</executing_agent>
+  <core_objective>
+    Produce detailed technical specifications for each module, including
+    responsibilities, interfaces, internal structure, algorithms, data
+    structures, and testing strategies.
+  </core_objective>
+</workflow_context>
+```
+
 **阶段标识**: `moduleFunctionalDesign`  
 **执行Agent**: HEngineer  
 **核心目标**: 为每个模块输出详细的技术规格，包括职责、接口、内部结构、算法、数据结构、测试策略。
