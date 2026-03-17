@@ -70,19 +70,38 @@ Before rendering any output to the user, call `hd_record_milestone` with:
 - `stage`: the current workflow stage key (e.g., "IRAnalysis", "ScenarioAnalysis")
 - `milestone`: an object with:
   - `type`: "gate"
+  - `isCompleted`: `true` if score >= 75 (passed), `false` if score < 75 (failed)
   - `detail`: an object containing:
     - `score`: the final computed score (0–100)
     - `comment`: a concise one-sentence summary capturing the document's core value and its most significant weakness
 
-Example:
+**Pass Threshold**: Score >= 75 means the document passes the quality gate and the workflow may proceed to the next stage.
+
+Example (passed):
 ```json
 {
   "stage": "IRAnalysis",
   "milestone": {
     "type": "gate",
+    "isCompleted": true,
     "detail": {
       "score": 85,
       "comment": "Strong requirement analysis but missing edge case handling"
+    }
+  }
+}
+```
+
+Example (failed):
+```json
+{
+  "stage": "IRAnalysis",
+  "milestone": {
+    "type": "gate",
+    "isCompleted": false,
+    "detail": {
+      "score": 60,
+      "comment": "Missing critical sections: stakeholders, constraints, and acceptance criteria"
     }
   }
 }
