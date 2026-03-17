@@ -46,7 +46,7 @@ export function createSystemTransformer() {
     const beforeLength = output.system.length
     const workflow = workflowService.getDefinition()
     const workflowState = workflowService.getState()
-    transformSystemMessages(output.system, workflow, workflowState)
+    await transformSystemMessages(output.system, workflow, workflowState)
     filterBlockedSkills(output.system, blockedSkills)
     if (output.system.length > beforeLength) {
       mergeSystemMessages(output.system)

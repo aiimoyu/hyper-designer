@@ -1,11 +1,23 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { WorkflowService } from '../../../workflows/core/service/WorkflowService'
 import { initializeWorkflowState, writeWorkflowStateFile } from '../../../workflows/core/state'
-import { rmSync, existsSync } from "fs";
+import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import type { WorkflowDefinition } from '../../../workflows/core/types'
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json");
+const OUTPUT_DIR = join(process.cwd(), ".hyper-designer", "IRAnalysis");
+
+function createOutputFiles(): void {
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+  writeFileSync(join(OUTPUT_DIR, "需求信息.md"), "# 需求信息\n\nTest content", "utf-8");
+}
+
+function removeOutputFiles(): void {
+  if (existsSync(OUTPUT_DIR)) {
+    rmSync(OUTPUT_DIR, { recursive: true, force: true });
+  }
+}
 
 const handoverMilestoneWorkflow: WorkflowDefinition = {
   id: 'handover-milestone-test',
@@ -95,6 +107,7 @@ describe("WorkflowService", () => {
     if (existsSync(STATE_FILE)) {
       rmSync(STATE_FILE, { force: true });
     }
+    removeOutputFiles();
     service = new WorkflowService();
   });
 
@@ -102,6 +115,7 @@ describe("WorkflowService", () => {
     if (existsSync(STATE_FILE)) {
       rmSync(STATE_FILE, { force: true });
     }
+    removeOutputFiles();
   });
 
   describe("constructor", () => {
@@ -228,37 +242,38 @@ describe("WorkflowService", () => {
   });
 
   describe("hdScheduleHandover", () => {
-    it("fails when not initialized", () => {
-      const result = service.hdScheduleHandover("IRAnalysis");
+    it("fails when not initialized", async () => {
+      const result = await service.hdScheduleHandover("IRAnalysis");
       expect(result.success).toBe(false);
       expect(result.error).toContain("not initialized");
     });
 
-    it('increments failureCount when handover is rejected by gate', () => {
+    it('increments failureCount when handover is rejected by gate', async () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 60, comment: 'need work' });
 
-      const firstAttempt = service.hdScheduleHandover('scenarioAnalysis');
+      const firstAttempt = await service.hdScheduleHandover('scenarioAnalysis');
       expect(firstAttempt.success).toBe(false);
       expect(service.getState()?.current?.failureCount).toBe(1);
 
-      const secondAttempt = service.hdScheduleHandover('scenarioAnalysis');
+      const secondAttempt = await service.hdScheduleHandover('scenarioAnalysis');
       expect(secondAttempt.success).toBe(false);
       expect(service.getState()?.current?.failureCount).toBe(2);
     });
 
-    it('does not increment failureCount when handover scheduling succeeds', () => {
+    it('does not increment failureCount when handover scheduling succeeds', async () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 70, comment: 'first reject' });
 
-      const rejected = service.hdScheduleHandover('scenarioAnalysis');
+      const rejected = await service.hdScheduleHandover('scenarioAnalysis');
       expect(rejected.success).toBe(false);
       expect(service.getState()?.current?.failureCount).toBe(1);
 
       service.setGateResult({ score: 90, comment: 'approved' });
-      const accepted = service.hdScheduleHandover('scenarioAnalysis');
+      createOutputFiles();
+      const accepted = await service.hdScheduleHandover('scenarioAnalysis');
 
       expect(accepted.success).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('scenarioAnalysis');
@@ -266,7 +281,7 @@ describe("WorkflowService", () => {
       expect(service.getState()?.current?.failureCount).toBe(1);
     });
 
-    it('rejects handover when a required handover milestone is incomplete', () => {
+    it('rejects handover when a required handover milestone is incomplete', async () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setStageMilestone({
@@ -278,28 +293,30 @@ describe("WorkflowService", () => {
         },
       });
 
-      const result = service.hdScheduleHandover('scenarioAnalysis');
+      const result = await service.hdScheduleHandover('scenarioAnalysis');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('质量门禁');
       expect(service.getState()?.current?.failureCount).toBe(1);
     });
 
-    it('allows handover when required handover milestones are completed', () => {
+    it('allows handover when required handover milestones are completed', async () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
+      createOutputFiles();
 
-      const result = service.hdScheduleHandover('scenarioAnalysis');
+      const result = await service.hdScheduleHandover('scenarioAnalysis');
 
       expect(result.success).toBe(true);
       expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
     });
 
-    it('allows handover when non-required milestones are incomplete', () => {
+    it('allows handover when non-required milestones are incomplete', async () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
+      createOutputFiles();
       service.setStageMilestone({
         stage: 'IRAnalysis',
         milestone: {
@@ -309,13 +326,13 @@ describe("WorkflowService", () => {
         },
       });
 
-      const result = service.hdScheduleHandover('scenarioAnalysis');
+      const result = await service.hdScheduleHandover('scenarioAnalysis');
 
       expect(result.success).toBe(true);
       expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
     });
 
-    it('checks every milestone listed in workflow stage requiredMilestones', () => {
+    it('checks every milestone listed in workflow stage requiredMilestones', async () => {
       writeWorkflowStateFile(initializeWorkflowState(handoverMilestoneWorkflow));
       Reflect.set(service, 'definition', handoverMilestoneWorkflow);
       service.setCurrent('stageA');
@@ -344,7 +361,7 @@ describe("WorkflowService", () => {
         },
       });
 
-      const rejected = service.hdScheduleHandover('stageB');
+      const rejected = await service.hdScheduleHandover('stageB');
 
       expect(rejected.success).toBe(false);
       expect(rejected.error).toContain('doc_review');
@@ -359,52 +376,51 @@ describe("WorkflowService", () => {
         },
       });
 
-      const accepted = service.hdScheduleHandover('stageB');
+      const accepted = await service.hdScheduleHandover('stageB');
 
       expect(accepted.success).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });
 
-    it('auto-selects first stage when stepName is omitted and currentStage is null', () => {
+    it('auto-selects first stage when stepName is omitted and currentStage is null', async () => {
       initWithWorkflow(service);
-      // 初始状态：currentStage 为 null
 
-      const result = service.hdScheduleHandover(); // 不传参数
+      const result = await service.hdScheduleHandover();
 
       expect(result.success).toBe(true);
-      expect(result.handover_to).toBe('IRAnalysis'); // classic workflow 的第一个阶段
+      expect(result.handover_to).toBe('IRAnalysis');
     });
 
-    it('auto-selects next stage when stepName is omitted and currentStage is set', () => {
+    it('auto-selects next stage when stepName is omitted and currentStage is set', async () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'approved' });
+      createOutputFiles();
 
-      const result = service.hdScheduleHandover(); // 不传参数
+      const result = await service.hdScheduleHandover();
 
       expect(result.success).toBe(true);
-      expect(result.handover_to).toBe('scenarioAnalysis'); // IRAnalysis 的下一个阶段
+      expect(result.handover_to).toBe('scenarioAnalysis');
     });
 
-    it('fails when stepName is omitted and currentStage is the last stage', () => {
+    it('fails when stepName is omitted and currentStage is the last stage', async () => {
       initWithWorkflow(service);
-      // 设置到最后一个阶段
       const lastStage = 'sddPlanGeneration';
       service.setCurrent(lastStage);
       service.setGateResult({ score: 90, comment: 'approved' });
 
-      const result = service.hdScheduleHandover(); // 不传参数
+      const result = await service.hdScheduleHandover();
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('最后一个阶段');
     });
 
-    it('checks requiredMilestones and ignores hook-local milestones for handover blocking', () => {
+    it('checks requiredMilestones and ignores hook-local milestones for handover blocking', async () => {
       writeWorkflowStateFile(initializeWorkflowState(transitionOnlyWorkflow));
       Reflect.set(service, 'definition', transitionOnlyWorkflow);
       service.setCurrent('stageA');
 
-      const rejected = service.hdScheduleHandover('stageB');
+      const rejected = await service.hdScheduleHandover('stageB');
       expect(rejected.success).toBe(false);
       expect(rejected.error).toContain('gate');
 
@@ -417,7 +433,7 @@ describe("WorkflowService", () => {
         },
       });
 
-      const accepted = service.hdScheduleHandover('stageB');
+      const accepted = await service.hdScheduleHandover('stageB');
       expect(accepted.success).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });

@@ -13,6 +13,7 @@
   "devDependencies": {
     "@opencode-ai/plugin": "^1.1.60",
     "@opencode-ai/sdk": "^1.1.60",
+    "@types/glob": "^8.1.0",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^1.6.1",
     "typescript": "^5.0.0",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import type { WorkflowStageDefinition } from '../../../workflows/core/types'
+import type { WorkflowStageDefinition, StageFileItem } from '../../../workflows/core/types'
 import type {
   CurrentStageState,
   WorkflowState,
@@ -22,38 +22,58 @@ describe('workflow type definitions', () => {
       expect(stage.required).toBe(true)
     })
 
-    it('should have inputs field with required boolean', () => {
+    it('should have inputs field as StageFileItem array', () => {
+      const inputs: StageFileItem[] = [
+        { id: 'input1', path: './input1.md', type: 'file', description: 'First input' },
+        { id: 'input2', path: './input2.md', type: 'file', description: 'Second input' },
+      ]
       const stage: WorkflowStageDefinition = {
         name: 'Test Stage',
         description: 'Test description',
         agent: 'TestAgent',
         getHandoverPrompt: (from, to) => `${from} -> ${to}`,
-        inputs: {
-          input1: { required: true },
-          input2: { required: false },
-        },
+        inputs,
       }
 
-      expect(stage.inputs?.input1.required).toBe(true)
-      expect(stage.inputs?.input2.required).toBe(false)
+      expect(stage.inputs?.length).toBe(2)
+      expect(stage.inputs?.[0].id).toBe('input1')
+      expect(stage.inputs?.[1].type).toBe('file')
     })
 
-    it('should have outputs field with path and description', () => {
+    it('should have outputs field as StageFileItem array', () => {
+      const outputs: StageFileItem[] = [
+        { id: 'output1', path: './output1.md', type: 'file', description: 'First output' },
+        { id: 'output2', path: './output2.md', type: 'file', description: 'Second output' },
+      ]
       const stage: WorkflowStageDefinition = {
         name: 'Test Stage',
         description: 'Test description',
         agent: 'TestAgent',
         getHandoverPrompt: (from, to) => `${from} -> ${to}`,
-        outputs: {
-          output1: { path: 'path/to/output1', description: 'First output' },
-          output2: { path: 'path/to/output2' },
-        },
+        outputs,
       }
 
-      expect(stage.outputs?.output1.path).toBe('path/to/output1')
-      expect(stage.outputs?.output1.description).toBe('First output')
-      expect(stage.outputs?.output2.path).toBe('path/to/output2')
-      expect(stage.outputs?.output2.description).toBeUndefined()
+      expect(stage.outputs?.length).toBe(2)
+      expect(stage.outputs?.[0].path).toBe('./output1.md')
+      expect(stage.outputs?.[1].description).toBe('Second output')
+    })
+
+    it('should support pattern type for inputs and outputs', () => {
+      const stage: WorkflowStageDefinition = {
+        name: 'Test Stage',
+        description: 'Test description',
+        agent: 'TestAgent',
+        getHandoverPrompt: (from, to) => `${from} -> ${to}`,
+        inputs: [
+          { id: 'allDocs', path: './docs/*.md', type: 'pattern', description: 'All markdown docs' },
+        ],
+        outputs: [
+          { id: 'allOutputs', path: './output/*.md', type: 'pattern', description: 'All output docs' },
+        ],
+      }
+
+      expect(stage.inputs?.[0].type).toBe('pattern')
+      expect(stage.outputs?.[0].type).toBe('pattern')
     })
 
     it('should support workflow-defined handover milestone requirements', () => {
@@ -79,6 +99,56 @@ describe('workflow type definitions', () => {
       expect(stage.required).toBeUndefined()
       expect(stage.inputs).toBeUndefined()
       expect(stage.outputs).toBeUndefined()
+    })
+  })
+
+  describe('StageFileItem', () => {
+    it('should have id, path, type, and description fields', () => {
+      const item: StageFileItem = {
+        id: 'test-doc',
+        path: './docs/test.md',
+        type: 'file',
+        description: 'Test document',
+      }
+
+      expect(item.id).toBe('test-doc')
+      expect(item.path).toBe('./docs/test.md')
+      expect(item.type).toBe('file')
+      expect(item.description).toBe('Test document')
+    })
+
+    it('should support optional content field', () => {
+      const item: StageFileItem = {
+        id: 'test-doc',
+        path: './docs/test.md',
+        type: 'file',
+        description: 'Test document',
+        content: 'This is the file content',
+      }
+
+      expect(item.content).toBe('This is the file content')
+    })
+
+    it('should support folder type', () => {
+      const item: StageFileItem = {
+        id: 'test-folder',
+        path: './docs/',
+        type: 'folder',
+        description: 'Test folder',
+      }
+
+      expect(item.type).toBe('folder')
+    })
+
+    it('should support pattern type', () => {
+      const item: StageFileItem = {
+        id: 'all-md',
+        path: './**/*.md',
+        type: 'pattern',
+        description: 'All markdown files',
+      }
+
+      expect(item.type).toBe('pattern')
     })
   })
 
@@ -108,7 +178,6 @@ describe('workflow type definitions', () => {
         handoverTo: null,
       }
 
-      // gateResult should not exist on CurrentStageState
       expect((currentStage as any).gateResult).toBeUndefined()
     })
   })
@@ -166,10 +235,8 @@ describe('workflow type definitions', () => {
         isCompleted: false,
       }
 
-      // @ts-expect-error - score should not exist
-      expect(stage.score).toBeUndefined()
-      // @ts-expect-error - comment should not exist
-      expect(stage.comment).toBeUndefined()
+      expect('score' in stage).toBe(false)
+      expect('comment' in stage).toBe(false)
     })
   })
 
@@ -257,7 +324,7 @@ describe('workflow type definitions', () => {
 
         expect(detail.comment).toBeNull()
       })
-    })
 
+    })
   })
 })

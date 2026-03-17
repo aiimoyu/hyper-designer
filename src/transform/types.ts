@@ -1,4 +1,5 @@
-import type { WorkflowDefinition, WorkflowStageDefinition } from '../workflows/core/types'
+export type { InjectionConfig } from '../workflows/core/types'
+import type { InjectionConfig, WorkflowDefinition, WorkflowStageDefinition } from '../workflows/core/types'
 import type { WorkflowState } from '../workflows/core/state/types'
 
 export interface PromptTransformWorkflowContext {
@@ -10,9 +11,10 @@ export interface PromptTransformWorkflowContext {
 
 export interface PromptInjectionRequest extends PromptTransformWorkflowContext {
   systemMessages: string[]
+  config?: InjectionConfig
 }
 
 export interface PromptInjectionProvider {
   id: string
-  inject(input: PromptInjectionRequest): string | null
+  inject(input: PromptInjectionRequest): string | null | Promise<string | null>
 }

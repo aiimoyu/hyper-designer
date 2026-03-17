@@ -18,7 +18,7 @@ function formatMilestonesContent(milestones: (string | MilestoneDefinition)[]): 
   const items = milestones.map(milestone => {
     const name = getMilestoneName(milestone)
     const description = getMilestoneDescription(milestone)
-    return `  <milestone>\n    <name>${name}</name>\n    <description>${description}</description>\n  </milestone>`
+    return `  <item>\n    <name>${name}</name>\n    <description>${description}</description>\n  </item>`
   })
   return items.join('\n')
 }

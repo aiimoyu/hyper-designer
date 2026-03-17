@@ -2,7 +2,7 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 import { filePrompt } from '../../../../workflows/core/utils'
-import type { WorkflowDefinition } from '../../../../workflows/core/types'
+import type { WorkflowDefinition, StageFileItem } from '../../../../workflows/core/types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -23,6 +23,51 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
   )
 }
 
+const ANALYSIS_SCENARIO_OUTPUTS: StageFileItem[] = [
+  {
+    id: '需求场景分析',
+    path: './.hyper-designer/lite/需求场景分析.md',
+    type: 'file',
+    description: 'Combined requirement and scenario analysis document',
+  },
+]
+
+const FUNCTIONAL_MODULE_INPUTS: StageFileItem[] = [
+  {
+    id: '需求场景分析',
+    path: './.hyper-designer/lite/需求场景分析.md',
+    type: 'file',
+    description: 'Combined requirement and scenario analysis document',
+  },
+]
+
+const FUNCTIONAL_MODULE_OUTPUTS: StageFileItem[] = [
+  {
+    id: '功能与模块设计',
+    path: './.hyper-designer/lite/功能与模块设计.md',
+    type: 'file',
+    description: 'Functional list with module design summary',
+  },
+]
+
+const SDD_LITE_INPUTS: StageFileItem[] = [
+  {
+    id: '功能与模块设计',
+    path: './.hyper-designer/lite/功能与模块设计.md',
+    type: 'file',
+    description: 'Functional list with module design summary',
+  },
+]
+
+const SDD_LITE_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'SDD计划',
+    path: './.hyper-designer/lite/SDD计划.md',
+    type: 'file',
+    description: 'Single-module SDD development plan',
+  },
+]
+
 export const liteWorkflow: WorkflowDefinition = {
   id: 'lite',
   name: 'Lite Requirements Engineering',
@@ -39,15 +84,14 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'Analysis and Scenario',
       description: 'Consolidate requirement analysis and scenario analysis for a single-module scope',
       agent: 'HArchitect',
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'analysisAndScenario.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: {},
-      outputs: {
-        '需求场景分析': { path: '需求场景分析.md', description: 'Combined requirement and scenario analysis document' },
-      },
+      inputs: [],
+      outputs: ANALYSIS_SCENARIO_OUTPUTS,
       transitions: [{ id: 'to-functional-module', toStageId: 'functionalAndModuleDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '完成需求分析与场景分析，并输出精简分析文档', currentName),
@@ -58,17 +102,14 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'Functional List and Module Design',
       description: 'Produce concise function list and module-level functional design for one module',
       agent: 'HEngineer',
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalAndModuleDesign.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: {
-        '需求场景分析': { required: true },
-      },
-      outputs: {
-        '功能与模块设计': { path: '功能与模块设计.md', description: 'Functional list with module design summary' },
-      },
+      inputs: FUNCTIONAL_MODULE_INPUTS,
+      outputs: FUNCTIONAL_MODULE_OUTPUTS,
       transitions: [{ id: 'to-sdd-lite', toStageId: 'sddPlanGenerationLite', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '梳理功能列表并完成单模块功能设计', currentName),
@@ -79,17 +120,14 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'SDD Plan Generation Lite',
       description: 'Generate an SDD implementation plan for a single module from concise design artifacts',
       agent: 'HEngineer',
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGenerationLite.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: {
-        '功能与模块设计': { required: true },
-      },
-      outputs: {
-        'SDD 计划': { path: 'SDD 计划.md', description: 'Single-module SDD development plan' },
-      },
+      inputs: SDD_LITE_INPUTS,
+      outputs: SDD_LITE_OUTPUTS,
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '生成可直接执行的轻量 SDD 开发计划', currentName),

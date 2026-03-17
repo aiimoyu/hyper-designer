@@ -9,6 +9,17 @@ export interface WorkflowPromptBindings {
   [placeholder: string]: string
 }
 
+export type StageFileItemType = 'file' | 'folder' | 'pattern'
+
+export interface StageFileItem {
+  id: string
+  path: string
+  type: StageFileItemType
+  description: string
+  content?: string
+  error?: string
+}
+
 export type StageHookFn = (ctx: {
   /** 阶段 key，如 "IRAnalysis" */
   stageKey: string
@@ -46,21 +57,20 @@ export interface MilestoneDefinition {
   failureMessage: string
 }
 
+export interface InjectionConfig {
+  provider: string
+  tag?: string
+  path?: string
+}
+
 export interface WorkflowStageDefinition {
   stageId?: string
-  /** Display name for this stage */
   name: string
-  /** Description of what this stage does */
   description: string
-  /** Which agent handles this stage */
   agent: string
-  /** Prompt file path relative to the workflow directory (optional - use workflow-level prompt if not specified) */
   promptFile?: string
-  /** Placeholder bindings applied when this stage is active */
   promptBindings?: WorkflowPromptBindings
-  /** Injection provider IDs to enable for this stage (e.g., ['stage-milestones', 'stage-config']) */
-  inject?: string[]
-  /** Custom content items to inject into system prompt (used by stage-config provider) */
+  inject?: InjectionConfig[]
   injectContent?: string[]
   /** Hooks to run before the stage's primary agent starts */
   before?: WorkflowHookDefinition[]
@@ -70,9 +80,9 @@ export interface WorkflowStageDefinition {
   /** Whether this stage is required to be completed */
   required?: boolean
   /** Input specifications for this stage */
-  inputs?: Record<string, { required?: boolean }>
+  inputs?: StageFileItem[]
   /** Output specifications for this stage */
-  outputs?: Record<string, { path: string; description?: string }>
+  outputs?: StageFileItem[]
   transitions?: StageTransitionDefinition[]
   getHandoverPrompt: (currentStageName: string | null, thisStageName: string) => string
 }
