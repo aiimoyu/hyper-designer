@@ -2,7 +2,7 @@ import type { PromptInjectionProvider } from '../types'
 
 function formatStageInjectionContents(items: string[]): string {
   const lines = items.map((item, index) => `${index + 1}. ${item}`)
-  return ['## Workflow Stage Injections', ...lines].join('\n')
+  return lines.join('\n')
 }
 
 export const stageConfigInjectionProvider: PromptInjectionProvider = {

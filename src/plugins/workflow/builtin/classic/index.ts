@@ -1,11 +1,19 @@
 import { filePrompt } from '../../../../workflows/core/utils'
-import type { WorkflowDefinition } from '../../../../workflows/core/types'
+import type { WorkflowDefinition, MilestoneDefinition } from '../../../../workflows/core/types'
 import { createHCollectorHook, summarizeHook } from '../../../../workflows/core/stageHooks'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const CLASSIC_HANDOVER_MILESTONES = ['gate']
+
+const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
+  {
+    id: 'gate',
+    name: '质量门禁',
+    description: '阶段质量门禁 - 确保阶段输出满足质量标准',
+    failureMessage: '阶段输出未通过质量门禁审核，请确保所有交付物符合质量标准后再进行交接。',
+  },
+]
 
 /** 阶段钩子定义 */
 const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })

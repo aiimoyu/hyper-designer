@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { existsSync, rmSync } from "fs"
 import { join } from "path"
-import { createHArchitectAgent } from "../../../agents/HArchitect"
-import { createHEngineerAgent } from "../../../agents/HEngineer"
-import { createHCriticAgent } from "../../../agents/HCritic"
+import { createHArchitectAgent } from "../../../plugins/agent/builtin/HArchitect"
+import { createHEngineerAgent } from "../../../plugins/agent/builtin/HEngineer"
+import { createHCriticAgent } from "../../../plugins/agent/builtin/HCritic"
 import { loadPromptForStage, getWorkflowDefinition, initializeWorkflowState } from '../../../workflows/core'
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")
@@ -35,7 +35,6 @@ describe("Integration Tests: Prompt Composition", () => {
     expectNoToolPlaceholders(agent.prompt!)
     expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}")
     expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}")
-    expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}")
   })
 
   it("creates HEngineer agent with valid configuration", () => {
@@ -45,7 +44,6 @@ describe("Integration Tests: Prompt Composition", () => {
     expect(agent.prompt).toBeTruthy()
     expect(agent.prompt!.length).toBeGreaterThan(0)
     expectNoToolPlaceholders(agent.prompt!)
-    expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}")
   })
 
   it("creates HCritic agent with valid configuration", () => {

@@ -10,7 +10,7 @@
  * 6. 设置质量门结果
  */
 
-import type { WorkflowDefinition, PlatformAdapter, StageTransitionDefinition } from "../types";
+import type { WorkflowDefinition, PlatformAdapter, StageTransitionDefinition, MilestoneDefinition } from "../types";
 import type {
   WorkflowState,
   WorkflowStage,
@@ -113,12 +113,16 @@ function createMainNodeId(stageKey: string): string {
   return `workflow.${stageKey}.main`
 }
 
+function getMilestoneId(milestone: string | MilestoneDefinition): string {
+  return typeof milestone === 'string' ? milestone : milestone.id
+}
+
 function getRequiredMilestones(definition: WorkflowDefinition, stageKey: string): string[] {
   const stage = definition.stages[stageKey]
   if (!stage || !Array.isArray(stage.requiredMilestones)) {
     return []
   }
-  return [...stage.requiredMilestones]
+  return stage.requiredMilestones.map(getMilestoneId)
 }
 
 function ensureRuntimeInitialized(state: WorkflowState): void {

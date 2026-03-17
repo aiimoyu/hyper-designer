@@ -1,7 +1,7 @@
-import type { AgentPromptMetadata } from '../types'
-import type { AgentConfig } from '../types'
-import type { AgentDefinition } from '../factory'
-import { createAgent, stringPrompt } from '../factory'
+import type { AgentPromptMetadata } from '../../../../agents/types'
+import type { AgentConfig } from '../../../../agents/types'
+import type { AgentDefinition } from '../../../../agents/factory'
+import { createAgent, stringPrompt } from '../../../../agents/factory'
 
 const BASE_PROMPT = `You are HAnalysis, the Hyper Designer project-analysis specialist.
 
@@ -58,7 +58,6 @@ const DEFINITION: AgentDefinition = {
     stringPrompt(BASE_PROMPT),
     stringPrompt('{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'),
     stringPrompt('{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'),
-    stringPrompt('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'),
   ],
   defaultPermission: {
     bash: 'deny',
@@ -76,12 +75,6 @@ const DEFINITION: AgentDefinition = {
   },
 }
 
-/**
- * 创建 HAnalysis 代理配置。
- *
- * @param model 可选模型覆盖
- * @returns HAnalysis 的完整代理配置
- */
 export function createHAnalysisAgent(model?: string): AgentConfig {
   return createAgent(DEFINITION, model)
 }

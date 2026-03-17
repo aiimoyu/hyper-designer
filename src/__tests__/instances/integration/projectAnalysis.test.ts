@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createHAnalysisAgent } from '../../../agents/HAnalysis'
+import { createHAnalysisAgent } from '../../../plugins/agent/builtin/HAnalysis'
 import {
   getStageOrder,
   getWorkflowDefinition,

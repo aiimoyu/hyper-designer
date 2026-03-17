@@ -281,7 +281,7 @@ describe("WorkflowService", () => {
       const result = service.hdScheduleHandover('scenarioAnalysis');
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('gate');
+      expect(result.error).toContain('质量门禁');
       expect(service.getState()?.current?.failureCount).toBe(1);
     });
 

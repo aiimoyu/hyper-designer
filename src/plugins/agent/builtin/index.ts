@@ -1,8 +1,8 @@
-import { createHAnalysisAgent } from '../../../agents/HAnalysis'
-import { createHArchitectAgent } from '../../../agents/HArchitect'
-import { createHCollectorAgent } from '../../../agents/HCollector'
-import { createHCriticAgent } from '../../../agents/HCritic'
-import { createHEngineerAgent } from '../../../agents/HEngineer'
+import { createHAnalysisAgent } from './HAnalysis'
+import { createHArchitectAgent } from './HArchitect'
+import { createHCollectorAgent } from './HCollector'
+import { createHCriticAgent } from './HCritic'
+import { createHEngineerAgent } from './HEngineer'
 import type { AgentPluginRegistration } from '../types'
 
 export const BUILTIN_AGENT_PLUGINS: AgentPluginRegistration[] = [
