@@ -1,6 +1,6 @@
 import { filePrompt } from '../../../../workflows/core/utils'
 import type { WorkflowDefinition, MilestoneDefinition, StageFileItem } from '../../../../workflows/core/types'
-import { createHCollectorHook, summarizeHook } from '../../../../workflows/core/stageHooks'
+import { summarizeHook } from '../../../../workflows/core/stageHooks'
 import { referenceSetupHook } from './hooks/referenceSetupHook'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
@@ -15,11 +15,6 @@ const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
     failureMessage: '阶段输出未通过质量门禁审核，请确保所有交付物符合质量标准后再进行交接。',
   },
 ]
-
-/** 阶段钩子定义 */
-const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })
-const scenarioAnalysisCollectorHook = createHCollectorHook({ domains: ['systemRequirementAnalysis'] })
-const systemDesignCollectorHook = createHCollectorHook({ domains: ['systemDesign', 'codebase'] })
 
 const IR_ANALYSIS_OUTPUTS: StageFileItem[] = [
   {
@@ -273,7 +268,7 @@ export const classicWorkflow: WorkflowDefinition = {
       required: true,
       inputs: [],
       outputs: IR_ANALYSIS_OUTPUTS,
-      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', fn: referenceSetupHook }],
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
       transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
@@ -293,7 +288,7 @@ export const classicWorkflow: WorkflowDefinition = {
       required: true,
       inputs: SCENARIO_ANALYSIS_INPUTS,
       outputs: SCENARIO_ANALYSIS_OUTPUTS,
-      before: [{ id: 'collect-scenario', description: 'Collect scenario references', fn: scenarioAnalysisCollectorHook }],
+      before: [],
       after: [{ id: 'summarize-scenario', description: 'Summarize scenario context', fn: summarizeHook }],
       transitions: [{ id: 'to-usecase', toStageId: 'useCaseAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
@@ -370,7 +365,7 @@ export const classicWorkflow: WorkflowDefinition = {
       required: true,
       inputs: SYSTEM_FUNCTIONAL_DESIGN_INPUTS,
       outputs: SYSTEM_FUNCTIONAL_DESIGN_OUTPUTS,
-      before: [{ id: 'collect-system-design', description: 'Collect system-design references', fn: systemDesignCollectorHook }],
+      before: [],
       after: [{ id: 'summarize-system-design', description: 'Summarize system-design context', fn: summarizeHook }],
       transitions: [{ id: 'to-module-design', toStageId: 'moduleFunctionalDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>

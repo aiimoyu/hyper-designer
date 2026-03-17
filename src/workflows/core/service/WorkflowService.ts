@@ -856,7 +856,7 @@ export class WorkflowService extends EventEmitter {
         success: true,
         handover_to: targetStep,
         instruction:
-          "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. NOW STOP ALL WORK and return to the user immediately. The system will automatically process the handover when this session enters idle state.",
+          "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. You are PROHIBITED from executing any operations regarding next-phase tasks and must IMMEDIATELY return to the user. The system will automatically process the handover when this session enters idle state.",
         state: newState,
       };
     }
@@ -931,7 +931,7 @@ export class WorkflowService extends EventEmitter {
       success: true,
       handover_to: targetStep,
       instruction:
-        "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. NOW STOP ALL WORK and return to the user immediately. The system will automatically process the handover when this session enters idle state.",
+        "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. You are PROHIBITED from executing any operations regarding next-phase tasks and must IMMEDIATELY return to the user. The system will automatically process the handover when this session enters idle state.",
       state: handoverState,
     };
   }

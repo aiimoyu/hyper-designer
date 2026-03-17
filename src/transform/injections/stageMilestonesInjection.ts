@@ -22,7 +22,7 @@ function formatMilestonesContent(milestones: (string | MilestoneDefinition)[]): 
   })
   const itemsXml = items.join('\n')
   return `<stage-milestones>
-  <instruction>以下是本阶段必须完成的关键里程碑任务。所有里程碑必须全部完成并点亮后，才能通过 handover 进入下一阶段。</instruction>
+  <instruction>The following are the critical milestone tasks that must be completed during this stage. All milestones must be fully completed and activated before you can proceed to the next stage via handover.</instruction>
 ${itemsXml}
 </stage-milestones>`
 }
