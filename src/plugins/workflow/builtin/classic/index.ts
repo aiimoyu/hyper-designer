@@ -265,7 +265,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Initial Requirement Analysis',
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],  
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
@@ -285,7 +285,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Scenario Analysis',
       description: 'Analyze system usage scenarios, identify actors and business processes',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
@@ -305,7 +305,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Use Case Analysis',
       description: 'Refine scenarios into detailed use case specifications with inputs, outputs, and acceptance criteria',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
@@ -324,7 +324,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Functional Refinement',
       description: 'Extract complete functional list, prioritize using MoSCoW method, and perform FMEA analysis',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
@@ -343,7 +343,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Requirement Decomposition',
       description: 'Map and decompose functional list into module-level requirements, subsystems, and interface definitions',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
@@ -362,7 +362,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'System Functional Design',
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
@@ -382,7 +382,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Module Functional Design',
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
@@ -401,7 +401,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'SDD Plan Generation',
       description: 'Generate specification-driven development (SDD) plans from module functional design docs: task waves, complexity ratings, subagent dispatch strategy, interface cards, acceptance criteria and TDD scenarios',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
