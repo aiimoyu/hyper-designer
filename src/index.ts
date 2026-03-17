@@ -20,6 +20,7 @@ export type { WorkflowDefinition, WorkflowStageDefinition } from "./workflows"
 
 // Agent creation
 export { createBuiltinAgents } from "./agents/utils"
+export { createAllAgents, isHDAgent, isHDPluginAgent } from './agents/utils'
 export { createAgent } from "./agents/factory"
 export { createHCollectorAgent } from "./agents/HCollector"
 export { createHArchitectAgent } from "./agents/HArchitect"
@@ -49,3 +50,6 @@ export { loadPromptForStage } from "./workflows"
 
 // Config
 export { loadHDConfig } from "./config/loader"
+
+// Plugin SDK
+export { sdk } from './sdk'

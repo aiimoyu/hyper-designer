@@ -9,6 +9,7 @@ import { OPENCODE_TOOL_MAPPING, replaceToolPlaceholders } from './toolTransform'
 import {
   createPromptInjectionRegistry,
 } from './injections/factory'
+import { HyperDesignerLogger } from '../utils/logger'
 
 const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_(?!FALLBACK_PROMPT\})[A-Z0-9_]+_PROMPT\}/g
 
@@ -62,6 +63,12 @@ function appendStageInjections(
     return
   }
 
+  HyperDesignerLogger.debug('SystemTransform', 'resolving stage injections', {
+    currentStage,
+    providerIds,
+    systemMessageCount: systemMessages.length,
+  })
+
   const registry = createPromptInjectionRegistry()
 
   const chunks = registry.run(providerIds, {
@@ -73,10 +80,21 @@ function appendStageInjections(
   })
 
   if (chunks.length === 0) {
+    HyperDesignerLogger.debug('SystemTransform', 'stage injection produced no content', {
+      currentStage,
+      providerIds,
+    })
     return
   }
 
-  systemMessages.push(chunks.join('\n\n'))
+  const injectedContent = chunks.join('\n\n')
+  systemMessages.push(injectedContent)
+  HyperDesignerLogger.debug('SystemTransform', 'stage injection appended', {
+    currentStage,
+    providerIds,
+    chunkCount: chunks.length,
+    injectedLength: injectedContent.length,
+  })
 }
 
 export function transformSystemMessages(
@@ -85,7 +103,13 @@ export function transformSystemMessages(
   state: WorkflowState | null,
 ): void {
   const currentStage = getCurrentStageContext(state)
+  const beforeLengths = systemMessages.map(item => item.length)
   const placeholderResolvers = buildPlaceholderResolvers(workflow, currentStage)
+
+  HyperDesignerLogger.debug('SystemTransform', 'placeholder resolvers prepared', {
+    currentStage,
+    resolverCount: placeholderResolvers.length,
+  })
 
   replacePlaceholders(systemMessages, placeholderResolvers)
 
@@ -98,5 +122,13 @@ export function transformSystemMessages(
   }
 
   appendStageInjections(systemMessages, workflow, state, currentStage)
+
+  HyperDesignerLogger.debug('SystemTransform', 'system transform completed', {
+    currentStage,
+    messageCountBefore: beforeLengths.length,
+    messageCountAfter: systemMessages.length,
+    messageLengthsBefore: beforeLengths,
+    messageLengthsAfter: systemMessages.map(item => item.length),
+  })
 
 }

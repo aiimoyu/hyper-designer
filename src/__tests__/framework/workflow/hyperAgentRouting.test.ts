@@ -118,7 +118,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       expect(state?.current?.agent).toBeUndefined()
     })
 
-    it('round-trip: write new state then read back keeps workflow stable (agent remains optional)', () => {
+    it('round-trip: write new state then read back keeps current.agent for routing', () => {
       writeWorkflowStateFile({
         initialized: true,
         typeId: 'classic',
@@ -150,7 +150,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
 
       expect(state?.current?.name).toBe('stage1')
       expect(state?.current?.handoverTo).toBe('stage2')
-      expect(state?.current?.agent).toBeUndefined()
+      expect(state?.current?.agent).toBe('HArchitect')
     })
   })
 

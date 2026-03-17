@@ -1,8 +1,8 @@
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
-import { filePrompt } from '../../core/utils'
-import type { WorkflowDefinition } from '../../core/types'
+import { filePrompt } from '../../../../workflows/core/utils'
+import type { WorkflowDefinition } from '../../../../workflows/core/types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

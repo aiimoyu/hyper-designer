@@ -138,6 +138,7 @@ describe('workflow persistence', () => {
       current: {
         name: 'IRAnalysis',
         handoverTo: null,
+        agent: 'HArchitect',
         failureCount: 0,
         previousStage: 'dataCollection',
         nextStage: 'scenarioAnalysis',
@@ -154,6 +155,7 @@ describe('workflow persistence', () => {
       previous: 'dataCollection',
       next: 'scenarioAnalysis',
       handoverTo: null,
+      agent: 'HArchitect',
       failureCount: 0,
     })
     expect(raw.plan.stages.dataCollection).toEqual({
@@ -167,5 +169,33 @@ describe('workflow persistence', () => {
     expect(raw.execution.stage.gateResult).toBeUndefined()
     expect(raw.plan.stages.dataCollection.score).toBeUndefined()
     expect(raw.plan.stages.dataCollection.comment).toBeUndefined()
+  })
+
+  it('reads v1 current.agent from canonical current payload for backward compatibility', () => {
+    const canonicalStateWithAgent = {
+      initialized: true,
+      typeId: 'classic',
+      workflow: {
+        IRAnalysis: {
+          isCompleted: false,
+          selected: true,
+          previousStage: null,
+          nextStage: 'scenarioAnalysis',
+        },
+      },
+      current: {
+        name: 'IRAnalysis',
+        handoverTo: null,
+        agent: 'HArchitect',
+        failureCount: 0,
+        previousStage: null,
+        nextStage: 'scenarioAnalysis',
+      },
+    }
+
+    writeFileSync(STATE_FILE, JSON.stringify(canonicalStateWithAgent, null, 2))
+
+    const state = readWorkflowStateFile()
+    expect(state?.current?.agent).toBe('HArchitect')
   })
 })

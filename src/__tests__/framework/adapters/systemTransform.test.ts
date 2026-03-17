@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
+import { HyperDesignerLogger } from '../../../utils/logger'
 
 const FRAMEWORK_FALLBACK_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'
 
@@ -274,16 +275,26 @@ describe('system transform', () => {
 
     const transform = createSystemTransformer()
     const output = { system: ['base system prompt'] }
+    const debugSpy = vi.spyOn(HyperDesignerLogger, 'debug')
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system).toHaveLength(2)
-    expect(output.system[1]).toContain('Workflow Stage Injections')
-    expect(output.system[1]).toContain('输入文件')
-    expect(output.system[1]).toContain('xxx')
-    expect(output.system[1]).toContain('yyy')
-    expect(output.system[1]).toContain('Stage Required Milestones (stage1)')
-    expect(output.system[1]).toContain('gate')
+    expect(output.system).toHaveLength(1)
+    expect(output.system[0]).toContain('base system prompt')
+    expect(output.system[0]).toContain('Workflow Stage Injections')
+    expect(output.system[0]).toContain('输入文件')
+    expect(output.system[0]).toContain('xxx')
+    expect(output.system[0]).toContain('yyy')
+    expect(output.system[0]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[0]).toContain('gate')
+    expect(debugSpy).toHaveBeenCalledWith(
+      'SystemTransform',
+      'stage injection appended',
+      expect.objectContaining({
+        currentStage: 'stage1',
+        providerIds: ['stage-config', 'stage-milestones'],
+      }),
+    )
   })
 
   it('does not append injection when stage has no inject configured', async () => {
@@ -365,12 +376,13 @@ describe('system transform', () => {
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system).toHaveLength(2)
-    expect(output.system[1]).toContain('Stage Required Milestones (stage1)')
-    expect(output.system[1]).toContain('gate')
-    expect(output.system[1]).toContain('doc_review')
-    expect(output.system[1]).not.toContain('Workflow Stage Injections')
-    expect(output.system[1]).not.toContain('输入文件')
+    expect(output.system).toHaveLength(1)
+    expect(output.system[0]).toContain('base system prompt')
+    expect(output.system[0]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[0]).toContain('gate')
+    expect(output.system[0]).toContain('doc_review')
+    expect(output.system[0]).not.toContain('Workflow Stage Injections')
+    expect(output.system[0]).not.toContain('输入文件')
   })
 
   it('injects both providers when multiple are configured', async () => {
@@ -412,10 +424,55 @@ describe('system transform', () => {
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system).toHaveLength(2)
-    expect(output.system[1]).toContain('Stage Required Milestones (stage1)')
-    expect(output.system[1]).toContain('gate')
-    expect(output.system[1]).toContain('Workflow Stage Injections')
-    expect(output.system[1]).toContain('输入文件')
+    expect(output.system).toHaveLength(1)
+    expect(output.system[0]).toContain('base system prompt')
+    expect(output.system[0]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[0]).toContain('gate')
+    expect(output.system[0]).toContain('Workflow Stage Injections')
+    expect(output.system[0]).toContain('输入文件')
+  })
+
+  it('merges stage injection into the first system message to avoid multi-system drop', async () => {
+    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const workflow: WorkflowDefinition = {
+      id: 'test-workflow',
+      name: 'Test Workflow',
+      description: 'Test workflow',
+      entryStageId: 'IRAnalysis',
+      stages: {
+        IRAnalysis: {
+          stageId: 'IRAnalysis',
+          name: 'Initial Requirement Analysis',
+          description: 'IR',
+          agent: 'HArchitect',
+          inject: ['stage-milestones'],
+          requiredMilestones: ['gate'],
+          getHandoverPrompt: () => 'handover',
+        },
+      },
+    }
+
+    getDefinition.mockReturnValue(workflow)
+    getState.mockReturnValue({
+      initialized: true,
+      typeId: workflow.id,
+      workflow: {
+        IRAnalysis: { isCompleted: false, selected: true },
+      },
+      current: {
+        name: 'IRAnalysis',
+        handoverTo: null,
+      },
+    })
+
+    const transform = createSystemTransformer()
+    const output = { system: ['base system prompt'] }
+
+    await transform({ model: {} } as never, output)
+
+    expect(output.system).toHaveLength(1)
+    expect(output.system[0]).toContain('base system prompt')
+    expect(output.system[0]).toContain('Stage Required Milestones (IRAnalysis)')
+    expect(output.system[0]).toContain('1. gate')
   })
 })

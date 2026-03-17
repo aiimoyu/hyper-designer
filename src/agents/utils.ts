@@ -1,55 +1,52 @@
-/**
- * 代理工具模块
- * 
- * 提供代理注册和创建的工具函数，包括：
- * 1. 内置代理工厂注册表
- * 2. 内置代理名称列表
- * 3. 代理创建和验证函数
- */
+import type { AgentConfig } from './types'
 
-import type { AgentConfig } from "./types"
-import { createHCollectorAgent } from "./HCollector"
-import { createHArchitectAgent } from "./HArchitect"
-import { createHCriticAgent } from "./HCritic"
-import { createHEngineerAgent } from "./HEngineer"
-import { createHAnalysisAgent } from "./HAnalysis"
+import {
+  createPluginAgents,
+  getAgentPluginNames,
+} from '../plugins/agent'
+import { BUILTIN_AGENT_PLUGINS } from '../plugins/agent/builtin'
 
+const BUILTIN_AGENT_NAME_SET = new Set(BUILTIN_AGENT_PLUGINS.map(item => item.name))
 
-export const BUILTIN_AGENT_FACTORIES = {
-  HCollector: createHCollectorAgent,
-  HArchitect: createHArchitectAgent,
-  HCritic: createHCriticAgent,
-  HEngineer: createHEngineerAgent,
-  HAnalysis: createHAnalysisAgent,
-} as const
+type BuiltinPluginName = typeof BUILTIN_AGENT_PLUGINS[number]['name']
 
-/**
- * List of all builtin hyper-designer agent names.
- * Used for filtering hooks to only activate for hyper-designer agents.
- */
-export const HD_BUILTIN_AGENT_NAMES = Object.keys(
-  BUILTIN_AGENT_FACTORIES
-) as Array<keyof typeof BUILTIN_AGENT_FACTORIES>
+export const BUILTIN_AGENT_FACTORIES = Object.fromEntries(
+  BUILTIN_AGENT_PLUGINS.map(item => [item.name, item.factory]),
+) as Record<BuiltinPluginName, (model?: string) => AgentConfig>
 
-export type HDBuiltinAgentName = keyof typeof BUILTIN_AGENT_FACTORIES
+export const HD_BUILTIN_AGENT_NAMES = Object.keys(BUILTIN_AGENT_FACTORIES) as BuiltinPluginName[]
 
-/**
- * Check if an agent name is a hyper-designer builtin agent.
- */
-export function isHDBuiltinAgent(agentName: string | undefined): boolean {
-  return agentName !== undefined && HD_BUILTIN_AGENT_NAMES.includes(agentName as HDBuiltinAgentName)
-}
+export type HDBuiltinAgentName = BuiltinPluginName
 
-export async function createBuiltinAgents(
-  model?: string
-): Promise<Record<HDBuiltinAgentName, AgentConfig>> {
-  const result: Partial<Record<HDBuiltinAgentName, AgentConfig>> = {}
-
-  for (const name of HD_BUILTIN_AGENT_NAMES) {
-    result[name] = BUILTIN_AGENT_FACTORIES[name](model)
+export async function createBuiltinAgents(model?: string): Promise<Record<string, AgentConfig>> {
+  const agents = await createPluginAgents(model)
+  const result: Record<string, AgentConfig> = {}
+  for (const [name, config] of Object.entries(agents)) {
+    if (BUILTIN_AGENT_NAME_SET.has(name)) {
+      result[name] = config
+    }
   }
-
-  return result as Record<HDBuiltinAgentName, AgentConfig>
+  return result
 }
 
-// export { agentSources, agentMetadata }
+export async function createAllAgents(model?: string): Promise<Record<string, AgentConfig>> {
+  return createPluginAgents(model)
+}
+
+export function isHDBuiltinAgent(agentName: string | undefined): boolean {
+  if (agentName === undefined) {
+    return false
+  }
+  return BUILTIN_AGENT_NAME_SET.has(agentName)
+}
+
+export function isHDPluginAgent(agentName: string | undefined): boolean {
+  if (agentName === undefined) {
+    return false
+  }
+  return getAgentPluginNames().includes(agentName)
+}
+
+export function isHDAgent(agentName: string | undefined): boolean {
+  return isHDBuiltinAgent(agentName) || isHDPluginAgent(agentName)
+}

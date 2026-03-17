@@ -60,7 +60,6 @@ const DEFINITION: AgentDefinition = {
     filePrompt(join(__dirname, "prompts", "interview.md")),
     filePrompt(join(__dirname, "prompts", "constraints.md")),
     stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
-    stringPrompt('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'),
   ],
   defaultPermission: {
     bash: "deny",

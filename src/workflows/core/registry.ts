@@ -8,16 +8,12 @@
  */
 
 import type { WorkflowDefinition } from './types'
-import { classicWorkflow } from '../plugins/classic'
-import { liteWorkflow } from '../plugins/lite'
-import { projectAnalysisWorkflow } from '../plugins/projectAnalysis'
 import { HyperDesignerLogger } from '../../utils/logger'
-
-const workflowRegistry: Record<string, WorkflowDefinition> = {
-  classic: classicWorkflow,
-  lite: liteWorkflow,
-  projectAnalysis: projectAnalysisWorkflow,
-}
+import {
+  ensureWorkflowPluginsBootstrapped,
+  getAvailableWorkflowPlugins,
+  getWorkflowPluginDefinition,
+} from '../../plugins/workflow'
 
 function getStageOrder(definition: WorkflowDefinition): string[] {
   const visited = new Set<string>()
@@ -54,7 +50,8 @@ function getStageOrder(definition: WorkflowDefinition): string[] {
  * @returns The workflow definition, or null if not found
  */
 export function getWorkflowDefinition(typeId: string): WorkflowDefinition | null {
-  const workflow = workflowRegistry[typeId]
+  ensureWorkflowPluginsBootstrapped()
+  const workflow = getWorkflowPluginDefinition(typeId)
   if (!workflow) {
     HyperDesignerLogger.warn("Workflow", `未知的工作流类型`, {
       workflowId: typeId,
@@ -78,5 +75,6 @@ export function getWorkflowDefinition(typeId: string): WorkflowDefinition | null
  * @returns Array of workflow IDs
  */
 export function getAvailableWorkflows(): string[] {
-  return Object.keys(workflowRegistry)
+  ensureWorkflowPluginsBootstrapped()
+  return getAvailableWorkflowPlugins()
 }

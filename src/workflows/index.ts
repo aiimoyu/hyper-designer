@@ -30,9 +30,9 @@ export {
 export { getHandoverAgent, getHandoverPrompt } from "./core/runtime"
 export { loadPromptForStage } from "./core/runtime"
 
-export { classicWorkflow } from "./plugins/classic"
-export { liteWorkflow } from './plugins/lite'
-export { projectAnalysisWorkflow } from "./plugins/projectAnalysis"
+export { classicWorkflow } from '../plugins/workflow/builtin/classic'
+export { liteWorkflow } from '../plugins/workflow/builtin/lite'
+export { projectAnalysisWorkflow } from '../plugins/workflow/builtin/projectAnalysis'
 
 export { WorkflowService, workflowService } from "./core/service"
 

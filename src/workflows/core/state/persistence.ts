@@ -384,6 +384,7 @@ function sanitizeCurrentState(parsed: ParsedWorkflowState): CurrentStageState | 
       previousStage,
       nextStage,
       failureCount: typeof parsedCurrent.failureCount === 'number' ? parsedCurrent.failureCount : 0,
+      ...(typeof parsedCurrent.agent === 'string' ? { agent: parsedCurrent.agent } : {}),
     }
     return current
   }
@@ -431,6 +432,7 @@ function sanitizeStateForWrite(state: WorkflowState): WorkflowState {
           previousStage: state.current.previousStage ?? null,
           nextStage: state.current.nextStage ?? null,
           failureCount: state.current.failureCount ?? 0,
+          ...(state.current.agent ? { agent: state.current.agent } : {}),
         }
       : null,
     ...(state.instance ? { instance: state.instance } : {}),

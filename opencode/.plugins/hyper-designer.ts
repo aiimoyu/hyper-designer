@@ -6,7 +6,7 @@ import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
 import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
 import { createHyperAgent } from "../../src/agents/Hyper"
-import { createBuiltinAgents } from "../../src/agents/utils"
+import { sdk } from '../../src/sdk'
 import { workflowService } from "../../src/workflows/core/service"
 import { createAgentTransformer } from '../../src/transform/opencode/agent-transform'
 import { createTransformHooks } from '../../src/transform/opencode/hooks'
@@ -49,13 +49,15 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   // Initialize logger - respects HYPER_DESIGNER_LOG_PERSIST env var
   initLogger()
 
-  const agents = await createBuiltinAgents()
+  const agents = await sdk.agent.createAll()
+  const builtinAgents = await sdk.agent.createBuiltin()
+  const builtinAgentNames = new Set(Object.keys(builtinAgents))
   const mappedBuiltinAgents = Object.fromEntries(
     Object.entries(toOpencodeAgents(agents)).map(([name, config]) => [
       name,
       {
         ...config,
-        hidden: true,
+        hidden: builtinAgentNames.has(name),
       },
     ]),
   ) as Record<string, OpencodeAgentConfig & { hidden?: boolean }>

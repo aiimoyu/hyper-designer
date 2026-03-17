@@ -12,7 +12,7 @@ const DEFINITION: AgentDefinition = {
     'Hyper Router Agent - Routes user requests to the correct specialist agent. Can directly handle simple user requests when workflow is not initialized.',
   mode: 'primary',
   color: '#2563EB',
-  defaultTemperature: 0.4,
+  defaultTemperature: 0.2,
   promptGenerators: [
     filePrompt(join(__dirname, 'prompt.md')),
     stringPrompt('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'),

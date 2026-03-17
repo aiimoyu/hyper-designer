@@ -1,6 +1,6 @@
-import { filePrompt } from '../../core/utils'
-import type { WorkflowDefinition } from '../../core/types'
-import { createHCollectorHook, summarizeHook } from '../../core/stageHooks'
+import { filePrompt } from '../../../../workflows/core/utils'
+import type { WorkflowDefinition } from '../../../../workflows/core/types'
+import { createHCollectorHook, summarizeHook } from '../../../../workflows/core/stageHooks'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 

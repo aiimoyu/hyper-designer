@@ -2,8 +2,11 @@ import { describe, it, expect } from "vitest"
 import {
   BUILTIN_AGENT_FACTORIES,
   HD_BUILTIN_AGENT_NAMES,
+  isHDAgent,
+  isHDPluginAgent,
   isHDBuiltinAgent,
   createBuiltinAgents,
+  createAllAgents,
 } from "../../../agents/utils"
 
 describe("agents utils", () => {
@@ -24,5 +27,12 @@ describe("agents utils", () => {
   it("createBuiltinAgents returns keys matching builtin names", async () => {
     const agents = await createBuiltinAgents("opencode")
     expect(Object.keys(agents)).toEqual(HD_BUILTIN_AGENT_NAMES)
+  })
+
+  it('user plugin agent is available and recognized as plugin agent', async () => {
+    const allAgents = await createAllAgents()
+    expect(allAgents.UserExampleAgent).toBeDefined()
+    expect(isHDPluginAgent('UserExampleAgent')).toBe(true)
+    expect(isHDAgent('UserExampleAgent')).toBe(true)
   })
 })
