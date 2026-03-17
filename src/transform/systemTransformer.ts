@@ -13,7 +13,6 @@ import { loadHDConfig } from '../config/loader'
 import type { WorkflowDefinition } from '../workflows/core/types'
 import type { WorkflowState } from '../workflows/core/state/types'
 import type { HDConfig } from '../config/loader'
-import type { HDConfig } from '../config/loader'
 
 const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_(?!FALLBACK_PROMPT\})[A-Z0-9_]+_PROMPT\}/g
 
