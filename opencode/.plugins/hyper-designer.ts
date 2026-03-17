@@ -9,6 +9,7 @@ import { createHyperAgent } from "../../src/agents/Hyper"
 import { sdk } from '../../src/sdk'
 import { workflowService } from "../../src/workflows/core/service"
 import { createAgentTransformer } from '../../src/transform/opencode/agent-transform'
+import { createUsingHyperDesignerTransformer } from '../../src/transform/opencode/using-hyperdesigner-transform'
 import { createTransformHooks } from '../../src/transform/opencode/hooks'
 import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
 import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
@@ -205,7 +206,12 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     event: async (input) => {
       await workflowHooks.event(input)
     },
-    "chat.message": createAgentTransformer(ctx),
+    "chat.message": async (input, output) => {
+      const agentTransformer = createAgentTransformer(ctx)
+      const usingHyperDesignerTransformer = createUsingHyperDesignerTransformer(ctx)
+      await agentTransformer(input, output)
+      await usingHyperDesignerTransformer(input, output)
+    },
     "experimental.chat.system.transform": async (input: unknown, output: { system: string[] }) => {
       await transformHooks['experimental.chat.system.transform'](input, output)
     },

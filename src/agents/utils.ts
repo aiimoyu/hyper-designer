@@ -48,5 +48,11 @@ export function isHDPluginAgent(agentName: string | undefined): boolean {
 }
 
 export function isHDAgent(agentName: string | undefined): boolean {
+  if (agentName === undefined) {
+    return false
+  }
+  if (agentName === 'Hyper') {
+    return true
+  }
   return isHDBuiltinAgent(agentName) || isHDPluginAgent(agentName)
 }

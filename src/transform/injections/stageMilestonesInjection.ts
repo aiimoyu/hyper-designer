@@ -20,7 +20,11 @@ function formatMilestonesContent(milestones: (string | MilestoneDefinition)[]): 
     const description = getMilestoneDescription(milestone)
     return `  <item>\n    <name>${name}</name>\n    <description>${description}</description>\n  </item>`
   })
-  return items.join('\n')
+  const itemsXml = items.join('\n')
+  return `<stage-milestones>
+  <instruction>以下是本阶段必须完成的关键里程碑任务。所有里程碑必须全部完成并点亮后，才能通过 handover 进入下一阶段。</instruction>
+${itemsXml}
+</stage-milestones>`
 }
 
 export const stageMilestonesInjectionProvider: PromptInjectionProvider = {

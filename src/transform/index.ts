@@ -17,6 +17,7 @@ export {
   DEFAULT_PROMPT_INJECTION_PROVIDER_IDS,
 } from './injections/factory'
 export { createAgentTransformer } from './opencode/agent-transform'
+export { createUsingHyperDesignerTransformer } from './opencode/using-hyperdesigner-transform'
 export { createSystemTransformer } from './opencode/system-transform'
 export { createTransformHooks } from './opencode/hooks'
 export type {
