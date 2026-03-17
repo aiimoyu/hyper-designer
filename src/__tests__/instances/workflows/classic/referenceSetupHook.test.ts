@@ -161,7 +161,7 @@ describe('referenceSetupHook', () => {
       )
     })
 
-    it('should include correct prompt content with HD_TOOL_ASK_USER instruction', async () => {
+    it('should use system prompt for detailed instructions', async () => {
       const adapter = createMockAdapter()
 
       const hook = createReferenceSetupHook()
@@ -175,16 +175,19 @@ describe('referenceSetupHook', () => {
       })
 
       const callArgs = (adapter.sendPrompt as ReturnType<typeof vi.fn>).mock.calls[0][0]
-      const text = callArgs.text as string
+      const system = callArgs.system as string
 
-      expect(text).toContain('参考资料填写确认')
-      expect(text).toContain('REFERENCE.md')
-      expect(text).toContain('HD_TOOL_ASK_USER')
-      expect(text).toContain('已完成，进入下一步')
-      expect(text).toContain('参考资料填写完毕，进入下一步。')
+      expect(system).toBeDefined()
+      expect(system).toContain('参考资料填写确认')
+      expect(system).toContain('REFERENCE.md')
+      expect(system).toContain('HD_TOOL_ASK_USER')
+      expect(system).toContain('已完成，进入下一步')
+      expect(system).toContain('参考资料填写完毕，进入下一步。')
+      expect(system).toContain('你只能使用 HD_TOOL_ASK_USER 工具询问用户')
+      expect(system).toContain('不要添加任何额外的解释或废话')
     })
 
-    it('should include constraints in prompt', async () => {
+    it('should use simple user prompt for confirmation request', async () => {
       const adapter = createMockAdapter()
 
       const hook = createReferenceSetupHook()
@@ -200,8 +203,9 @@ describe('referenceSetupHook', () => {
       const callArgs = (adapter.sendPrompt as ReturnType<typeof vi.fn>).mock.calls[0][0]
       const text = callArgs.text as string
 
-      expect(text).toContain('你只能使用 HD_TOOL_ASK_USER 工具询问用户')
-      expect(text).toContain('不要添加任何额外的解释或废话')
+      expect(text).toContain('确认')
+      expect(text).toContain('参考资料填写')
+      expect(text.length).toBeLessThan(100)
     })
   })
 

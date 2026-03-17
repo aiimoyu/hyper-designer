@@ -90,7 +90,7 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
       return id
     },
 
-    sendPrompt: async ({ sessionId, agent, text, schema }: SendPromptParams): Promise<SendPromptResult> => {
+    sendPrompt: async ({ sessionId, agent, text, schema, system }: SendPromptParams): Promise<SendPromptResult> => {
       const resolvedSessionId = resolveSessionID(sessionId, sessionRedirects)
       const response = await ctx.client.session.prompt({
         path: { id: resolvedSessionId },
@@ -98,6 +98,7 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
           agent,
           noReply: false,
           parts: [{ type: 'text', text }],
+          ...(system !== undefined ? { system } : {}),
           ...(schema !== undefined ? { format: { type: 'json_schema', schema } } : {}),
         } as PromptBodyWithFormat,
         query: { directory: ctx.directory },

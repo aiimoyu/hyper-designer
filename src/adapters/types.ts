@@ -19,6 +19,8 @@ export interface SendPromptParams {
   text: string
   /** 结构化输出 schema（JSON Schema 格式，可选） */
   schema?: Record<string, unknown>
+  /** 系统提示词（可选，覆盖 agent 默认系统提示词） */
+  system?: string
 }
 
 /** sendPrompt 的返回结果 */

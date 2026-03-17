@@ -92,7 +92,7 @@ export function createReferenceSetupHook(): StageHookFn {
     }
 
     // 步骤2: 通过 agent 询问用户是否已完成填写
-    const promptText = [
+    const systemPrompt = [
       '## 参考资料填写确认',
       '',
       `已在项目根目录创建 \`${REFERENCE_FILENAME}\` 文件。`,
@@ -112,6 +112,8 @@ export function createReferenceSetupHook(): StageHookFn {
       '3. 不要添加任何额外的解释或废话',
     ].join('\n')
 
+    const userPrompt = '请向用户确认是否已完成参考资料填写。'
+
     HyperDesignerLogger.info('ReferenceSetupHook', '等待用户填写参考资料', {
       stageKey,
       stageName,
@@ -121,7 +123,8 @@ export function createReferenceSetupHook(): StageHookFn {
     await adapter.sendPrompt({
       sessionId: sessionID,
       agent: 'HArchitect',
-      text: promptText,
+      text: userPrompt,
+      system: systemPrompt,
     })
   }
 }

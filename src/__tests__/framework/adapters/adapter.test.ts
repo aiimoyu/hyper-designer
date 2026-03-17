@@ -193,4 +193,41 @@ describe('createOpenCodeAdapter', () => {
       )
     })
   })
+
+  describe('sendPrompt', () => {
+    it('passes system prompt to session.prompt body when provided', async () => {
+      const ctx = makeCtx()
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.sendPrompt({
+        sessionId: 'ses-test',
+        agent: 'HArchitect',
+        text: 'user message',
+        system: 'system instructions',
+      })
+
+      expect(ctx.client.session.prompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            system: 'system instructions',
+            parts: [{ type: 'text', text: 'user message' }],
+          }),
+        }),
+      )
+    })
+
+    it('does not include system field when not provided', async () => {
+      const ctx = makeCtx()
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.sendPrompt({
+        sessionId: 'ses-test',
+        agent: 'HArchitect',
+        text: 'user message',
+      })
+
+      const callArgs = (ctx.client.session.prompt as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      expect(callArgs.body).not.toHaveProperty('system')
+    })
+  })
 })
