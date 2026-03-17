@@ -464,6 +464,18 @@ describe("workflow state management", () => {
       expect(gateMilestone?.isCompleted).toBe(true)
     })
 
+    it("sets current.agent from stage definition for HArchitect stage", () => {
+      const state = setWorkflowCurrent("IRAnalysis")
+      expect(state.current?.name).toBe("IRAnalysis")
+      expect(state.current?.agent).toBe("HArchitect")
+    })
+
+    it("sets current.agent from stage definition for HEngineer stage", () => {
+      const state = setWorkflowCurrent("requirementDecomposition")
+      expect(state.current?.name).toBe("requirementDecomposition")
+      expect(state.current?.agent).toBe("HEngineer")
+    })
+
   })
 
   describe("setWorkflowGateResult", () => {

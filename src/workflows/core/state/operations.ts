@@ -18,6 +18,7 @@ import type {
   GateMilestoneDetail,
 } from "./types";
 import { readWorkflowStateFile, writeWorkflowStateFile } from "./persistence";
+import { getWorkflowDefinition } from "../registry";
 import { HyperDesignerLogger } from "../../../utils/logger";
 import {
   GATE_MILESTONE_KEY,
@@ -341,11 +342,15 @@ export function setWorkflowCurrent(stepName: string | null): WorkflowState {
     const previousStep = state.current?.name || null;
     if (previousStep !== stepName) {
       const neighbors = resolveCurrentNeighbors(state.workflow, stepName)
+      // 从工作流定义获取阶段对应的 agent
+      const definition = state.typeId ? getWorkflowDefinition(state.typeId) : null;
+      const stageAgent = definition?.stages[stepName]?.agent;
       state.current = {
         name: stepName,
         handoverTo: null,
         previousStage: neighbors.previousStage,
         nextStage: neighbors.nextStage,
+        ...(stageAgent ? { agent: stageAgent } : {}),
       };
     }
     writeWorkflowStateFile(state);

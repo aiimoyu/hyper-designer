@@ -190,7 +190,37 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       expect(output.message.agent).toBe('Hyper')
     })
 
-    it('chat.message keeps Hyper unchanged when current.agent is undefined', async () => {
+    it('routes Hyper to HArchitect when current.stage has agent defined in workflow definition', async () => {
+      // After fix: when setWorkflowCurrent sets agent from stage definition,
+      // resolveAgentForMessage should return the stage's agent
+      vi.spyOn(workflowService, 'getState').mockReturnValue({
+        initialized: true,
+        typeId: 'classic',
+        workflow: {},
+        current: {
+          name: 'IRAnalysis',
+          handoverTo: null,
+          agent: 'HArchitect', // Now set by setWorkflowCurrent from stage definition
+          previousStage: null,
+          nextStage: null,
+          failureCount: 0,
+        },
+      })
+
+      const transformer = createAgentTransformer({} as PluginInput)
+      const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
+      const output = {
+        message: { agent: 'Hyper' },
+      } as Parameters<ReturnType<typeof createAgentTransformer>>[1]
+
+      await transformer(input, output)
+
+      expect(input.agent).toBe('HArchitect')
+      expect(output.message.agent).toBe('HArchitect')
+    })
+
+    it('keeps Hyper unchanged when current.agent is undefined (backward compat)', async () => {
+      // Backward compat: old state files without agent field should not crash
       vi.spyOn(workflowService, 'getState').mockReturnValue({
         initialized: true,
         typeId: 'classic',
