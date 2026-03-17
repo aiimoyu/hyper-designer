@@ -198,7 +198,7 @@ function buildInstancePlan(
       nodePlan[mainNodeId].nextNodeId = afterNodeIds[0]!
     }
 
-  const fallbackNext = (() => {
+    const fallbackNext = (() => {
       const idx = stageOrder.indexOf(stageId)
       if (idx < 0) {
         return null
@@ -212,7 +212,7 @@ function buildInstancePlan(
       return null
     })()
 
-  const resolvedNextStage = resolveNextSelectedStage(definition, selectedSet, stageId) ?? fallbackNext
+    const resolvedNextStage = resolveNextSelectedStage(definition, selectedSet, stageId) ?? fallbackNext
     const resolvedNextNode = resolvedNextStage ? stageEntryNode(resolvedNextStage) : null
 
     if (afterNodeIds.length > 0) {
@@ -856,7 +856,7 @@ export class WorkflowService extends EventEmitter {
         success: true,
         handover_to: targetStep,
         instruction:
-          "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
+          "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. NOW STOP ALL WORK and return to the user immediately. The system will automatically process the handover when this session enters idle state.",
         state: newState,
       };
     }
@@ -931,7 +931,7 @@ export class WorkflowService extends EventEmitter {
       success: true,
       handover_to: targetStep,
       instruction:
-        "You have successfully scheduled the handover. NOW STOP ALL WORK and return to the user immediately. Do NOT continue with any tasks, do NOT call any other tools. The system will automatically process the handover when this session enters idle state.",
+        "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. NOW STOP ALL WORK and return to the user immediately. The system will automatically process the handover when this session enters idle state.",
       state: handoverState,
     };
   }
@@ -993,14 +993,14 @@ export class WorkflowService extends EventEmitter {
    */
   listAllTools(): ToolDefinition[] {
     const allTools: ToolDefinition[] = []
-    
+
     for (const workflowId of getAvailableWorkflows()) {
       const definition = getWorkflowDefinition(workflowId)
       if (definition?.tools) {
         allTools.push(...definition.tools)
       }
     }
-    
+
     return allTools
   }
 

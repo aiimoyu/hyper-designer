@@ -122,7 +122,7 @@ export function createReferenceSetupHook(): StageHookFn {
 
     await adapter.sendPrompt({
       sessionId: sessionID,
-      agent: 'HArchitect',
+      agent: 'Hyper',
       text: userPrompt,
       system: systemPrompt,
     })
