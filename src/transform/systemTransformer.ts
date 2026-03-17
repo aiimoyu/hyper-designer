@@ -76,12 +76,12 @@ function formatInjectionResults(results: InjectionResult[]): string {
   ].join('\n')
 }
 
-function appendStageInjections(
+async function appendStageInjections(
   systemMessages: string[],
   workflow: WorkflowDefinition | null,
   state: WorkflowState | null,
   currentStage: string | null,
-): void {
+): Promise<void> {
   if (!workflow || currentStage === null) {
     return
   }
@@ -104,7 +104,7 @@ function appendStageInjections(
 
   const registry = createPromptInjectionRegistry()
 
-  const results = registry.run(providerIds, {
+  const results = await registry.run(providerIds, {
     workflow,
     state,
     currentStage,
@@ -134,11 +134,11 @@ function appendStageInjections(
   })
 }
 
-export function transformSystemMessages(
+export async function transformSystemMessages(
   systemMessages: string[],
   workflow: WorkflowDefinition | null,
   state: WorkflowState | null,
-): void {
+): Promise<void> {
   const currentStage = getCurrentStageContext(state)
   const beforeLengths = systemMessages.map(item => item.length)
   const placeholderResolvers = buildPlaceholderResolvers(workflow, currentStage)
@@ -158,7 +158,7 @@ export function transformSystemMessages(
     systemMessages[index] = replaceToolPlaceholders(systemMessages[index], OPENCODE_TOOL_MAPPING)
   }
 
-  appendStageInjections(systemMessages, workflow, state, currentStage)
+  await appendStageInjections(systemMessages, workflow, state, currentStage)
 
   HyperDesignerLogger.debug('SystemTransform', 'system transform completed', {
     currentStage,
@@ -167,5 +167,4 @@ export function transformSystemMessages(
     messageLengthsBefore: beforeLengths,
     messageLengthsAfter: systemMessages.map(item => item.length),
   })
-
 }

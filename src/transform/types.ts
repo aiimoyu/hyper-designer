@@ -14,5 +14,5 @@ export interface PromptInjectionRequest extends PromptTransformWorkflowContext {
 
 export interface PromptInjectionProvider {
   id: string
-  inject(input: PromptInjectionRequest): string | null
+  inject(input: PromptInjectionRequest): string | null | Promise<string | null>
 }

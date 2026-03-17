@@ -2,7 +2,7 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 import { filePrompt } from '../../../../workflows/core/utils'
-import type { WorkflowDefinition } from '../../../../workflows/core/types'
+import type { WorkflowDefinition, StageFileItem } from '../../../../workflows/core/types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -23,6 +23,87 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
   )
 }
 
+const SYSTEM_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  {
+    id: '系统架构分析报告',
+    path: './.hyper-designer/projectAnalysis/architecture.md',
+    type: 'file',
+    description: 'System architecture analysis report (5 dimensions + Mermaid)',
+  },
+  {
+    id: '组件清单',
+    path: './.hyper-designer/projectAnalysis/components-manifest.md',
+    type: 'file',
+    description: 'Component manifest (markdown table, source of truth for Stage 2)',
+  },
+  {
+    id: 'API目录',
+    path: './.hyper-designer/projectAnalysis/api-catalog.md',
+    type: 'file',
+    description: 'API catalog and component mapping',
+  },
+  {
+    id: '源码概览',
+    path: './.hyper-designer/projectAnalysis/source-overview.md',
+    type: 'file',
+    description: 'Source file inventory and statistics',
+  },
+]
+
+const COMPONENT_ANALYSIS_INPUTS: StageFileItem[] = [
+  {
+    id: '系统架构分析报告',
+    path: './.hyper-designer/projectAnalysis/architecture.md',
+    type: 'file',
+    description: 'System architecture analysis report',
+  },
+  {
+    id: '组件清单',
+    path: './.hyper-designer/projectAnalysis/components-manifest.md',
+    type: 'file',
+    description: 'Component manifest',
+  },
+]
+
+const COMPONENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  {
+    id: '组件分析文档目录',
+    path: './.hyper-designer/projectAnalysis/components/',
+    type: 'folder',
+    description: 'Per-component analysis markdown files',
+  },
+  {
+    id: '组件分析汇总',
+    path: './.hyper-designer/projectAnalysis/component-analysis-summary.md',
+    type: 'file',
+    description: 'Component analysis summary report',
+  },
+]
+
+const COVERAGE_CHECK_INPUTS: StageFileItem[] = [
+  {
+    id: '系统架构分析报告',
+    path: './.hyper-designer/projectAnalysis/architecture.md',
+    type: 'file',
+    description: 'System architecture analysis report',
+  },
+  {
+    id: '组件清单',
+    path: './.hyper-designer/projectAnalysis/components-manifest.md',
+    type: 'file',
+    description: 'Component manifest',
+  },
+]
+
+const COVERAGE_CHECK_OUTPUTS: StageFileItem[] = [
+  {
+    id: '覆盖率检查报告',
+    path: './.hyper-designer/projectAnalysis/coverage-report.md',
+    type: 'file',
+    description: 'Coverage report with verdict, severity, and remediation guidance',
+  },
+]
+
 export const projectAnalysisWorkflow: WorkflowDefinition = {
   id: 'projectAnalysis',
   name: 'Project Analysis',
@@ -39,30 +120,14 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       name: 'System Analysis',
       description: 'Analyze the target project at system level and produce the system architecture report',
       agent: 'HAnalysis',
+      inject: ['stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: {},
-      outputs: {
-        '系统架构分析报告': {
-          path: '.hyper-designer/projectAnalysis/architecture.md',
-          description: 'System architecture analysis report (5 dimensions + Mermaid)',
-        },
-        '组件清单': {
-          path: '.hyper-designer/projectAnalysis/components-manifest.md',
-          description: 'Component manifest (markdown table, source of truth for Stage 2)',
-        },
-        'API目录': {
-          path: '.hyper-designer/projectAnalysis/api-catalog.md',
-          description: 'API catalog and component mapping',
-        },
-        '源码概览': {
-          path: '.hyper-designer/projectAnalysis/source-overview.md',
-          description: 'Source file inventory and statistics',
-        },
-      },
+      inputs: [],
+      outputs: SYSTEM_ANALYSIS_OUTPUTS,
       transitions: [{ id: 'to-component', toStageId: 'componentAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行系统级分析', currentName),
@@ -73,25 +138,14 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       name: 'Component Analysis',
       description: 'Analyze each component from the manifest across 4 dimensions',
       agent: 'HAnalysis',
+      inject: ['stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'componentAnalysis.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: {
-        '系统架构分析报告': { required: true },
-        '组件清单': { required: true },
-      },
-      outputs: {
-        '组件分析文档目录': {
-          path: '.hyper-designer/projectAnalysis/components/',
-          description: 'Per-component analysis markdown files',
-        },
-        '组件分析汇总': {
-          path: '.hyper-designer/projectAnalysis/component-analysis-summary.md',
-          description: 'Component analysis summary report',
-        },
-      },
+      inputs: COMPONENT_ANALYSIS_INPUTS,
+      outputs: COMPONENT_ANALYSIS_OUTPUTS,
       transitions: [{ id: 'to-coverage', toStageId: 'missingCoverageCheck', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '基于组件清单执行组件分析', currentName),
@@ -102,21 +156,14 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       name: 'Missing Coverage Check',
       description: 'Check missing analysis coverage across 7 categories (diagnostic, non-gating)',
       agent: 'HAnalysis',
+      inject: ['stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'missingCoverageCheck.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: {
-        '系统架构分析报告': { required: true },
-        '组件清单': { required: true },
-      },
-      outputs: {
-        '覆盖率检查报告': {
-          path: '.hyper-designer/projectAnalysis/coverage-report.md',
-          description: 'Coverage report with verdict, severity, and remediation guidance',
-        },
-      },
+      inputs: COVERAGE_CHECK_INPUTS,
+      outputs: COVERAGE_CHECK_OUTPUTS,
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '执行缺失覆盖率检查', currentName),

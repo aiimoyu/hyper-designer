@@ -1,5 +1,5 @@
 import { filePrompt } from '../../../../workflows/core/utils'
-import type { WorkflowDefinition, MilestoneDefinition } from '../../../../workflows/core/types'
+import type { WorkflowDefinition, MilestoneDefinition, StageFileItem } from '../../../../workflows/core/types'
 import { createHCollectorHook, summarizeHook } from '../../../../workflows/core/stageHooks'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
@@ -19,6 +19,201 @@ const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
 const irAnalysisCollectorHook = createHCollectorHook({ domains: ['domainAnalysis'] })
 const scenarioAnalysisCollectorHook = createHCollectorHook({ domains: ['systemRequirementAnalysis'] })
 const systemDesignCollectorHook = createHCollectorHook({ domains: ['systemDesign', 'codebase'] })
+
+const IR_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  {
+    id: '需求信息',
+    path: './.hyper-designer/IRAnalysis/需求信息.md',
+    type: 'file',
+    description: 'Initial requirement analysis document covering all 5W2H dimensions',
+  },
+]
+
+const SCENARIO_ANALYSIS_INPUTS: StageFileItem[] = [
+  {
+    id: '需求信息',
+    path: './.hyper-designer/IRAnalysis/需求信息.md',
+    type: 'file',
+    description: 'Initial requirement analysis document',
+  },
+]
+
+const SCENARIO_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  {
+    id: '功能场景',
+    path: './.hyper-designer/scenarioAnalysis/*场景.md',
+    type: 'pattern',
+    description: 'Functional scenario specifications by type (business/operation/maintenance/manufacturing/other)',
+  },
+]
+
+const USE_CASE_ANALYSIS_INPUTS: StageFileItem[] = [
+  {
+    id: '功能场景',
+    path: './.hyper-designer/scenarioAnalysis/*场景.md',
+    type: 'pattern',
+    description: 'Functional scenario documents to be refined into use cases',
+  },
+]
+
+const USE_CASE_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  {
+    id: '用例',
+    path: './.hyper-designer/useCaseAnalysis/*用例.md',
+    type: 'pattern',
+    description: 'Use case specifications with tables, PlantUML diagrams, and data dictionaries',
+  },
+]
+
+const FUNCTIONAL_REFINEMENT_INPUTS: StageFileItem[] = [
+  {
+    id: '需求信息',
+    path: './.hyper-designer/IRAnalysis/需求信息.md',
+    type: 'file',
+    description: 'Initial requirement analysis document for context and constraints',
+  },
+  {
+    id: '用例',
+    path: './.hyper-designer/useCaseAnalysis/*用例.md',
+    type: 'pattern',
+    description: 'Use case documents to extract function lists from',
+  },
+]
+
+const FUNCTIONAL_REFINEMENT_OUTPUTS: StageFileItem[] = [
+  {
+    id: '功能列表',
+    path: './.hyper-designer/functionalRefinement/*功能列表.md',
+    type: 'pattern',
+    description: 'Refined functional requirements with MoSCoW prioritization and SR mapping',
+  },
+  {
+    id: 'FMEA',
+    path: './.hyper-designer/functionalRefinement/*FMEA.md',
+    type: 'pattern',
+    description: 'FMEA risk analysis matrices with failure modes and countermeasures',
+  },
+]
+
+const REQUIREMENT_DECOMPOSITION_INPUTS: StageFileItem[] = [
+  {
+    id: '需求信息',
+    path: './.hyper-designer/IRAnalysis/需求信息.md',
+    type: 'file',
+    description: 'Initial requirement analysis document for context',
+  },
+  {
+    id: '功能列表',
+    path: './.hyper-designer/functionalRefinement/*功能列表.md',
+    type: 'pattern',
+    description: 'Function lists to decompose into SR-AR mapping',
+  },
+]
+
+const REQUIREMENT_DECOMPOSITION_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'SR-AR分解',
+    path: './.hyper-designer/requirementDecomposition/sr-ar-decomposition.md',
+    type: 'file',
+    description: 'System-Allocation requirement decomposition with module interfaces',
+  },
+  {
+    id: '追溯报告',
+    path: './.hyper-designer/requirementDecomposition/traceability-report.md',
+    type: 'file',
+    description: 'IR→SR→AR traceability verification report',
+  },
+]
+
+const SYSTEM_FUNCTIONAL_DESIGN_INPUTS: StageFileItem[] = [
+  {
+    id: '需求信息',
+    path: './.hyper-designer/IRAnalysis/需求信息.md',
+    type: 'file',
+    description: 'Initial requirement analysis document',
+  },
+  {
+    id: 'SR-AR分解',
+    path: './.hyper-designer/requirementDecomposition/sr-ar-decomposition.md',
+    type: 'file',
+    description: 'SR-AR decomposition for module-level requirements',
+  },
+  {
+    id: '功能列表',
+    path: './.hyper-designer/functionalRefinement/*功能列表.md',
+    type: 'pattern',
+    description: 'Function lists for NFR/DFX summary reference',
+  },
+]
+
+const SYSTEM_FUNCTIONAL_DESIGN_OUTPUTS: StageFileItem[] = [
+  {
+    id: '系统设计',
+    path: './.hyper-designer/systemFunctionalDesign/system-design.md',
+    type: 'file',
+    description: 'System-level architecture design with 12 sections (§0-§11)',
+  },
+]
+
+const MODULE_FUNCTIONAL_DESIGN_INPUTS: StageFileItem[] = [
+  {
+    id: '系统设计',
+    path: './.hyper-designer/systemFunctionalDesign/system-design.md',
+    type: 'file',
+    description: 'System architecture design for module boundaries',
+  },
+  {
+    id: 'SR-AR分解',
+    path: './.hyper-designer/requirementDecomposition/sr-ar-decomposition.md',
+    type: 'file',
+    description: 'SR-AR decomposition for AR assignment',
+  },
+  {
+    id: '功能列表',
+    path: './.hyper-designer/functionalRefinement/*功能列表.md',
+    type: 'pattern',
+    description: 'Function lists for NFR/DFX reference',
+  },
+]
+
+const MODULE_FUNCTIONAL_DESIGN_OUTPUTS: StageFileItem[] = [
+  {
+    id: '模块设计',
+    path: './.hyper-designer/moduleFunctionalDesign/*设计.md',
+    type: 'pattern',
+    description: 'Module-level technical specifications with 10 sections (§0-§9)',
+  },
+]
+
+const SDD_PLAN_GENERATION_INPUTS: StageFileItem[] = [
+  {
+    id: '系统设计',
+    path: './.hyper-designer/systemFunctionalDesign/system-design.md',
+    type: 'file',
+    description: 'System design for technology stack and module dependencies',
+  },
+  {
+    id: 'SR-AR分解',
+    path: './.hyper-designer/requirementDecomposition/sr-ar-decomposition.md',
+    type: 'file',
+    description: 'SR-AR decomposition for acceptance criteria tracing',
+  },
+  {
+    id: '模块设计',
+    path: './.hyper-designer/moduleFunctionalDesign/*设计.md',
+    type: 'pattern',
+    description: 'Module design documents for task decomposition',
+  },
+]
+
+const SDD_PLAN_GENERATION_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'SDD计划',
+    path: './dev-plan/*-dev-plan.md',
+    type: 'pattern',
+    description: 'SDD development plans with task waves, complexity ratings, and QA scenarios',
+  },
+]
 
 /**
  * 生成阶段移交提示词
@@ -69,16 +264,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Initial Requirement Analysis',
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {},
-      outputs: {
-        '需求信息': { path: '需求信息.md', description: 'Initial requirement analysis document' },
-      },
+      inputs: [],
+      outputs: IR_ANALYSIS_OUTPUTS,
       before: [{ id: 'collect-ir', description: 'Collect IR references', fn: irAnalysisCollectorHook }],
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
       transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
@@ -91,18 +284,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Scenario Analysis',
       description: 'Analyze system usage scenarios, identify actors and business processes',
       agent: 'HArchitect',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {
-        '需求信息': { required: true },
-      },
-      outputs: {
-        '功能场景': { path: '功能场景.md', description: 'Functional scenario specifications' },
-      },
+      inputs: SCENARIO_ANALYSIS_INPUTS,
+      outputs: SCENARIO_ANALYSIS_OUTPUTS,
       before: [{ id: 'collect-scenario', description: 'Collect scenario references', fn: scenarioAnalysisCollectorHook }],
       after: [{ id: 'summarize-scenario', description: 'Summarize scenario context', fn: summarizeHook }],
       transitions: [{ id: 'to-usecase', toStageId: 'useCaseAnalysis', mode: 'auto', priority: 0 }],
@@ -115,18 +304,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Use Case Analysis',
       description: 'Refine scenarios into detailed use case specifications with inputs, outputs, and acceptance criteria',
       agent: 'HArchitect',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {
-        '功能场景': { required: true },
-      },
-      outputs: {
-        '用例': { path: '用例.md', description: 'Use case specifications' },
-      },
+      inputs: USE_CASE_ANALYSIS_INPUTS,
+      outputs: USE_CASE_ANALYSIS_OUTPUTS,
       after: [{ id: 'summarize-usecase', description: 'Summarize use-case context', fn: summarizeHook }],
       transitions: [{ id: 'to-functional', toStageId: 'functionalRefinement', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
@@ -138,18 +323,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Functional Refinement',
       description: 'Extract complete functional list, prioritize using MoSCoW method, and perform FMEA analysis',
       agent: 'HArchitect',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {
-        '用例': { required: true },
-      },
-      outputs: {
-        '功能列表': { path: '功能列表.md', description: 'Refined functional requirements' },
-      },
+      inputs: FUNCTIONAL_REFINEMENT_INPUTS,
+      outputs: FUNCTIONAL_REFINEMENT_OUTPUTS,
       after: [{ id: 'summarize-functional', description: 'Summarize functional context', fn: summarizeHook }],
       transitions: [{ id: 'to-decompose', toStageId: 'requirementDecomposition', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
@@ -161,18 +342,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Requirement Decomposition',
       description: 'Map and decompose functional list into module-level requirements, subsystems, and interface definitions',
       agent: 'HEngineer',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {
-        '功能列表': { required: true },
-      },
-      outputs: {
-        'SR-AR 分解': { path: 'SR-AR 分解.md', description: 'System-Allocation requirement decomposition' },
-      },
+      inputs: REQUIREMENT_DECOMPOSITION_INPUTS,
+      outputs: REQUIREMENT_DECOMPOSITION_OUTPUTS,
       after: [{ id: 'summarize-decompose', description: 'Summarize decomposition context', fn: summarizeHook }],
       transitions: [{ id: 'to-system-design', toStageId: 'systemFunctionalDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
@@ -184,18 +361,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'System Functional Design',
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {
-        'SR-AR 分解': { required: true },
-      },
-      outputs: {
-        '系统功能设计': { path: '系统功能设计.md', description: 'System-level functional design' },
-      },
+      inputs: SYSTEM_FUNCTIONAL_DESIGN_INPUTS,
+      outputs: SYSTEM_FUNCTIONAL_DESIGN_OUTPUTS,
       before: [{ id: 'collect-system-design', description: 'Collect system-design references', fn: systemDesignCollectorHook }],
       after: [{ id: 'summarize-system-design', description: 'Summarize system-design context', fn: summarizeHook }],
       transitions: [{ id: 'to-module-design', toStageId: 'moduleFunctionalDesign', mode: 'auto', priority: 0 }],
@@ -208,18 +381,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Module Functional Design',
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: true,
-      inputs: {
-        '系统功能设计': { required: true },
-      },
-      outputs: {
-        '模块功能设计': { path: '模块功能设计.md', description: 'Module-level functional design' },
-      },
+      inputs: MODULE_FUNCTIONAL_DESIGN_INPUTS,
+      outputs: MODULE_FUNCTIONAL_DESIGN_OUTPUTS,
       after: [{ id: 'summarize-module-design', description: 'Summarize module-design context', fn: summarizeHook }],
       transitions: [{ id: 'to-sdd-plan', toStageId: 'sddPlanGeneration', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
@@ -231,18 +400,14 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'SDD Plan Generation',
       description: 'Generate specification-driven development (SDD) plans from module functional design docs: task waves, complexity ratings, subagent dispatch strategy, interface cards, acceptance criteria and TDD scenarios',
       agent: 'HEngineer',
-      inject: ['stage-milestones'],
+      inject: ['stage-milestones', 'stage-inputs', 'stage-outputs'],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
       requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
       required: false,
-      inputs: {
-        '模块功能设计': { required: true },
-      },
-      outputs: {
-        'SDD 计划': { path: 'SDD 计划.md', description: 'SDD development plan' },
-      },
+      inputs: SDD_PLAN_GENERATION_INPUTS,
+      outputs: SDD_PLAN_GENERATION_OUTPUTS,
       after: [{ id: 'summarize-sdd-plan', description: 'Summarize SDD planning context', fn: summarizeHook }],
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>

@@ -12,14 +12,14 @@ export class PromptInjectionRegistry {
     this.providers.set(provider.id, provider)
   }
 
-  run(providerIds: string[], input: PromptInjectionRequest): InjectionResult[] {
+  async run(providerIds: string[], input: PromptInjectionRequest): Promise<InjectionResult[]> {
     const results: InjectionResult[] = []
     for (const providerId of providerIds) {
       const provider = this.providers.get(providerId)
       if (!provider) {
         continue
       }
-      const content = provider.inject(input)
+      const content = await provider.inject(input)
       if (content && content.trim()) {
         results.push({ providerId, content })
       }

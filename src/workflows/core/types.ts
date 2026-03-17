@@ -9,6 +9,16 @@ export interface WorkflowPromptBindings {
   [placeholder: string]: string
 }
 
+export type StageFileItemType = 'file' | 'folder' | 'pattern'
+
+export interface StageFileItem {
+  id: string
+  path: string
+  type: StageFileItemType
+  description: string
+  content?: string
+}
+
 export type StageHookFn = (ctx: {
   /** 阶段 key，如 "IRAnalysis" */
   stageKey: string
@@ -70,9 +80,9 @@ export interface WorkflowStageDefinition {
   /** Whether this stage is required to be completed */
   required?: boolean
   /** Input specifications for this stage */
-  inputs?: Record<string, { required?: boolean }>
+  inputs?: StageFileItem[]
   /** Output specifications for this stage */
-  outputs?: Record<string, { path: string; description?: string }>
+  outputs?: StageFileItem[]
   transitions?: StageTransitionDefinition[]
   getHandoverPrompt: (currentStageName: string | null, thisStageName: string) => string
 }

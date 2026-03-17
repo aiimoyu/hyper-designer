@@ -3,9 +3,29 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
-import type { WorkflowDefinition } from '../../../workflows/core/types'
+import type { WorkflowDefinition, StageFileItem } from '../../../workflows/core/types'
 import type { WorkflowState } from '../../../workflows/core/state/types'
-import { resolveStageInputs, validateStageOutputs, ArtifactResolutionError } from '../../../workflows/core/artifacts'
+import { resolveStageInputs, validateStageOutputs } from '../../../workflows/core/artifacts'
+
+const IR_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  { id: '需求信息', path: './docs/需求信息.md', type: 'file', description: 'IR document' },
+]
+
+const SCENARIO_ANALYSIS_INPUTS: StageFileItem[] = [
+  { id: '需求信息', path: './docs/需求信息.md', type: 'file', description: 'IR document' },
+]
+
+const SCENARIO_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  { id: '功能场景', path: './docs/功能场景.md', type: 'file', description: 'Scenario document' },
+]
+
+const USE_CASE_INPUTS: StageFileItem[] = [
+  { id: '功能场景', path: './docs/功能场景.md', type: 'file', description: 'Scenario document' },
+]
+
+const USE_CASE_OUTPUTS: StageFileItem[] = [
+  { id: '用例', path: './docs/用例.md', type: 'file', description: 'Use case document' },
+]
 
 function createDefinition(): WorkflowDefinition {
   return {
@@ -20,9 +40,7 @@ function createDefinition(): WorkflowDefinition {
         description: 'IR',
         agent: 'HArchitect',
         transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
-        outputs: {
-          需求信息: { path: 'docs/需求信息.md' },
-        },
+        outputs: IR_ANALYSIS_OUTPUTS,
         getHandoverPrompt: () => 'to IRAnalysis',
       },
       scenarioAnalysis: {
@@ -30,12 +48,8 @@ function createDefinition(): WorkflowDefinition {
         name: 'Scenario Analysis',
         description: 'Scenario',
         agent: 'HArchitect',
-        inputs: {
-          需求信息: { required: true },
-        },
-        outputs: {
-          功能场景: { path: 'docs/功能场景.md' },
-        },
+        inputs: SCENARIO_ANALYSIS_INPUTS,
+        outputs: SCENARIO_ANALYSIS_OUTPUTS,
         transitions: [{ id: 'to-usecase', toStageId: 'useCaseAnalysis', mode: 'auto', priority: 0 }],
         getHandoverPrompt: () => 'to scenarioAnalysis',
       },
@@ -44,12 +58,8 @@ function createDefinition(): WorkflowDefinition {
         name: 'Use Case Analysis',
         description: 'UseCase',
         agent: 'HArchitect',
-        inputs: {
-          功能场景: { required: true },
-        },
-        outputs: {
-          用例: { path: 'docs/用例.md' },
-        },
+        inputs: USE_CASE_INPUTS,
+        outputs: USE_CASE_OUTPUTS,
         getHandoverPrompt: () => 'to useCaseAnalysis',
       },
     },
@@ -89,40 +99,29 @@ describe('ArtifactManager', () => {
 
     const inputs = resolveStageInputs('scenarioAnalysis', definition, state, tempDir)
 
-    expect(inputs.需求信息).toBe('test content')
+    expect(inputs['需求信息']).toBe('test content')
   })
 
-  it('resolveStageInputs throws ArtifactResolutionError for missing required inputs', () => {
+  it('resolveStageInputs returns "无" for missing inputs', () => {
     const definition = createDefinition()
-    const state = createState()
-
-    expect(() => resolveStageInputs('scenarioAnalysis', definition, state, tempDir)).toThrow(ArtifactResolutionError)
-  })
-
-  it('resolveStageInputs returns "无" for missing optional inputs', () => {
-    const definition = createDefinition()
-    definition.stages.scenarioAnalysis.inputs = {
-      需求信息: { required: false },
-    }
     const state = createState()
 
     const inputs = resolveStageInputs('scenarioAnalysis', definition, state, tempDir)
 
-    expect(inputs.需求信息).toBe('无')
+    expect(inputs['需求信息']).toBe('无')
   })
 
-  it('resolveStageInputs only resolves from isCompleted === true stages', () => {
+  it('resolveStageInputs handles pattern type inputs', () => {
     const definition = createDefinition()
-    const state = createState({
-      workflow: {
-        IRAnalysis: { isCompleted: false },
-        scenarioAnalysis: { isCompleted: false },
-        useCaseAnalysis: { isCompleted: false },
-      },
-    })
-    writeFileSync(join(tempDir, 'docs/需求信息.md'), 'should not be loaded', 'utf-8')
+    definition.stages.scenarioAnalysis.inputs = [
+      { id: '需求信息', path: './docs/*.md', type: 'pattern', description: 'All docs' },
+    ]
+    const state = createState()
+    writeFileSync(join(tempDir, 'docs/需求信息.md'), 'test content', 'utf-8')
 
-    expect(() => resolveStageInputs('scenarioAnalysis', definition, state, tempDir)).toThrow(ArtifactResolutionError)
+    const inputs = resolveStageInputs('scenarioAnalysis', definition, state, tempDir)
+
+    expect(inputs['需求信息']).toContain('test content')
   })
 
   it('validateStageOutputs returns valid=true when all outputs exist', () => {
@@ -140,6 +139,6 @@ describe('ArtifactManager', () => {
     const result = validateStageOutputs('IRAnalysis', definition, tempDir)
 
     expect(result.valid).toBe(false)
-    expect(result.missing).toContain('docs/需求信息.md')
+    expect(result.missing).toContain('./docs/需求信息.md')
   })
 })

@@ -8,7 +8,7 @@ import type { ToolDefinition } from '../toolTypes'
  */
 
 import { EventEmitter } from "events";
-import type { StageTransitionDefinition, WorkflowDefinition, PlatformAdapter, MilestoneDefinition } from "../types";
+import type { StageTransitionDefinition, WorkflowDefinition, PlatformAdapter, MilestoneDefinition, StageFileItem } from "../types";
 import type { WorkflowState, GateMilestoneDetail } from "../state/types";
 import {
   getWorkflowState,
@@ -29,6 +29,7 @@ import {
   GATE_PASS_THRESHOLD,
   isGateMilestoneDetail,
 } from '../stageMilestone'
+import { checkStageOutputs, formatMissingOutputsMessage } from '../outputChecker'
 
 function getStageOrder(definition: WorkflowDefinition): string[] {
   const visited = new Set<string>()
@@ -278,8 +279,8 @@ export interface StageDetail {
   description: string;
   required: boolean;
   agent: string;
-  inputs?: Record<string, { required?: boolean }>;
-  outputs?: Record<string, { path: string; description?: string }>;
+  inputs?: StageFileItem[];
+  outputs?: StageFileItem[];
 }
 
 /**
@@ -784,7 +785,7 @@ export class WorkflowService extends EventEmitter {
    *                 - 当前阶段不为 null → 下一个被选中的阶段
    * @returns 结构化结果对象
    */
-  hdScheduleHandover(stepName?: string): HandoverResult {
+  async hdScheduleHandover(stepName?: string): Promise<HandoverResult> {
     // 检查工作流是否已初始化
     if (!this.definition) {
       return {
@@ -899,6 +900,20 @@ export class WorkflowService extends EventEmitter {
         success: false,
         error: `阶段交接所需里程碑未完成：\n${failureMessages.join('\n')}`,
       };
+    }
+
+    // 检查当前阶段的输出文件是否完整
+    const currentStageDef = this.definition.stages[currentStage]
+    if (currentStageDef?.outputs && currentStageDef.outputs.length > 0) {
+      const outputCheck = await checkStageOutputs(currentStageDef.outputs)
+      if (!outputCheck.success) {
+        this.incrementCurrentFailureCount();
+        const missingMessage = formatMissingOutputsMessage(outputCheck.missing, outputCheck.matchCounts)
+        return {
+          success: false,
+          error: missingMessage,
+        };
+      }
     }
 
     // 调度交接

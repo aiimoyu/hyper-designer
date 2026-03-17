@@ -26,14 +26,12 @@ describe('classic workflow stage metadata', () => {
         expect(typeof stages[key].required).toBe('boolean')
       })
 
-      it('has an inputs field (object)', () => {
-        expect(stages[key].inputs).toBeDefined()
-        expect(typeof stages[key].inputs).toBe('object')
+      it('has an inputs field (array)', () => {
+        expect(Array.isArray(stages[key].inputs)).toBe(true)
       })
 
-      it('has an outputs field (object)', () => {
-        expect(stages[key].outputs).toBeDefined()
-        expect(typeof stages[key].outputs).toBe('object')
+      it('has an outputs field (array)', () => {
+        expect(Array.isArray(stages[key].outputs)).toBe(true)
       })
 
       it('enables stage-milestones injection', () => {
@@ -48,12 +46,15 @@ describe('classic workflow stage metadata', () => {
     })
 
     it('has no inputs (first stage)', () => {
-      expect(stages['IRAnalysis'].inputs).toEqual({})
+      expect(stages['IRAnalysis'].inputs).toEqual([])
     })
 
     it('outputs 需求信息 artifact', () => {
-      expect(stages['IRAnalysis'].outputs).toHaveProperty('需求信息')
-      expect(stages['IRAnalysis'].outputs!['需求信息'].path).toBe('需求信息.md')
+      const outputs = stages['IRAnalysis'].outputs!
+      const item = outputs.find(o => o.id === '需求信息')
+      expect(item).toBeDefined()
+      expect(item?.path).toBe('./.hyper-designer/IRAnalysis/需求信息.md')
+      expect(item?.type).toBe('file')
     })
   })
 
@@ -62,12 +63,18 @@ describe('classic workflow stage metadata', () => {
       expect(stages['scenarioAnalysis'].required).toBe(true)
     })
 
-    it('inputs 需求信息 as required', () => {
-      expect(stages['scenarioAnalysis'].inputs!['需求信息']).toEqual({ required: true })
+    it('inputs 需求信息', () => {
+      const inputs = stages['scenarioAnalysis'].inputs!
+      const item = inputs.find(i => i.id === '需求信息')
+      expect(item).toBeDefined()
+      expect(item?.path).toBe('./.hyper-designer/IRAnalysis/需求信息.md')
     })
 
     it('outputs 功能场景 artifact', () => {
-      expect(stages['scenarioAnalysis'].outputs!['功能场景'].path).toBe('功能场景.md')
+      const outputs = stages['scenarioAnalysis'].outputs!
+      const item = outputs.find(o => o.id === '功能场景')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
   })
 
@@ -76,12 +83,18 @@ describe('classic workflow stage metadata', () => {
       expect(stages['useCaseAnalysis'].required).toBe(true)
     })
 
-    it('inputs 功能场景 as required', () => {
-      expect(stages['useCaseAnalysis'].inputs!['功能场景']).toEqual({ required: true })
+    it('inputs 功能场景', () => {
+      const inputs = stages['useCaseAnalysis'].inputs!
+      const item = inputs.find(i => i.id === '功能场景')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
 
     it('outputs 用例 artifact', () => {
-      expect(stages['useCaseAnalysis'].outputs!['用例'].path).toBe('用例.md')
+      const outputs = stages['useCaseAnalysis'].outputs!
+      const item = outputs.find(o => o.id === '用例')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
   })
 
@@ -90,12 +103,25 @@ describe('classic workflow stage metadata', () => {
       expect(stages['functionalRefinement'].required).toBe(true)
     })
 
-    it('inputs 用例 as required', () => {
-      expect(stages['functionalRefinement'].inputs!['用例']).toEqual({ required: true })
+    it('inputs 用例', () => {
+      const inputs = stages['functionalRefinement'].inputs!
+      const item = inputs.find(i => i.id === '用例')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
 
     it('outputs 功能列表 artifact', () => {
-      expect(stages['functionalRefinement'].outputs!['功能列表'].path).toBe('功能列表.md')
+      const outputs = stages['functionalRefinement'].outputs!
+      const item = outputs.find(o => o.id === '功能列表')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
+    })
+
+    it('outputs FMEA artifact', () => {
+      const outputs = stages['functionalRefinement'].outputs!
+      const item = outputs.find(o => o.id === 'FMEA')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
   })
 
@@ -104,12 +130,25 @@ describe('classic workflow stage metadata', () => {
       expect(stages['requirementDecomposition'].required).toBe(true)
     })
 
-    it('inputs 功能列表 as required', () => {
-      expect(stages['requirementDecomposition'].inputs!['功能列表']).toEqual({ required: true })
+    it('inputs 功能列表', () => {
+      const inputs = stages['requirementDecomposition'].inputs!
+      const item = inputs.find(i => i.id === '功能列表')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
 
-    it('outputs SR-AR 分解 artifact', () => {
-      expect(stages['requirementDecomposition'].outputs!['SR-AR 分解'].path).toBe('SR-AR 分解.md')
+    it('outputs SR-AR分解 artifact', () => {
+      const outputs = stages['requirementDecomposition'].outputs!
+      const item = outputs.find(o => o.id === 'SR-AR分解')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('file')
+    })
+
+    it('outputs 追溯报告 artifact', () => {
+      const outputs = stages['requirementDecomposition'].outputs!
+      const item = outputs.find(o => o.id === '追溯报告')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('file')
     })
   })
 
@@ -118,12 +157,18 @@ describe('classic workflow stage metadata', () => {
       expect(stages['systemFunctionalDesign'].required).toBe(true)
     })
 
-    it('inputs SR-AR 分解 as required', () => {
-      expect(stages['systemFunctionalDesign'].inputs!['SR-AR 分解']).toEqual({ required: true })
+    it('inputs SR-AR分解', () => {
+      const inputs = stages['systemFunctionalDesign'].inputs!
+      const item = inputs.find(i => i.id === 'SR-AR分解')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('file')
     })
 
-    it('outputs 系统功能设计 artifact', () => {
-      expect(stages['systemFunctionalDesign'].outputs!['系统功能设计'].path).toBe('系统功能设计.md')
+    it('outputs 系统设计 artifact', () => {
+      const outputs = stages['systemFunctionalDesign'].outputs!
+      const item = outputs.find(o => o.id === '系统设计')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('file')
     })
   })
 
@@ -132,12 +177,18 @@ describe('classic workflow stage metadata', () => {
       expect(stages['moduleFunctionalDesign'].required).toBe(true)
     })
 
-    it('inputs 系统功能设计 as required', () => {
-      expect(stages['moduleFunctionalDesign'].inputs!['系统功能设计']).toEqual({ required: true })
+    it('inputs 系统设计', () => {
+      const inputs = stages['moduleFunctionalDesign'].inputs!
+      const item = inputs.find(i => i.id === '系统设计')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('file')
     })
 
-    it('outputs 模块功能设计 artifact', () => {
-      expect(stages['moduleFunctionalDesign'].outputs!['模块功能设计'].path).toBe('模块功能设计.md')
+    it('outputs 模块设计 artifact', () => {
+      const outputs = stages['moduleFunctionalDesign'].outputs!
+      const item = outputs.find(o => o.id === '模块设计')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
   })
 
@@ -146,12 +197,18 @@ describe('classic workflow stage metadata', () => {
       expect(stages['sddPlanGeneration'].required).toBe(false)
     })
 
-    it('inputs 模块功能设计 as required', () => {
-      expect(stages['sddPlanGeneration'].inputs!['模块功能设计']).toEqual({ required: true })
+    it('inputs 模块设计', () => {
+      const inputs = stages['sddPlanGeneration'].inputs!
+      const item = inputs.find(i => i.id === '模块设计')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
 
-    it('outputs SDD 计划 artifact', () => {
-      expect(stages['sddPlanGeneration'].outputs!['SDD 计划'].path).toBe('SDD 计划.md')
+    it('outputs SDD计划 artifact', () => {
+      const outputs = stages['sddPlanGeneration'].outputs!
+      const item = outputs.find(o => o.id === 'SDD计划')
+      expect(item).toBeDefined()
+      expect(item?.type).toBe('pattern')
     })
   })
 })
