@@ -1,17 +1,7 @@
-/**
- * HArchitect 代理模块
- * 
- * 系统架构师和需求工作流协调员，负责：
- * 1. 管理需求工程流程：从数据收集到功能细化
- * 2. 协调多阶段设计，包括正式文档和评审周期
- * 3. 完成每个阶段文档后必须调用 @HCritic 进行质量门评审
- * 4. 在功能细化完成后将工作交接给 @HEngineer
- */
-
-import type { AgentPromptMetadata } from "../types"
-import type { AgentDefinition } from "../factory"
-import { filePrompt, stringPrompt } from "../factory"
-import { createAgent } from "../factory"
+import type { AgentPromptMetadata } from "../../../../agents/types"
+import type { AgentDefinition } from "../../../../agents/factory"
+import { filePrompt, stringPrompt } from "../../../../agents/factory"
+import { createAgent } from "../../../../agents/factory"
 import { join } from "path"
 import { dirname } from "path"
 import { fileURLToPath } from "url"

@@ -4,17 +4,17 @@ import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const SRC_DIR = join(__dirname, "..", "..", "..")
-const AGENTS_DIR = join(SRC_DIR, "agents")
+const BUILTIN_AGENTS_DIR = join(SRC_DIR, "plugins", "agent", "builtin")
 
-// Collect all .md files under src/agents/*/prompts/
+// Collect all .md files under src/plugins/agent/builtin/*/prompts/
 function getPromptFiles(): string[] {
-  const agentDirs = readdirSync(AGENTS_DIR, { withFileTypes: true })
+  const agentDirs = readdirSync(BUILTIN_AGENTS_DIR, { withFileTypes: true })
     .filter(d => d.isDirectory())
     .map(d => d.name)
 
   const mdFiles: string[] = []
   for (const agent of agentDirs) {
-    const promptsDir = join(AGENTS_DIR, agent, "prompts")
+    const promptsDir = join(BUILTIN_AGENTS_DIR, agent, "prompts")
     if (!existsSync(promptsDir)) continue
     const files = readdirSync(promptsDir)
       .filter(f => f.endsWith(".md"))

@@ -22,11 +22,11 @@ export type { WorkflowDefinition, WorkflowStageDefinition } from "./workflows"
 export { createBuiltinAgents } from "./agents/utils"
 export { createAllAgents, isHDAgent, isHDPluginAgent } from './agents/utils'
 export { createAgent } from "./agents/factory"
-export { createHCollectorAgent } from "./agents/HCollector"
-export { createHArchitectAgent } from "./agents/HArchitect"
-export { createHCriticAgent } from "./agents/HCritic"
-export { createHEngineerAgent } from "./agents/HEngineer"
-export { createHAnalysisAgent } from "./agents/HAnalysis"
+export { createHCollectorAgent } from "./plugins/agent/builtin/HCollector"
+export { createHArchitectAgent } from "./plugins/agent/builtin/HArchitect"
+export { createHCriticAgent } from "./plugins/agent/builtin/HCritic"
+export { createHEngineerAgent } from "./plugins/agent/builtin/HEngineer"
+export { createHAnalysisAgent } from "./plugins/agent/builtin/HAnalysis"
 
 // Workflow state management
 export {
