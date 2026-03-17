@@ -70,7 +70,7 @@ describe('workflow prompt bindings', () => {
       entryStageId: 'IRAnalysis',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(
-          join(__dirname, '..', '..', '..', 'workflows', 'plugins', 'classic', 'prompts', 'workflow.md'),
+          join(__dirname, '..', '..', '..', 'plugins', "workflow", "builtin", 'classic', 'prompts', 'workflow.md'),
         ),
       },
       stages: {
@@ -81,7 +81,7 @@ describe('workflow prompt bindings', () => {
           agent: 'HArchitect',
           promptBindings: {
             '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(
-              join(__dirname, '..', '..', '..', 'workflows', 'plugins', 'classic', 'prompts', 'IRAnalysis.md'),
+              join(__dirname, '..', '..', '..', 'plugins', "workflow", "builtin", 'classic', 'prompts', 'IRAnalysis.md'),
             ),
           },
           getHandoverPrompt: () => 'handover',

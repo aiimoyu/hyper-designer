@@ -49,7 +49,7 @@ export const HANALYSIS_PROMPT_METADATA: AgentPromptMetadata = {
 const DEFINITION: AgentDefinition = {
   name: 'HAnalysis',
   description:
-    'Project Analysis Specialist - Executes the projectAnalysis workflow across systemAnalysis, componentAnalysis, and missingCoverageCheck. Stays lean at the base prompt layer and relies on workflow stage context plus stage-specific skills for detailed analysis methodology and artifact contracts. (HAnalysis - OhMyOpenCode)',
+    'Project Analysis Specialist - Executes the projectAnalysis workflow across systemAnalysis, componentAnalysis, and missingCoverageCheck. Stays lean at the base prompt layer and relies on workflow stage context plus stage-specific skills for detailed analysis methodology and artifact contracts.',
   mode: 'primary',
   color: '#7C3AED',
   defaultTemperature: 0.4,

@@ -37,7 +37,7 @@ export const HENGINEER_PROMPT_METADATA: AgentPromptMetadata = {
 const DEFINITION: AgentDefinition = {
   name: "HEngineer",
   description:
-    "System Engineer & Technical Design Specialist - Executes system-level design (SR-AR decomposition + system functional design: architecture, tech stack, data models) and module-level design (detailed class design, algorithms, implementation specs). Takes over from @HArchitect after functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. (HEngineer - OhMyOpenCode)",
+    "System Engineer & Technical Design Specialist - Executes system-level design (SR-AR decomposition + system functional design: architecture, tech stack, data models) and module-level design (detailed class design, algorithms, implementation specs). Takes over from @HArchitect after functional refinement. After completing each stage document, MUST call @HCritic for quality gate review.",
   mode: "primary",
   color: "#31B5C6",
   defaultTemperature: 0.4,

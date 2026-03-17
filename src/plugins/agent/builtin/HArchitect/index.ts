@@ -38,7 +38,7 @@ export const HARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
 const DEFINITION: AgentDefinition = {
   name: "HArchitect",
   description:
-    "System Architect & Requirements Workflow Coordinator - Manages requirements engineering from data collection (delegates to @HCollector) through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles. (HArchitect - OhMyOpenCode)",
+    "System Architect & Requirements Workflow Coordinator - Manages requirements engineering from data collection (delegates to @HCollector) through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles.",
   mode: "primary",
   color: "#C8102E",
   defaultTemperature: 0.6,
@@ -50,7 +50,6 @@ const DEFINITION: AgentDefinition = {
     filePrompt(join(__dirname, "prompts", "interview.md")),
     filePrompt(join(__dirname, "prompts", "constraints.md")),
     stringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
-    stringPrompt('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'),
   ],
   defaultPermission: {
     bash: "deny",

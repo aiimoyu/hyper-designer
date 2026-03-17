@@ -35,7 +35,7 @@ export const HCRITIC_PROMPT_METADATA: AgentPromptMetadata = {
 const DEFINITION: AgentDefinition = {
   name: "HCritic",
   description:
-    "Design Quality Gate & Review Agent - MUST be called after HArchitect/HEngineer completes any stage document. Provides structured quality assessment (completeness, consistency, feasibility, conformance) with Pass/Fail decision. Skill-driven review using stage-specific checklists. Read-only reviewer. Call BEFORE marking workflow stage complete. (HCritic - OhMyOpenCode)",
+    "Design Quality Gate & Review Agent - MUST be called after HArchitect/HEngineer completes any stage document. Provides structured quality assessment (completeness, consistency, feasibility, conformance) with Pass/Fail decision. Skill-driven review using stage-specific checklists. Read-only reviewer. Call BEFORE marking workflow stage complete.",
   mode: "subagent",
   color: "#FBC803",
   defaultTemperature: 0.1,

@@ -39,7 +39,7 @@ export const HCOLLECTOR_PROMPT_METADATA: AgentPromptMetadata = {
 const DEFINITION: AgentDefinition = {
   name: "HCollector",
   description:
-    "Data Collection & Requirements Gathering Specialist - Typically delegated by @HArchitect at workflow start. Conducts data collection via GATHERING/NEEDS_CLARIFICATION/COMPLETED status protocol to clarify requirements, collects reference materials and existing documentation, researches domain knowledge and similar systems. Prepares comprehensive context for requirements analysis. Read-mostly agent focused on discovery and information gathering. (HCollector - OhMyOpenCode)",
+    "Data Collection & Requirements Gathering Specialist - Typically delegated by @HArchitect at workflow start. Conducts data collection via GATHERING/NEEDS_CLARIFICATION/COMPLETED status protocol to clarify requirements, collects reference materials and existing documentation, researches domain knowledge and similar systems. Prepares comprehensive context for requirements analysis. Read-mostly agent focused on discovery and information gathering.",
   mode: "all",
   color: "#63B232",
   defaultTemperature: 0.3,
