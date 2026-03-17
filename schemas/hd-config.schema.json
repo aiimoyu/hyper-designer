@@ -43,6 +43,20 @@
         "$ref": "#/definitions/agentConfig",
         "description": "Custom agent configuration"
       }
+    },
+    "transform": {
+      "type": "object",
+      "description": "Transform configuration overrides",
+      "properties": {
+        "blockedSkills": {
+          "type": "array",
+          "description": "Exact, case-sensitive skill names to remove from system prompt output",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "required": [

@@ -32,6 +32,15 @@ export interface AgentOverrideConfig {
   /** Optional tool settings for the agent (permission converted to boolean) */
   tools?: Record<string, boolean>
 }
+
+/**
+ * Transform configuration options
+ */
+export interface TransformConfig {
+  /** Optional list of skills to block from system prompt output */
+  blockedSkills?: string[]
+}
+
 /**
  * Hyper Designer configuration structure
  */
@@ -42,6 +51,8 @@ export interface HDConfig {
   workflow?: string
   /** Agent-specific configuration overrides */
   agents: Record<string, AgentOverrideConfig>
+  /** Optional transform configuration overrides */
+  transform?: TransformConfig
 }
 /** Default name for the configuration file */
 export const DEFAULT_CONFIG_PATH = "hd-config.json"
@@ -77,6 +88,13 @@ export const DEFAULT_AGENT_CONFIGS: Record<string, AgentOverrideConfig> = {
   HAnalysis: {
     temperature: 0.5,
   },
+}
+
+/**
+ * 内置转换配置默认值
+ */
+export const DEFAULT_TRANSFORM_CONFIG: TransformConfig = {
+  blockedSkills: [],
 }
 
 /**
@@ -135,6 +153,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
     return {
       agents: DEFAULT_AGENT_CONFIGS,
       workflow: "classic",
+      transform: DEFAULT_TRANSFORM_CONFIG,
     }
   }
 
@@ -153,6 +172,10 @@ export function loadHDConfig(configPath?: string): HDConfig {
       agents: {
         ...DEFAULT_AGENT_CONFIGS,
         ...config.agents,
+      },
+      transform: {
+        ...DEFAULT_TRANSFORM_CONFIG,
+        ...config.transform,
       },
     }
 
@@ -184,6 +207,7 @@ export function loadHDConfig(configPath?: string): HDConfig {
     return {
       agents: DEFAULT_AGENT_CONFIGS,
       workflow: "classic",
+      transform: DEFAULT_TRANSFORM_CONFIG,
     }
   }
 }

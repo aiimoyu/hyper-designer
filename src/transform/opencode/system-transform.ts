@@ -1,10 +1,55 @@
 import { workflowService } from '../../workflows/core/service'
-import { transformSystemMessages } from '../systemTransformer'
+import { getBlockedSkillsFromConfig, transformSystemMessages } from '../systemTransformer'
+
+const SKILL_BLOCK_PATTERN = /<skill>[\s\S]*?<\/skill>/g
+const SKILL_NAME_PATTERN = /<name>([\s\S]*?)<\/name>/
+
+function stripBlockedSkills(text: string, blockedSkills: Set<string>): string {
+  if (blockedSkills.size === 0) {
+    return text
+  }
+
+  return text.replace(SKILL_BLOCK_PATTERN, match => {
+    const nameMatch = match.match(SKILL_NAME_PATTERN)
+    const skillName = nameMatch?.[1]?.trim() ?? ''
+    if (blockedSkills.has(skillName)) {
+      return ''
+    }
+    return match
+  })
+}
+
+function filterBlockedSkills(systemMessages: string[], blockedSkills: Set<string>): void {
+  if (blockedSkills.size === 0) {
+    return
+  }
+
+  for (let index = 0; index < systemMessages.length; index += 1) {
+    systemMessages[index] = stripBlockedSkills(systemMessages[index], blockedSkills)
+  }
+}
+
+function mergeSystemMessages(systemMessages: string[]): void {
+  if (systemMessages.length <= 1) {
+    return
+  }
+
+  // OpenCode 多系统消息可能被丢弃，合并为单条以保证注入内容生效
+  systemMessages[0] = systemMessages.join('\n\n')
+  systemMessages.splice(1)
+}
 
 export function createSystemTransformer() {
+  const blockedSkills = new Set(getBlockedSkillsFromConfig())
+
   return async (_input: unknown, output: { system: string[] }) => {
+    const beforeLength = output.system.length
     const workflow = workflowService.getDefinition()
     const workflowState = workflowService.getState()
     transformSystemMessages(output.system, workflow, workflowState)
+    filterBlockedSkills(output.system, blockedSkills)
+    if (output.system.length > beforeLength) {
+      mergeSystemMessages(output.system)
+    }
   }
 }

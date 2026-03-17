@@ -1,17 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
 import { HyperDesignerLogger } from '../../../utils/logger'
+import type { HDConfig } from '../../../config/loader'
 
 const FRAMEWORK_FALLBACK_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'
 
 const getDefinition = vi.fn<[], WorkflowDefinition | null>()
 const getState = vi.fn<[], WorkflowState | null>()
+const loadHDConfig = vi.fn<[], HDConfig>(() => ({
+  workflow: 'classic',
+  agents: {},
+  transform: {
+    blockedSkills: [],
+  },
+}))
 
 vi.mock('../../../workflows/core/service', () => ({
   workflowService: {
     getDefinition,
     getState,
   },
+}))
+
+vi.mock('../../../config/loader', () => ({
+  loadHDConfig: () => loadHDConfig(),
 }))
 
 describe('system transform', () => {
@@ -237,6 +249,33 @@ describe('system transform', () => {
     expect(output.system[2]).toBe('')
     expect(output.system[3]).toContain('当前阶段：工作流初始化')
     expect(output.system[3]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
+  })
+
+  it('removes blocked skills from system prompt output', async () => {
+    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+
+    loadHDConfig.mockReturnValue({
+      workflow: 'classic',
+      agents: {},
+      transform: {
+        blockedSkills: ['typescript-expert'],
+      },
+    })
+
+    getDefinition.mockReturnValue(null)
+    getState.mockReturnValue(null)
+
+    const transform = createSystemTransformer()
+    const output = {
+      system: [
+        `<available_skills>\n  <skill>\n    <name>typescript-expert</name>\n    <description>blocked</description>\n  </skill>\n  <skill>\n    <name>prompt-engineering-patterns</name>\n    <description>allowed</description>\n  </skill>\n</available_skills>\nOther text\n<skill>\n  <name>typescript-expert</name>\n  <description>blocked again</description>\n</skill>`,
+      ],
+    }
+
+    await transform({ model: {} } as never, output)
+
+    expect(output.system[0]).not.toContain('<name>typescript-expert</name>')
+    expect(output.system[0]).toContain('<name>prompt-engineering-patterns</name>')
   })
 
   it('appends stage injection content when stage has inject configured', async () => {

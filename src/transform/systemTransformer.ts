@@ -1,5 +1,3 @@
-import type { WorkflowDefinition } from '../workflows/core/types'
-import type { WorkflowState } from '../workflows/core/state/types'
 import {
   loadPromptBindings,
   resolvePromptBindingsForMode,
@@ -10,8 +8,30 @@ import {
   createPromptInjectionRegistry,
 } from './injections/factory'
 import { HyperDesignerLogger } from '../utils/logger'
+import { loadHDConfig } from '../config/loader'
+import type { WorkflowDefinition } from '../workflows/core/types'
+import type { WorkflowState } from '../workflows/core/state/types'
+import type { HDConfig } from '../config/loader'
+import type { HDConfig } from '../config/loader'
 
 const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_(?!FALLBACK_PROMPT\})[A-Z0-9_]+_PROMPT\}/g
+
+/**
+ * 内建需要屏蔽的 skill 列表（精确且区分大小写）
+ * 业务侧可在此维护默认屏蔽项
+ */
+export const DEFAULT_BLOCKED_SKILLS: string[] = ["using-superpowers"]
+
+export function resolveBlockedSkills(config: HDConfig | null): string[] {
+  const configured = config?.transform?.blockedSkills ?? []
+  const merged = [...DEFAULT_BLOCKED_SKILLS, ...configured]
+  return Array.from(new Set(merged))
+}
+
+export function getBlockedSkillsFromConfig(): string[] {
+  const config = loadHDConfig()
+  return resolveBlockedSkills(config)
+}
 
 function clearUnresolvedWorkflowPromptTokens(systemMessages: string[]): void {
   for (let index = 0; index < systemMessages.length; index += 1) {

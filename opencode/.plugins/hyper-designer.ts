@@ -50,14 +50,12 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   initLogger()
 
   const agents = await sdk.agent.createAll()
-  const builtinAgents = await sdk.agent.createBuiltin()
-  const builtinAgentNames = new Set(Object.keys(builtinAgents))
   const mappedBuiltinAgents = Object.fromEntries(
     Object.entries(toOpencodeAgents(agents)).map(([name, config]) => [
       name,
       {
         ...config,
-        hidden: builtinAgentNames.has(name),
+        hidden: true,
       },
     ]),
   ) as Record<string, OpencodeAgentConfig & { hidden?: boolean }>

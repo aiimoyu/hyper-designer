@@ -5,6 +5,14 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ["./src/__tests__/setup.ts"],
     fileParallelism: false,
+    exclude: [
+      '**/node_modules/**',
+      '**/.opencode/**',
+      '**/opencode/**',
+      '**/.worktrees/**',
+      '**/dist/**',
+      '**/coverage/**',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],

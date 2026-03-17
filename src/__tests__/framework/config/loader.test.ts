@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from "vitest"
-import { loadHDConfig, DEFAULT_AGENT_CONFIGS, DEFAULT_CONFIG_PATH, GLOBAL_CONFIG_PATH } from "../../../config/loader"
+import { loadHDConfig, DEFAULT_AGENT_CONFIGS, DEFAULT_CONFIG_PATH, DEFAULT_TRANSFORM_CONFIG, GLOBAL_CONFIG_PATH } from "../../../config/loader"
 import { writeFileSync, mkdirSync, rmSync, existsSync, readFileSync } from "fs"
 import { join, dirname } from "path"
 
@@ -60,6 +60,7 @@ describe("loadHDConfig", () => {
     expect(config).toHaveProperty("agents")
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
     expect(config.workflow).toBe("classic")
+    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
   it("loads valid config file", () => {
@@ -102,6 +103,7 @@ describe("loadHDConfig", () => {
     expect(config.agents.HCritic).toEqual(DEFAULT_AGENT_CONFIGS.HCritic)
     expect(config.agents.HEngineer).toEqual(DEFAULT_AGENT_CONFIGS.HEngineer)
     expect(config.workflow).toBe("classic")
+    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
   it("handles invalid JSON gracefully", () => {
@@ -112,6 +114,7 @@ describe("loadHDConfig", () => {
 
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
     expect(config.workflow).toBe("classic")
+    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
   it("handles empty config file", () => {
@@ -122,6 +125,7 @@ describe("loadHDConfig", () => {
 
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
     expect(config.workflow).toBe("classic")
+    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
   it("preserves $schema field if present", () => {
@@ -152,6 +156,7 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.workflow).toBe("classic")
+    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
   it("uses custom workflow when specified", () => {
@@ -167,6 +172,26 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.workflow).toBe("custom")
+    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
+  })
+
+  it("loads transform config when specified", () => {
+    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
+
+    const testConfig = {
+      agents: {},
+      transform: {
+        blockedSkills: ["typescript-expert", "prompt-engineering-patterns"],
+      },
+    }
+
+    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
+
+    const config = loadHDConfig(TEST_CONFIG_PATH)
+
+    expect(config.transform).toEqual({
+      blockedSkills: ["typescript-expert", "prompt-engineering-patterns"],
+    })
   })
 
   it("prioritizes project config over global config", () => {
