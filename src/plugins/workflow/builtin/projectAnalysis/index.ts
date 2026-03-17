@@ -120,7 +120,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       name: 'System Analysis',
       description: 'Analyze the target project at system level and produce the system architecture report',
       agent: 'HAnalysis',
-      inject: ['stage-inputs', 'stage-outputs'],
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
       },
@@ -138,7 +138,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       name: 'Component Analysis',
       description: 'Analyze each component from the manifest across 4 dimensions',
       agent: 'HAnalysis',
-      inject: ['stage-inputs', 'stage-outputs'],
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'componentAnalysis.md')),
       },
@@ -156,7 +156,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       name: 'Missing Coverage Check',
       description: 'Check missing analysis coverage across 7 categories (diagnostic, non-gating)',
       agent: 'HAnalysis',
-      inject: ['stage-inputs', 'stage-outputs'],
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'missingCoverageCheck.md')),
       },

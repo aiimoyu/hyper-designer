@@ -84,7 +84,7 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'Analysis and Scenario',
       description: 'Consolidate requirement analysis and scenario analysis for a single-module scope',
       agent: 'HArchitect',
-      inject: ['stage-inputs', 'stage-outputs'],
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'analysisAndScenario.md')),
       },
@@ -102,7 +102,7 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'Functional List and Module Design',
       description: 'Produce concise function list and module-level functional design for one module',
       agent: 'HEngineer',
-      inject: ['stage-inputs', 'stage-outputs'],
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalAndModuleDesign.md')),
       },
@@ -120,7 +120,7 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'SDD Plan Generation Lite',
       description: 'Generate an SDD implementation plan for a single module from concise design artifacts',
       agent: 'HEngineer',
-      inject: ['stage-inputs', 'stage-outputs'],
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGenerationLite.md')),
       },

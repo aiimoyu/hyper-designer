@@ -35,7 +35,9 @@ describe('classic workflow stage metadata', () => {
       })
 
       it('enables stage-milestones injection', () => {
-        expect(stages[key].inject).toContain('stage-milestones')
+        const inject = stages[key].inject
+        const hasMilestones = inject?.some(item => item.provider === 'stage-milestones')
+        expect(hasMilestones).toBe(true)
       })
     })
   }

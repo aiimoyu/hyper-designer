@@ -1,4 +1,4 @@
-import type { PromptInjectionProvider, PromptInjectionRequest } from './types'
+import type { InjectionConfig, PromptInjectionProvider, PromptInjectionRequest } from './types'
 
 export interface InjectionResult {
   providerId: string
@@ -12,16 +12,16 @@ export class PromptInjectionRegistry {
     this.providers.set(provider.id, provider)
   }
 
-  async run(providerIds: string[], input: PromptInjectionRequest): Promise<InjectionResult[]> {
+  async run(injectionConfigs: InjectionConfig[], input: PromptInjectionRequest): Promise<InjectionResult[]> {
     const results: InjectionResult[] = []
-    for (const providerId of providerIds) {
-      const provider = this.providers.get(providerId)
+    for (const config of injectionConfigs) {
+      const provider = this.providers.get(config.provider)
       if (!provider) {
         continue
       }
-      const content = await provider.inject(input)
+      const content = await provider.inject({ ...input, config })
       if (content && content.trim()) {
-        results.push({ providerId, content })
+        results.push({ providerId: config.provider, content })
       }
     }
     return results

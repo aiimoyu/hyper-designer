@@ -6,29 +6,40 @@ import { readdir } from 'fs/promises'
 import { resolve } from 'path'
 import * as glob from 'glob'
 
+interface ReadResult {
+  content: string | null
+  error: string | null
+}
+
 function formatInputFileItem(item: StageFileItem): string {
   const contentSection = item.content
     ? `\n    <content>\n${item.content}\n    </content>`
+    : '\n    <content></content>'
+  const errorSection = item.error
+    ? `\n    <error>${item.error}</error>`
     : ''
   return `  <item>
     <id>${item.id}</id>
     <path>${item.path}</path>
     <type>${item.type}</type>
-    <description>${item.description}</description>${contentSection}
+    <description>${item.description}</description>${contentSection}${errorSection}
   </item>`
 }
 
-async function readFileContent(filePath: string): Promise<string> {
+async function readFileContent(filePath: string): Promise<ReadResult> {
   try {
     const content = await readFile(filePath, 'utf-8')
-    return content
+    return { content, error: null }
   } catch (error) {
     HyperDesignerLogger.warn('StageInputsInjection', `Failed to read file: ${filePath}`, { error })
-    return `[Error reading file: ${error instanceof Error ? error.message : String(error)}]`
+    return {
+      content: null,
+      error: `Failed to read file: ${filePath}`,
+    }
   }
 }
 
-async function readFolderTree(folderPath: string): Promise<string> {
+async function readFolderTree(folderPath: string): Promise<ReadResult> {
   try {
     const entries = await readdir(folderPath, { withFileTypes: true })
     const lines: string[] = []
@@ -39,10 +50,13 @@ async function readFolderTree(folderPath: string): Promise<string> {
         lines.push(`📄 ${entry.name}`)
       }
     }
-    return lines.join('\n')
+    return { content: lines.join('\n'), error: null }
   } catch (error) {
     HyperDesignerLogger.warn('StageInputsInjection', `Failed to read folder: ${folderPath}`, { error })
-    return `[Error reading folder: ${error instanceof Error ? error.message : String(error)}]`
+    return {
+      content: null,
+      error: `Failed to read folder: ${folderPath}`,
+    }
   }
 }
 
@@ -67,28 +81,43 @@ async function enrichInputItem(item: StageFileItem): Promise<StageFileItem> {
     : resolve(cwd, item.path)
 
   if (item.type === 'file') {
-    const content = await readFileContent(absolutePath)
-    return { ...item, content }
+    const result = await readFileContent(absolutePath)
+    const enriched: StageFileItem = { ...item }
+    if (result.content) enriched.content = result.content
+    if (result.error) enriched.error = result.error
+    return enriched
   }
 
   if (item.type === 'folder') {
-    const tree = await readFolderTree(absolutePath)
-    return { ...item, content: tree }
+    const result = await readFolderTree(absolutePath)
+    const enriched: StageFileItem = { ...item }
+    if (result.content) enriched.content = result.content
+    if (result.error) enriched.error = result.error
+    return enriched
   }
 
   if (item.type === 'pattern') {
     const matches = resolvePatternMatches(item.path)
     if (matches.length === 0) {
-      return { ...item, content: '[No matching files found]' }
+      return { ...item, error: 'No matching files found' }
     }
 
     const contents: string[] = []
+    const errors: string[] = []
     for (const match of matches) {
       const matchPath = resolve(cwd, match)
-      const fileContent = await readFileContent(matchPath)
-      contents.push(`--- ${match} ---\n${fileContent}`)
+      const result = await readFileContent(matchPath)
+      if (result.error) {
+        errors.push(`${match}: ${result.error}`)
+      } else if (result.content) {
+        contents.push(`--- ${match} ---\n${result.content}`)
+      }
     }
-    return { ...item, content: contents.join('\n\n') }
+
+    const enriched: StageFileItem = { ...item }
+    if (contents.length > 0) enriched.content = contents.join('\n\n')
+    if (errors.length > 0) enriched.error = errors.join('; ')
+    return enriched
   }
 
   return item

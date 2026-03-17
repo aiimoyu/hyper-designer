@@ -91,20 +91,20 @@ async function appendStageInjections(
     return
   }
 
-  const providerIds = stageDefinition.inject
-  if (!providerIds || providerIds.length === 0) {
+  const injectionConfigs = stageDefinition.inject
+  if (!injectionConfigs || injectionConfigs.length === 0) {
     return
   }
 
   HyperDesignerLogger.debug('SystemTransform', 'resolving stage injections', {
     currentStage,
-    providerIds,
+    providerIds: injectionConfigs.map(c => c.provider),
     systemMessageCount: systemMessages.length,
   })
 
   const registry = createPromptInjectionRegistry()
 
-  const results = await registry.run(providerIds, {
+  const results = await registry.run(injectionConfigs, {
     workflow,
     state,
     currentStage,
@@ -115,7 +115,7 @@ async function appendStageInjections(
   if (results.length === 0) {
     HyperDesignerLogger.debug('SystemTransform', 'stage injection produced no content', {
       currentStage,
-      providerIds,
+      providerIds: injectionConfigs.map(c => c.provider),
     })
     return
   }
@@ -128,7 +128,7 @@ async function appendStageInjections(
   }
   HyperDesignerLogger.debug('SystemTransform', 'stage injection appended', {
     currentStage,
-    providerIds,
+    providerIds: injectionConfigs.map(c => c.provider),
     resultCount: results.length,
     injectedLength: injectedContent.length,
   })
