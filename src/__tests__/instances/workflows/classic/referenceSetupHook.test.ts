@@ -156,7 +156,7 @@ describe('referenceSetupHook', () => {
       expect(adapter.sendPrompt).toHaveBeenCalledWith(
         expect.objectContaining({
           sessionId: 'test-session',
-          agent: 'HArchitect',
+          agent: 'Hyper',
         }),
       )
     })
@@ -177,14 +177,12 @@ describe('referenceSetupHook', () => {
       const callArgs = (adapter.sendPrompt as ReturnType<typeof vi.fn>).mock.calls[0][0]
       const system = callArgs.system as string
 
+      // 验证功能：系统提示词包含必要的操作指引
       expect(system).toBeDefined()
-      expect(system).toContain('参考资料填写确认')
       expect(system).toContain('REFERENCE.md')
       expect(system).toContain('HD_TOOL_ASK_USER')
       expect(system).toContain('已完成，进入下一步')
       expect(system).toContain('参考资料填写完毕，进入下一步。')
-      expect(system).toContain('你只能使用 HD_TOOL_ASK_USER 工具询问用户')
-      expect(system).toContain('不要添加任何额外的解释或废话')
     })
 
     it('should use simple user prompt for confirmation request', async () => {

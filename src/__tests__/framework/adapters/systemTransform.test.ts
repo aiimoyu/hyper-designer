@@ -66,11 +66,11 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['prefix {HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT} suffix'] }
+    const output = { system: ['<using-hyper-designer>prefix {HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT} suffix</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system[0]).toBe('prefix workflow overview suffix')
+    expect(output.system[0]).toBe('<using-hyper-designer>prefix workflow overview suffix</using-hyper-designer>')
   })
 
   it('lets stage prompt bindings override workflow bindings for the same token', async () => {
@@ -110,11 +110,11 @@ describe('system transform', () => {
       },
     })
     const transform = createSystemTransformer()
-    const output = { system: ['{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'] }
+    const output = { system: ['<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system[0]).toBe('stage step')
+    expect(output.system[0]).toBe('<using-hyper-designer>stage step</using-hyper-designer>')
   })
 
   it('injects framework fallback prompt and clears workflow tokens when no active stage', async () => {
@@ -153,7 +153,7 @@ describe('system transform', () => {
     const transform = createSystemTransformer()
     const output = {
       system: [
-        '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}',
+        '<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
         '{HYPER_DESIGNER_CUSTOM_PROMPT}',
         FRAMEWORK_FALLBACK_PROMPT_TOKEN,
@@ -162,7 +162,7 @@ describe('system transform', () => {
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system[0]).toBe('')
+    expect(output.system[0]).toBe('<using-hyper-designer></using-hyper-designer>')
     expect(output.system[1]).toBe('')
     expect(output.system[2]).toBe('')
     expect(output.system[3]).toContain('当前阶段：工作流初始化')
@@ -211,7 +211,7 @@ describe('system transform', () => {
     const transform = createSystemTransformer()
     const output = {
       system: [
-        '## Role Definition\n\nYou are **HArchitect**, collaborating with HEngineer.\n\n{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}',
+        '<using-hyper-designer>## Role Definition\n\nYou are **HArchitect**, collaborating with HEngineer.\n\n{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
         '{HYPER_DESIGNER_CUSTOM_PROMPT}',
         FRAMEWORK_FALLBACK_PROMPT_TOKEN,
@@ -235,7 +235,7 @@ describe('system transform', () => {
     const transform = createSystemTransformer()
     const output = {
       system: [
-        '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}',
+        '<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
         '{HYPER_DESIGNER_WORKFLOW_CUSTOM_DYNAMIC_PROMPT}',
         FRAMEWORK_FALLBACK_PROMPT_TOKEN,
@@ -244,7 +244,7 @@ describe('system transform', () => {
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system[0]).toBe('')
+    expect(output.system[0]).toBe('<using-hyper-designer></using-hyper-designer>')
     expect(output.system[1]).toBe('')
     expect(output.system[2]).toBe('')
     expect(output.system[3]).toContain('当前阶段：工作流初始化')
@@ -268,7 +268,7 @@ describe('system transform', () => {
     const transform = createSystemTransformer()
     const output = {
       system: [
-        `<available_skills>\n  <skill>\n    <name>typescript-expert</name>\n    <description>blocked</description>\n  </skill>\n  <skill>\n    <name>prompt-engineering-patterns</name>\n    <description>allowed</description>\n  </skill>\n</available_skills>\nOther text\n<skill>\n  <name>typescript-expert</name>\n  <description>blocked again</description>\n</skill>`,
+        `<using-hyper-designer><available_skills>\n  <skill>\n    <name>typescript-expert</name>\n    <description>blocked</description>\n  </skill>\n  <skill>\n    <name>prompt-engineering-patterns</name>\n    <description>allowed</description>\n  </skill>\n</available_skills>\nOther text\n<skill>\n  <name>typescript-expert</name>\n  <description>blocked again</description>\n</skill></using-hyper-designer>`,
       ],
     }
 
@@ -313,7 +313,7 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['base system prompt'] }
+    const output = { system: ['<using-hyper-designer>base system prompt</using-hyper-designer>'] }
     const debugSpy = vi.spyOn(HyperDesignerLogger, 'debug')
 
     await transform({ model: {} } as never, output)
@@ -370,11 +370,11 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['base system prompt'] }
+    const output = { system: ['<using-hyper-designer>base system prompt</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
-    expect(output.system).toEqual(['base system prompt'])
+    expect(output.system).toEqual(['<using-hyper-designer>base system prompt</using-hyper-designer>'])
   })
 
   it('injects only selected provider content when providers are explicitly configured', async () => {
@@ -412,7 +412,7 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['base system prompt'] }
+    const output = { system: ['<using-hyper-designer>base system prompt</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
@@ -460,7 +460,7 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['base system prompt'] }
+    const output = { system: ['<using-hyper-designer>base system prompt</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
@@ -506,7 +506,7 @@ describe('system transform', () => {
     })
 
     const transform = createSystemTransformer()
-    const output = { system: ['base system prompt'] }
+    const output = { system: ['<using-hyper-designer>base system prompt</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
