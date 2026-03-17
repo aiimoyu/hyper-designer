@@ -1,8 +1,10 @@
 import { workflowService } from '../../workflows/core/service'
 import { getBlockedSkillsFromConfig, transformSystemMessages } from '../systemTransformer'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 const SKILL_BLOCK_PATTERN = /<skill>[\s\S]*?<\/skill>/g
 const SKILL_NAME_PATTERN = /<name>([\s\S]*?)<\/name>/
+const USING_HYPER_DESIGNER_PATTERN = /<using-hyper-designer>/
 
 function stripBlockedSkills(text: string, blockedSkills: Set<string>): string {
   if (blockedSkills.size === 0) {
@@ -39,10 +41,19 @@ function mergeSystemMessages(systemMessages: string[]): void {
   systemMessages.splice(1)
 }
 
+function hasUsingHyperDesignerTag(systemMessages: string[]): boolean {
+  return systemMessages.some(msg => USING_HYPER_DESIGNER_PATTERN.test(msg))
+}
+
 export function createSystemTransformer() {
   const blockedSkills = new Set(getBlockedSkillsFromConfig())
 
   return async (_input: unknown, output: { system: string[] }) => {
+    if (!hasUsingHyperDesignerTag(output.system)) {
+      HyperDesignerLogger.debug('SystemTransform', 'skipping transform - <using-hyper-designer> tag not found')
+      return
+    }
+
     const beforeLength = output.system.length
     const workflow = workflowService.getDefinition()
     const workflowState = workflowService.getState()

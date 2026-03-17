@@ -23,9 +23,35 @@ describe('transform opencode hooks', () => {
     const { createTransformHooks } = await import('../../../transform/opencode/hooks')
     const hooks = await createTransformHooks({} as never)
 
-    const output = { system: ['{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'] }
+    const output = { system: ['<using-hyper-designer>\n{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'] }
     await hooks['experimental.chat.system.transform']({}, output)
 
     expect(output.system[0]).toContain('当前阶段：工作流初始化')
+  })
+
+  it('skips transform when <using-hyper-designer> tag is not present', async () => {
+    getDefinition.mockReturnValue(null)
+    getState.mockReturnValue(null)
+
+    const { createTransformHooks } = await import('../../../transform/opencode/hooks')
+    const hooks = await createTransformHooks({} as never)
+
+    const output = { system: ['{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'] }
+    await hooks['experimental.chat.system.transform']({}, output)
+
+    expect(output.system[0]).toBe('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}')
+  })
+
+  it('skips transform when system messages are empty', async () => {
+    getDefinition.mockReturnValue(null)
+    getState.mockReturnValue(null)
+
+    const { createTransformHooks } = await import('../../../transform/opencode/hooks')
+    const hooks = await createTransformHooks({} as never)
+
+    const output = { system: [] as string[] }
+    await hooks['experimental.chat.system.transform']({}, output)
+
+    expect(output.system).toHaveLength(0)
   })
 })
