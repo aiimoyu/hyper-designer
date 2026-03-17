@@ -281,11 +281,12 @@ describe('system transform', () => {
 
     expect(output.system).toHaveLength(1)
     expect(output.system[0]).toContain('base system prompt')
-    expect(output.system[0]).toContain('Workflow Stage Injections')
+    expect(output.system[0]).toContain('hyper-designer-info')
+    expect(output.system[0]).toContain('<stage-config>')
     expect(output.system[0]).toContain('输入文件')
     expect(output.system[0]).toContain('xxx')
     expect(output.system[0]).toContain('yyy')
-    expect(output.system[0]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[0]).toContain('<stage-milestones>')
     expect(output.system[0]).toContain('gate')
     expect(debugSpy).toHaveBeenCalledWith(
       'SystemTransform',
@@ -378,10 +379,10 @@ describe('system transform', () => {
 
     expect(output.system).toHaveLength(1)
     expect(output.system[0]).toContain('base system prompt')
-    expect(output.system[0]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[0]).toContain('<stage-milestones>')
     expect(output.system[0]).toContain('gate')
     expect(output.system[0]).toContain('doc_review')
-    expect(output.system[0]).not.toContain('Workflow Stage Injections')
+    expect(output.system[0]).not.toContain('<stage-config>')
     expect(output.system[0]).not.toContain('输入文件')
   })
 
@@ -426,9 +427,9 @@ describe('system transform', () => {
 
     expect(output.system).toHaveLength(1)
     expect(output.system[0]).toContain('base system prompt')
-    expect(output.system[0]).toContain('Stage Required Milestones (stage1)')
+    expect(output.system[0]).toContain('<stage-milestones>')
     expect(output.system[0]).toContain('gate')
-    expect(output.system[0]).toContain('Workflow Stage Injections')
+    expect(output.system[0]).toContain('<stage-config>')
     expect(output.system[0]).toContain('输入文件')
   })
 
@@ -472,7 +473,7 @@ describe('system transform', () => {
 
     expect(output.system).toHaveLength(1)
     expect(output.system[0]).toContain('base system prompt')
-    expect(output.system[0]).toContain('Stage Required Milestones (IRAnalysis)')
-    expect(output.system[0]).toContain('1. gate')
+    expect(output.system[0]).toContain('<stage-milestones>')
+    expect(output.system[0]).toContain('gate')
   })
 })

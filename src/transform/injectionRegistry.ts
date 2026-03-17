@@ -1,5 +1,10 @@
 import type { PromptInjectionProvider, PromptInjectionRequest } from './types'
 
+export interface InjectionResult {
+  providerId: string
+  content: string
+}
+
 export class PromptInjectionRegistry {
   private readonly providers = new Map<string, PromptInjectionProvider>()
 
@@ -7,8 +12,8 @@ export class PromptInjectionRegistry {
     this.providers.set(provider.id, provider)
   }
 
-  run(providerIds: string[], input: PromptInjectionRequest): string[] {
-    const chunks: string[] = []
+  run(providerIds: string[], input: PromptInjectionRequest): InjectionResult[] {
+    const results: InjectionResult[] = []
     for (const providerId of providerIds) {
       const provider = this.providers.get(providerId)
       if (!provider) {
@@ -16,9 +21,9 @@ export class PromptInjectionRegistry {
       }
       const content = provider.inject(input)
       if (content && content.trim()) {
-        chunks.push(content)
+        results.push({ providerId, content })
       }
     }
-    return chunks
+    return results
   }
 }

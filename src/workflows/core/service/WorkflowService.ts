@@ -8,7 +8,7 @@ import type { ToolDefinition } from '../toolTypes'
  */
 
 import { EventEmitter } from "events";
-import type { StageTransitionDefinition, WorkflowDefinition, PlatformAdapter } from "../types";
+import type { StageTransitionDefinition, WorkflowDefinition, PlatformAdapter, MilestoneDefinition } from "../types";
 import type { WorkflowState, GateMilestoneDetail } from "../state/types";
 import {
   getWorkflowState,
@@ -359,7 +359,7 @@ export class WorkflowService extends EventEmitter {
     return this.getGateDetail(stageKey)?.score ?? null;
   }
 
-  private getRequiredHandoverMilestones(stageKey: string): string[] {
+  private getRequiredHandoverMilestones(stageKey: string): (string | MilestoneDefinition)[] {
     const stageDefinition = this.definition?.stages[stageKey]
     if (!stageDefinition) {
       return []
@@ -370,6 +370,14 @@ export class WorkflowService extends EventEmitter {
     }
 
     return []
+  }
+
+  private getMilestoneId(milestone: string | MilestoneDefinition): string {
+    return typeof milestone === 'string' ? milestone : milestone.id
+  }
+
+  private getMilestoneFailureMessage(milestone: string | MilestoneDefinition): string {
+    return typeof milestone === 'string' ? `请先完成里程碑 "${milestone}"` : milestone.failureMessage
   }
 
   /**
@@ -861,19 +869,20 @@ export class WorkflowService extends EventEmitter {
 
     const requiredMilestones = this.getRequiredHandoverMilestones(currentStage)
     const stateForCheck = this.getState()
-    const incompleteRequiredMilestones = requiredMilestones.filter(milestoneType => {
+    const incompleteMilestones = requiredMilestones.filter(milestone => {
+      const milestoneId = this.getMilestoneId(milestone)
       if (!stateForCheck || !this.definition) {
         return true
       }
       const completed = areRequiredMilestonesCompletedForStage(stateForCheck, this.definition, currentStage)
-      if (milestoneType === GATE_MILESTONE_KEY) {
+      if (milestoneId === GATE_MILESTONE_KEY) {
         return !completed
       }
       const mainNodeId = `workflow.${currentStage}.main`
       const events = stateForCheck.history?.events ?? []
       for (let i = events.length - 1; i >= 0; i -= 1) {
         const event = events[i]
-        if (event.type !== 'milestone.set' || event.nodeId !== mainNodeId || event.key !== milestoneType) {
+        if (event.type !== 'milestone.set' || event.nodeId !== mainNodeId || event.key !== milestoneId) {
           continue
         }
         if (typeof event.value === 'object' && event.value !== null && 'isCompleted' in event.value) {
@@ -883,11 +892,12 @@ export class WorkflowService extends EventEmitter {
       return true
     })
 
-    if (incompleteRequiredMilestones.length > 0) {
+    if (incompleteMilestones.length > 0) {
       this.incrementCurrentFailureCount();
+      const failureMessages = incompleteMilestones.map(m => this.getMilestoneFailureMessage(m))
       return {
         success: false,
-        error: `阶段交接所需里程碑未完成：${incompleteRequiredMilestones.join(', ')}。请先完成这些里程碑后再进行交接。`,
+        error: `阶段交接所需里程碑未完成：\n${failureMessages.join('\n')}`,
       };
     }
 

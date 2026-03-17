@@ -1,10 +1,26 @@
 import type { PromptInjectionProvider } from '../types'
+import type { MilestoneDefinition } from '../../workflows/core/types'
 import { HyperDesignerLogger } from '../../utils/logger'
 
+function getMilestoneId(milestone: string | MilestoneDefinition): string {
+  return typeof milestone === 'string' ? milestone : milestone.id
+}
 
-function formatRequiredMilestones(stageName: string, milestones: string[]): string {
-  const lines = milestones.map((milestone, index) => `${index + 1}. ${milestone}`)
-  return [`## Stage Required Milestones (${stageName})`, ...lines].join('\n')
+function getMilestoneName(milestone: string | MilestoneDefinition): string {
+  return typeof milestone === 'string' ? milestone : milestone.name
+}
+
+function getMilestoneDescription(milestone: string | MilestoneDefinition): string {
+  return typeof milestone === 'string' ? milestone : milestone.description
+}
+
+function formatMilestonesContent(milestones: (string | MilestoneDefinition)[]): string {
+  const items = milestones.map(milestone => {
+    const name = getMilestoneName(milestone)
+    const description = getMilestoneDescription(milestone)
+    return `  <milestone>\n    <name>${name}</name>\n    <description>${description}</description>\n  </milestone>`
+  })
+  return items.join('\n')
 }
 
 export const stageMilestonesInjectionProvider: PromptInjectionProvider = {
@@ -14,8 +30,8 @@ export const stageMilestonesInjectionProvider: PromptInjectionProvider = {
     if (!milestones || milestones.length === 0 || !currentStage) {
       return null
     }
-    HyperDesignerLogger.debug('StageMilestonesInjection', `Injecting required milestones for stage "${currentStage}": ${milestones.join(', ')}`)
-    HyperDesignerLogger.debug('StageMilestonesInjection', formatRequiredMilestones(currentStage, milestones))
-    return formatRequiredMilestones(currentStage, milestones)
+    const milestoneIds = milestones.map(getMilestoneId).join(', ')
+    HyperDesignerLogger.debug('StageMilestonesInjection', `Injecting required milestones for stage "${currentStage}": ${milestoneIds}`)
+    return formatMilestonesContent(milestones)
   },
 }

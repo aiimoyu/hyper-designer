@@ -39,6 +39,13 @@ export interface StageTransitionDefinition {
   description?: string
 }
 
+export interface MilestoneDefinition {
+  id: string
+  name: string
+  description: string
+  failureMessage: string
+}
+
 export interface WorkflowStageDefinition {
   stageId?: string
   /** Display name for this stage */
@@ -58,7 +65,8 @@ export interface WorkflowStageDefinition {
   /** Hooks to run before the stage's primary agent starts */
   before?: WorkflowHookDefinition[]
   after?: WorkflowHookDefinition[]
-  requiredMilestones?: string[]
+  /** Milestones required for handover - can be string IDs or full definitions */
+  requiredMilestones?: (string | MilestoneDefinition)[]
   /** Whether this stage is required to be completed */
   required?: boolean
   /** Input specifications for this stage */

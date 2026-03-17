@@ -9,6 +9,7 @@ import { OPENCODE_TOOL_MAPPING, replaceToolPlaceholders } from './toolTransform'
 import {
   createPromptInjectionRegistry,
 } from './injections/factory'
+import type { InjectionResult } from './injectionRegistry'
 import { HyperDesignerLogger } from '../utils/logger'
 
 const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_(?!FALLBACK_PROMPT\})[A-Z0-9_]+_PROMPT\}/g
@@ -43,6 +44,19 @@ function getCurrentStageContext(state: WorkflowState | null): string | null {
   return state?.current?.name ?? null
 }
 
+function formatInjectionResults(results: InjectionResult[]): string {
+  const innerTags = results.map(result => {
+    return `<${result.providerId}>\n${result.content}\n</${result.providerId}>`
+  }).join('\n')
+
+  return [
+    '下面是 hyper-designer 插件提供的一些额外信息：',
+    '<hyper-designer-info>',
+    innerTags,
+    '</hyper-designer-info>',
+  ].join('\n')
+}
+
 function appendStageInjections(
   systemMessages: string[],
   workflow: WorkflowDefinition | null,
@@ -71,7 +85,7 @@ function appendStageInjections(
 
   const registry = createPromptInjectionRegistry()
 
-  const chunks = registry.run(providerIds, {
+  const results = registry.run(providerIds, {
     workflow,
     state,
     currentStage,
@@ -79,7 +93,7 @@ function appendStageInjections(
     systemMessages,
   })
 
-  if (chunks.length === 0) {
+  if (results.length === 0) {
     HyperDesignerLogger.debug('SystemTransform', 'stage injection produced no content', {
       currentStage,
       providerIds,
@@ -87,12 +101,16 @@ function appendStageInjections(
     return
   }
 
-  const injectedContent = chunks.join('\n\n')
-  systemMessages.push(injectedContent)
+  const injectedContent = formatInjectionResults(results)
+  if (systemMessages.length > 0) {
+    systemMessages[0] = `${systemMessages[0]}\n\n${injectedContent}`
+  } else {
+    systemMessages.push(injectedContent)
+  }
   HyperDesignerLogger.debug('SystemTransform', 'stage injection appended', {
     currentStage,
     providerIds,
-    chunkCount: chunks.length,
+    resultCount: results.length,
     injectedLength: injectedContent.length,
   })
 }
