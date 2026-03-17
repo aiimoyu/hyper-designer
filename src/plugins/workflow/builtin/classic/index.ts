@@ -1,6 +1,7 @@
 import { filePrompt } from '../../../../workflows/core/utils'
 import type { WorkflowDefinition, MilestoneDefinition } from '../../../../workflows/core/types'
 import { createHCollectorHook, summarizeHook } from '../../../../workflows/core/stageHooks'
+import { referenceSetupHook } from './hooks/referenceSetupHook'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -79,7 +80,10 @@ export const classicWorkflow: WorkflowDefinition = {
       outputs: {
         '需求信息': { path: '需求信息.md', description: 'Initial requirement analysis document' },
       },
-      before: [{ id: 'collect-ir', description: 'Collect IR references', fn: irAnalysisCollectorHook }],
+      before: [
+        { id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', fn: referenceSetupHook },
+        { id: 'collect-ir', description: 'Collect IR references', fn: irAnalysisCollectorHook }
+      ],
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
       transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
