@@ -297,7 +297,7 @@ describe("WorkflowService", () => {
       const result = await service.hdScheduleHandover('scenarioAnalysis');
 
       expect(result.scheduled).toBe(false);
-      expect(result.error).toContain('quality gate');
+      expect(result.error).toContain('milestone');
       expect(service.getState()?.current?.failureCount).toBe(1);
     });
 
@@ -413,7 +413,8 @@ describe("WorkflowService", () => {
       const result = await service.hdScheduleHandover();
 
       expect(result.scheduled).toBe(false);
-      expect(result.error).toContain('last stage');
+      expect(result.error).toContain('final stage');
+      expect(result.error).toContain('Workflow completed');
     });
 
     it('checks requiredMilestones and ignores hook-local milestones for handover blocking', async () => {

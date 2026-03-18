@@ -848,7 +848,7 @@ export class WorkflowService extends EventEmitter {
         return {
           scheduled: false,
           status: "failed",
-          error: `Current stage "${currentStage}" is the last stage. No further handover is possible.`,
+          error: `Current stage "${currentStage}" is the final stage. Workflow completed.\n\n**Workflow Finished**: All stages have been successfully completed. The workflow will now enter idle state.\n\nPlease inform the user: The workflow has finished execution. Thank you for using this service. You may select a new workflow or perform other operations as needed.`,
         };
       }
       targetStep = selectedStages[nextIndex];
