@@ -38,7 +38,7 @@
 
 此 Skill 将场景细化为详细的用例规格，定义用例的前置条件、成功保证、触发事件、Actor、主成功场景、扩展场景和DFX属性。
 
-**核心参考资料**: `.hyper-designer/document/systemRequirementAnalysis/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
+**核心参考资料**: 根据上下文搜集已收集的前置阶段交付物，包括场景文档、FMEA库、功能库等资料的结构化摘要和引用链接。
 ### 3. 阶段交付物
 
 | 文件名 | 路径 | 格式要求 |

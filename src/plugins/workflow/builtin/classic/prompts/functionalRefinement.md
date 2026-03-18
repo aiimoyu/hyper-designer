@@ -37,7 +37,7 @@
 
 此 Skill 提供功能提取方法论、MoSCoW 优先级排序指南与 FMEA 风险分析框架。
 
-**核心参考资料**: `.hyper-designer/document/systemRequirementAnalysis/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
+**核心参考资料**: 根据上下文搜集已收集的前置阶段交付物，包括需求信息、用例文档、FMEA库、DFX属性等资料的结构化摘要和引用链接。
 
 **NFR 提取与 SR 映射**: 从 IR 约束、场景需求、用例 DFX 属性中提取非功能需求，应用 strictest-metric 整合规则，并为每个功能分配 SR 编号（SR-NNN 格式），建立可追溯链。
 ### 3. 阶段交付物

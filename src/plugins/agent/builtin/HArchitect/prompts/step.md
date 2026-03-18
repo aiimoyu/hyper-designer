@@ -63,8 +63,7 @@
 
    **Actions:**
 
-   1. **Read Manifest**: Read `.hyper-designer/document/{domain}/manifest.md`
-      - `{domain}` values: `domainAnalysis` | `systemRequirementAnalysis` | `systemDesign` | `codebase`
+   1. **Gather Context**: 根据当前阶段需求，搜集相关的前置阶段交付物、代码库资料、外部参考等上下文信息
    2. **Load Prior Output**: Read the deliverables from the previous stage to confirm the current state baseline
 
    ---

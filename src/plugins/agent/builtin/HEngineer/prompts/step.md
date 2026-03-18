@@ -65,8 +65,7 @@
 
    **Actions:**
 
-   1. **Read Manifest**: Read `.hyper-designer/document/{domain}/manifest.md`
-      - `{domain}` values: `domainAnalysis` | `systemRequirementAnalysis` | `systemDesign` | `codebase`
+   1. **Gather Context**: 根据当前阶段需求，搜集相关的前置阶段交付物、需求文档、代码库资料等上下文信息
    2. **Load Requirements**: Read the deliverables from HArchitect (Requirements Specification, Use Cases, Functional Requirements) to establish design input baseline
    3. **Incremental Pre-Check** (MANDATORY for systemFunctionalDesign and moduleFunctionalDesign stages):
       - Check `.hyper-designer/systemFunctionalDesign/` — if any document exists, **read it** before starting system design

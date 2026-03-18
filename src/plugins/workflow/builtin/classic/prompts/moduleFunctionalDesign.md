@@ -37,9 +37,9 @@
 
 1. **读取资料清单**：读取项目根目录 `REFERENCE.md` 中相关 Section，解析用户填写的资料信息。
 2. **确认完整性**：检查必需资料是否已填写，向用户汇报状态并确认是否需要补充。
-3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料，生成 `.hyper-designer/moduleFunctionalDesign/document/manifest.md`。
+3. **搜集与解析**：根据资料清单信息读取本地文件和URL，使用 `explore`/`librarian` 自主搜集补充资料。
 
-**核心参考资料**: `.hyper-designer/document/systemDesign/manifest.md` 和 `.hyper-designer/document/codebase/manifest.md`，由 HCollector 生成，包含已收集资料的结构化摘要和引用链接。
+**核心参考资料**: 根据上下文搜集已收集的前置阶段交付物、系统设计资料、代码库资料等的结构化摘要和引用链接。
 
 ### 2. 执行规范与 Skill 使用
 

@@ -19,7 +19,7 @@
 
 #### ⚙️ 自动化维护规则
 
-1. **Initialization**: 阶段开始时，检查并创建 `{stage_name}` 目录；首次运行时读取 `document/{domain}/manifest.md` 初始化上下文。
+1. **Initialization**: 阶段开始时，检查并创建 `{stage_name}` 目录；根据上下文搜集并加载相关资料初始化上下文。
 2. **Integrity Check**: 阶段结束前执行 `Checklist` 验证：
     * [ ] `draft.md` 全部必填 Section 均已填写（无空占位符）。
     * [ ] 正式交付文档已生成。

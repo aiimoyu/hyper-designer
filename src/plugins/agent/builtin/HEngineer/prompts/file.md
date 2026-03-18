@@ -6,16 +6,11 @@
 
 ```
 .hyper-designer/
-├── document/                      # HCollector 全局资料区（按领域组织）
-│   └── {domain}/
-│       └── manifest.md            # 最新资料搜集目录 (HCollector 独占读写)
 ├── {stage_name}/                  # 当前阶段工作区
 │   ├── draft.md                   # Agent 记忆系统（主 Agent 独占读写）
 │   └── {deliverable_name}.md      # 阶段最终交付物
 └── _traceability/                 # 需求追溯矩阵（设计到需求的映射）
 ```
-
-> **注意**: 资料目录由 HCollector 统一维护于 `document/{domain}/manifest.md`，各阶段不再单独管理资料子目录。
 
 #### ⚙️ 自动化维护规则
 
