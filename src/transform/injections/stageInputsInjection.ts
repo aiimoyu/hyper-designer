@@ -74,6 +74,36 @@ function resolvePatternMatches(pattern: string): string[] {
   }
 }
 
+function expandPatternItems(items: StageFileItem[]): StageFileItem[] {
+  const result: StageFileItem[] = []
+
+  for (const item of items) {
+    if (item.type !== 'pattern') {
+      result.push(item)
+      continue
+    }
+
+    const matches = resolvePatternMatches(item.path)
+    if (matches.length === 0) {
+      // Keep the original item with an error if no matches
+      result.push({ ...item, error: 'No matching files found' })
+      continue
+    }
+
+    // Expand pattern into multiple file items
+    for (const match of matches) {
+      result.push({
+        id: `${item.id}:${match}`,
+        path: match,
+        type: 'file',
+        description: `${item.description} (${match})`,
+      })
+    }
+  }
+
+  return result
+}
+
 async function enrichInputItem(item: StageFileItem): Promise<StageFileItem> {
   const cwd = process.cwd()
   const absolutePath = item.path.startsWith('./')
@@ -96,30 +126,6 @@ async function enrichInputItem(item: StageFileItem): Promise<StageFileItem> {
     return enriched
   }
 
-  if (item.type === 'pattern') {
-    const matches = resolvePatternMatches(item.path)
-    if (matches.length === 0) {
-      return { ...item, error: 'No matching files found' }
-    }
-
-    const contents: string[] = []
-    const errors: string[] = []
-    for (const match of matches) {
-      const matchPath = resolve(cwd, match)
-      const result = await readFileContent(matchPath)
-      if (result.error) {
-        errors.push(`${match}: ${result.error}`)
-      } else if (result.content) {
-        contents.push(`--- ${match} ---\n${result.content}`)
-      }
-    }
-
-    const enriched: StageFileItem = { ...item }
-    if (contents.length > 0) enriched.content = contents.join('\n\n')
-    if (errors.length > 0) enriched.error = errors.join('; ')
-    return enriched
-  }
-
   return item
 }
 
@@ -135,7 +141,8 @@ export const stageInputsInjectionProvider: PromptInjectionProvider = {
       inputCount: inputs.length,
     })
 
-    const enrichedItems = await Promise.all(inputs.map(enrichInputItem))
+    const expandedInputs = expandPatternItems(inputs)
+    const enrichedItems = await Promise.all(expandedInputs.map(enrichInputItem))
     const itemsXml = enrichedItems.map(formatInputFileItem).join('\n')
 
     return `<stage-input-files>

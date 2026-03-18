@@ -10,9 +10,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
   {
     id: 'gate',
-    name: '质量门禁',
-    description: '阶段质量门禁 - 确保阶段输出满足质量标准',
-    failureMessage: '阶段输出未通过质量门禁审核，请确保所有交付物符合质量标准后再进行交接。',
+    name: 'Quality Gate',
+    description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
+    failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
   },
 ]
 
