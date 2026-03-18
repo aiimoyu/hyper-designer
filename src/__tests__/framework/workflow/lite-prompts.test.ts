@@ -16,9 +16,9 @@ describe('lite workflow prompts', () => {
   })
 
   it('enforces output length limits in most stage prompts', () => {
-    const analysis = loadPromptForStage('analysisAndScenario', liteWorkflow)
-    const design = loadPromptForStage('functionalAndModuleDesign', liteWorkflow)
-    const sdd = loadPromptForStage('sddPlanGenerationLite', liteWorkflow)
+    const analysis = loadPromptForStage('requirementAnalysis', liteWorkflow)
+    const design = loadPromptForStage('ModuleDesign', liteWorkflow)
+    const sdd = loadPromptForStage('developmentPlan', liteWorkflow)
 
     expect(analysis).toContain('1-2 句话')
     expect(design).toContain('1-2 句话')

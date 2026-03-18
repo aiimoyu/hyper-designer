@@ -1,136 +1,149 @@
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-
+import { summarizeHook } from '../../../../workflows/core/stageHooks'
+import { referenceSetupHook } from './hooks/referenceSetupHook'
 import { filePrompt } from '../../../../workflows/core/utils'
-import type { WorkflowDefinition, StageFileItem } from '../../../../workflows/core/types'
+import type { WorkflowDefinition, MilestoneDefinition, StageFileItem } from '../../../../workflows/core/types'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: string | null): string {
-  const thisDisplay = thisName.toUpperCase()
-  const fromDisplay = currentName ? currentName.toUpperCase() : null
+  const thisDisplay = thisName
+  const fromDisplay = currentName ?? null
   const phaseHeader = fromDisplay
     ? `[ PHASE: ${fromDisplay} → ${thisDisplay} ]`
     : `[ PHASE: ${thisDisplay} ]`
   const switchMsg = fromDisplay
-    ? `工作流已从 \`${fromDisplay}\` 切换至 \`${thisDisplay}\`。`
-    : `工作流已切换至 \`${thisDisplay}\`。`
+    ? `Workflow switched from \`${fromDisplay}\` to \`${thisDisplay}\`.`
+    : `Workflow switched to \`${thisDisplay}\`.`
 
   return (
     `${phaseHeader}\n\n` +
-    `${switchMsg} 请基于当前上下文与前序产物，${stageTask}，并生成本阶段要求的输出。\n\n` +
-    '请遵循 Single-Stage Processing Pipeline，立即开始工作。'
+    `${switchMsg} Based on current context and prior artifacts, ${stageTask}, and generate the required output for this stage.\n\n` +
+    'Follow the Single-Stage Processing Pipeline and begin immediately.'
   )
 }
 
-const ANALYSIS_SCENARIO_OUTPUTS: StageFileItem[] = [
+const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
   {
-    id: '需求场景分析',
-    path: './.hyper-designer/lite/需求场景分析.md',
-    type: 'file',
-    description: 'Combined requirement and scenario analysis document',
+    id: 'gate',
+    name: 'Quality Gate',
+    description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
+    failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
   },
 ]
 
-const FUNCTIONAL_MODULE_INPUTS: StageFileItem[] = [
+const REQUIREMENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
   {
-    id: '需求场景分析',
-    path: './.hyper-designer/lite/需求场景分析.md',
+    id: 'requirementAnalysis',
+    path: './.hyper-designer/requirementAnalysis/需求分析说明书.md',
     type: 'file',
-    description: 'Combined requirement and scenario analysis document',
+    description: 'Requirement analysis specification document',
   },
 ]
 
-const FUNCTIONAL_MODULE_OUTPUTS: StageFileItem[] = [
+const FUNCTIONAL_DESIGN_INPUTS: StageFileItem[] = [
   {
-    id: '功能与模块设计',
-    path: './.hyper-designer/lite/功能与模块设计.md',
+    id: 'requirementAnalysis',
+    path: './.hyper-designer/requirementAnalysis/需求分析说明书.md',
     type: 'file',
-    description: 'Functional list with module design summary',
+    description: 'Requirement analysis specification document',
   },
 ]
 
-const SDD_LITE_INPUTS: StageFileItem[] = [
+const FUNCTIONAL_DESIGN_OUTPUTS: StageFileItem[] = [
   {
-    id: '功能与模块设计',
-    path: './.hyper-designer/lite/功能与模块设计.md',
+    id: 'functionalDesign',
+    path: './.hyper-designer/ModuleDesign/需求设计说明书.md',
     type: 'file',
-    description: 'Functional list with module design summary',
+    description: 'Functional design specification document',
   },
 ]
 
-const SDD_LITE_OUTPUTS: StageFileItem[] = [
+const SDD_PLAN_INPUTS: StageFileItem[] = [
   {
-    id: 'SDD计划',
-    path: './.hyper-designer/lite/SDD计划.md',
+    id: 'functionalDesign',
+    path: './.hyper-designer/ModuleDesign/需求设计说明书.md',
     type: 'file',
-    description: 'Single-module SDD development plan',
+    description: 'Functional design specification document',
+  },
+]
+
+const SDD_PLAN_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'developmentPlan',
+    path: './.hyper-designer/developmentPlan/开发计划.md',
+    type: 'file',
+    description: 'SDD development plan',
   },
 ]
 
 export const liteWorkflow: WorkflowDefinition = {
-  id: 'lite',
-  name: 'Lite Requirements Engineering',
-  description: '3-stage lightweight workflow for single-module changes: analysis+scenario → functional list+module design → SDD plan generation',
-  entryStageId: 'analysisAndScenario',
+  id: 'lite-designer',
+  name: 'Lite Designer',
+  description: '3-stage lightweight workflow for single-module changes: requirementAnalysis → ModuleDesign → designdevelopmentPlan',
+  entryStageId: 'requirementAnalysis',
 
   promptBindings: {
     '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': filePrompt(join(__dirname, 'prompts', 'workflow.md')),
   },
 
   stages: {
-    analysisAndScenario: {
-      stageId: 'analysisAndScenario',
-      name: 'Analysis and Scenario',
-      description: 'Consolidate requirement analysis and scenario analysis for a single-module scope',
+    requirementAnalysis: {
+      stageId: 'requirementAnalysis',
+      name: 'Requirement Scenario Analysis',
+      description: 'Consolidate requirement analysis and scenario analysis',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'analysisAndScenario.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementAnalysis.md')),
       },
-      requiredMilestones: [],
+      requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
       required: true,
       inputs: [],
-      outputs: ANALYSIS_SCENARIO_OUTPUTS,
-      transitions: [{ id: 'to-functional-module', toStageId: 'functionalAndModuleDesign', mode: 'auto', priority: 0 }],
+      outputs: REQUIREMENT_ANALYSIS_OUTPUTS,
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
+      after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
+      transitions: [{ id: 'to-ModuleDesign', toStageId: 'ModuleDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '完成需求分析与场景分析，并输出精简分析文档', currentName),
+        buildHandoverPrompt(thisName, '请使用 `lite-designer` skill进行需求分析，并输出需求分析说明书', currentName),
     },
 
-    functionalAndModuleDesign: {
-      stageId: 'functionalAndModuleDesign',
-      name: 'Functional List and Module Design',
-      description: 'Produce concise function list and module-level functional design for one module',
+    ModuleDesign: {
+      stageId: 'ModuleDesign',
+      name: 'Module Design',
+      description: 'Produce module-level functional design',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalAndModuleDesign.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleDesign.md')),
       },
-      requiredMilestones: [],
+      requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
       required: true,
-      inputs: FUNCTIONAL_MODULE_INPUTS,
-      outputs: FUNCTIONAL_MODULE_OUTPUTS,
-      transitions: [{ id: 'to-sdd-lite', toStageId: 'sddPlanGenerationLite', mode: 'auto', priority: 0 }],
+      inputs: FUNCTIONAL_DESIGN_INPUTS,
+      outputs: FUNCTIONAL_DESIGN_OUTPUTS,
+      after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
+      transitions: [{ id: 'to-developmentPlan', toStageId: 'developmentPlan', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '梳理功能列表并完成单模块功能设计', currentName),
+        buildHandoverPrompt(thisName, '请使用 `lite-designer` skill，并根据需求分析进行模块设计，并输出需求设计说明书', currentName),
     },
 
-    sddPlanGenerationLite: {
-      stageId: 'sddPlanGenerationLite',
-      name: 'SDD Plan Generation Lite',
-      description: 'Generate an SDD implementation plan for a single module from concise design artifacts',
+    developmentPlan: {
+      stageId: 'developmentPlan',
+      name: 'Development Plan',
+      description: 'Generate an SDD implementation plan from design artifacts',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGenerationLite.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'developmentPlan.md')),
       },
-      requiredMilestones: [],
+      requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
       required: true,
-      inputs: SDD_LITE_INPUTS,
-      outputs: SDD_LITE_OUTPUTS,
+      inputs: SDD_PLAN_INPUTS,
+      outputs: SDD_PLAN_OUTPUTS,
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '生成可直接执行的轻量 SDD 开发计划', currentName),
+        buildHandoverPrompt(thisName, '请使用 `lite-designer` skill，并根据需求设计说明书，生成SDD实施计划', currentName),
     },
   },
 }

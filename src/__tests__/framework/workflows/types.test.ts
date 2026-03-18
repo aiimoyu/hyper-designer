@@ -76,6 +76,6 @@ describe('lite workflow registry integration', () => {
   it('should be retrievable via getWorkflowDefinition', () => {
     const workflow = getWorkflowDefinition('lite')
     expect(workflow).toBeDefined()
-    expect(workflow?.id).toBe('lite')
+    expect(workflow?.id).toBe('lite-designer')
   })
 })

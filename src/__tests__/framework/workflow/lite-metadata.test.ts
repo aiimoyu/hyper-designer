@@ -5,9 +5,9 @@ describe('lite workflow stage metadata', () => {
   const stages = liteWorkflow.stages
 
   const stageKeys = [
-    'analysisAndScenario',
-    'functionalAndModuleDesign',
-    'sddPlanGenerationLite',
+    'requirementAnalysis',
+    'ModuleDesign',
+    'developmentPlan',
   ] as const
 
   for (const key of stageKeys) {
@@ -26,62 +26,62 @@ describe('lite workflow stage metadata', () => {
     })
   }
 
-  describe('analysisAndScenario metadata values', () => {
+  describe('requirementAnalysis metadata values', () => {
     it('is required', () => {
-      expect(stages['analysisAndScenario'].required).toBe(true)
+      expect(stages['requirementAnalysis'].required).toBe(true)
     })
 
     it('has no inputs (first stage)', () => {
-      expect(stages['analysisAndScenario'].inputs).toEqual([])
+      expect(stages['requirementAnalysis'].inputs).toEqual([])
     })
 
-    it('outputs 需求场景分析 artifact', () => {
-      const outputs = stages['analysisAndScenario'].outputs!
-      const item = outputs.find(o => o.id === '需求场景分析')
+    it('outputs requirementAnalysis artifact', () => {
+      const outputs = stages['requirementAnalysis'].outputs!
+      const item = outputs.find(o => o.id === 'requirementAnalysis')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/lite/需求场景分析.md')
+      expect(item?.path).toBe('./.hyper-designer/requirementAnalysis/需求分析说明书.md')
       expect(item?.type).toBe('file')
     })
   })
 
-  describe('functionalAndModuleDesign metadata values', () => {
+  describe('ModuleDesign metadata values', () => {
     it('is required', () => {
-      expect(stages['functionalAndModuleDesign'].required).toBe(true)
+      expect(stages['ModuleDesign'].required).toBe(true)
     })
 
-    it('inputs 需求场景分析', () => {
-      const inputs = stages['functionalAndModuleDesign'].inputs!
-      const item = inputs.find(i => i.id === '需求场景分析')
+    it('inputs requirementAnalysis', () => {
+      const inputs = stages['ModuleDesign'].inputs!
+      const item = inputs.find(i => i.id === 'requirementAnalysis')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/lite/需求场景分析.md')
+      expect(item?.path).toBe('./.hyper-designer/requirementAnalysis/需求分析说明书.md')
     })
 
-    it('outputs 功能与模块设计 artifact', () => {
-      const outputs = stages['functionalAndModuleDesign'].outputs!
-      const item = outputs.find(o => o.id === '功能与模块设计')
+    it('outputs functionalDesign artifact', () => {
+      const outputs = stages['ModuleDesign'].outputs!
+      const item = outputs.find(o => o.id === 'functionalDesign')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/lite/功能与模块设计.md')
+      expect(item?.path).toBe('./.hyper-designer/ModuleDesign/需求设计说明书.md')
       expect(item?.type).toBe('file')
     })
   })
 
-  describe('sddPlanGenerationLite metadata values', () => {
+  describe('developmentPlan metadata values', () => {
     it('is required', () => {
-      expect(stages['sddPlanGenerationLite'].required).toBe(true)
+      expect(stages['developmentPlan'].required).toBe(true)
     })
 
-    it('inputs 功能与模块设计', () => {
-      const inputs = stages['sddPlanGenerationLite'].inputs!
-      const item = inputs.find(i => i.id === '功能与模块设计')
+    it('inputs functionalDesign', () => {
+      const inputs = stages['developmentPlan'].inputs!
+      const item = inputs.find(i => i.id === 'functionalDesign')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/lite/功能与模块设计.md')
+      expect(item?.path).toBe('./.hyper-designer/ModuleDesign/需求设计说明书.md')
     })
 
-    it('outputs SDD计划 artifact', () => {
-      const outputs = stages['sddPlanGenerationLite'].outputs!
-      const item = outputs.find(o => o.id === 'SDD计划')
+    it('outputs developmentPlan artifact', () => {
+      const outputs = stages['developmentPlan'].outputs!
+      const item = outputs.find(o => o.id === 'developmentPlan')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/lite/SDD计划.md')
+      expect(item?.path).toBe('./.hyper-designer/developmentPlan/开发计划.md')
       expect(item?.type).toBe('file')
     })
   })
