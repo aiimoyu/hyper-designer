@@ -14,7 +14,7 @@ export const BUILTIN_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] = [
     factory: () => projectAnalysisWorkflow,
   },
   {
-    name: 'lite',
+    name: 'lite-designer',
     factory: () => liteWorkflow,
   },
 ]
