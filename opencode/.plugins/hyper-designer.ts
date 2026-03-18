@@ -133,7 +133,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         step_name: tool.schema.string().optional().describe("The name of the workflow step to set as handover. If omitted, automatically selects the next stage."),
       },
       async execute(params: { step_name?: string }) {
-        const result = workflowService.hdScheduleHandover(params.step_name)
+        const result = await workflowService.hdScheduleHandover(params.step_name)
         return JSON.stringify(result, null, 2)
       },
     }),
