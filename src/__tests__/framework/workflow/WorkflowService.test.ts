@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { WorkflowService } from '../../../workflows/core/service/WorkflowService'
-import { initializeWorkflowState, writeWorkflowStateFile } from '../../../workflows/core/state'
+import { initializeWorkflowState, writeWorkflowStateFile, readWorkflowStateFile } from '../../../workflows/core/state'
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import type { WorkflowDefinition } from '../../../workflows/core/types'
+import { createMockAdapter } from '../../helpers/mockAdapter'
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json");
 const OUTPUT_DIR = join(process.cwd(), ".hyper-designer", "IRAnalysis");
@@ -244,7 +245,7 @@ describe("WorkflowService", () => {
   describe("hdScheduleHandover", () => {
     it("fails when not initialized", async () => {
       const result = await service.hdScheduleHandover("IRAnalysis");
-      expect(result.success).toBe(false);
+      expect(result.scheduled).toBe(false);
       expect(result.error).toContain("not initialized");
     });
 
@@ -254,11 +255,11 @@ describe("WorkflowService", () => {
       service.setGateResult({ score: 60, comment: 'need work' });
 
       const firstAttempt = await service.hdScheduleHandover('scenarioAnalysis');
-      expect(firstAttempt.success).toBe(false);
+      expect(firstAttempt.scheduled).toBe(false);
       expect(service.getState()?.current?.failureCount).toBe(1);
 
       const secondAttempt = await service.hdScheduleHandover('scenarioAnalysis');
-      expect(secondAttempt.success).toBe(false);
+      expect(secondAttempt.scheduled).toBe(false);
       expect(service.getState()?.current?.failureCount).toBe(2);
     });
 
@@ -268,14 +269,14 @@ describe("WorkflowService", () => {
       service.setGateResult({ score: 70, comment: 'first reject' });
 
       const rejected = await service.hdScheduleHandover('scenarioAnalysis');
-      expect(rejected.success).toBe(false);
+      expect(rejected.scheduled).toBe(false);
       expect(service.getState()?.current?.failureCount).toBe(1);
 
       service.setGateResult({ score: 90, comment: 'approved' });
       createOutputFiles();
       const accepted = await service.hdScheduleHandover('scenarioAnalysis');
 
-      expect(accepted.success).toBe(true);
+      expect(accepted.scheduled).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('scenarioAnalysis');
       expect(accepted.state?.current?.failureCount).toBe(1);
       expect(service.getState()?.current?.failureCount).toBe(1);
@@ -295,7 +296,7 @@ describe("WorkflowService", () => {
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
 
-      expect(result.success).toBe(false);
+      expect(result.scheduled).toBe(false);
       expect(result.error).toContain('quality gate');
       expect(service.getState()?.current?.failureCount).toBe(1);
     });
@@ -308,7 +309,7 @@ describe("WorkflowService", () => {
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
 
-      expect(result.success).toBe(true);
+      expect(result.scheduled).toBe(true);
       expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
     });
 
@@ -328,7 +329,7 @@ describe("WorkflowService", () => {
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
 
-      expect(result.success).toBe(true);
+      expect(result.scheduled).toBe(true);
       expect(result.state?.current?.handoverTo).toBe('scenarioAnalysis');
     });
 
@@ -363,7 +364,7 @@ describe("WorkflowService", () => {
 
       const rejected = await service.hdScheduleHandover('stageB');
 
-      expect(rejected.success).toBe(false);
+      expect(rejected.scheduled).toBe(false);
       expect(rejected.error).toContain('doc_review');
       expect(rejected.error).not.toContain('traceability');
 
@@ -378,7 +379,7 @@ describe("WorkflowService", () => {
 
       const accepted = await service.hdScheduleHandover('stageB');
 
-      expect(accepted.success).toBe(true);
+      expect(accepted.scheduled).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });
 
@@ -387,7 +388,7 @@ describe("WorkflowService", () => {
 
       const result = await service.hdScheduleHandover();
 
-      expect(result.success).toBe(true);
+      expect(result.scheduled).toBe(true);
       expect(result.handover_to).toBe('IRAnalysis');
     });
 
@@ -399,7 +400,7 @@ describe("WorkflowService", () => {
 
       const result = await service.hdScheduleHandover();
 
-      expect(result.success).toBe(true);
+      expect(result.scheduled).toBe(true);
       expect(result.handover_to).toBe('scenarioAnalysis');
     });
 
@@ -411,8 +412,8 @@ describe("WorkflowService", () => {
 
       const result = await service.hdScheduleHandover();
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('最后一个阶段');
+      expect(result.scheduled).toBe(false);
+      expect(result.error).toContain('last stage');
     });
 
     it('checks requiredMilestones and ignores hook-local milestones for handover blocking', async () => {
@@ -421,7 +422,7 @@ describe("WorkflowService", () => {
       service.setCurrent('stageA');
 
       const rejected = await service.hdScheduleHandover('stageB');
-      expect(rejected.success).toBe(false);
+      expect(rejected.scheduled).toBe(false);
       expect(rejected.error).toContain('gate');
 
       service.setStageMilestone({
@@ -434,7 +435,7 @@ describe("WorkflowService", () => {
       });
 
       const accepted = await service.hdScheduleHandover('stageB');
-      expect(accepted.success).toBe(true);
+      expect(accepted.scheduled).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });
   });
@@ -547,6 +548,117 @@ describe("WorkflowService", () => {
     it("returns true after first handover", () => {
       initWithHandover(service);
       expect(service.isInitialized()).toBe(true);
+    });
+  });
+
+  describe("executeHandover error handling", () => {
+    const errorWorkflow: WorkflowDefinition = {
+      id: 'error-handover-test',
+      name: 'Error Handover Test Workflow',
+      description: 'Tests handoverTo clearing on after-hook failure',
+      entryStageId: 'stageA',
+      stages: {
+        stageA: {
+          stageId: 'stageA',
+          name: 'Stage A',
+          description: 'Source stage with failing after hook',
+          agent: 'HArchitect',
+          after: [{
+            id: 'failing-after',
+            description: 'After hook that always fails',
+            fn: async () => {
+              throw new Error('Simulated after-hook failure');
+            },
+          }],
+          transitions: [{ id: 'to-stageB', toStageId: 'stageB', mode: 'auto', priority: 0 }],
+          getHandoverPrompt: () => 'handover to stage A',
+        },
+        stageB: {
+          stageId: 'stageB',
+          name: 'Stage B',
+          description: 'Target stage',
+          agent: 'HEngineer',
+          getHandoverPrompt: () => 'handover to stage B',
+        },
+      },
+    };
+
+    it("clears handoverTo when after hook throws an error", async () => {
+      writeWorkflowStateFile(initializeWorkflowState(errorWorkflow));
+      Reflect.set(service, 'definition', errorWorkflow);
+      service.setCurrent('stageA');
+      service.setHandover('stageB');
+
+      const stateBefore = readWorkflowStateFile();
+      expect(stateBefore?.current?.handoverTo).toBe('stageB');
+
+      const adapter = createMockAdapter();
+      await expect(service.executeHandover('session-123', adapter)).rejects.toThrow('Simulated after-hook failure');
+
+      const stateAfter = readWorkflowStateFile();
+      expect(stateAfter?.current?.handoverTo).toBeNull();
+    });
+
+    it("clears handoverTo when before hook throws an error", async () => {
+      const beforeErrorWorkflow: WorkflowDefinition = {
+        id: 'before-error-test',
+        name: 'Before Error Test Workflow',
+        description: 'Tests handoverTo clearing on before-hook failure',
+        entryStageId: 'stageA',
+        stages: {
+          stageA: {
+            stageId: 'stageA',
+            name: 'Stage A',
+            description: 'Source stage',
+            agent: 'HArchitect',
+            transitions: [{ id: 'to-stageB', toStageId: 'stageB', mode: 'auto', priority: 0 }],
+            getHandoverPrompt: () => 'handover to stage A',
+          },
+          stageB: {
+            stageId: 'stageB',
+            name: 'Stage B',
+            description: 'Target stage with failing before hook',
+            agent: 'HEngineer',
+            before: [{
+              id: 'failing-before',
+              description: 'Before hook that always fails',
+              fn: async () => {
+                throw new Error('Simulated before-hook failure');
+              },
+            }],
+            getHandoverPrompt: () => 'handover to stage B',
+          },
+        },
+      };
+
+      writeWorkflowStateFile(initializeWorkflowState(beforeErrorWorkflow));
+      Reflect.set(service, 'definition', beforeErrorWorkflow);
+      service.setCurrent('stageA');
+      service.setHandover('stageB');
+
+      const stateBefore = readWorkflowStateFile();
+      expect(stateBefore?.current?.handoverTo).toBe('stageB');
+
+      const adapter = createMockAdapter();
+      await expect(service.executeHandover('session-123', adapter)).rejects.toThrow('Simulated before-hook failure');
+
+      const stateAfter = readWorkflowStateFile();
+      expect(stateAfter?.current?.handoverTo).toBeNull();
+    });
+
+    it("sets _handoverInProgress to false after error", async () => {
+      writeWorkflowStateFile(initializeWorkflowState(errorWorkflow));
+      Reflect.set(service, 'definition', errorWorkflow);
+      service.setCurrent('stageA');
+      service.setHandover('stageB');
+
+      const adapter = createMockAdapter();
+
+      expect(service.isHandoverInProgress()).toBe(false);
+
+      await expect(service.executeHandover('session-123', adapter)).rejects.toThrow();
+
+      expect(service.isHandoverInProgress()).toBe(false);
     });
   });
 });

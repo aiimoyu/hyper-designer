@@ -52,9 +52,13 @@ const DEFINITION: AgentDefinition = {
     question: "deny",
     task: "deny",
     external_directory: "deny",
+    hd_workflow_list: 'deny',
+    hd_workflow_select: 'deny',
     hd_workflow_state: "allow",
     hd_handover: "deny",
+    hd_force_next_step: "deny",
     hd_record_milestone: "allow",
+    call_omo_agent: "deny",
   },
 }
 

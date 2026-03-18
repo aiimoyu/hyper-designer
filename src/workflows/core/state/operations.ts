@@ -625,29 +625,40 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   const departingStage = fromStep ? definition.stages[fromStep] : null;
   const incomingStage = definition.stages[toStep];
   const departingAfterHooks = departingStage ? departingStage.after ?? [] : []
-  if (departingStage && departingAfterHooks.length > 0) {
-    HyperDesignerLogger.debug("Workflow", "执行 after 钩子", { step: fromStep, hookCount: departingAfterHooks.length });
-    for (const [i, hook] of departingAfterHooks.entries()) {
-      const { fn, agent: hookAgent } = hook;
-      const hookId = hook.id
-      const nodeId = createHookNodeId(fromStep!, 'after', hookId ?? `after-${i}`)
-      setCurrentNodeContext(state, { nodeId, visit: 1, attempt: 1 })
-      appendHistoryEvent(state, { type: 'node.entered', nodeId })
-      const setters = createNodeContextSetters(state)
-      if (state.current) {
-        state.current.agent = hookAgent ?? departingStage.agent;
-        if (state.runtime) {
-          state.runtime.flow.fromNodeId = state.runtime.flow.currentNodeId
-          state.runtime.flow.currentNodeId = nodeId
-          state.runtime.flow.nextNodeId = createMainNodeId(toStep)
+  
+  try {
+    if (departingStage && departingAfterHooks.length > 0) {
+      HyperDesignerLogger.debug("Workflow", "执行 after 钩子", { step: fromStep, hookCount: departingAfterHooks.length });
+      for (const [i, hook] of departingAfterHooks.entries()) {
+        const { fn, agent: hookAgent } = hook;
+        const hookId = hook.id
+        const nodeId = createHookNodeId(fromStep!, 'after', hookId ?? `after-${i}`)
+        setCurrentNodeContext(state, { nodeId, visit: 1, attempt: 1 })
+        appendHistoryEvent(state, { type: 'node.entered', nodeId })
+        const setters = createNodeContextSetters(state)
+        if (state.current) {
+          state.current.agent = hookAgent ?? departingStage.agent;
+          if (state.runtime) {
+            state.runtime.flow.fromNodeId = state.runtime.flow.currentNodeId
+            state.runtime.flow.currentNodeId = nodeId
+            state.runtime.flow.nextNodeId = createMainNodeId(toStep)
+          }
+          writeWorkflowStateFile(state);
         }
-        writeWorkflowStateFile(state);
+        await fn({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, nodeId, setMilestone: setters.setMilestone, setInfo: setters.setInfo, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
+        flushCurrentNodeContextToHistory(state)
+        appendHistoryEvent(state, { type: 'node.completed', nodeId })
       }
-      await fn({ stageKey: fromStep!, stageName: departingStage.name, workflow: definition, nodeId, setMilestone: setters.setMilestone, setInfo: setters.setInfo, ...(sessionID !== undefined && { sessionID }), ...(adapter !== undefined && { adapter }) });
-      flushCurrentNodeContextToHistory(state)
-      appendHistoryEvent(state, { type: 'node.completed', nodeId })
     }
+  } catch (error) {
+    // after hook 失败时清除 handoverTo 防止重复执行
+    if (state.current) {
+      state.current.handoverTo = null;
+      writeWorkflowStateFile(state);
+    }
+    throw error;
   }
+  
   // Stage 切换
   const previousNodeId = state.runtime?.flow.currentNodeId ?? null
   const nextMainNodeId = createMainNodeId(toStep)

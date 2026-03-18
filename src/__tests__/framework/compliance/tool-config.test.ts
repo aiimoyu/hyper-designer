@@ -63,7 +63,6 @@ describe("tool config compliance", () => {
       const localCritic = createHCriticAgent()
       const critic = toOpencodeAgentConfig(localCritic)
       expect(critic.tools).toBeDefined()
-      expect(critic.tools!.hd_force_next_step).toBeUndefined()
     })
 
     it("defaultTools does NOT have hd_submit_evaluation (undefined)", () => {

@@ -19,6 +19,7 @@ import {
   setWorkflowHandover,
   executeWorkflowHandover,
   forceWorkflowNextStep,
+  readWorkflowStateFile,
   writeWorkflowStateFile,
 } from "../state";
 import { getWorkflowDefinition, getAvailableWorkflows } from "../registry";
@@ -246,7 +247,8 @@ export interface WorkflowServiceEvents {
  * hdScheduleHandover 返回值类型
  */
 export interface HandoverResult {
-  success: boolean;
+  scheduled: boolean;
+  status?: "pending" | "failed";
   handover_to?: string;
   instruction?: string;
   error?: string;
@@ -689,6 +691,29 @@ export class WorkflowService extends EventEmitter {
         this.emit('handoverExecuted', { fromStep: fromStep ?? '', toStep });
       }
       return state;
+    } catch (error) {
+      console.log('executeHandover catch block entered, toStep:', toStep);
+      HyperDesignerLogger.error("Workflow", "handover执行失败，清除handoverTo防止重复执行",
+        error instanceof Error ? error : new Error(String(error)), {
+          fromStep,
+          toStep,
+          action: 'executeHandover.errorRecovery'
+        });
+
+      try {
+        const currentState = readWorkflowStateFile();
+        console.log('currentState from file:', JSON.stringify(currentState?.current, null, 2));
+        if (currentState?.current?.handoverTo === toStep) {
+          currentState.current.handoverTo = null;
+          writeWorkflowStateFile(currentState);
+          HyperDesignerLogger.info("Workflow", "已清除失败的handoverTo", { toStep });
+        }
+      } catch (clearError) {
+        console.log('Inner catch block - clearError:', clearError instanceof Error ? clearError.message : String(clearError));
+        HyperDesignerLogger.error("Workflow", "清除handoverTo失败",
+          clearError instanceof Error ? clearError : new Error(String(clearError)));
+      }
+      throw error;
     } finally {
       this._handoverInProgress = false;
     }
@@ -789,7 +814,8 @@ export class WorkflowService extends EventEmitter {
     // 检查工作流是否已初始化
     if (!this.definition) {
       return {
-        success: false,
+        scheduled: false,
+        status: "failed",
         error: "Workflow not initialized. Use hd_workflow_select to choose a workflow first.",
       };
     }
@@ -812,105 +838,115 @@ export class WorkflowService extends EventEmitter {
       const currentIndex = selectedStages.indexOf(currentStage);
       if (currentIndex === -1) {
         return {
-          success: false,
-          error: `当前阶段 "${currentStage}" 不在被选中的阶段列表中。`,
+          scheduled: false,
+          status: "failed",
+          error: `Current stage "${currentStage}" is not in the selected stage list.`,
         };
       }
       const nextIndex = currentIndex + 1;
       if (nextIndex >= selectedStages.length) {
         return {
-          success: false,
-          error: `当前阶段 "${currentStage}" 已是最后一个阶段，无法继续交接。`,
+          scheduled: false,
+          status: "failed",
+          error: `Current stage "${currentStage}" is the last stage. No further handover is possible.`,
         };
       }
       targetStep = selectedStages[nextIndex];
     } else {
       return {
-        success: false,
-        error: '当前阶段未设置，无法执行交接。',
+        scheduled: false,
+        status: "failed",
+        error: "Current stage is not set. Cannot perform handover.",
       };
     }
 
     // 初始状态：允许从无阶段进入第一个被选中的阶段
     if (!currentStage && state?.current === null) {
       const firstSelectedStage = selectedStages[0];
-
       if (targetStep !== firstSelectedStage) {
         return {
-          success: false,
-          error: `初始交接只能进入第一个阶段 "${firstSelectedStage}"，不能直接进入 "${targetStep}"。`,
+          scheduled: false,
+          status: "failed",
+          error: `Initial handover can only target the first stage "${firstSelectedStage}". Cannot jump directly to "${targetStep}".`,
         };
       }
 
       // 设置交接目标（setWorkflowHandover 会创建 current 对象并设置 handoverTo）
       const newState = this.setHandover(targetStep);
-
       if (newState.current?.handoverTo !== targetStep) {
         return {
-          success: false,
-          error: `无法设置初始交接目标 "${targetStep}"。`,
+          scheduled: false,
+          status: "failed",
+          error: `Failed to set initial handover target "${targetStep}".`,
         };
       }
 
       return {
-        success: true,
+        scheduled: true,
+        status: "pending",
         handover_to: targetStep,
         instruction:
-          "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. You are PROHIBITED from executing any operations regarding next-phase tasks and must IMMEDIATELY return to the user. The system will automatically process the handover when this session enters idle state.",
+          "STOP. You MUST return to the user immediately and cease all work. " +
+          "The handover to the next phase has been scheduled but has NOT taken effect yet. " +
+          "Do NOT perform any operations related to next-phase tasks. " +
+          "The system will execute the handover automatically when this session enters idle state.",
         state: newState,
       };
     }
 
     if (!currentStage) {
       return {
-        success: false,
-        error: '当前阶段未设置，无法执行交接。',
+        scheduled: false,
+        status: "failed",
+        error: "Current stage is not set. Cannot perform handover.",
       };
     }
 
-    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage)
-    const stateForCheck = this.getState()
+    const requiredMilestones = this.getRequiredHandoverMilestones(currentStage);
+    const stateForCheck = this.getState();
     const incompleteMilestones = requiredMilestones.filter(milestone => {
-      const milestoneId = this.getMilestoneId(milestone)
+      const milestoneId = this.getMilestoneId(milestone);
       if (!stateForCheck || !this.definition) {
-        return true
+        return true;
       }
-      const completed = areRequiredMilestonesCompletedForStage(stateForCheck, this.definition, currentStage)
+      const completed = areRequiredMilestonesCompletedForStage(stateForCheck, this.definition, currentStage);
       if (milestoneId === GATE_MILESTONE_KEY) {
-        return !completed
+        return !completed;
       }
-      const mainNodeId = `workflow.${currentStage}.main`
-      const events = stateForCheck.history?.events ?? []
+      const mainNodeId = `workflow.${currentStage}.main`;
+      const events = stateForCheck.history?.events ?? [];
       for (let i = events.length - 1; i >= 0; i -= 1) {
-        const event = events[i]
+        const event = events[i];
         if (event.type !== 'milestone.set' || event.nodeId !== mainNodeId || event.key !== milestoneId) {
-          continue
+          continue;
         }
         if (typeof event.value === 'object' && event.value !== null && 'isCompleted' in event.value) {
-          return (event.value as { isCompleted?: unknown }).isCompleted !== true
+          return (event.value as { isCompleted?: unknown }).isCompleted !== true;
         }
       }
-      return true
-    })
+      return true;
+    });
 
     if (incompleteMilestones.length > 0) {
       this.incrementCurrentFailureCount();
-      const failureMessages = incompleteMilestones.map(m => this.getMilestoneFailureMessage(m))
+      const failureMessages = incompleteMilestones.map(m => this.getMilestoneFailureMessage(m));
       return {
-        success: false,
-        error: `阶段交接所需里程碑未完成：\n${failureMessages.join('\n')}`,
+        scheduled: false,
+        status: "failed",
+        error: `Handover blocked. The following required milestones are not completed:\n${failureMessages.join('\n')}`,
       };
     }
 
     // 检查当前阶段的输出文件是否完整
-    const currentStageDef = this.definition.stages[currentStage]
+    const currentStageDef = this.definition.stages[currentStage];
     if (currentStageDef?.outputs && currentStageDef.outputs.length > 0) {
-      const outputCheck = await checkStageOutputs(currentStageDef.outputs)
+      const outputCheck = await checkStageOutputs(currentStageDef.outputs);
       if (!outputCheck.success) {
         this.incrementCurrentFailureCount();
-        const missingMessage = formatMissingOutputsMessage(outputCheck.missing, outputCheck.matchCounts)
+        const missingMessage = formatMissingOutputsMessage(outputCheck.missing, outputCheck.matchCounts);
         return {
-          success: false,
+          scheduled: false,
+          status: "failed",
           error: missingMessage,
         };
       }
@@ -922,16 +958,21 @@ export class WorkflowService extends EventEmitter {
     // 如果 handoverTo 没有设置成功（被验证逻辑拒绝），返回错误
     if (handoverState.current?.handoverTo !== targetStep) {
       return {
-        success: false,
-        error: `无法设置交接目标 "${targetStep}"。请检查目标步骤是否有效，或是否试图跳过步骤。`,
+        scheduled: false,
+        status: "failed",
+        error: `Failed to set handover target "${targetStep}". Verify the target step is valid and no steps are being skipped.`,
       };
     }
 
     return {
-      success: true,
+      scheduled: true,
+      status: "pending",
       handover_to: targetStep,
       instruction:
-        "You have successfully scheduled the handover. THE HANDOVER IS PENDING AND HAS NOT YET TAKEN EFFECT. You are PROHIBITED from executing any operations regarding next-phase tasks and must IMMEDIATELY return to the user. The system will automatically process the handover when this session enters idle state.",
+        "STOP. You MUST return to the user immediately and cease all work. " +
+        "The handover to the next phase has been scheduled but has NOT taken effect yet. " +
+        "Do NOT perform any operations related to next-phase tasks. " +
+        "The system will execute the handover automatically when this session enters idle state.",
       state: handoverState,
     };
   }

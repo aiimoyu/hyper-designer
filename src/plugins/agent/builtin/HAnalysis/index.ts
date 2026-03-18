@@ -69,9 +69,13 @@ const DEFINITION: AgentDefinition = {
     question: 'allow',
     task: 'allow',
     external_directory: 'allow',
-    hd_workflow_state: 'allow',
-    hd_handover: 'allow',
-    hd_force_next_step: 'ask',
+    hd_workflow_list: 'deny',
+    hd_workflow_select: 'deny',
+    hd_workflow_state: "allow",
+    hd_handover: "allow",
+    hd_force_next_step: "ask",
+    hd_record_milestone: "deny",
+    call_omo_agent: "deny",
   },
 }
 

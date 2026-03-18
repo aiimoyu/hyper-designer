@@ -28,8 +28,11 @@ const DEFINITION: AgentDefinition = {
     task: 'allow',
     external_directory: 'allow',
     hd_workflow_state: 'allow',
+    hd_workflow_list: 'allow',
+    hd_workflow_select: 'allow',
     hd_handover: 'allow',
-    hd_force_next_step: 'allow',
+    hd_record_milestone: 'allow',
+    call_omo_agent: "deny",
   },
 }
 
