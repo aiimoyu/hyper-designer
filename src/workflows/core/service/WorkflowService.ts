@@ -821,6 +821,19 @@ export class WorkflowService extends EventEmitter {
     }
 
     const state = this.getState();
+
+    if (state?.current?.handoverTo) {
+      return {
+        scheduled: false,
+        status: "failed",
+        error: `A handover to "${state.current.handoverTo}" is already pending. Cannot schedule a new handover.`,
+        instruction:
+          "A handover has already been scheduled but not yet executed. " +
+          "The system is waiting for the session to enter idle state to complete the handover. " +
+          "Please return to the user and wait for the session to become idle.",
+      };
+    }
+
     const currentStage = this.getCurrentStage();
     const selectedStages = getStageOrder(this.definition).filter(
       s => state?.workflow[s]?.selected !== false

@@ -439,6 +439,22 @@ describe("WorkflowService", () => {
       expect(accepted.scheduled).toBe(true);
       expect(accepted.state?.current?.handoverTo).toBe('stageB');
     });
+
+    it('rejects handover when a pending handover already exists', async () => {
+      initWithWorkflow(service);
+      service.setCurrent('IRAnalysis');
+      service.setGateResult({ score: 90, comment: 'approved' });
+      createOutputFiles();
+
+      const firstAttempt = await service.hdScheduleHandover('scenarioAnalysis');
+      expect(firstAttempt.scheduled).toBe(true);
+      expect(firstAttempt.handover_to).toBe('scenarioAnalysis');
+
+      const secondAttempt = await service.hdScheduleHandover('scenarioAnalysis');
+      expect(secondAttempt.scheduled).toBe(false);
+      expect(secondAttempt.error).toContain('pending');
+      expect(secondAttempt.instruction).toContain('idle');
+    });
   });
 
   describe('hdForceNextStep', () => {
