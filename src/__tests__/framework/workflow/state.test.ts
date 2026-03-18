@@ -744,4 +744,117 @@ describe("workflow state management", () => {
     })
   })
 
+  describe('node-level agent resolution', () => {
+    const workflowWithBeforeHookAgent: WorkflowDefinition = {
+      id: 'node-agent-test',
+      name: 'Node Agent Test Workflow',
+      description: 'Test workflow for node-level agent resolution',
+      entryStageId: 'stage1',
+      stages: {
+        stage1: {
+          stageId: 'stage1',
+          name: 'Stage 1',
+          description: 'First stage',
+          agent: 'HArchitect',
+          transitions: [{ id: 'to-stage2', toStageId: 'stage2', mode: 'auto', priority: 0 }],
+          getHandoverPrompt: () => 'handover to stage1',
+        },
+        stage2: {
+          stageId: 'stage2',
+          name: 'Stage 2',
+          description: 'Second stage with before hook using different agent',
+          agent: 'HEngineer',
+          before: [
+            {
+              id: 'setup-hook',
+              description: 'Setup hook with Hyper agent',
+              agent: 'Hyper',
+              fn: async () => {},
+            },
+          ],
+          transitions: [],
+          getHandoverPrompt: () => 'handover to stage2',
+        },
+      },
+    }
+
+    beforeEach(() => {
+      const state = initializeWorkflowState(workflowWithBeforeHookAgent)
+      const stageOrder = getStageOrder(workflowWithBeforeHookAgent)
+      state.instance = {
+        instanceId: `${workflowWithBeforeHookAgent.id}-${Date.now()}`,
+        workflowId: workflowWithBeforeHookAgent.id,
+        workflowVersion: workflowWithBeforeHookAgent.version ?? 'v1',
+        selectedStageIds: stageOrder,
+        skippedStageIds: [],
+        entryNodeId: 'workflow.stage1.main',
+        nodePlan: {
+          'workflow.stage1.main': {
+            nodeId: 'workflow.stage1.main',
+            stageId: 'stage1',
+            kind: 'main',
+            agent: 'HArchitect',
+            fromNodeId: null,
+            nextNodeId: 'workflow.stage2.before.setup-hook',
+          },
+          'workflow.stage2.before.setup-hook': {
+            nodeId: 'workflow.stage2.before.setup-hook',
+            stageId: 'stage2',
+            kind: 'before',
+            hookId: 'setup-hook',
+            agent: 'Hyper',
+            fromNodeId: null,
+            nextNodeId: 'workflow.stage2.main',
+          },
+          'workflow.stage2.main': {
+            nodeId: 'workflow.stage2.main',
+            stageId: 'stage2',
+            kind: 'main',
+            agent: 'HEngineer',
+            fromNodeId: 'workflow.stage2.before.setup-hook',
+            nextNodeId: null,
+          },
+        },
+      }
+      state.runtime = {
+        status: 'running',
+        flow: {
+          fromNodeId: null,
+          currentNodeId: null,
+          nextNodeId: 'workflow.stage1.main',
+          lastEventSeq: 0,
+        },
+        currentNodeContext: null,
+      }
+      state.history = { events: [] }
+      writeWorkflowStateFile(state)
+    })
+
+    it('stores agent in nodePlan for each node during workflow initialization', () => {
+      const state = getWorkflowState()
+
+      expect(state?.instance?.nodePlan).toBeDefined()
+      const nodePlan = state?.instance?.nodePlan ?? {}
+
+      const stage1Main = nodePlan['workflow.stage1.main']
+      expect(stage1Main?.agent).toBe('HArchitect')
+
+      const stage2BeforeHook = nodePlan['workflow.stage2.before.setup-hook']
+      expect(stage2BeforeHook?.agent).toBe('Hyper')
+
+      const stage2Main = nodePlan['workflow.stage2.main']
+      expect(stage2Main?.agent).toBe('HEngineer')
+    })
+
+    it('resolves agent from current node in nodePlan during before hook execution', async () => {
+      setWorkflowCurrent('stage1')
+      setWorkflowHandover('stage2', workflowWithBeforeHookAgent)
+
+      const state = await executeWorkflowHandover(workflowWithBeforeHookAgent)
+
+      expect(state.runtime?.flow.currentNodeId).toBe('workflow.stage2.main')
+      expect(state.current?.agent).toBe('HEngineer')
+    })
+  })
+
 })

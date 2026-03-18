@@ -727,6 +727,11 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
       flushCurrentNodeContextToHistory(state)
       appendHistoryEvent(state, { type: 'node.completed', nodeId })
     }
+    // before hooks 执行完成后，恢复 agent 为阶段主流程的 agent
+    if (state.current) {
+      state.current.agent = incomingStage.agent;
+      writeWorkflowStateFile(state);
+    }
   }
 
   if (state.current) {

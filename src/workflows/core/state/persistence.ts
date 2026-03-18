@@ -218,6 +218,7 @@ function sanitizeInstance(value: unknown): WorkflowState['instance'] {
       stageId: node.stageId,
       kind: node.kind,
       ...(typeof node.hookId === 'string' ? { hookId: node.hookId } : {}),
+      ...(typeof node.agent === 'string' ? { agent: node.agent } : {}),
       fromNodeId: node.fromNodeId,
       nextNodeId: node.nextNodeId,
     }

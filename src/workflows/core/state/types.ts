@@ -88,6 +88,7 @@ export interface WorkflowInstanceNodePlan {
   stageId: string;
   kind: 'before' | 'main' | 'after';
   hookId?: string;
+  agent?: string;
   fromNodeId: string | null;
   nextNodeId: string | null;
 }

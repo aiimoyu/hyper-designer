@@ -120,6 +120,7 @@ function buildInstancePlan(
     stageId: string
     kind: 'before' | 'main' | 'after'
     hookId?: string
+    agent?: string
     fromNodeId: string | null
     nextNodeId: string | null
   }>
@@ -131,6 +132,7 @@ function buildInstancePlan(
     stageId: string
     kind: 'before' | 'main' | 'after'
     hookId?: string
+    agent?: string
     fromNodeId: string | null
     nextNodeId: string | null
   }> = {}
@@ -163,12 +165,15 @@ function buildInstancePlan(
 
     for (let i = 0; i < beforeNodeIds.length; i += 1) {
       const nodeId = beforeNodeIds[i]!
-      const hookId = beforeHooks[i]?.id
+      const hook = beforeHooks[i]
+      const hookId = hook?.id
+      const hookAgent = hook?.agent ?? stage.agent
       nodePlan[nodeId] = {
         nodeId,
         stageId,
         kind: 'before',
         ...(hookId ? { hookId } : {}),
+        ...(hookAgent ? { agent: hookAgent } : {}),
         fromNodeId: i === 0 ? null : beforeNodeIds[i - 1]!,
         nextNodeId: i < beforeNodeIds.length - 1 ? beforeNodeIds[i + 1]! : mainNodeId,
       }
@@ -178,18 +183,22 @@ function buildInstancePlan(
       nodeId: mainNodeId,
       stageId,
       kind: 'main',
+      ...(stage.agent ? { agent: stage.agent } : {}),
       fromNodeId: beforeNodeIds.length > 0 ? beforeNodeIds[beforeNodeIds.length - 1]! : null,
       nextNodeId: null,
     }
 
     for (let i = 0; i < afterNodeIds.length; i += 1) {
       const nodeId = afterNodeIds[i]!
-      const hookId = afterHooks[i]?.id
+      const hook = afterHooks[i]
+      const hookId = hook?.id
+      const hookAgent = hook?.agent ?? stage.agent
       nodePlan[nodeId] = {
         nodeId,
         stageId,
         kind: 'after',
         ...(hookId ? { hookId } : {}),
+        ...(hookAgent ? { agent: hookAgent } : {}),
         fromNodeId: i === 0 ? mainNodeId : afterNodeIds[i - 1]!,
         nextNodeId: i < afterNodeIds.length - 1 ? afterNodeIds[i + 1]! : null,
       }
