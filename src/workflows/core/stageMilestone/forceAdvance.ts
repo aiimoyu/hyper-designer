@@ -89,9 +89,11 @@ export function forceAdvanceToNextSelectedStage(
     }
   }
 
+  const targetStageDef = definition.stages[targetStage]
   state.current = {
     name: targetStage,
     handoverTo: null,
+    agent: targetStageDef?.agent,
     previousStage: state.workflow[targetStage]?.previousStage ?? null,
     nextStage: state.workflow[targetStage]?.nextStage ?? null,
     failureCount: 0,

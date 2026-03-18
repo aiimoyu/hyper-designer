@@ -283,7 +283,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       await expect(executeWorkflowHandover(incompleteDefinition)).rejects.toThrow(TypeError)
     })
 
-    it('forceWorkflowNextStep correctly updates current stage and clears stale current.agent', () => {
+    it('forceWorkflowNextStep correctly updates current stage and sets agent from stage definition', () => {
       const definition = makeTwoStageWorkflow()
 
       writeWorkflowStateFile({
@@ -308,7 +308,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       expect('error' in result).toBe(false)
       if (!('error' in result)) {
         expect(result.current?.name).toBe('stage2')
-        expect(result.current?.agent).toBeUndefined()
+        expect(result.current?.agent).toBe('HEngineer')
       }
     })
 
