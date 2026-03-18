@@ -1,58 +1,57 @@
-# FMEA 分析模板
+# FMEA Analysis Template
 
-## 何时使用 FMEA
+## When to Use FMEA
 
-FMEA（Failure Mode and Effects Analysis，失效模式与影响分析）适用于以下高风险功能场景：
+FMEA (Failure Mode and Effects Analysis) applies to the following high-risk function types:
 
-- **业务关键路径**：支付、订单提交、数据迁移等核心业务流程
-- **不可逆操作**：数据删除、账号注销、资金转移等
-- **外部依赖**：依赖第三方服务、API调用、硬件接口
-- **并发敏感**：库存、余额等需要并发控制的功能
-- **安全敏感**：认证、授权、敏感数据处理
+- **Business critical paths**: payment, order submission, data migration
+- **Irreversible operations**: data deletion, account cancellation, fund transfer
+- **External dependencies**: third-party services, API calls, hardware interfaces
+- **Concurrency-sensitive**: inventory deduction, balance changes
+- **Security-sensitive**: authentication, authorization, sensitive data handling
 
-## 风险等级计算规则
+## Risk Level Calculation
 
 ```
-风险等级 = 严重度 S × 发生概率 O
+Risk Level = Severity (S) × Occurrence Probability (O)
 
-低风险：结果 ≤ 6
-中风险：7 ≤ 结果 ≤ 15
-高风险：结果 ≥ 16
+Low:    S × O ≤ 6
+Medium: 7 ≤ S × O ≤ 15
+High:   S × O ≥ 16
 ```
 
-## FMEA 分析表格模板
+## FMEA Table Template
 
 **输出文件：** `{功能名}FMEA.md`
 
-| 编号 | 功能需求 | 失效模式 | 影响后果 | 严重度 S(1-5) | 发生概率 O(1-5) | 现有控制措施 | 风险等级 (低/中/高) | 建议措施 | 负责人 |
-|-----|---------|---------|---------|-------------|--------------|------------|----------------|---------|-------|
-| FMEA-001 | [功能名称] | [失效模式描述] | [影响后果描述] | [1-5] | [1-5] | [现有控制措施] | [低/中/高] | [建议改进措施] | [负责人] |
-| FMEA-002 | [功能名称] | [失效模式描述] | [影响后果描述] | [1-5] | [1-5] | [现有控制措施] | [低/中/高] | [建议改进措施] | [负责人] |
+| 编号 | 功能 | 失效模式 | 影响后果 | 严重度 S(1-5) | 发生概率 O(1-5) | 现有控制措施 | 风险等级 | 建议措施 | 负责人 |
+|-----|------|---------|---------|-------------|--------------|------------|---------|---------|-------|
+| FMEA-001 | [功能名称] | [失效模式描述] | [影响后果描述] | [1-5] | [1-5] | [现有措施，无则填"无"] | 低/中/高 | [建议改进措施] | [负责人] |
 
 ## 示例（用户支付功能）
 
-| 编号 | 功能需求 | 失效模式 | 影响后果 | 严重度 S(1-5) | 发生概率 O(1-5) | 现有控制措施 | 风险等级 (低/中/高) | 建议措施 | 负责人 |
-|-----|---------|---------|---------|-------------|--------------|------------|----------------|---------|-------|
+| 编号 | 功能 | 失效模式 | 影响后果 | 严重度 S | 发生概率 O | 现有控制措施 | 风险等级 | 建议措施 | 负责人 |
+|-----|------|---------|---------|---------|----------|------------|---------|---------|-------|
 | FMEA-001 | 用户支付 | 重复扣款 | 用户资金损失，客诉风险 | 5 | 2 | 无 | 高 | 添加幂等Token防重复请求 | 后端负责人 |
 | FMEA-002 | 用户支付 | 支付超时未回调 | 订单状态不一致 | 4 | 3 | 无 | 高 | 添加定时对账任务 | 后端负责人 |
 | FMEA-003 | 用户支付 | 第三方支付平台不可用 | 无法完成支付 | 3 | 2 | 无 | 中 | 接入备用支付渠道 | 架构师 |
 
-## 严重度 S 评级标准
+## Severity (S) Rating
 
-| 等级 | 描述 |
-|-----|------|
-| 1 | 影响极小，用户几乎察觉不到 |
-| 2 | 轻微影响，用户体验稍差 |
-| 3 | 中等影响，功能部分降级 |
-| 4 | 严重影响，核心功能失效 |
-| 5 | 灾难性影响，数据丢失或资金损失 |
+| Level | Description |
+|-------|-------------|
+| 1 | Negligible — user barely notices |
+| 2 | Minor — slightly degraded experience |
+| 3 | Moderate — partial feature degradation |
+| 4 | Severe — core feature fails |
+| 5 | Catastrophic — data loss or financial loss |
 
-## 发生概率 O 评级标准
+## Occurrence Probability (O) Rating
 
-| 等级 | 描述 |
-|-----|------|
-| 1 | 极少发生（<0.1%） |
-| 2 | 偶尔发生（0.1%-1%） |
-| 3 | 有时发生（1%-5%） |
-| 4 | 经常发生（5%-20%） |
-| 5 | 频繁发生（>20%） |
+| Level | Description |
+|-------|-------------|
+| 1 | Rare (< 0.1%) |
+| 2 | Occasional (0.1% – 1%) |
+| 3 | Sometimes (1% – 5%) |
+| 4 | Frequent (5% – 20%) |
+| 5 | Very frequent (> 20%) |

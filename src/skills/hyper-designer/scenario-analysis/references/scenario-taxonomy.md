@@ -1,93 +1,93 @@
-# 场景分类法 (Scenario Taxonomy)
+# Scenario Taxonomy
 
-本文档定义 hyper-designer 场景分析中使用的五种场景类型，为场景分类提供统一标准。
+This document defines the five scenario types used in scenario analysis, providing a unified classification standard.
 
 ---
 
-## 场景类型定义
+## Scenario Type Definitions
 
 ### 业务场景 (Business Scenario)
 
-**定义：** 直接支持核心业务流程的场景，涉及系统的主要用途和价值交付。业务场景通常对应用户完成一项有意义的业务目标（如下单、审批、查询报表）。
+**Definition:** Scenarios that directly support core business processes, involving the system's primary purpose and value delivery. A business scenario typically corresponds to a user completing a meaningful business goal (e.g., placing an order, approving a request, querying a report).
 
-**示例：** 用户提交采购申请 — 采购员填写采购需求、选择供应商并提交审批，系统记录申请并通知审批人。
+**Example:** 用户提交采购申请 — 采购员填写采购需求、选择供应商并提交审批，系统记录申请并通知审批人。
 
 ---
 
 ### 操作场景 (Operational Scenario)
 
-**定义：** 用户日常使用系统时执行的操作场景，通常是频繁、重复的交互行为（如搜索、筛选、导出、设置偏好）。操作场景支持业务场景的完成，但本身不直接产生业务价值。
+**Definition:** Scenarios for routine interactions users perform while using the system — typically frequent, repetitive actions (e.g., search, filter, export, set preferences). Operational scenarios support the completion of business scenarios but do not directly produce business value on their own.
 
-**示例：** 用户搜索历史订单 — 用户在订单列表页输入关键词或日期范围进行筛选，系统返回匹配结果。
+**Example:** 用户搜索历史订单 — 用户在订单列表页输入关键词或日期范围进行筛选，系统返回匹配结果。
 
 ---
 
 ### 维护场景 (Maintenance Scenario)
 
-**定义：** 系统管理员或运维人员对系统进行配置、管理、监控和维护的场景。维护场景确保系统正常运行，不直接面向终端用户的业务目标。
+**Definition:** Scenarios in which system administrators or operations staff configure, manage, monitor, and maintain the system. Maintenance scenarios ensure the system runs correctly and are not directly oriented toward end users' business goals.
 
-**示例：** 管理员配置用户权限 — 系统管理员为新员工分配角色和功能访问权限，调整后立即生效。
+**Example:** 管理员配置用户权限 — 系统管理员为新员工分配角色和功能访问权限，调整后立即生效。
 
 ---
 
 ### 制造场景 (Manufacturing Scenario)
 
-**定义：** 系统生成、创建或批量处理内容/数据的场景。制造场景的核心是系统作为生产者输出产物（如生成报告、批量导入数据、自动生成配置文件、AI 生成内容）。
+**Definition:** Scenarios in which the system generates, creates, or batch-processes content or data. The core of a manufacturing scenario is the system acting as a producer of output artifacts (e.g., generating reports, bulk-importing data, auto-generating configuration files, AI-generated content).
 
-**示例：** 系统自动生成月度财务报告 — 系统在每月末汇总交易数据，按预设模板生成财务报告文件，并发送给指定收件人。
+**Example:** 系统自动生成月度财务报告 — 系统在每月末汇总交易数据，按预设模板生成财务报告文件，并发送给指定收件人。
 
 ---
 
 ### 其他场景 (Other Scenario)
 
-**定义：** 不适合归入上述四类的场景。通常包括跨类型的复合场景、边缘交互场景，或当前阶段尚未明确归类的场景。建议在后续分析中进一步细化分类。
+**Definition:** Scenarios that do not fit neatly into the four types above. Typically includes cross-type composite scenarios, edge interaction scenarios, or scenarios whose classification has not yet been determined. These should be refined in subsequent analysis.
 
-**示例：** 用户反馈问题 — 用户通过内置反馈入口描述遇到的问题并提交，系统记录反馈并（可选）通知支持团队。
+**Example:** 用户反馈问题 — 用户通过内置反馈入口描述遇到的问题并提交，系统记录反馈并（可选）通知支持团队。
 
 ---
 
-## 分类方法论
+## Classification Methodology
 
-### 快速分类指南
+### Quick Classification Guide
 
-使用以下问题快速判断场景类型：
+Use the following questions to determine scenario type:
 
-1. **这个场景是否直接完成一项核心业务目标？**
-   - 是 → **业务场景**
+1. **Does this scenario directly complete a core business goal?**
+   - Yes → **业务场景**
 
-2. **这个场景是否是用户在使用过程中的辅助操作（搜索、筛选、导出等）？**
-   - 是 → **操作场景**
+2. **Is this scenario a supporting action during system use (search, filter, export, etc.)?**
+   - Yes → **操作场景**
 
-3. **这个场景的主要参与者是管理员或运维人员，目的是维护系统正常运行？**
-   - 是 → **维护场景**
+3. **Is the primary participant an administrator or operations person, with the goal of keeping the system running?**
+   - Yes → **维护场景**
 
-4. **这个场景的核心是系统生成或批量处理某种产出物？**
-   - 是 → **制造场景**
+4. **Is the core of this scenario the system generating or batch-processing some output artifact?**
+   - Yes → **制造场景**
 
-5. **以上均不符合？**
-   - 归入 **其他场景**，并附简短说明
+5. **None of the above apply?**
+   - Classify as **其他场景** with a brief note
 
-### 分类优先级
+### Classification Priority
 
-当一个场景可能跨越多个类型时，按以下优先级选择：
+When a scenario could span multiple types, apply this priority order:
 
 ```
 业务场景 > 制造场景 > 操作场景 > 维护场景 > 其他场景
 ```
 
-**原则：** 选择最能体现场景核心价值的类型。若场景既有业务目标又有内容生成，优先归为业务场景。
+**Principle:** Choose the type that best reflects the scenario's core value. If a scenario has both a business goal and content generation, prefer 业务场景.
 
-### 常见误判示例
+### Common Misclassification Examples
 
-| 场景描述 | 错误分类 | 正确分类 | 原因 |
-|---------|---------|---------|------|
-| 用户登录系统 | 业务场景 | 操作场景 | 登录是支撑性操作，不是核心业务目标 |
-| 管理员查看系统日志 | 业务场景 | 维护场景 | 主要参与者是管理员，目的是系统监控 |
-| 系统定时清理过期数据 | 操作场景 | 维护场景 | 由系统自动执行，目的是维护数据健康 |
-| AI 根据模板生成合同 | 业务场景 | 制造场景 | 核心是系统生成产出物（合同文件） |
+| Scenario Description | Wrong Classification | Correct Classification | Reason |
+|----------------------|---------------------|----------------------|--------|
+| 用户登录系统 | 业务场景 | 操作场景 | Login is a supporting action, not a core business goal |
+| 管理员查看系统日志 | 业务场景 | 维护场景 | Primary participant is admin; purpose is system monitoring |
+| 系统定时清理过期数据 | 操作场景 | 维护场景 | Executed automatically by the system for data health |
+| AI 根据模板生成合同 | 业务场景 | 制造场景 | Core activity is the system producing an output artifact (contract) |
 
 ---
 
-## 参考
+## Reference
 
-本分类法适用于 hyper-designer 场景分析工作流（场景分析阶段）。分类结果将影响后续用例分析中的场景优先级和功能细化的范围界定。
+This taxonomy applies to the scenario analysis phase of the hyper-designer workflow. Classification results influence scenario prioritization in downstream use-case analysis and the scoping of feature elaboration.
