@@ -26,7 +26,7 @@ describe('transform opencode hooks', () => {
     const output = { system: ['<using-hyper-designer>\n{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'] }
     await hooks['experimental.chat.system.transform']({}, output)
 
-    expect(output.system[0]).toContain('当前阶段：工作流初始化')
+    expect(output.system[0]).toContain('Current Stage: Workflow Initialization')
   })
 
   it('skips transform when <using-hyper-designer> tag is not present', async () => {

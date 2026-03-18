@@ -13,6 +13,8 @@ function getProjectAnalysisWorkflow() {
   return workflow
 }
 
+const SKILL_BASE_PATH = resolve(process.cwd(), 'src/skills/hyper-designer/projectAnalysis')
+
 describe('projectAnalysis workflow skill guidance', () => {
   it('each stage prompt guides to projectAnalysis skill and stage reference markdown', () => {
     const workflow = getProjectAnalysisWorkflow()
@@ -32,10 +34,10 @@ describe('projectAnalysis workflow skill guidance', () => {
   })
 
   it('projectAnalysis skill exists with relative-path references only', () => {
-    const skillPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/SKILL.md')
-    const systemRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/systemAnalysis.md')
-    const componentRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/componentAnalysis.md')
-    const missingRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/missingCoverageCheck.md')
+    const skillPath = resolve(SKILL_BASE_PATH, 'SKILL.md')
+    const systemRefPath = resolve(SKILL_BASE_PATH, 'references/systemAnalysis.md')
+    const componentRefPath = resolve(SKILL_BASE_PATH, 'references/componentAnalysis.md')
+    const missingRefPath = resolve(SKILL_BASE_PATH, 'references/missingCoverageCheck.md')
 
     expect(existsSync(skillPath)).toBe(true)
     expect(existsSync(systemRefPath)).toBe(true)
@@ -51,9 +53,9 @@ describe('projectAnalysis workflow skill guidance', () => {
   })
 
   it('references files contain migrated methodology and output templates', () => {
-    const systemRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/systemAnalysis.md')
-    const componentRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/componentAnalysis.md')
-    const missingRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/missingCoverageCheck.md')
+    const systemRefPath = resolve(SKILL_BASE_PATH, 'references/systemAnalysis.md')
+    const componentRefPath = resolve(SKILL_BASE_PATH, 'references/componentAnalysis.md')
+    const missingRefPath = resolve(SKILL_BASE_PATH, 'references/missingCoverageCheck.md')
 
     const systemContent = readFileSync(systemRefPath, 'utf-8')
     const componentContent = readFileSync(componentRefPath, 'utf-8')
@@ -78,8 +80,8 @@ describe('projectAnalysis workflow skill guidance', () => {
   })
 
   it('skill provides shared workflow methodology reference', () => {
-    const skillPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/SKILL.md')
-    const sharedRefPath = resolve(process.cwd(), '.opencode/skills/projectAnalysis/references/workflowShared.md')
+    const skillPath = resolve(SKILL_BASE_PATH, 'SKILL.md')
+    const sharedRefPath = resolve(SKILL_BASE_PATH, 'references/workflowShared.md')
 
     expect(existsSync(sharedRefPath)).toBe(true)
 

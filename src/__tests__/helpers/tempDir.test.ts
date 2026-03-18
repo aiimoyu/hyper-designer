@@ -13,7 +13,7 @@ describe("tempDir", () => {
 
     it("returns an absolute path", () => {
       const dir = createTempTestDir("test-prefix")
-      expect(dir.startsWith("/")).toBe(true)
+      expect(dir.startsWith("/") || dir.match(/^[A-Za-z]:\\/)).toBeTruthy()
       cleanupTempDir(dir)
     })
 

@@ -165,7 +165,7 @@ describe('system transform', () => {
     expect(output.system[0]).toBe('<using-hyper-designer></using-hyper-designer>')
     expect(output.system[1]).toBe('')
     expect(output.system[2]).toBe('')
-    expect(output.system[3]).toContain('当前阶段：工作流初始化')
+    expect(output.system[3]).toContain('Current Stage: Workflow Initialization')
     expect(output.system[3]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
   })
 
@@ -247,7 +247,7 @@ describe('system transform', () => {
     expect(output.system[0]).toBe('<using-hyper-designer></using-hyper-designer>')
     expect(output.system[1]).toBe('')
     expect(output.system[2]).toBe('')
-    expect(output.system[3]).toContain('当前阶段：工作流初始化')
+    expect(output.system[3]).toContain('Current Stage: Workflow Initialization')
     expect(output.system[3]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
   })
 

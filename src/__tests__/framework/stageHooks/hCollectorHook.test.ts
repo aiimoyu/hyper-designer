@@ -285,7 +285,7 @@ describe('hCollectorHook', () => {
       // Simulate: codebase completed, domainAnalysis not completed
       mockedExistsSync.mockImplementation((path: unknown) => {
         const pathStr = String(path)
-        if (pathStr.includes('/codebase/')) return true
+        if (pathStr.includes('codebase')) return true
         return false
       })
 
@@ -384,7 +384,7 @@ describe('hCollectorHook', () => {
         existsSyncCallCount++
         const pathStr = String(path)
         // After all 5 loop iterations, systemDesign completes but codebase doesn't
-        if (pathStr.includes('/systemDesign/') && existsSyncCallCount > 15) return true
+        if (pathStr.includes('systemDesign') && existsSyncCallCount > 15) return true
         return false
       })
 
