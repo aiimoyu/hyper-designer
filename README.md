@@ -1,6 +1,6 @@
 # hyper-designer
 
-一个 OpenCode 插件，实现了专业化的 AI Agent 协作和标准化工作流管理，用于需求工程和系统设计。
+一个 OpenCode 插件，通过专业化 AI Agent 协作和标准化工作流，实现从需求工程到系统设计的全流程智能化。
 
 ## 核心资产一览
 
@@ -22,6 +22,7 @@
 
 | Agent | 角色定位 | 主要职责 | 协作模式 |
 |-------|---------|---------|---------|
+| **Hyper** | 路由代理 | 智能路由用户请求到正确的专业代理；工作流未初始化时直接处理简单请求 | primary，统一入口 |
 | **HArchitect** | 系统架构师 | 需求分析流程管理（IR分析 → 场景分析 → 用例分析 → 功能细化） | primary，主流程协调员 |
 | **HEngineer** | 系统工程师 | 系统级设计（SR-AR分解、架构设计）和模块级详细设计 | primary，接收 HArchitect 交接 |
 | **HCollector** | 需求收集专家 | 数据收集、用户访谈、参考资料整理 | all，接受 HArchitect 委派 |
@@ -33,17 +34,18 @@
 | 工作流 | 阶段数 | 执行流程 | 适用场景 |
 |-------|-------|---------|---------|
 | **Classic** | 8阶段 | IR分析 → 场景分析 → 用例分析 → 功能细化 → SR-AR分解 → 系统功能设计 → 模块功能设计 → SDD计划生成 | 全新系统从零设计、多团队协作的大型项目 |
-| **Lite** | 3阶段 | 需求场景分析 → 功能与模块设计 → SDD开发计划 | 功能增强型需求、中小规模新功能开发 |
+| **Lite Designer** | 3阶段 | 需求场景分析 → 功能与模块设计 → SDD开发计划 | 功能增强型需求、中小规模新功能开发 |
 | **Project Analysis** | 3阶段 | 系统分析 → 组件分析 → 缺漏检查 | 陌生项目快速理解、架构分析、覆盖率检查 |
 
 ---
 
 ## 功能特性
 
-### 五大核心 Agent
+### 六大核心 Agent
 
 | Agent | 角色定位 | 主要职责 |
 |-------|---------|---------|
+| **Hyper** | 路由代理 | 智能路由用户请求到正确的专业代理；工作流未初始化时直接处理简单请求 |
 | **HArchitect** | 系统架构师 | 需求分析流程管理（IR分析 → 场景分析 → 用例分析 → 功能细化） |
 | **HEngineer** | 系统工程师 | 系统级设计（SR-AR分解、架构设计）和模块级详细设计 |
 | **HCollector** | 需求收集专家 | 数据收集、用户访谈、参考资料整理 |
@@ -60,12 +62,25 @@
 阶段3: 用例分析             @HArchitect  → use-case-analysis
 阶段4: 功能细化             @HArchitect  → functional-refinement
 阶段5: 需求分解(SR-AR)      @HEngineer   → sr-ar-decomposition
-阶段6: 系统功能设计         @HEngineer   → functional-design
-阶段7: 模块功能设计         @HEngineer   → functional-design
-阶段8: SDD 开发计划生成     @HEngineer   → sdd-plan-generator
+阶段6: 系统功能设计         @HEngineer   → system-functional-design
+阶段7: 模块功能设计         @HEngineer   → module-functional-design
+阶段8: SDD 开发计划生成     @HEngineer   → sdd-plan-generation
 ```
 
-每个阶段通过对应的 Skill 文件注入专属方法论，完成后需通过 HCritic 质量门评审。
+每个阶段通过对应的 Skill 文件注入专属方法论，完成后需通过 HCritic 质量门评审（score > 75）。
+
+#### Lite Designer 工作流（3 阶段）
+
+```
+阶段1: 需求场景分析         @HArchitect  → requirement-analysis
+阶段2: 需求设计             @HEngineer   → requirement-design
+阶段3: 开发计划             @HEngineer   → development-plan
+```
+
+**特点**：
+- 适用于中小规模功能增强需求
+- 快速产出结构化文档和开发计划
+- 同样需要通过质量门评审
 
 #### Project Analysis 工作流（3 阶段）
 
@@ -85,6 +100,7 @@
 - 自动识别架构组件、技术栈、扩展性瓶颈
 - 严格的覆盖率检查，确保分析完整性
 - 输出包含 Mermaid 图表和代码引用
+- 无质量门禁（诊断型工作流）
 
 ## 安装
 
@@ -209,11 +225,20 @@ logger.warn('警告信息')
 
 ### 1. 启动工作流
 
-按 **Tab** 键切换到 **HArchitect** 入口，输入：
+按 **Tab** 键切换到 **Hyper** 入口（统一路由代理），输入：
 
 ```
 我想设计一个实时通知系统
 ```
+
+Hyper 会自动识别您的意图并路由到正确的专业代理（如 HArchitect）。
+
+### 2. 选择工作流
+
+首次使用时，系统会提示您选择工作流类型：
+- **Classic**：8 阶段完整流程（推荐大型项目）
+- **Lite Designer**：3 阶段轻量流程（推荐中小规模功能）
+- **Project Analysis**：项目架构分析（无质量门禁）
 
 ### 2. 配置参考资料
 
@@ -254,8 +279,9 @@ logger.warn('警告信息')
 ### 4. 质量评审
 
 修改确认后，HCritic 自动进行质量评审：
-- **通过**：进入下一阶段
-- **不通过**：返回修改后重新评审
+- **通过**（score > 75）：进入下一阶段
+- **不通过**（score ≤ 75）：返回修改后重新评审
+- **强制推进**：连续 3 次失败后可使用 `hd_force_next_step` 强制进入下一阶段
 
 ## 开发
 
@@ -280,18 +306,50 @@ npm run test:watch
 ```
 hyper-designer/
 ├── src/
-│   ├── agents/                    # Agent 定义
-│   │   ├── HArchitect/            # 系统架构师
-│   │   ├── HEngineer/             # 系统工程师
-│   │   ├── HCollector/            # 需求收集专家
-│   │   ├── HCritic/               # 设计评审员
-│   │   ├── HAnalysis/             # 项目分析专家
-│   │   └── factory.ts             # Agent 创建工厂
+│   ├── agents/                    # 核心 Agent 系统
+│   │   ├── Hyper/                 # 路由代理（统一入口）
+│   │   ├── factory.ts             # Agent 创建工厂
+│   │   ├── types.ts               # Agent 类型定义
+│   │   └── utils.ts               # Agent 工具函数
 │   │
-│   ├── workflows/                 # 工作流引擎
+│   ├── plugins/                   # 插件系统
+│   │   ├── agent/                 # Agent 插件
+│   │   │   ├── builtin/           # 内置 Agent 定义
+│   │   │   │   ├── HArchitect/    # 系统架构师
+│   │   │   │   ├── HEngineer/     # 系统工程师
+│   │   │   │   ├── HCollector/    # 需求收集专家
+│   │   │   │   ├── HCritic/       # 设计评审员
+│   │   │   │   └── HAnalysis/     # 项目分析专家
+│   │   │   └── user/              # 用户自定义 Agent 插件
+│   │   │
+│   │   └── workflow/              # 工作流插件
+│   │       ├── builtin/           # 内置工作流定义
+│   │       │   ├── classic/       # 经典工作流（8 阶段）
+│   │       │   ├── lite/          # 轻量级工作流（3 阶段）
+│   │       │   └── projectAnalysis/ # 项目分析工作流（3 阶段）
+│   │       └── user/              # 用户自定义工作流插件
+│   │
+│   ├── workflows/                 # 工作流引擎核心
 │   │   ├── core/                  # 核心逻辑
-│   │   ├── plugins/classic/       # 经典工作流（8 阶段）
-│   │   └── plugins/projectAnalysis/ # 项目分析工作流（3 阶段）
+│   │   │   ├── service/           # WorkflowService
+│   │   │   ├── state/             # 状态管理
+│   │   │   ├── runtime/           # 运行时（交接、提示词加载）
+│   │   │   ├── stageHooks/        # 阶段钩子
+│   │   │   ├── stageMilestone/    # 里程碑系统
+│   │   │   ├── artifacts/         # 产物管理
+│   │   │   ├── toolRegistry.ts    # 工具注册管理
+│   │   │   └── outputChecker.ts   # 输出文件检查
+│   │   └── integrations/          # 平台集成
+│   │
+│   ├── transform/                 # 转换系统
+│   │   ├── agentRouting.ts        # Agent 路由逻辑
+│   │   ├── placeholder.ts         # 占位符替换
+│   │   ├── injectionRegistry.ts   # 提示词注入注册
+│   │   ├── injections/            # 内置注入提供者
+│   │   └── opencode/              # OpenCode 平台转换器
+│   │
+│   ├── sdk/                       # SDK 模块
+│   │   └── index.ts               # 统一 SDK 接口
 │   │
 │   ├── skills/hyper-designer/     # 技能文件
 │   │   ├── ir-analysis/           # IR分析技能
@@ -300,13 +358,19 @@ hyper-designer/
 │   │   ├── functional-refinement/ # 功能细化技能
 │   │   ├── sr-ar-decomposition/   # SR-AR分解技能
 │   │   ├── functional-design/     # 功能设计技能
+│   │   ├── lite-designer/         # 轻量级设计技能
+│   │   ├── sdd-plan-generator/    # SDD计划生成技能
 │   │   ├── project-analysis-concepts/ # 项目分析共享概念
-│   │   ├── system-analysis/        # 系统分析技能
-│   │   ├── component-analysis/      # 组件分析技能
+│   │   ├── system-analysis/       # 系统分析技能
+│   │   ├── component-analysis/    # 组件分析技能
 │   │   └── missing-coverage-check/ # 缺漏检查技能
 │   │
-│   ├── tools/                     # 工具实现
-│   │   └── documentReview/        # 文档审核工具
+│   ├── tools/                     # 工具定义
+│   │
+│   ├── adapters/                  # 平台适配器
+│   │   └── opencode/              # OpenCode 平台实现
+│   │
+│   ├── config/                    # 配置加载
 │   │
 │   └── utils/                     # 工具函数
 │
