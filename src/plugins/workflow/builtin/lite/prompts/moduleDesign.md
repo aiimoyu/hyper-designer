@@ -41,10 +41,11 @@
 在开始执行前，**必须先读取** `lite-designer` skill 的以下 reference 文件：
 
 ```
-src/skills/hyper-designer/lite-designer/references/phase2-functional-module-design.md
+references/phase2-functional-module-design.md
 ```
 
 该文件包含：
+
 - 完整的输出模板结构（§0 概要 → §1 设计目标 → §4 SR-AR 分解 → §5 数据与接口 → 修改围栏）
 - SR 分解规则（总量控制 2-6 个、场景对应、合并优先）
 - AR 分配规则（默认 1-2 个、最多 3 个、功能点清单要求）
@@ -98,7 +99,7 @@ src/skills/hyper-designer/lite-designer/references/phase2-functional-module-desi
 
 **参考规范**：
 1. 请读取 `lite-designer` skill 文件
-2. 请读取 `src/skills/hyper-designer/lite-designer/references/phase2-functional-module-design.md`，理解该文档的撰写规范与模板要求
+2. 请读取 `references/phase2-functional-module-design.md`，理解该文档的撰写规范与模板要求
 
 在执行标准评审框架（完整性 / 准确性 / 清晰度 / 可行性 / 规范性）的基础上，**重点核查**以下维度：
 

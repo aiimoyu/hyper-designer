@@ -61,6 +61,8 @@ export interface InjectionConfig {
   provider: string
   tag?: string
   path?: string
+  skill?: string
+  files?: string[]
 }
 
 export interface WorkflowStageDefinition {

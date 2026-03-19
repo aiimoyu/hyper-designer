@@ -27,10 +27,11 @@
 在开始执行前，**必须先读取** `lite-designer` skill 的以下 reference 文件：
 
 ```
-src/skills/hyper-designer/lite-designer/references/phase1-requirements-analysis.md
+references/phase1-requirements-analysis.md
 ```
 
 该文件包含：
+
 - 完整的输出模板结构（§0 概要 → 5W2H → §3 业务功能与场景 → §6 验收方法 → §4 约束 → §7 边界）
 - 各章节详细写作指南
 - 功能清单优先级定义（P0/P1/P2）
@@ -82,7 +83,7 @@ src/skills/hyper-designer/lite-designer/references/phase1-requirements-analysis.
 
 **参考规范**：
 1. 请读取 `lite-designer` skill 文件
-2. 请读取 `src/skills/hyper-designer/lite-designer/references/phase1-requirements-analysis.md`，理解该文档的撰写规范与模板要求
+2. 请读取 `references/phase1-requirements-analysis.md`，理解该文档的撰写规范与模板要求
 
 在执行标准评审框架（完整性 / 准确性 / 清晰度 / 可行性 / 规范性）的基础上，**重点核查**以下维度：
 

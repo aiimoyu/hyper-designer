@@ -42,10 +42,11 @@
 在开始执行前，**必须先读取** `lite-designer` skill 的以下 reference 文件：
 
 ```
-src/skills/hyper-designer/lite-designer/references/phase3-sdd-plan.md
+references/phase3-sdd-plan.md
 ```
 
 该文件包含：
+
 - 完整的输出模板结构（§0 概要 → §1 执行前准备 → §2 开发任务列表 → §3 依赖关系 → §4 测试计划 → §5 风险 → §6 执行说明）
 - 任务编号格式（T-{里程碑编号}{序号:02d}）
 - 每个任务的完整卡片格式（对应AR、功能点清单、实现要点、验收条件）
@@ -97,7 +98,7 @@ src/skills/hyper-designer/lite-designer/references/phase3-sdd-plan.md
 
 **参考规范**：
 1. 请读取 `lite-designer` skill 文件
-2. 请读取 `src/skills/hyper-designer/lite-designer/references/phase3-sdd-plan.md`，理解该文档的撰写规范与模板要求
+2. 请读取 `references/phase3-sdd-plan.md`，理解该文档的撰写规范与模板要求
 
 在执行标准评审框架（完整性 / 准确性 / 清晰度 / 可行性 / 规范性）的基础上，**重点核查**以下维度：
 
