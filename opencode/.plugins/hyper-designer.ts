@@ -78,18 +78,22 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   const documentReviewTools = createDocumentReviewTools()
 
   const hdTools = {
+    // XXX 暂时解决GLM模型推理问题
     hd_workflow_state: tool({
-      description: "Get the current workflow state of the Hyper Designer project. Returns uninitialized status if no workflow has been selected.",
-      args: {},
-      async execute() {
+      description: "Get the current workflow state of the Hyper Designer project. Returns uninitialized status if no workflow has been selected. Call this tool with parameter: {\"_\": \"\"}",
+      args: {
+        _: tool.schema.string().optional().describe("Optional placeholder parameter - pass empty string or omit"),
+      },
+      async execute(_params: { _?: string }, _context) {
         const result = workflowService.hdGetWorkflowState()
         return JSON.stringify(result, null, 2)
       },
     }),
+    // XXX 暂时解决GLM模型推理问题
     hd_workflow_list: tool({
-      description: "List all available workflows that can be selected for the Hyper Designer project. Use this to see what workflows are available before calling hd_workflow_select.",
-      args: {},
-      async execute() {
+      description: "List all available workflows that can be selected for the Hyper Designer project. Use this to see what workflows are available before calling hd_workflow_select. Call this tool with parameter: {\"_\": \"\"}",
+      args: { _: tool.schema.string().optional().describe("Optional placeholder parameter - pass empty string or omit") },
+      async execute(_params: { _?: string }, _context) {
         const workflows = workflowService.listWorkflows()
         return JSON.stringify({ workflows }, null, 2)
       },
@@ -173,10 +177,11 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         }, null, 2);
       },
     }),
+    // XXX 暂时解决GLM模型推理问题
     hd_force_next_step: tool({
-      description: "Force advance to the next step in the workflow, bypassing gate checks. Use this when gate approval cannot be achieved after multiple attempts.",
-      args: {},
-      async execute() {
+      description: "Force advance to the next step in the workflow, bypassing gate checks. Use this when gate approval cannot be achieved after multiple attempts. Call this tool with parameter: {\"_\": \"\"}",
+      args: { _: tool.schema.string().optional().describe("无实际意义的占位参数，调用时传入随机字符串") },
+      async execute(_: { _: string }) {
         const result = workflowService.hdForceNextStep();
         return JSON.stringify(result, null, 2);
       },
