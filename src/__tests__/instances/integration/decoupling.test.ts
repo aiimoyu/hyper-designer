@@ -7,7 +7,6 @@ import { HyperDesignerPlugin } from "../../../../opencode/.plugins/hyper-designe
 
 vi.mock("@opencode-ai/plugin", () => {
   const tool = (definition: Record<string, unknown>) => definition
-  // Chainable Zod-like stub: every method returns itself so .string().optional().describe() works
   const chainable: Record<string, unknown> = {}
   const chainFn = () => chainable
   chainable.describe = chainFn
@@ -116,10 +115,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
   describe("Full Pipeline Integration", () => {
     it("should load config, get workflow, create agent, and resolve prompts end-to-end", () => {
       const config = loadHDConfig()
-      expect(config.workflow).toBe("classic")
       expect(config.agents).toBeDefined()
 
-      const workflow = getWorkflowDefinition(config.workflow!)
+      const workflow = getWorkflowDefinition("classic")
       expect(workflow).not.toBeNull()
       expect(workflow!.id).toBe("classic")
       expect(workflow!.name).toBe("Classic Requirements Engineering")
@@ -169,12 +167,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(agentConfig).toHaveProperty("existingAgent")
     })
 
-    it("should verify extensibility: config workflow affects loaded definition", () => {
-      const config = loadHDConfig()
-      expect(config.workflow).toBe("classic")
-
-      const workflow = getWorkflowDefinition(config.workflow!)
-      expect(workflow!.id).toBe(config.workflow)
+    it("should verify extensibility: workflow definition can be loaded", () => {
+      const workflow = getWorkflowDefinition("classic")
+      expect(workflow!.id).toBe("classic")
     })
   })
 
@@ -278,9 +273,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
   })
 
   describe("Config Default Behavior", () => {
-    it("should default to classic workflow when not specified", () => {
+    it("should load config with agents", () => {
       const config = loadHDConfig()
-      expect(config.workflow).toBe("classic")
+      expect(config.agents).toBeDefined()
     })
 
     it("should merge agent configs with defaults", () => {
@@ -314,11 +309,9 @@ describe("Integration Tests: Deep Decoupling System", () => {
       }
     })
 
-    it("should verify new workflow can be added by config change", () => {
-      const config = loadHDConfig()
-      const workflow = getWorkflowDefinition(config.workflow!)
-
-      expect(workflow!.id).toBe(config.workflow)
+    it("should verify workflow definition can be loaded by id", () => {
+      const workflow = getWorkflowDefinition("classic")
+      expect(workflow!.id).toBe("classic")
     })
   })
 
@@ -350,18 +343,11 @@ describe("Integration Tests: Deep Decoupling System", () => {
       }
       expect(agent).toHaveProperty("color")
       expect(agent).toHaveProperty("permission")
-      // tools 字段在 OpenCode 转换层从 permission 生成，不在 LocalAgentConfig 中
     })
   })
 })
 
 describe("No premature .hyper-designer directory creation", () => {
-  /**
-   * Regression guard: importing the plugin, loading config, reading workflow
-   * definitions, or creating agents must NOT cause the .hyper-designer
-   * directory to appear on disk.  Only explicit state writes (setStage,
-   * executeHandover) may create it.
-   */
   let hdDirExistedBefore: boolean
 
   beforeEach(() => {
@@ -369,8 +355,6 @@ describe("No premature .hyper-designer directory creation", () => {
   })
 
   it("importing plugin module does not create .hyper-designer", async () => {
-    // HyperDesignerPlugin is already imported at the top of this file;
-    // the import itself must not create the directory.
     if (!hdDirExistedBefore) {
       expect(existsSync(PROJECT_CONFIG_DIR)).toBe(false)
     }

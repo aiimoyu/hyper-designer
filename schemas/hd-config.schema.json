@@ -9,11 +9,6 @@
       "type": "string",
       "description": "JSON Schema reference for validation"
     },
-    "workflow": {
-      "type": "string",
-      "description": "Workflow type to use (classic or projectAnalysis)",
-      "default": "classic"
-    },
     "defaultModel": {
       "type": "string",
       "description": "Default model for all agents (format: provider/model). Individual agents can override this with their own model setting.",

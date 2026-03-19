@@ -1,21 +1,3 @@
 {
-  "$schema": "https://raw.atomgit.com/u011501137/hyper-designer/raw/master/schemas/hd-config.schema.json",
-  "workflow": "classic",
-  "agents": {
-    "HArchitect": {
-      "model": "volces/ep-20260306100253-tq6jf"
-    },
-    "HCollector": {
-      "model": "volces/ep-20260306100253-tq6jf"
-    },
-    "HCritic": {
-      "model": "volces/ep-20260306100253-tq6jf"
-    },
-    "HEngineer": {
-      "model": "volces/ep-20260306100253-tq6jf"
-    },
-    "HAnalysis": {
-      "model": "volces/ep-20260306100253-tq6jf"
-    }
-  }
+  "$schema": "https://raw.atomgit.com/u011501137/hyper-designer/raw/master/schemas/hd-config.schema.json"
 }

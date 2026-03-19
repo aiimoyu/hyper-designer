@@ -47,8 +47,6 @@ export interface TransformConfig {
 export interface HDConfig {
   /** Optional schema URL for validation */
   $schema?: string
-  /** Optional default workflow to use */
-  workflow?: string
   /** Optional default model for all agents (format: provider/model) */
   defaultModel?: string
   /** Agent-specific configuration overrides */
@@ -154,7 +152,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
     })
     return {
       agents: DEFAULT_AGENT_CONFIGS,
-      workflow: "classic",
       transform: DEFAULT_TRANSFORM_CONFIG,
     }
   }
@@ -170,7 +167,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
 
     // 合并配置策略：用户配置覆盖默认配置
     const mergedConfig: HDConfig = {
-      workflow: config.workflow ?? "classic",
       agents: {
         ...DEFAULT_AGENT_CONFIGS,
         ...config.agents,
@@ -213,7 +209,6 @@ export function loadHDConfig(configPath?: string): HDConfig {
 
     return {
       agents: DEFAULT_AGENT_CONFIGS,
-      workflow: "classic",
       transform: DEFAULT_TRANSFORM_CONFIG,
     }
   }

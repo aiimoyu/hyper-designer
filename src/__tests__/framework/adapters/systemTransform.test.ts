@@ -255,7 +255,6 @@ describe('system transform', () => {
     const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
 
     loadHDConfig.mockReturnValue({
-      workflow: 'classic',
       agents: {},
       transform: {
         blockedSkills: ['typescript-expert'],

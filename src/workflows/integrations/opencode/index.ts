@@ -15,7 +15,6 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 
 import { workflowService } from "../../core/service"
-import { loadHDConfig } from "../../../config/loader"
 import { HyperDesignerLogger } from "../../../utils/logger"
 import { createEventHandler } from "./event-handler"
 
@@ -28,9 +27,6 @@ export { convertWorkflowToolsToOpenCode } from './workflow-tools'
  * @returns 平台集成钩子对象
  */
 export async function createWorkflowHooks(ctx: PluginInput) {
-  const config = loadHDConfig()
-
-  // 注册 WorkflowService 事件监听器（用于可观测性）
   workflowService.on('handoverExecuted', ({ fromStep, toStep }: { fromStep: string; toStep: string }) => {
     HyperDesignerLogger.info('Integrations', `Handover completed: ${fromStep || '(none)'} → ${toStep}`)
   })
@@ -41,7 +37,6 @@ export async function createWorkflowHooks(ctx: PluginInput) {
 
   if (!workflowService.getDefinition()) {
     HyperDesignerLogger.warn('OpenCode', '工作流未初始化，进入 fallback 模式，等待 hd_workflow_select。', {
-      configuredWorkflow: config.workflow || 'classic',
       action: 'createWorkflowHooks',
       mode: 'fallback',
     })

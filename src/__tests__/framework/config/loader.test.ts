@@ -59,7 +59,6 @@ describe("loadHDConfig", () => {
 
     expect(config).toHaveProperty("agents")
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
-    expect(config.workflow).toBe("classic")
     expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
@@ -81,7 +80,6 @@ describe("loadHDConfig", () => {
 
     expect(config.agents.HArchitect.temperature).toBe(0.9)
     expect(config.agents.HArchitect.maxTokens).toBe(16000)
-    expect(config.workflow).toBe("classic")
   })
 
   it("merges config with defaults", () => {
@@ -102,7 +100,6 @@ describe("loadHDConfig", () => {
     expect(config.agents.HArchitect.temperature).toBe(0.8)
     expect(config.agents.HCritic).toEqual(DEFAULT_AGENT_CONFIGS.HCritic)
     expect(config.agents.HEngineer).toEqual(DEFAULT_AGENT_CONFIGS.HEngineer)
-    expect(config.workflow).toBe("classic")
     expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
@@ -113,7 +110,6 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
-    expect(config.workflow).toBe("classic")
     expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
@@ -124,7 +120,6 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.agents).toEqual(DEFAULT_AGENT_CONFIGS)
-    expect(config.workflow).toBe("classic")
     expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
@@ -141,13 +136,13 @@ describe("loadHDConfig", () => {
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
     expect(config.$schema).toBe("https://example.com/schema.json")
-    expect(config.workflow).toBe("classic")
   })
 
-  it("defaults workflow to 'classic' when not specified", () => {
+  it("loads defaultModel when specified", () => {
     mkdirSync(TEST_CONFIG_DIR, { recursive: true })
 
     const testConfig = {
+      defaultModel: "volces/ep-20260306100253-tq6jf",
       agents: {},
     }
 
@@ -155,23 +150,7 @@ describe("loadHDConfig", () => {
 
     const config = loadHDConfig(TEST_CONFIG_PATH)
 
-    expect(config.workflow).toBe("classic")
-    expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
-  })
-
-  it("uses custom workflow when specified", () => {
-    mkdirSync(TEST_CONFIG_DIR, { recursive: true })
-
-    const testConfig = {
-      workflow: "custom",
-      agents: {},
-    }
-
-    writeFileSync(TEST_CONFIG_PATH, JSON.stringify(testConfig, null, 2))
-
-    const config = loadHDConfig(TEST_CONFIG_PATH)
-
-    expect(config.workflow).toBe("custom")
+    expect(config.defaultModel).toBe("volces/ep-20260306100253-tq6jf")
     expect(config.transform).toEqual(DEFAULT_TRANSFORM_CONFIG)
   })
 
@@ -205,7 +184,7 @@ describe("loadHDConfig", () => {
           temperature: 0.5,
         },
       },
-      workflow: "global",
+      defaultModel: "global/model",
     }
     writeFileSync(TEST_GLOBAL_CONFIG_PATH, JSON.stringify(globalConfig, null, 2))
 
@@ -216,13 +195,13 @@ describe("loadHDConfig", () => {
           temperature: 0.9,
         },
       },
-      workflow: "project",
+      defaultModel: "project/model",
     }
     writeFileSync(PROJECT_CONFIG_PATH, JSON.stringify(projectConfig, null, 2))
   
     const config = loadHDConfig()
 
-    expect(config.workflow).toBe("project")
+    expect(config.defaultModel).toBe("project/model")
     expect(config.agents.HArchitect.temperature).toBe(0.9)
   })
 })
