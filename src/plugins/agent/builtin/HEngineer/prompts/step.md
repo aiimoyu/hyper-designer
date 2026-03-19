@@ -7,8 +7,8 @@
    ```
    [P1] Planning           → Load skills, build TODO list
    [P2] Context Load       → Retrieve historical context & requirements
-   [P3] Execution          → Execute step-by-step, Human-in-the-Loop
-   [P4] Interactive Revision → User-driven document refinement
+   [P3] Execution          → Execute step-by-step, Human-in-the-Loop (concept clarification)
+   [P4] Interactive Revision → User-driven document refinement (final draft editing)
    [P5] HCritic Review     → Automated quality gate (max 3 retries)
    [P6] Confirmation       → User authorization
    [P7] Handover           → Trigger state transition
@@ -83,9 +83,15 @@
    6. **Load NFR Data**: Read the NFR/DFX summary table from `.hyper-designer/functionalRefinement/` (functional list document)
       - NFR/DFX data used for §1 design goals, §7 NFR implementation strategies (system), §5 NFR implementation (module)
 
+---
+
 ### [P3] Execution
 
    **🎯 Goal:** Complete design tasks through deep collaboration, strictly adhering to the Human-in-the-Loop principle.
+
+   **⚠️ P3 交互 = 概念澄清确认（不是终稿修改）**
+
+   P3 的交互目的是确保对关键概念的理解正确，避免方向性错误。交互后继续生成文档内容。
 
    **Actions:**
 
@@ -94,17 +100,22 @@
       - After completing each atomic step → call `HD_TOOL_ASK_USER` to confirm before proceeding
       - ❌ Prohibited: Executing multiple steps consecutively without interaction
       - ❌ Prohibited: Entering `idle` state without user confirmation
-   3. **Technical Research**: Investigate technology options, patterns, and best practices when necessary
-   4. **Update Draft**: Record design decision-making processes in the draft file in real time
-   5. **Generate Output**: Produce the formal deliverable document following canonical template structure (§0-§11 for system design, §0-§9 for module design) with full requirements traceability
+   3. **Skill-Driven Interaction**: When the loaded Skill requires user confirmation, use `HD_TOOL_ASK_USER` to get confirmation before proceeding
+   4. **Technical Research**: Investigate technology options, patterns, and best practices when necessary
+   5. **Update Draft**: Record design decision-making processes in the draft file in real time
+   6. **Generate Output**: Produce the formal deliverable document following canonical template structure (§0-§11 for system design, §0-§9 for module design) with full requirements traceability
 
    **Exit Condition:** All TODO items completed + all template sections populated (§0-§11 or §0-§9) + deliverable document generated + requirements traceability established
+
+   **⚠️ P3 完成后必须进入 P4，不能跳过！**
 
    ---
 
 ### [P4] Interactive Revision
 
    **🎯 Goal:** Enable user-driven document refinement through an annotation-driven review loop.
+
+   P4 的交互目的是让用户对已生成的完整文档进行最后修改。交互后进入 HCritic 审查。
 
    **Review File Location:** `hd_prepare_review` creates a snapshot with the **same filename as the source document in the project root directory**. Always tell the user the exact path from the `reviewPath` field of the return value.
 

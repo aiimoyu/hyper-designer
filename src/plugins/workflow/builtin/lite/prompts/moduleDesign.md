@@ -18,6 +18,28 @@
 **执行Agent**: HEngineer  
 **核心目标**: 基于需求场景分析，产出单模块可实现的功能列表和模块功能设计摘要。
 
+### 0. 阶段执行流程
+
+本阶段遵循 Single-Stage Processing Pipeline：
+
+```
+[P1] Planning           → Load skills, build TODO list
+[P2] Context Load       → Retrieve historical context & requirements
+[P3] Execution          → Execute step-by-step, Human-in-the-Loop
+[P4] Interactive Revision → User-driven document refinement (hd_prepare_review/hd_finalize_review)
+[P5] HCritic Review     → Automated quality gate (max 3 retries)
+[P6] Confirmation       → User authorization
+[P7] Handover           → Trigger state transition
+```
+
+**关键交互节点**：
+1. **模块分解理解确认**（P3内）：阅读代码后，使用 HD_TOOL_ASK_USER 确认模块理解是否正确
+2. **围栏范围确认**（P3内）：确定修改围栏前，使用 HD_TOOL_ASK_USER 与用户确认围栏范围
+3. **交互式修改**（P4）：文档生成后，调用 `hd_prepare_review` 和 `hd_finalize_review` 进行交互式修改
+4. **HCritic审查**（P5）：使用 `HD_TOOL_DELEGATE(subagent=HCritic)` 进行质量评审
+
+---
+
 ### 1. 输入与资料收集
 
 **在开始执行前，必须读取前阶段产出的需求分析文档。**
@@ -57,7 +79,64 @@ references/phase2-functional-module-design.md
 
 ---
 
-### 3. 阶段交付物
+### 3. 关键交互步骤
+
+#### 3.1 模块分解理解确认（必须）
+
+阅读代码库后、开始SR-AR分解前，**必须使用 HD_TOOL_ASK_USER 确认对模块分解的理解是否正确**：
+
+```
+基于代码库分析，我对现有模块结构的理解如下：
+
+**模块结构**：
+- [模块A]：[职责描述]
+- [模块B]：[职责描述]
+
+**关键依赖**：
+- [模块A] → [模块B]：[依赖原因]
+
+**核心接口**：
+- [接口1]：[提供方] → [消费方]，[用途]
+
+请确认：
+1. 模块划分理解是否正确？
+2. 有没有遗漏的关键模块或接口？
+3. 有没有需要特别关注的依赖关系？
+```
+
+#### 3.2 围栏范围确认（必须）
+
+确定修改围栏前，**必须使用 HD_TOOL_ASK_USER 与用户确认围栏范围**：
+
+```
+基于代码库分析和历史文档，我初步划定以下修改围栏：
+
+✅ 允许修改：
+  - [模块A]：[修改内容]
+  - [模块B]：[修改内容]
+
+❌ 禁止修改：
+  - [模块C]：[原因]
+  - [模块D]：[原因]
+
+❓ 需要您确认：
+  - [模块E]：是否可以修改？
+
+请确认以上围栏范围是否正确，或指出需要调整的部分。
+```
+
+#### 3.3 交互式修改（P4）
+
+文档生成后，**必须调用交互式修改工具**：
+
+1. **Prepare Review**: 调用 `hd_prepare_review` 创建文档快照
+2. **Notify User**: 使用 `HD_TOOL_ASK_USER` 通知用户审核快照文件
+3. **Finalize Review**: 调用 `hd_finalize_review` 获取用户修改
+4. **Process Changes**: 根据用户修改更新文档，循环直到 `canProceedToNextStep === true`
+
+---
+
+### 4. 阶段交付物
 
 | 文件名 | 路径 | 格式要求 |
 | :--- | :--- | :--- |
@@ -65,7 +144,7 @@ references/phase2-functional-module-design.md
 
 ---
 
-### 4. 质量要求
+### 5. 质量要求
 
 基于 `phase2-functional-module-design.md` 中的质量自检清单：
 
@@ -80,7 +159,7 @@ references/phase2-functional-module-design.md
 
 ---
 
-### 5. 质量审查
+### 6. 质量审查
 
 **审查方式**：使用 `HD_TOOL_DELEGATE(subagent=HCritic)` 调用 HCritic 进行质量评审。
 

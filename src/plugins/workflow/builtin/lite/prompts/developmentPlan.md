@@ -19,6 +19,28 @@
 **执行Agent**: HEngineer  
 **核心目标**: 将单模块设计转换为可执行、可分发、可验证的 SDD 计划。
 
+### 0. 阶段执行流程
+
+本阶段遵循 Single-Stage Processing Pipeline：
+
+```
+[P1] Planning           → Load skills, build TODO list
+[P2] Context Load       → Retrieve historical context & requirements
+[P3] Execution          → Execute step-by-step, Human-in-the-Loop
+[P4] Interactive Revision → User-driven document refinement (hd_prepare_review/hd_finalize_review)
+[P5] HCritic Review     → Automated quality gate (max 3 retries)
+[P6] Confirmation       → User authorization
+[P7] Handover           → Trigger state transition
+```
+
+**关键交互节点**：
+1. **代码阅读确认修改位置**（P3内）：阅读代码后，明确每个任务要修改的文件路径、位置和内容
+2. **里程碑确认**（P3内）：使用 HD_TOOL_ASK_USER 确认里程碑时间节点是否符合预期
+3. **交互式修改**（P4）：文档生成后，调用 `hd_prepare_review` 和 `hd_finalize_review` 进行交互式修改
+4. **HCritic审查**（P5）：使用 `HD_TOOL_DELEGATE(subagent=HCritic)` 进行质量评审
+
+---
+
 ### 1. 输入与资料收集
 
 **在开始执行前，必须读取前阶段产出的模块设计文档。**
@@ -58,7 +80,66 @@ references/phase3-sdd-plan.md
 
 ---
 
-### 3. 阶段交付物
+### 3. 代码阅读要求（必须）
+
+**在生成SDD计划前，必须阅读相关代码文件，明确修改位置。**
+
+#### 3.1 阅读步骤
+
+1. **阅读需求设计说明书中的修改围栏**：确认允许修改和禁止修改的范围
+2. **使用 SearchCodebase/Grep 阅读代码库**：定位要修改的文件和位置
+3. **记录修改位置**：每个任务必须明确以下信息
+
+#### 3.2 任务修改信息格式
+
+每个开发任务必须包含：
+
+```
+**修改文件**：
+- 文件路径：[具体路径，如 src/services/feedback/index.ts]
+- 修改位置：[行号范围或函数名，如 L45-67 或 submitFeedback 函数]
+- 修改类型：[新增 / 修改 / 删除]
+- 修改内容：[具体描述，如"新增 submitFeedback 方法，处理用户反馈提交"]
+
+**新增文件**（如有）：
+- 文件路径：[具体路径]
+- 依赖关系：[依赖哪些现有模块]
+- 集成方式：[如何与现有代码集成]
+```
+
+---
+
+### 4. 关键交互步骤
+
+#### 4.1 里程碑确认
+
+在开始拆分任务前，**使用 HD_TOOL_ASK_USER 确认里程碑时间节点**：
+
+```
+在生成开发计划前，请确认：
+
+1. 各里程碑的目标日期是否与 §4 中一致？
+   M1（需求设计完成）：[日期]
+   M2（P0 功能上线）：[日期]
+   M3（P1 功能上线）：[日期]
+
+2. 是否有并行开发的团队成员？如有，我可以标注哪些任务可以并行。
+
+3. 有没有已知的技术风险需要在计划中提前预留时间？
+```
+
+#### 4.2 交互式修改（P4）
+
+文档生成后，**必须调用交互式修改工具**：
+
+1. **Prepare Review**: 调用 `hd_prepare_review` 创建文档快照
+2. **Notify User**: 使用 `HD_TOOL_ASK_USER` 通知用户审核快照文件
+3. **Finalize Review**: 调用 `hd_finalize_review` 获取用户修改
+4. **Process Changes**: 根据用户修改更新文档，循环直到 `canProceedToNextStep === true`
+
+---
+
+### 5. 阶段交付物
 
 | 文件名 | 路径 | 格式要求 |
 | :--- | :--- | :--- |
@@ -66,7 +147,7 @@ references/phase3-sdd-plan.md
 
 ---
 
-### 4. 质量要求
+### 6. 质量要求
 
 基于 `phase3-sdd-plan.md` 中的质量自检清单：
 
@@ -76,10 +157,11 @@ references/phase3-sdd-plan.md
 4. **任务依赖关系已完整标注**
 5. **修改围栏已在执行说明中体现**
 6. **测试计划覆盖主成功场景和关键异常场景**
+7. **每个任务明确了修改文件路径、位置和内容**
 
 ---
 
-### 5. 质量审查
+### 7. 质量审查
 
 **审查方式**：使用 `HD_TOOL_DELEGATE(subagent=HCritic)` 调用 HCritic 进行质量评审。
 
@@ -109,6 +191,7 @@ references/phase3-sdd-plan.md
 | **验收条件客观性** | 每个任务的验收条件是否可客观判断？是否避免了模糊词汇？ | 🔴 Critical |
 | **功能点清单追溯** | 任务的功能点是否来自 AR 功能点？是否有遗漏或越界？ | 🟡 Major |
 | **依赖关系完整性** | 任务依赖关系是否已标注？是否有循环依赖？ | 🟡 Major |
+| **修改位置明确性** | 每个任务是否明确了修改文件路径、位置和内容？ | 🔴 Critical |
 
 ## 📋 输出要求
 - 严格遵循审核报告格式输出
@@ -118,7 +201,7 @@ references/phase3-sdd-plan.md
 
 ---
 
-### 6. 阶段完成提示
+### 8. 阶段完成提示
 
 **本阶段是工作流的最后一个阶段。**
 
