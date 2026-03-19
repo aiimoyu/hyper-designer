@@ -6,7 +6,7 @@ describe('lite workflow stage metadata', () => {
 
   const stageKeys = [
     'requirementAnalysis',
-    'ModuleDesign',
+    'requirementDesign',
     'developmentPlan',
   ] as const
 
@@ -44,23 +44,23 @@ describe('lite workflow stage metadata', () => {
     })
   })
 
-  describe('ModuleDesign metadata values', () => {
+  describe('requirementDesign metadata values', () => {
     it('is required', () => {
-      expect(stages['ModuleDesign'].required).toBe(true)
+      expect(stages['requirementDesign'].required).toBe(true)
     })
 
     it('inputs requirementAnalysis', () => {
-      const inputs = stages['ModuleDesign'].inputs!
+      const inputs = stages['requirementDesign'].inputs!
       const item = inputs.find(i => i.id === 'requirementAnalysis')
       expect(item).toBeDefined()
       expect(item?.path).toBe('./.hyper-designer/requirementAnalysis/需求分析说明书.md')
     })
 
     it('outputs functionalDesign artifact', () => {
-      const outputs = stages['ModuleDesign'].outputs!
+      const outputs = stages['requirementDesign'].outputs!
       const item = outputs.find(o => o.id === 'functionalDesign')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/ModuleDesign/需求设计说明书.md')
+      expect(item?.path).toBe('./.hyper-designer/requirementDesign/需求设计说明书.md')
       expect(item?.type).toBe('file')
     })
   })
@@ -74,7 +74,7 @@ describe('lite workflow stage metadata', () => {
       const inputs = stages['developmentPlan'].inputs!
       const item = inputs.find(i => i.id === 'functionalDesign')
       expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/ModuleDesign/需求设计说明书.md')
+      expect(item?.path).toBe('./.hyper-designer/requirementDesign/需求设计说明书.md')
     })
 
     it('outputs developmentPlan artifact', () => {

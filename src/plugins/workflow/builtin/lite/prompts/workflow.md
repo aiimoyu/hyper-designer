@@ -5,7 +5,7 @@
 本工作流由 **HArchitect** 与 **HEngineer** 协作完成，严格遵循线性执行顺序。每个阶段必须按照 `Single-Stage Processing Pipeline` 执行后方可进入下一阶段。
 
 **执行链条：**
-`requirementAnalysis` → `ModuleDesign` → `developmentPlan`
+`requirementAnalysis` → `requirementDesign` → `developmentPlan`
 
 ### 阶段定义与执行规范
 
@@ -32,7 +32,7 @@
 
 - `.hyper-designer/requirementAnalysis/需求分析说明书.md`
 
-#### 阶段 2：ModuleDesign (功能列表与模块设计)
+#### 阶段 2：requirementDesign (功能列表与需求设计)
 
 **执行者：** HEngineer
 **核心目标：** 基于需求场景分析，产出单模块可实现的功能列表和模块功能设计摘要。
@@ -45,12 +45,12 @@
 
 1. **功能提取**：从需求场景中提取功能点（最多8个）。
 2. **SR映射**：建立功能与SR的映射关系。
-3. **模块设计**：输出模块职责、边界、核心接口（最多3个）。
+3. **需求设计**：输出模块职责、边界、核心接口（最多3个）。
 4. **DFX约束**：提取关键非功能性要求（最多5条）。
 
 **输出交付物：**
 
-- `.hyper-designer/ModuleDesign/需求设计说明书.md`
+- `.hyper-designer/requirementDesign/需求设计说明书.md`
 
 #### 阶段 3：developmentPlan (SDD 开发计划生成)
 
@@ -59,7 +59,7 @@
 
 **输入依赖：**
 
-- `.hyper-designer/ModuleDesign/需求设计说明书.md`
+- `.hyper-designer/requirementDesign/需求设计说明书.md`
 
 **执行行动指引：**
 

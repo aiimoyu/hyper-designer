@@ -51,7 +51,7 @@ const REFERENCE_TEMPLATE = `# 参考资料清单
 | --- | --- |
 | Industry Design References (业界设计参考) | |
 | System Design Specification (系统设计说明书) | |
-| Module Design Specification (模块功能设计说明书) | |
+| Requirement Design Specification (需求设计说明书) | |
 `
 
 /**

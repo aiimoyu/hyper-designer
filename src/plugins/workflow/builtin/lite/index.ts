@@ -54,7 +54,7 @@ const FUNCTIONAL_DESIGN_INPUTS: StageFileItem[] = [
 const FUNCTIONAL_DESIGN_OUTPUTS: StageFileItem[] = [
   {
     id: 'functionalDesign',
-    path: './.hyper-designer/ModuleDesign/需求设计说明书.md',
+    path: './.hyper-designer/requirementDesign/需求设计说明书.md',
     type: 'file',
     description: 'Functional design specification document',
   },
@@ -63,7 +63,7 @@ const FUNCTIONAL_DESIGN_OUTPUTS: StageFileItem[] = [
 const SDD_PLAN_INPUTS: StageFileItem[] = [
   {
     id: 'functionalDesign',
-    path: './.hyper-designer/ModuleDesign/需求设计说明书.md',
+    path: './.hyper-designer/requirementDesign/需求设计说明书.md',
     type: 'file',
     description: 'Functional design specification document',
   },
@@ -81,7 +81,7 @@ const SDD_PLAN_OUTPUTS: StageFileItem[] = [
 export const liteWorkflow: WorkflowDefinition = {
   id: 'lite-designer',
   name: 'Lite Designer',
-  description: '3-stage lightweight workflow for single-module changes: requirementAnalysis → ModuleDesign → designdevelopmentPlan',
+  description: '3-stage lightweight workflow for single-module changes: requirementAnalysis → requirementDesign → designdevelopmentPlan',
   entryStageId: 'requirementAnalysis',
 
   promptBindings: {
@@ -104,19 +104,19 @@ export const liteWorkflow: WorkflowDefinition = {
       outputs: REQUIREMENT_ANALYSIS_OUTPUTS,
       before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
-      transitions: [{ id: 'to-ModuleDesign', toStageId: 'ModuleDesign', mode: 'auto', priority: 0 }],
+      transitions: [{ id: 'to-requirementDesign', toStageId: 'requirementDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '请使用 `lite-designer` skill进行需求分析，并输出需求分析说明书', currentName),
     },
 
-    ModuleDesign: {
-      stageId: 'ModuleDesign',
-      name: 'Module Design',
-      description: 'Produce module-level functional design',
+    requirementDesign: {
+      stageId: 'requirementDesign',
+      name: 'Requirement Design',
+      description: 'Produce module-level functional requirement design',
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleDesign.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDesign.md')),
       },
       requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
       required: true,
@@ -125,7 +125,7 @@ export const liteWorkflow: WorkflowDefinition = {
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
       transitions: [{ id: 'to-developmentPlan', toStageId: 'developmentPlan', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '请使用 `lite-designer` skill，并根据需求分析进行模块设计，并输出需求设计说明书', currentName),
+        buildHandoverPrompt(thisName, '请使用 `lite-designer` skill，并根据需求分析进行需求设计，并输出需求设计说明书', currentName),
     },
 
     developmentPlan: {

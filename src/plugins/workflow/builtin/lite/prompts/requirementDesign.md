@@ -1,22 +1,22 @@
-## 当前阶段：功能列表与模块设计（轻量）
+## 当前阶段：功能列表与需求设计（轻量）
 
 ```xml
 <workflow_context>
   <pipeline>
-    <curr_stage id="ModuleDesign"/>
+    <curr_stage id="requirementDesign"/>
     <pre_stage>requirementAnalysis</pre_stage>
   </pipeline>
   <executing_agent>HEngineer</executing_agent>
   <core_objective>
     Based on requirement scenario analysis, produce a single-module implementable
-    function list and module functional design summary within strict length limits.
+    function list and requirement functional design summary within strict length limits.
   </core_objective>
 </workflow_context>
 ```
 
-**阶段标识**: `ModuleDesign`  
-**执行Agent**: HEngineer  
-**核心目标**: 基于需求场景分析，产出单模块可实现的功能列表和模块功能设计摘要。
+**阶段标识**: `requirementDesign`
+**执行Agent**: HEngineer
+**核心目标**: 基于需求场景分析，产出单模块可实现的功能列表和需求功能设计摘要。
 
 ### 0. 阶段执行流程
 
@@ -140,7 +140,7 @@ references/phase2-functional-module-design.md
 
 | 文件名 | 路径 | 格式要求 |
 | :--- | :--- | :--- |
-| **需求设计说明书.md** | `.hyper-designer/ModuleDesign/需求设计说明书.md` | Markdown，**严格遵循 phase2-functional-module-design.md 中的完整模板** |
+| **需求设计说明书.md** | `.hyper-designer/requirementDesign/需求设计说明书.md` | Markdown，**严格遵循 phase2-functional-module-design.md 中的完整模板** |
 
 ---
 
@@ -170,7 +170,7 @@ references/phase2-functional-module-design.md
 
 ## 📁 审核目标
 请对以下文档进行全面的质量审核：
-**文件路径**: `.hyper-designer/ModuleDesign/需求设计说明书.md`
+**文件路径**: `.hyper-designer/requirementDesign/需求设计说明书.md`
 
 ---
 
