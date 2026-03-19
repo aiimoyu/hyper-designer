@@ -679,16 +679,16 @@ export class WorkflowService extends EventEmitter {
 
   /**
    * 设置工作流交接目标
-   * @param stepName 目标步骤名称或 null（清除交接）
+   * @param stageName 目标阶段名称或 null（清除交接）
    * @returns 更新后的工作流状态
    */
-  setHandover(stepName: string | null): WorkflowState {
+  setHandover(stageName: string | null): WorkflowState {
     if (!this.definition) {
       throw new Error("Workflow not initialized. Call selectWorkflow first.");
     }
-    const state = setWorkflowHandover(stepName, this.definition);
-    if (stepName !== null && state.current?.handoverTo === stepName) {
-      this.emit('handoverScheduled', { targetStep: stepName });
+    const state = setWorkflowHandover(stageName, this.definition);
+    if (stageName !== null && state.current?.handoverTo === stageName) {
+      this.emit('handoverScheduled', { targetStage: stageName });
     }
     return state;
   }
@@ -828,12 +828,12 @@ export class WorkflowService extends EventEmitter {
    * 在调度交接前验证质量门是否通过（score > 75）。
    * 成功时返回包含 instruction 的对象，要求 Agent 立即停止所有工作。
    *
-   * @param stepName 目标步骤名称（可选）。若省略，自动计算下一阶段：
+   * @param stageName 目标阶段名称（可选）。若省略，自动计算下一阶段：
    *                 - 当前阶段为 null → 第一个被选中的阶段
    *                 - 当前阶段不为 null → 下一个被选中的阶段
    * @returns 结构化结果对象
    */
-  async hdScheduleHandover(stepName?: string): Promise<HandoverResult> {
+  async hdScheduleHandover(stageName?: string): Promise<HandoverResult> {
     // 检查工作流是否已初始化
     if (!this.definition) {
       return {
@@ -862,13 +862,22 @@ export class WorkflowService extends EventEmitter {
       s => state?.workflow[s]?.selected !== false
     );
 
-    // 计算目标阶段：若未提供 stepName，自动选择下一阶段
-    let targetStep: string;
-    if (stepName) {
-      targetStep = stepName;
+    // 计算目标阶段：若未提供 stageName，自动选择下一阶段
+    let targetStage: string;
+    if (stageName) {
+      // 验证传入的 stageName 是否有效
+      if (!selectedStages.includes(stageName)) {
+        const validOptions = selectedStages.map(s => `"${s}"`).join(", ");
+        return {
+          scheduled: false,
+          status: "failed",
+          error: `Invalid stage name "${stageName}".\n\nValid stage options: ${validOptions}`,
+        };
+      }
+      targetStage = stageName;
     } else if (!currentStage && state?.current === null) {
       // 初始状态：选择第一个被选中的阶段
-      targetStep = selectedStages[0];
+      targetStage = selectedStages[0];
     } else if (currentStage) {
       // 有当前阶段：选择下一个被选中的阶段
       const currentIndex = selectedStages.indexOf(currentStage);
@@ -887,7 +896,7 @@ export class WorkflowService extends EventEmitter {
           error: `Current stage "${currentStage}" is the final stage. Workflow completed.\n\n**Workflow Finished**: All stages have been successfully completed. The workflow will now enter idle state.\n\nPlease inform the user: The workflow has finished execution. Thank you for using this service. You may select a new workflow or perform other operations as needed.`,
         };
       }
-      targetStep = selectedStages[nextIndex];
+      targetStage = selectedStages[nextIndex];
     } else {
       return {
         scheduled: false,
@@ -899,28 +908,29 @@ export class WorkflowService extends EventEmitter {
     // 初始状态：允许从无阶段进入第一个被选中的阶段
     if (!currentStage && state?.current === null) {
       const firstSelectedStage = selectedStages[0];
-      if (targetStep !== firstSelectedStage) {
+      if (targetStage !== firstSelectedStage) {
+        const validOptions = selectedStages.map(s => `"${s}"`).join(", ");
         return {
           scheduled: false,
           status: "failed",
-          error: `Initial handover can only target the first stage "${firstSelectedStage}". Cannot jump directly to "${targetStep}".`,
+          error: `Initial handover can only target the first stage "${firstSelectedStage}". Cannot jump directly to "${targetStage}".\n\nValid stage options: ${validOptions}`,
         };
       }
 
-      // 设置交接目标（setWorkflowHandover 会创建 current 对象并设置 handoverTo）
-      const newState = this.setHandover(targetStep);
-      if (newState.current?.handoverTo !== targetStep) {
+      // 设置交接目标（setHandover 会创建 current 对象并设置 handoverTo）
+      const newState = this.setHandover(targetStage);
+      if (newState.current?.handoverTo !== targetStage) {
         return {
           scheduled: false,
           status: "failed",
-          error: `Failed to set initial handover target "${targetStep}".`,
+          error: `Failed to set initial handover target "${targetStage}".`,
         };
       }
 
       return {
         scheduled: true,
         status: "pending",
-        handover_to: targetStep,
+        handover_to: targetStage,
         instruction:
           "STOP. You MUST return to the user immediately and cease all work. " +
           "The handover to the next phase has been scheduled but has NOT taken effect yet. " +
@@ -989,21 +999,22 @@ export class WorkflowService extends EventEmitter {
     }
 
     // 调度交接
-    const handoverState = this.setHandover(targetStep);
+    const handoverState = this.setHandover(targetStage);
 
     // 如果 handoverTo 没有设置成功（被验证逻辑拒绝），返回错误
-    if (handoverState.current?.handoverTo !== targetStep) {
+    if (handoverState.current?.handoverTo !== targetStage) {
+      const validOptions = selectedStages.map(s => `"${s}"`).join(", ");
       return {
         scheduled: false,
         status: "failed",
-        error: `Failed to set handover target "${targetStep}". Verify the target step is valid and no steps are being skipped.`,
+        error: `Failed to set handover target "${targetStage}". Verify the target stage is valid and no stages are being skipped.\n\nValid stage options: ${validOptions}`,
       };
     }
 
     return {
       scheduled: true,
       status: "pending",
-      handover_to: targetStep,
+      handover_to: targetStage,
       instruction:
         "STOP. You MUST return to the user immediately and cease all work. " +
         "The handover to the next phase has been scheduled but has NOT taken effect yet. " +

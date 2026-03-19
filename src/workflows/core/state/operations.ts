@@ -371,16 +371,16 @@ export function setWorkflowCurrent(stepName: string | null): WorkflowState {
  * Sets the workflow handover target
  * 
  * 交接验证逻辑：
- * 1. 如果当前没有活动步骤，只能交接给第一个被选中的步骤
- * 2. 如果有活动步骤，只能交接给下一个被选中的步骤或返回之前的步骤
- * 3. 不允许向前跳过被选中的步骤
+ * 1. 如果当前没有活动阶段，只能交接给第一个被选中的阶段
+ * 2. 如果有活动阶段，只能交接给下一个被选中的阶段或返回之前的阶段
+ * 3. 不允许向前跳过被选中的阶段
  * 
- * @param stepName Name of the step to hand over to, or null to clear
+ * @param stageName Name of the stage to hand over to, or null to clear
  * @param definition Workflow definition
  * @returns Updated workflow state
  */
-export function setWorkflowHandover(stepName: string | null, definition: WorkflowDefinition): WorkflowState {
-  HyperDesignerLogger.info("Workflow", "设置工作流交接目标", { targetStep: stepName });
+export function setWorkflowHandover(stageName: string | null, definition: WorkflowDefinition): WorkflowState {
+  HyperDesignerLogger.info("Workflow", "设置工作流交接目标", { targetStage: stageName });
 
   const state = ensureWorkflowStateExists();
 
@@ -395,7 +395,7 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
   };
 
   if (state.current === null) {
-    // 初始逻辑：如果没有当前活动步骤，创建一个初始 current 对象
+    // 初始逻辑：如果没有当前活动阶段，创建一个初始 current 对象
     state.current = {
       name: null,
       handoverTo: null,
@@ -407,19 +407,19 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
   }
 
   // 清除交接目标
-  if (stepName === null) {
+  if (stageName === null) {
     state.current.handoverTo = null;
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", "工作流交接目标已清除");
     return state;
   }
 
-  // 验证目标步骤是否存在
-  if (!state.workflow[stepName]) {
-    HyperDesignerLogger.warn("Workflow", "无效的工作流步骤", {
-      targetStep: stepName,
-      availableSteps: Object.keys(state.workflow),
-      error: `Invalid workflow step: ${stepName}`
+  // 验证目标阶段是否存在
+  if (!state.workflow[stageName]) {
+    HyperDesignerLogger.warn("Workflow", "无效的工作流阶段", {
+      targetStage: stageName,
+      availableStages: Object.keys(state.workflow),
+      error: `Invalid workflow stage: ${stageName}`
     });
     return incrementCurrentFailureCount();
   }
@@ -430,55 +430,55 @@ export function setWorkflowHandover(stepName: string | null, definition: Workflo
   const firstSelectedStage = selectedStages[0];
 
   if (state.current.name === null) {
-    // 初始交接验证：只能交接给第一个被选中的步骤
-    if (stepName === firstSelectedStage) {
-      state.current.handoverTo = stepName;
+    // 初始交接验证：只能交接给第一个被选中的阶段
+    if (stageName === firstSelectedStage) {
+      state.current.handoverTo = stageName;
       writeWorkflowStateFile(state);
-      HyperDesignerLogger.debug("Workflow", "初始交接目标设置完成", { targetStep: stepName });
+      HyperDesignerLogger.debug("Workflow", "初始交接目标设置完成", { targetStage: stageName });
       return state;
     }
 
-    HyperDesignerLogger.warn("Workflow", "无法设置交接：没有当前活动步骤且目标不是首个被选中的步骤", {
-      targetStep: stepName,
+    HyperDesignerLogger.warn("Workflow", "无法设置交接：没有当前活动阶段且目标不是首个被选中的阶段", {
+      targetStage: stageName,
       firstSelectedStage
     });
     return incrementCurrentFailureCount();
   }
 
   const currentIndex = selectedStages.indexOf(state.current.name);
-  const targetIndex = selectedStages.indexOf(stepName);
+  const targetIndex = selectedStages.indexOf(stageName);
 
-  // 目标步骤不在被选中列表中
+  // 目标阶段不在被选中列表中
   if (targetIndex === -1) {
-    HyperDesignerLogger.warn("Workflow", "目标步骤未被选中", {
-      targetStep: stepName,
+    HyperDesignerLogger.warn("Workflow", "目标阶段未被选中", {
+      targetStage: stageName,
       selectedStages
     });
     return incrementCurrentFailureCount();
   }
 
-  // 正常逻辑：只允许下一个步骤或向后步骤
-  const isNextStep = targetIndex === currentIndex + 1;
-  const isBackwardStep = targetIndex <= currentIndex;
+  // 正常逻辑：只允许下一个阶段或向后阶段
+  const isNextStage = targetIndex === currentIndex + 1;
+  const isBackwardStage = targetIndex <= currentIndex;
 
-  if (!isNextStep && !isBackwardStep) {
-    HyperDesignerLogger.warn("Workflow", "无法跳过步骤设置交接", {
+  if (!isNextStage && !isBackwardStage) {
+    HyperDesignerLogger.warn("Workflow", "无法跳过阶段设置交接", {
       currentStage: state.current.name,
       currentIndex,
-      targetStep: stepName,
+      targetStage: stageName,
       targetIndex,
-      validation: "noStepSkipping",
-      error: "Cannot skip steps"
+      validation: "noStageSkipping",
+      error: "Cannot skip stages"
     });
     return incrementCurrentFailureCount();
   }
 
-  state.current.handoverTo = stepName;
+  state.current.handoverTo = stageName;
   const neighbors = resolveCurrentNeighbors(state.workflow, state.current.name)
   state.current.previousStage = neighbors.previousStage
   state.current.nextStage = neighbors.nextStage
   writeWorkflowStateFile(state);
-  HyperDesignerLogger.debug("Workflow", "工作流交接目标设置完成", { targetStep: stepName });
+  HyperDesignerLogger.debug("Workflow", "工作流交接目标设置完成", { targetStage: stageName });
   return state;
 }
 
