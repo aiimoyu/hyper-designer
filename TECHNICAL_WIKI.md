@@ -806,9 +806,9 @@ sequenceDiagram
     OC->>WS: executeHandover()
     WS->>S: currentStage = "IRAnalysis"
     
-    Note over U,A: 执行 beforeStage 钩子
-    OC->>A: HCollector 收集领域分析资料
-    A-->>OC: 完成 (session.idle)
+    Note over U,A: 执行 before 钩子 (REFERENCE.md 设置)
+    OC->>A: Hyper 设置 REFERENCE.md
+    A-->>OC: 用户确认完成 (session.idle)
 
     Note over U,A: === IR 分析阶段执行 ===
     OC->>A: HArchitect 进入 IR 分析阶段
@@ -818,31 +818,28 @@ sequenceDiagram
         U->>A: 回答
     end
     
-    A->>A: 生成 ir信息.md
+    A->>A: 生成 需求信息.md
     
-    Note over U,A: 质量门检查
+    Note over U,A: 质量门检查 (gate 里程碑)
     A->>A: HCritic 评审文档
     A->>WS: hd_record_milestone({type: 'gate', score: 85, comment: '文档质量良好'})
-    QZ|    WS->>S: recordMilestone({type: 'gate', score: 85, comment: '文档质量良好'})
-    BR|    S-->>WS: 更新 workflow[IRAnalysis].stageMilestones
+    WS->>S: recordMilestone({type: 'gate', score: 85, comment: '文档质量良好'})
+    S-->>WS: 更新 workflow[IRAnalysis].stageMilestones
     
-    BB|    Note over U,A: 请求交接
-    VT|    A->>WS: hd_handover("scenarioAnalysis")
-    SM|    WS->>S: getLatestGateScore()? (85 > 75 ✓)
-    WJ|    WS->>S: setHandover("scenarioAnalysis")
-    MP|    WS-->>A: {success: true}
+    Note over U,A: 请求交接
+    A->>WS: hd_handover("scenarioAnalysis")
+    WS->>S: isGateApproved()? (score > 75?)
+    S-->>WS: true (85 > 75 ✓)
+    WS->>S: setHandover("scenarioAnalysis")
+    WS-->>A: {success: true}
 
     Note over U,A: === 交接执行 (session.idle) ===
     P->>OC: 触发 session.idle
     OC->>WS: executeHandover()
     WS->>S: currentStage = "scenarioAnalysis"
     
-    Note over U,A: 执行 afterStage 钩子 (离开 IRAnalysis)
+    Note over U,A: 执行 after 钩子 (离开 IRAnalysis - 上下文压缩)
     OC->>OC: summarizeSession()
-    
-    Note over U,A: 执行 beforeStage 钩子 (进入 scenarioAnalysis)
-    OC->>A: HCollector 收集系统需求资料
-    A-->>OC: 完成 (session.idle)
     
     Note over U,A: === 继续后续阶段... ===
 ```
@@ -853,41 +850,41 @@ sequenceDiagram
 stateDiagram-v2
     [*] --> IRAnalysis: 用户发起需求
     
-    IRAnalysis --> GateCheck1: 完成文档
-    GateCheck1 --> IRAnalysis: score ≤ 75<br/>需改进
-    GateCheck1 --> scenarioAnalysis: score > 75<br/>通过门禁
+    IRAnalysis --> GateCheck1: 完成文档 + 输出检查
+    GateCheck1 --> IRAnalysis: gate 里程碑 score ≤ 75<br/>需改进
+    GateCheck1 --> scenarioAnalysis: gate 里程碑 score > 75<br/>通过门禁
     
-    scenarioAnalysis --> GateCheck2: 完成文档
+    scenarioAnalysis --> GateCheck2: 完成文档 + 输出检查
     GateCheck2 --> scenarioAnalysis: score ≤ 75
     GateCheck2 --> useCaseAnalysis: score > 75
     
-    useCaseAnalysis --> GateCheck3: 完成文档
+    useCaseAnalysis --> GateCheck3: 完成文档 + 输出检查
     GateCheck3 --> useCaseAnalysis: score ≤ 75
     GateCheck3 --> functionalRefinement: score > 75
     
-    functionalRefinement --> GateCheck4: 完成文档
+    functionalRefinement --> GateCheck4: 完成文档 + 输出检查
     GateCheck4 --> functionalRefinement: score ≤ 75
     GateCheck4 --> requirementDecomposition: score > 75<br/>切换到 HEngineer
     
-    requirementDecomposition --> GateCheck5: 完成文档
+    requirementDecomposition --> GateCheck5: 完成文档 + 输出检查
     GateCheck5 --> requirementDecomposition: score ≤ 75
     GateCheck5 --> systemFunctionalDesign: score > 75
     
-    systemFunctionalDesign --> GateCheck6: 完成文档
+    systemFunctionalDesign --> GateCheck6: 完成文档 + 输出检查
     GateCheck6 --> systemFunctionalDesign: score ≤ 75
     GateCheck6 --> moduleFunctionalDesign: score > 75
     
-    moduleFunctionalDesign --> GateCheck7: 完成文档
+    moduleFunctionalDesign --> GateCheck7: 完成文档 + 输出检查
     GateCheck7 --> moduleFunctionalDesign: score ≤ 75
     GateCheck7 --> [*]: score > 75<br/>工作流完成
     
     note right of IRAnalysis
-        beforeStage: 收集领域分析资料
+        before: REFERENCE.md 设置 (Hyper)
+        after: 上下文压缩
     end note
     
     note right of scenarioAnalysis
-        beforeStage: 收集系统需求资料
-        afterStage: 压缩上下文
+        after: 上下文压缩
     end note
 ```
 
@@ -1038,14 +1035,14 @@ registry.registerToPlatform(adapter, registrations)
 ```typescript
 // hd_handover 工具实现
 async execute(params: { step_name: string }, ctx: ToolContext) {
-  // 1. 检查质量门
-  const latestGateScore = workflowService.getLatestGateScore()
-  if (!latestGateScore || latestGateScore <= 75) {
+  // 1. 检查 gate 里程碑是否通过（gate 是 requiredMilestones 中的里程碑标识）
+  const isApproved = workflowService.isGateApproved()
+  if (!isApproved) {
     // 增加失败计数
     workflowService.incrementFailureCount()
     return {
       success: false,
-      error: "Gate not passed. Latest gate score must be > 75"
+      error: "Gate milestone not passed. HCritic must approve with score > 75"
     }
   }
   
@@ -1062,89 +1059,6 @@ async execute(params: { step_name: string }, ctx: ToolContext) {
   const state = workflowService.setHandover(params.step_name)
   
   // 4. 返回结果
-  return {
-    success: true,
-    handover_to: params.step_name,
-    instruction: "STOP immediately. Handover will be processed on session.idle"
-  }
-}
-```
-### 7.2 工具调用流程
-
-```typescript
-// hd_handover 工具实现
-async execute(params: { step_name: string }) {
-  // 1. 检查质量门
-  const latestGateScore = workflowService.getLatestGateScore()
-  if (!latestGateScore || latestGateScore <= 75) {
-    // 增加失败计数
-    workflowService.incrementFailureCount()
-    return {
-      success: false,
-      error: "Gate not passed. Latest gate score must be > 75"
-    }
-  }
-  
-  // 2. 设置交接目标
-  const state = workflowService.setHandover(params.step_name)
-  
-  // 3. 返回结果
-  return {
-    success: true,
-    handover_to: params.step_name,
-    instruction: "STOP immediately. Handover will be processed on session.idle"
-  }
-}
-
-// hd_record_milestone 工具实现
-async execute(params: { type: 'gate' | 'completion' | 'checkpoint', score?: number, comment?: string, detail?: Record<string, unknown> }) {
-  // 1. 验证里程碑类型
-  if (params.type === 'gate' && params.score === undefined) {
-    return { success: false, error: "Gate milestone requires score" }
-  }
-  
-  // 2. 记录里程碑
-  const milestone = {
-    type: params.type,
-    timestamp: new Date().toISOString(),
-    detail: {
-      score: params.score,
-      comment: params.comment,
-      ...params.detail
-    }
-  }
-  
-  workflowService.recordMilestone(milestone)
-  
-  return { success: true }
-}
-
-// hd_force_next_step 工具实现
-async execute(params: { step_name: string }) {
-  // 1. 检查失败计数
-  const failureCount = workflowService.getFailureCount()
-  if (failureCount < 3) {
-    return {
-      success: false,
-      error: `Cannot force next step. Failure count (${failureCount}) < 3`
-    }
-  }
-  
-  // 2. 验证目标阶段是否为下一选中阶段
-  const nextStage = workflowService.getNextSelectedStage()
-  if (params.step_name !== nextStage) {
-    return {
-      success: false,
-      error: `Can only force transition to next selected stage (${nextStage})`
-    }
-  }
-  
-  // 3. 设置交接目标
-  const state = workflowService.setHandover(params.step_name)
-  
-  // 4. 重置失败计数
-  workflowService.resetFailureCount()
-  
   return {
     success: true,
     handover_to: params.step_name,
