@@ -14,6 +14,14 @@
       "description": "Workflow type to use (classic or projectAnalysis)",
       "default": "classic"
     },
+    "defaultModel": {
+      "type": "string",
+      "description": "Default model for all agents (format: provider/model). Individual agents can override this with their own model setting.",
+      "examples": [
+        "volces/ep-20260306100253-tq6jf",
+        "github-copilot/claude-sonnet-4.5"
+      ]
+    },
     "agents": {
       "type": "object",
       "description": "Per-agent configuration overrides",

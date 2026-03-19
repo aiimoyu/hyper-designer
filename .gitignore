@@ -42,6 +42,7 @@ temp/
 
 # Test output
 .test-temp/
+vitest.config.*.mjs
 
 # OpenCode specific
 .opencode/

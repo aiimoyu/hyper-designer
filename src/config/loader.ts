@@ -49,6 +49,8 @@ export interface HDConfig {
   $schema?: string
   /** Optional default workflow to use */
   workflow?: string
+  /** Optional default model for all agents (format: provider/model) */
+  defaultModel?: string
   /** Agent-specific configuration overrides */
   agents: Record<string, AgentOverrideConfig>
   /** Optional transform configuration overrides */
@@ -183,10 +185,15 @@ export function loadHDConfig(configPath?: string): HDConfig {
       mergedConfig.$schema = config.$schema
     }
 
+    if (config.defaultModel !== undefined) {
+      mergedConfig.defaultModel = config.defaultModel
+    }
+
     HyperDesignerLogger.info("Config", `配置加载成功`, {
       path,
       agentCount: Object.keys(mergedConfig.agents).length,
-      hasSchema: mergedConfig.$schema !== undefined
+      hasSchema: mergedConfig.$schema !== undefined,
+      hasDefaultModel: mergedConfig.defaultModel !== undefined
     })
 
     return mergedConfig

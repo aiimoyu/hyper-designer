@@ -1,4 +1,5 @@
 import type { ToolDefinition } from '../toolTypes'
+import { resolveAgentConfig } from '../../../transform/agentRouting'
 
 /**
  * WorkflowService - 工作流服务类
@@ -121,6 +122,8 @@ function buildInstancePlan(
     kind: 'before' | 'main' | 'after'
     hookId?: string
     agent?: string
+    model?: { providerID: string; modelID: string }
+    variant?: string
     fromNodeId: string | null
     nextNodeId: string | null
   }>
@@ -133,6 +136,8 @@ function buildInstancePlan(
     kind: 'before' | 'main' | 'after'
     hookId?: string
     agent?: string
+    model?: { providerID: string; modelID: string }
+    variant?: string
     fromNodeId: string | null
     nextNodeId: string | null
   }> = {}
@@ -168,22 +173,28 @@ function buildInstancePlan(
       const hook = beforeHooks[i]
       const hookId = hook?.id
       const hookAgent = hook?.agent ?? stage.agent
+      const agentConfig = hookAgent ? resolveAgentConfig(hookAgent) : null
       nodePlan[nodeId] = {
         nodeId,
         stageId,
         kind: 'before',
         ...(hookId ? { hookId } : {}),
         ...(hookAgent ? { agent: hookAgent } : {}),
+        ...(agentConfig?.model ? { model: agentConfig.model } : {}),
+        ...(agentConfig?.variant ? { variant: agentConfig.variant } : {}),
         fromNodeId: i === 0 ? null : beforeNodeIds[i - 1]!,
         nextNodeId: i < beforeNodeIds.length - 1 ? beforeNodeIds[i + 1]! : mainNodeId,
       }
     }
 
+    const mainAgentConfig = stage.agent ? resolveAgentConfig(stage.agent) : null
     nodePlan[mainNodeId] = {
       nodeId: mainNodeId,
       stageId,
       kind: 'main',
       ...(stage.agent ? { agent: stage.agent } : {}),
+      ...(mainAgentConfig?.model ? { model: mainAgentConfig.model } : {}),
+      ...(mainAgentConfig?.variant ? { variant: mainAgentConfig.variant } : {}),
       fromNodeId: beforeNodeIds.length > 0 ? beforeNodeIds[beforeNodeIds.length - 1]! : null,
       nextNodeId: null,
     }
@@ -193,12 +204,15 @@ function buildInstancePlan(
       const hook = afterHooks[i]
       const hookId = hook?.id
       const hookAgent = hook?.agent ?? stage.agent
+      const agentConfig = hookAgent ? resolveAgentConfig(hookAgent) : null
       nodePlan[nodeId] = {
         nodeId,
         stageId,
         kind: 'after',
         ...(hookId ? { hookId } : {}),
         ...(hookAgent ? { agent: hookAgent } : {}),
+        ...(agentConfig?.model ? { model: agentConfig.model } : {}),
+        ...(agentConfig?.variant ? { variant: agentConfig.variant } : {}),
         fromNodeId: i === 0 ? mainNodeId : afterNodeIds[i - 1]!,
         nextNodeId: i < afterNodeIds.length - 1 ? afterNodeIds[i + 1]! : null,
       }
