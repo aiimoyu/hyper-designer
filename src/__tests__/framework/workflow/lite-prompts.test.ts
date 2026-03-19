@@ -15,13 +15,13 @@ describe('lite workflow prompts', () => {
     }
   })
 
-  it('enforces output length limits in most stage prompts', () => {
+  it('enforces quantity limits in stage prompts', () => {
     const analysis = loadPromptForStage('requirementAnalysis', liteWorkflow)
     const design = loadPromptForStage('ModuleDesign', liteWorkflow)
     const sdd = loadPromptForStage('developmentPlan', liteWorkflow)
 
-    expect(analysis).toContain('1-2 句话')
-    expect(design).toContain('1-2 句话')
-    expect(sdd).toContain('3-5')
+    expect(analysis).toContain('最多3个关键场景')
+    expect(design).toContain('最多8个')
+    expect(sdd).toContain('最多4个波次')
   })
 })

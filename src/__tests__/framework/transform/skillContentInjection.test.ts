@@ -11,7 +11,7 @@ vi.mock('fs/promises', () => ({
 
 import { readFile, readdir, stat } from 'fs/promises'
 
-function dir(name: string): { name: string; isDirectory: () => true } {
+function dir(name: string): { name: string; isDirectory: () => boolean } {
   return { name, isDirectory: () => true }
 }
 
@@ -66,9 +66,9 @@ describe('skillContentInjectionProvider', () => {
     const skillFile = resolve(skillDir, 'SKILL.md')
 
     vi.mocked(readdir).mockImplementation(async (target: unknown) => {
-      if (target === skillsRoot) return [dir('subdir')]
-      if (target === nested) return [dir('lite-designer')]
-      return []
+      if (target === skillsRoot) return [dir('subdir')] as never
+      if (target === nested) return [dir('lite-designer')] as never
+      return [] as never
     })
 
     fileExists(skillFile)
@@ -100,8 +100,8 @@ describe('skillContentInjectionProvider', () => {
     const extraFile = resolve(skillDir, 'references', 'phase1.md')
 
     vi.mocked(readdir).mockImplementation(async (target: unknown) => {
-      if (target === skillsRoot) return [dir('lite-designer')]
-      return []
+      if (target === skillsRoot) return [dir('lite-designer')] as never
+      return [] as never
     })
 
     fileExists(skillFile)
@@ -135,7 +135,7 @@ describe('skillContentInjectionProvider', () => {
   })
 
   it('includes an error when the skill is not found', async () => {
-    vi.mocked(readdir).mockResolvedValue([])
+    vi.mocked(readdir).mockResolvedValue([] as never)
 
     const result = await skillContentInjectionProvider.inject({
       workflow: null,
@@ -160,8 +160,8 @@ describe('skillContentInjectionProvider', () => {
     const skillFile = resolve(skillDir, 'SKILL.md')
 
     vi.mocked(readdir).mockImplementation(async (target: unknown) => {
-      if (target === skillsRoot) return [dir('lite-designer')]
-      return []
+      if (target === skillsRoot) return [dir('lite-designer')] as never
+      return [] as never
     })
 
     fileExists(skillFile)
