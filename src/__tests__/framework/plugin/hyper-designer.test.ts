@@ -40,6 +40,10 @@ function initClassicWorkflowSelection(): void {
   }
 }
 
+function setCurrentStage(stageName: string): void {
+  workflowService.setCurrent(stageName)
+}
+
 function createMockToolContext(): ToolContext {
   return {
     sessionID: "test-session",
@@ -173,12 +177,12 @@ describe("HyperDesigner Plugin", () => {
         directory: process.cwd(),
       } as unknown as PluginInput
 
+      setCurrentStage("IRAnalysis")
       const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
       const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          stage: "IRAnalysis",
           milestone: {
             type: "gate",
             isCompleted: true,
@@ -210,12 +214,12 @@ describe("HyperDesigner Plugin", () => {
         directory: process.cwd(),
       } as unknown as PluginInput
 
+      setCurrentStage('IRAnalysis')
       const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
       const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          stage: 'IRAnalysis',
           milestone: {
             type: 'doc_review',
             isCompleted: false,
@@ -255,12 +259,12 @@ describe("HyperDesigner Plugin", () => {
         directory: process.cwd(),
       } as unknown as PluginInput
 
+      setCurrentStage("IRAnalysis")
       const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
       const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          stage: "IRAnalysis",
           milestone: {
             type: "gate",
             isCompleted: false,
@@ -292,12 +296,12 @@ describe("HyperDesigner Plugin", () => {
         directory: process.cwd(),
       } as unknown as PluginInput
 
+      setCurrentStage("IRAnalysis")
       const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
       const pluginInstance = await HyperDesignerPlugin(mockCtx)
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          stage: "IRAnalysis",
           milestone: {
             type: "force_advance",
             isCompleted: true,
@@ -314,6 +318,38 @@ describe("HyperDesigner Plugin", () => {
       expect(result.milestone.isCompleted).toBe(true)
       expect(result.milestone.detail.reason).toBe("Three failed attempts")
       expect(result.milestone.timestamp).toBeDefined()
+    })
+
+    it("should return error when no current stage is set", async () => {
+      const mockCtx = {
+        client: {
+          session: {
+            create: vi.fn(),
+            prompt: vi.fn(),
+            delete: vi.fn(),
+          },
+        },
+        directory: process.cwd(),
+      } as unknown as PluginInput
+
+      workflowService.setCurrent(null as unknown as string)
+      const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
+      const pluginInstance = await HyperDesignerPlugin(mockCtx)
+
+      const output = await pluginInstance.tool!.hd_record_milestone.execute(
+        {
+          milestone: {
+            type: "gate",
+            isCompleted: true,
+            detail: { score: 85 }
+          }
+        },
+        createMockToolContext(),
+      )
+      const result = JSON.parse(output) as { success: boolean; error: string }
+
+      expect(result.success).toBe(false)
+      expect(result.error).toContain("No current stage")
     })
   })
 })

@@ -67,7 +67,6 @@ Evaluate the document across all five dimensions. Compute the weighted score and
 **Step 2 — Tool Submission *(required before outputting the report)***
 Before rendering any output to the user, call `hd_record_milestone` with:
 
-- `stage`: the current workflow stage key (e.g., "IRAnalysis", "ScenarioAnalysis")
 - `milestone`: an object with:
   - `type`: "gate"
   - `isCompleted`: `true` if score >= 75 (passed), `false` if score < 75 (failed)
@@ -80,7 +79,6 @@ Before rendering any output to the user, call `hd_record_milestone` with:
 Example (passed):
 ```json
 {
-  "stage": "IRAnalysis",
   "milestone": {
     "type": "gate",
     "isCompleted": true,
@@ -95,7 +93,6 @@ Example (passed):
 Example (failed):
 ```json
 {
-  "stage": "IRAnalysis",
   "milestone": {
     "type": "gate",
     "isCompleted": false,

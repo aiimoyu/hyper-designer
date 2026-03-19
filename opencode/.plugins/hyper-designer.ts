@@ -138,17 +138,23 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
       },
     }),
     hd_record_milestone: tool({
-      description: "Record or overwrite a milestone for a workflow stage. For gate milestones, detail may include score/comment and isCompleted should reflect pass/fail.",
+      description: "Record or overwrite a milestone for the current workflow stage. For gate milestones, detail may include score/comment and isCompleted should reflect pass/fail.",
       args: {
-        stage: tool.schema.string().describe("The stage key to record the milestone for (e.g., 'IRAnalysis')"),
         milestone: tool.schema.object({
           type: tool.schema.string().describe("The milestone type/key to record"),
           isCompleted: tool.schema.boolean().describe("Whether this milestone item is completed"),
           detail: tool.schema.object({}).describe("Milestone detail payload, e.g. gate: { score, comment }"),
         }).describe("The milestone to record"),
       },
-      async execute(params: { stage: string; milestone: { type: string; isCompleted: boolean; detail: unknown } }) {
-        const { stage, milestone } = params;
+      async execute(params: { milestone: { type: string; isCompleted: boolean; detail: unknown } }) {
+        const { milestone } = params;
+        const stage = workflowService.getCurrentStage();
+        if (!stage) {
+          return JSON.stringify({
+            success: false,
+            error: "No current stage. Cannot record milestone.",
+          }, null, 2);
+        }
         const timestamp = new Date().toISOString();
         workflowService.setStageMilestone({
           stage,
