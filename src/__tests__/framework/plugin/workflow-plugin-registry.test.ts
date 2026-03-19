@@ -34,7 +34,7 @@ describe('workflow plugin registry', () => {
       },
     }
 
-    registerWorkflowPlugin(pluginWorkflow.id, () => pluginWorkflow)
+    registerWorkflowPlugin(() => pluginWorkflow)
 
     expect(getAvailableWorkflows()).toContain('plugin-demo-workflow')
     expect(getWorkflowDefinition('plugin-demo-workflow')).toBe(pluginWorkflow)

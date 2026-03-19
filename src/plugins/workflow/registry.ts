@@ -4,13 +4,18 @@ import type { WorkflowPluginRegistration } from './types'
 
 const pluginWorkflowRegistry = new Map<string, () => WorkflowDefinition>()
 
-export function registerWorkflowPlugin(name: string, factory: () => WorkflowDefinition): void {
-  pluginWorkflowRegistry.set(name, factory)
+export function registerWorkflowPlugin(factory: () => WorkflowDefinition): void {
+  const definition = factory()
+  if (!definition?.id) {
+    console.warn('Workflow plugin factory must return a definition with an id')
+    return
+  }
+  pluginWorkflowRegistry.set(definition.id, factory)
 }
 
 export function registerWorkflowPlugins(registrations: WorkflowPluginRegistration[]): void {
   for (const item of registrations) {
-    registerWorkflowPlugin(item.name, item.factory)
+    registerWorkflowPlugin(item.factory)
   }
 }
 

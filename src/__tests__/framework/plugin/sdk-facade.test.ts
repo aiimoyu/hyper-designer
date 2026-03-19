@@ -7,7 +7,7 @@ describe('sdk facade', () => {
   it('exposes builtin workflows through plugin registry namespace', () => {
     expect(sdk.workflow.plugins.list()).toContain('classic')
     expect(sdk.workflow.plugins.list()).toContain('projectAnalysis')
-    expect(sdk.workflow.plugins.list()).toContain('lite')
+    expect(sdk.workflow.plugins.list()).toContain('lite-designer')
     expect(sdk.workflow.plugins.list()).toContain('userExampleWorkflow')
   })
 
@@ -15,7 +15,7 @@ describe('sdk facade', () => {
     sdk.workflow.plugins.clear()
     sdk.agent.plugins.clear()
 
-    sdk.workflow.plugins.register('sdk-facade-workflow', () => ({
+    sdk.workflow.plugins.register(() => ({
       id: 'sdk-facade-workflow',
       name: 'SDK Facade Workflow',
       description: 'workflow via sdk facade',

@@ -8,7 +8,7 @@ describe('plugins sdk exports', () => {
     sdk.workflow.plugins.clear()
     sdk.agent.plugins.clear()
 
-    sdk.workflow.plugins.register('sdk-workflow', () => ({
+    sdk.workflow.plugins.register(() => ({
       id: 'sdk-workflow',
       name: 'SDK Workflow',
       description: 'workflow via sdk export',
@@ -42,7 +42,7 @@ describe('plugins sdk exports', () => {
     sdk.workflow.plugins.clear()
     sdk.agent.plugins.clear()
 
-    sdk.workflow.plugins.register('sdk-unified-export', () => ({
+    sdk.workflow.plugins.register(() => ({
       id: 'sdk-unified-export',
       name: 'SDK Unified Export',
       description: 'sdk object workflow',

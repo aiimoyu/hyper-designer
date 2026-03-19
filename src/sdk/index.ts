@@ -43,7 +43,7 @@ interface SDK {
     get: (typeId: string) => WorkflowDefinition | null
     list: () => string[]
     plugins: {
-      register: (name: string, factory: () => WorkflowDefinition) => void
+      register: (factory: () => WorkflowDefinition) => void
       registerMany: (registrations: WorkflowPluginRegistration[]) => void
       list: () => string[]
       get: (typeId: string) => WorkflowDefinition | null

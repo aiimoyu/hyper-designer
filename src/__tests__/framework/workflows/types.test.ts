@@ -50,7 +50,7 @@ describe('getAvailableWorkflows', () => {
     expect(result.every(item => typeof item === 'string')).toBe(true)
     expect(result).toContain('classic')
     expect(result).toContain('projectAnalysis')
-    expect(result).toContain('lite')
+    expect(result).toContain('lite-designer')
   })
 })
 
@@ -70,11 +70,11 @@ describe('projectAnalysis workflow registry integration', () => {
 describe('lite workflow registry integration', () => {
   it('should be registered in workflow registry', () => {
     const available = getAvailableWorkflows()
-    expect(available).toContain('lite')
+    expect(available).toContain('lite-designer')
   })
 
   it('should be retrievable via getWorkflowDefinition', () => {
-    const workflow = getWorkflowDefinition('lite')
+    const workflow = getWorkflowDefinition('lite-designer')
     expect(workflow).toBeDefined()
     expect(workflow?.id).toBe('lite-designer')
   })

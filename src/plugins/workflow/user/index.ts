@@ -20,7 +20,6 @@ export const userExampleWorkflow: WorkflowDefinition = {
 
 export const USER_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] = [
   {
-    name: userExampleWorkflow.id,
     factory: () => userExampleWorkflow,
   },
 ]
