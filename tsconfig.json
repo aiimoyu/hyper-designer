@@ -17,7 +17,8 @@
   },
   "include": [
     "src/**/*",
-    "opencode/**/*"
+    "opencode/**/*",
+    "plugins/**/*"
   ],
   "exclude": [
     "node_modules"

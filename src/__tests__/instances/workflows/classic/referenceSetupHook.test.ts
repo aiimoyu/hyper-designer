@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createReferenceSetupHook, referenceSetupHook } from '../../../../plugins/workflow/builtin/classic/hooks/referenceSetupHook'
+import { createReferenceSetupHook, referenceSetupHook } from '../../../../plugins/workflows/classic/hooks/referenceSetupHook'
 import { createMockAdapter } from '../../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../../utils/logger'
 import type { WorkflowDefinition } from '../../../../workflows/core/types'

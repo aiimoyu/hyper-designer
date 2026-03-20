@@ -5,7 +5,7 @@ import {
   clearAgentPluginsForTest,
   createPluginAgents,
   registerAgentPlugin,
-} from '../../../plugins/agent'
+} from '../../../agents/pluginRegistry'
 
 describe('agent plugin registry', () => {
   beforeEach(() => {

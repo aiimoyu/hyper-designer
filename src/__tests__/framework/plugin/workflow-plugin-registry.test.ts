@@ -9,7 +9,7 @@ import {
   resetWorkflowPluginBootstrapForTest,
   clearWorkflowPluginsForTest,
   registerWorkflowPlugin,
-} from '../../../plugins/workflow'
+} from '../../../workflows/core/pluginRegistry'
 
 describe('workflow plugin registry', () => {
   beforeEach(() => {

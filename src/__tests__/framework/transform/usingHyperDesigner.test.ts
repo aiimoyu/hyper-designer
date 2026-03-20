@@ -3,9 +3,8 @@ import type { Hooks, PluginInput } from '@opencode-ai/plugin'
 import type { UserMessage, Part } from '@opencode-ai/sdk'
 
 import { createUsingHyperDesignerTransformer } from '../../../transform/opencode/using-hyperdesigner-transform'
-import { clearAgentPluginsForTest } from '../../../plugins/agent/registry'
-import { BUILTIN_AGENT_PLUGINS } from '../../../plugins/agent/builtin'
-import { registerAgentPlugins } from '../../../plugins/agent'
+import { BUILTIN_AGENT_PLUGINS } from '../../../plugins/agent'
+import { clearAgentPluginsForTest, registerAgentPlugins } from '../../../agents/pluginRegistry'
 
 type ChatMessageHook = NonNullable<Hooks['chat.message']>
 type ChatMessageInput = Parameters<ChatMessageHook>[0]

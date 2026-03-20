@@ -3,8 +3,10 @@ import type { AgentConfig } from './types'
 import {
   createPluginAgents,
   getAgentPluginNames,
+} from './pluginRegistry'
+import {
+  BUILTIN_AGENT_PLUGINS,
 } from '../plugins/agent'
-import { BUILTIN_AGENT_PLUGINS } from '../plugins/agent/builtin'
 
 const BUILTIN_AGENT_NAME_SET = new Set(BUILTIN_AGENT_PLUGINS.map(item => item.name))
 

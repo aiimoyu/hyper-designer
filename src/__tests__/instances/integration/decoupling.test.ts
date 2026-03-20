@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import type { PluginInput } from "@opencode-ai/plugin"
 import { loadHDConfig, DEFAULT_CONFIG_PATH, GLOBAL_CONFIG_PATH } from "../../../config/loader"
 import { getWorkflowDefinition } from "../../../workflows"
-import { createHArchitectAgent } from "../../../plugins/agent/builtin/HArchitect"
+import { createHArchitectAgent } from '../../../plugins/agent/HArchitect'
 import { HyperDesignerPlugin } from "../../../../opencode/.plugins/hyper-designer"
 
 vi.mock("@opencode-ai/plugin", () => {

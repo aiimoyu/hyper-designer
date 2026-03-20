@@ -396,7 +396,7 @@ promptGenerators: [
 
 工作流系统采用插件架构：
 
-1. **内置插件** (`src/plugins/workflow/builtin/`)：Classic、Lite Designer、Project Analysis
+1. **内置插件** (`src/plugins/workflow/`)：Classic、Lite Designer、Project Analysis
 2. **用户插件** (`src/plugins/workflow/user/`)：用户自定义工作流
 
 **注册流程：**

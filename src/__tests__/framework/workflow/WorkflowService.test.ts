@@ -273,6 +273,14 @@ describe("WorkflowService", () => {
       expect(service.getState()?.current?.failureCount).toBe(1);
 
       service.setGateResult({ score: 90, comment: 'approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'hd-int-mod',
+          isCompleted: true,
+          detail: { source: 'test' },
+        },
+      });
       createOutputFiles();
       const accepted = await service.hdScheduleHandover('scenarioAnalysis');
 
@@ -305,6 +313,14 @@ describe("WorkflowService", () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'hd-int-mod',
+          isCompleted: true,
+          detail: { source: 'test' },
+        },
+      });
       createOutputFiles();
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
@@ -317,6 +333,14 @@ describe("WorkflowService", () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'hd-int-mod',
+          isCompleted: true,
+          detail: { source: 'test' },
+        },
+      });
       createOutputFiles();
       service.setStageMilestone({
         stage: 'IRAnalysis',
@@ -396,6 +420,14 @@ describe("WorkflowService", () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'hd-int-mod',
+          isCompleted: true,
+          detail: { source: 'test' },
+        },
+      });
       createOutputFiles();
 
       const result = await service.hdScheduleHandover();
@@ -444,6 +476,14 @@ describe("WorkflowService", () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'approved' });
+      service.setStageMilestone({
+        stage: 'IRAnalysis',
+        milestone: {
+          type: 'hd-int-mod',
+          isCompleted: true,
+          detail: { source: 'test' },
+        },
+      });
       createOutputFiles();
 
       const firstAttempt = await service.hdScheduleHandover('scenarioAnalysis');

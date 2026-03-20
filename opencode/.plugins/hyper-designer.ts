@@ -1,19 +1,20 @@
-import { convertWorkflowToolsToOpenCode } from '../../src/workflows/integrations/opencode'
-import type { ToolContext } from '../../src/workflows/core/toolTypes'
-
 import type { Plugin } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
-import type { AgentConfig as LocalAgentConfig } from "../../src/agents/types"
-import { createHyperAgent } from "../../src/agents/Hyper"
-import { sdk } from '../../src/sdk'
-import { workflowService } from "../../src/workflows/core/service"
-import { createAgentTransformer } from '../../src/transform/opencode/agent-transform'
-import { createUsingHyperDesignerTransformer } from '../../src/transform/opencode/using-hyperdesigner-transform'
-import { createTransformHooks } from '../../src/transform/opencode/hooks'
-import { createWorkflowHooks } from "../../src/workflows/integrations/opencode"
-import { createDocumentReviewTools } from "../../src/tools/integrations/opencode"
-import { initLogger } from "../../src/utils/logger"
+import {
+  type AgentConfig as LocalAgentConfig,
+  type ToolContext,
+  convertWorkflowToolsToOpenCode,
+  createAgentTransformer,
+  createDocumentReviewTools,
+  createHyperAgent,
+  createTransformHooks,
+  createUsingHyperDesignerTransformer,
+  createWorkflowHooks,
+  initLogger,
+  sdk,
+  workflowService,
+} from '../../src/sdk'
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   const result: OpencodeAgentConfig = {

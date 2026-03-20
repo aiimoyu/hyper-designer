@@ -4,9 +4,9 @@ import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const SRC_DIR = join(__dirname, "..", "..", "..")
-const BUILTIN_AGENTS_DIR = join(SRC_DIR, "plugins", "agent", "builtin")
+const BUILTIN_AGENTS_DIR = join(SRC_DIR, 'plugins', 'agent')
 
-// Collect all .md files under src/plugins/agent/builtin/*/prompts/
+// Collect all .md files under src/plugins/agent/*/prompts/ via builtin source directory
 function getPromptFiles(): string[] {
   const agentDirs = readdirSync(BUILTIN_AGENTS_DIR, { withFileTypes: true })
     .filter(d => d.isDirectory())

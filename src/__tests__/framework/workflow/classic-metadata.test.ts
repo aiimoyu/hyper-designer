@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { classicWorkflow } from '../../../plugins/workflow/builtin/classic'
+import { classicWorkflow } from '../../../plugins/workflows/classic'
 
 describe('classic workflow stage metadata', () => {
   const stages = classicWorkflow.stages

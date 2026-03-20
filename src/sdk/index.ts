@@ -1,7 +1,15 @@
-import type { AgentPluginFactory, AgentPluginRegistration } from '../plugins/agent'
 import type { AgentConfig } from '../agents/types'
 import type { WorkflowDefinition } from '../workflows/core/types'
-import type { WorkflowPluginRegistration } from '../plugins/workflow'
+import type { AgentPluginFactory, AgentPluginRegistration, WorkflowPluginRegistration } from './contracts'
+export * from './contracts'
+
+export type {
+  AgentPluginFactory,
+  AgentPluginRegistration,
+  AgentConfig,
+  WorkflowDefinition,
+  WorkflowPluginRegistration,
+}
 
 import { createAllAgents, createBuiltinAgents, isHDAgent, isHDBuiltinAgent, isHDPluginAgent } from '../agents/utils'
 import {
@@ -12,7 +20,7 @@ import {
   getAgentPluginNames,
   registerAgentPlugin,
   registerAgentPlugins,
-} from '../plugins/agent'
+} from '../agents/pluginRegistry'
 import {
   ensureWorkflowPluginsBootstrapped,
   resetWorkflowPluginBootstrapForTest,
@@ -21,8 +29,19 @@ import {
   getWorkflowPluginDefinition,
   registerWorkflowPlugin,
   registerWorkflowPlugins,
-} from '../plugins/workflow'
+} from '../workflows/core/pluginRegistry'
 import { getAvailableWorkflows, getWorkflowDefinition } from '../workflows/core/registry'
+
+export type { ToolContext } from '../workflows/core/toolTypes'
+export { convertWorkflowToolsToOpenCode } from '../workflows/integrations/opencode'
+export { createHyperAgent } from '../agents/Hyper'
+export { workflowService } from '../workflows/core/service'
+export { createAgentTransformer } from '../transform/opencode/agent-transform'
+export { createUsingHyperDesignerTransformer } from '../transform/opencode/using-hyperdesigner-transform'
+export { createTransformHooks } from '../transform/opencode/hooks'
+export { createWorkflowHooks } from '../workflows/integrations/opencode'
+export { createDocumentReviewTools } from '../tools/integrations/opencode'
+export { initLogger } from '../utils/logger'
 
 interface SDK {
   agent: {

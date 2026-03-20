@@ -13,7 +13,7 @@ import {
   ensureWorkflowPluginsBootstrapped,
   getAvailableWorkflowPlugins,
   getWorkflowPluginDefinition,
-} from '../../plugins/workflow'
+} from './pluginRegistry'
 
 function getStageOrder(definition: WorkflowDefinition): string[] {
   const visited = new Set<string>()

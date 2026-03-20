@@ -23,6 +23,7 @@
     "@rollup/rollup-win32-x64-msvc": "*"
   },
   "dependencies": {
-    "diff": "^8.0.3"
+    "diff": "^8.0.3",
+    "glob": "^10.4.5"
   }
 }
