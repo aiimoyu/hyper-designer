@@ -1,22 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import * as collectorHookModule from '../../../workflows/core/stageHooks/hCollectorHook'
 import { createHCollectorHook } from '../../../workflows/core/stageHooks/hCollectorHook'
 import type { HCollectorHookOptions, CollectionDomain } from '../../../workflows/core/stageHooks/hCollectorHook'
 import { createMockAdapter } from '../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../utils/logger'
 import type { WorkflowDefinition } from '../../../workflows/core/types'
-
-// Mock fs.existsSync to control file existence checks
-vi.mock('fs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('fs')>()
-  return {
-    ...actual,
-    existsSync: vi.fn().mockReturnValue(false),
-  }
-})
-
-import { existsSync } from 'fs'
-
-const mockedExistsSync = vi.mocked(existsSync)
 
 /** Minimal workflow definition for hook context */
 const stubWorkflow: WorkflowDefinition = {
@@ -38,8 +26,7 @@ const stubWorkflow: WorkflowDefinition = {
 describe('hCollectorHook', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    // Re-apply the mock since restoreAllMocks clears it
-    mockedExistsSync.mockReturnValue(false)
+    vi.spyOn(collectorHookModule.hCollectorFs, 'pathExists').mockReturnValue(false)
   })
 
   describe('missing adapter or sessionID', () => {
@@ -88,7 +75,7 @@ describe('hCollectorHook', () => {
     it('should return immediately when all domain completed files exist', async () => {
       const debugSpy = vi.spyOn(HyperDesignerLogger, 'debug')
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(true)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(true)
 
       const options: HCollectorHookOptions = { domains: ['codebase'] }
       const hook = createHCollectorHook(options)
@@ -111,7 +98,7 @@ describe('hCollectorHook', () => {
 
     it('should handle multiple domains all completed', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(true)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(true)
 
       const domains: CollectionDomain[] = ['codebase', 'domainAnalysis', 'systemDesign']
       const hook = createHCollectorHook({ domains })
@@ -135,7 +122,7 @@ describe('hCollectorHook', () => {
 
       // Not completed before call, completed after first call
       let callCount = 0
-      mockedExistsSync.mockImplementation(() => {
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockImplementation(() => {
         // First call in loop (allCompleted check) returns false
         // After sendPrompt, second iteration check returns true
         callCount++
@@ -171,7 +158,7 @@ describe('hCollectorHook', () => {
       const adapter = createMockAdapter()
 
       // Never completed — will exhaust retries
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const hook = createHCollectorHook({ domains: ['codebase', 'domainAnalysis'] })
 
@@ -196,7 +183,7 @@ describe('hCollectorHook', () => {
 
     it('should include retry text on subsequent attempts', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const hook = createHCollectorHook({ domains: ['codebase'] })
 
@@ -221,7 +208,7 @@ describe('hCollectorHook', () => {
     it('should retry up to MAX_COLLECTION_RETRIES (5) times when files never appear', async () => {
       const adapter = createMockAdapter()
       const warnSpy = vi.spyOn(HyperDesignerLogger, 'warn')
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const hook = createHCollectorHook({ domains: ['codebase'] })
 
@@ -251,7 +238,7 @@ describe('hCollectorHook', () => {
 
       // Track calls to determine when to "complete"
       let existsSyncCallCount = 0
-      mockedExistsSync.mockImplementation(() => {
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockImplementation(() => {
         existsSyncCallCount++
         // Each loop iteration calls existsSync twice for 1 domain:
         //   1. allCompleted check (every)
@@ -283,7 +270,7 @@ describe('hCollectorHook', () => {
       const adapter = createMockAdapter()
 
       // Simulate: codebase completed, domainAnalysis not completed
-      mockedExistsSync.mockImplementation((path: unknown) => {
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockImplementation((path: unknown) => {
         const pathStr = String(path)
         if (pathStr.includes('codebase')) return true
         return false
@@ -315,7 +302,7 @@ describe('hCollectorHook', () => {
       const warnSpy = vi.spyOn(HyperDesignerLogger, 'warn')
 
       let existsSyncCallCount = 0
-      mockedExistsSync.mockImplementation(() => {
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockImplementation(() => {
         existsSyncCallCount++
         // For 1 domain, each loop iteration: 2 calls (allCompleted + incompleteDomains)
         // 5 iterations × 2 = 10 calls in loop
@@ -351,7 +338,7 @@ describe('hCollectorHook', () => {
     it('should warn about incomplete domains when final check also fails', async () => {
       const adapter = createMockAdapter()
       const warnSpy = vi.spyOn(HyperDesignerLogger, 'warn')
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const domains: CollectionDomain[] = ['codebase', 'systemDesign']
       const hook = createHCollectorHook({ domains })
@@ -380,7 +367,7 @@ describe('hCollectorHook', () => {
 
       // systemDesign completes after loop but codebase never does
       let existsSyncCallCount = 0
-      mockedExistsSync.mockImplementation((path: unknown) => {
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockImplementation((path: unknown) => {
         existsSyncCallCount++
         const pathStr = String(path)
         // After all 5 loop iterations, systemDesign completes but codebase doesn't
@@ -412,7 +399,7 @@ describe('hCollectorHook', () => {
   describe('prompt text content', () => {
     it('should include all four domain labels in prompt', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const allDomains: CollectionDomain[] = ['codebase', 'domainAnalysis', 'systemRequirementAnalysis', 'systemDesign']
       const hook = createHCollectorHook({ domains: allDomains })
@@ -434,7 +421,7 @@ describe('hCollectorHook', () => {
 
     it('should include correct output requirements per domain', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const hook = createHCollectorHook({ domains: ['codebase'] })
 
@@ -454,7 +441,7 @@ describe('hCollectorHook', () => {
 
     it('should include retry number in resumption prompt', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const hook = createHCollectorHook({ domains: ['codebase'] })
 
@@ -477,7 +464,7 @@ describe('hCollectorHook', () => {
 
     it('should include constraint reminders with domain names', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(collectorHookModule.hCollectorFs.pathExists).mockReturnValue(false)
 
       const hook = createHCollectorHook({ domains: ['codebase', 'domainAnalysis'] })
 

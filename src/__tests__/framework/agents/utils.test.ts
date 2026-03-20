@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import { bootstrapPluginRegistries, sdk } from '../../../sdk'
 import {
   BUILTIN_AGENT_FACTORIES,
   HD_BUILTIN_AGENT_NAMES,
@@ -10,6 +11,12 @@ import {
 } from "../../../agents/utils"
 
 describe("agents utils", () => {
+  it('setup plugin registries for this suite', async () => {
+    sdk.agent.plugins.clear()
+    await bootstrapPluginRegistries()
+    expect(sdk.agent.plugins.list().length).toBeGreaterThan(0)
+  })
+
   it("keeps builtin names aligned with factories", () => {
     const factoryNames = Object.keys(BUILTIN_AGENT_FACTORIES)
     expect(HD_BUILTIN_AGENT_NAMES).toEqual(factoryNames)

@@ -138,7 +138,7 @@ export class ToolRegistry {
         toolNames: registrations.map(r => r.name),
       })
     } else {
-      HyperDesignerLogger.debug(MODULE_NAME, '平台适配器不支持工具注册，跳过', {
+      HyperDesignerLogger.warn(MODULE_NAME, '平台适配器不支持工具注册，跳过', {
         toolCount: registrations.length,
       })
     }

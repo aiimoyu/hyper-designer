@@ -1,9 +1,12 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
+import { dirname, resolve } from "path"
+import { fileURLToPath } from "url"
 import {
   type AgentConfig as LocalAgentConfig,
   type ToolContext,
+  bootstrapPluginRegistries,
   convertWorkflowToolsToOpenCode,
   createAgentTransformer,
   createDocumentReviewTools,
@@ -15,6 +18,9 @@ import {
   sdk,
   workflowService,
 } from '../../src/sdk'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const HD_PACKAGE_ROOT = resolve(__dirname, '../..')
 
 const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => {
   const result: OpencodeAgentConfig = {
@@ -50,6 +56,20 @@ const toOpencodeAgents = (
 export const HyperDesignerPlugin: Plugin = async (ctx) => {
   // Initialize logger - respects HYPER_DESIGNER_LOG_PERSIST env var
   initLogger()
+
+  sdk.agent.plugins.clear()
+  sdk.workflow.plugins.clear()
+  sdk.tool.plugins.clear()
+  const pluginDirectories = [
+    `${ctx.directory}/plugins`,
+  ]
+  if (process.env.HD_PLUGINS_DIR) {
+    pluginDirectories.push(...process.env.HD_PLUGINS_DIR.split(':').filter(Boolean))
+  }
+  await bootstrapPluginRegistries({
+    pluginDirectories,
+    rootDirectory: HD_PACKAGE_ROOT,
+  })
 
   const agents = await sdk.agent.createAll()
   const mappedBuiltinAgents = Object.fromEntries(
@@ -124,7 +144,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
         if (!detail) {
           return JSON.stringify({ success: false, error: `Workflow '${params.type_id}' not found` }, null, 2)
         }
-        
+
         const stages = params.stages ?? detail.stages.map(stage => ({ key: stage.key, selected: true }))
         const result = workflowService.selectWorkflow({ typeId: params.type_id, stages })
         return JSON.stringify(result, null, 2)
@@ -165,7 +185,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
           stage,
           milestone,
         })
-        
+
         return JSON.stringify({
           success: true,
           stage,
@@ -208,12 +228,15 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   })()
   // ── 工作流工具收集完成 ─────────────────────────────────────────────────────
 
+  const pluginTools = await sdk.tool.plugins.getAll()
+
   return {
     config: agentHandler,
     tool: {
       ...hdTools,
       ...documentReviewTools,
       ...workflowTools,
+      ...pluginTools,
     },
     event: async (input) => {
       await workflowHooks.event(input)

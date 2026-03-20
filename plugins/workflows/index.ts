@@ -1,24 +1,11 @@
-import type { WorkflowDefinition, WorkflowPluginRegistration } from '../../src/sdk/contracts'
+import type { WorkflowPluginRegistration } from '../../src/sdk/contracts'
+import {
+  buildPluginRegistrations,
+  toWorkflowPluginRegistrations,
+} from '../../src/plugin'
+import { EXAMPLE_USER_PLUGIN } from '../example'
 
-export const userExampleWorkflow: WorkflowDefinition = {
-  id: 'userExampleWorkflow',
-  name: 'User Example Workflow',
-  description: 'Minimal example workflow for user extension registration',
-  entryStageId: 'exampleStage',
-  stages: {
-    exampleStage: {
-      stageId: 'exampleStage',
-      name: 'Example Stage',
-      description: 'A minimal user-defined workflow stage',
-      agent: 'HArchitect',
-      getHandoverPrompt: () => 'Run user example workflow stage',
-      transitions: [],
-    },
-  },
-}
+const registrations = await buildPluginRegistrations([EXAMPLE_USER_PLUGIN])
 
-export const USER_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] = [
-  {
-    factory: () => userExampleWorkflow,
-  },
-]
+export const USER_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] =
+  toWorkflowPluginRegistrations(registrations.workflow)

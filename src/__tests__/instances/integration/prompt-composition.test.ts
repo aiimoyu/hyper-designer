@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { existsSync, rmSync } from "fs"
 import { join } from "path"
-import { createHArchitectAgent } from '../../../plugins/agent/HArchitect'
-import { createHEngineerAgent } from '../../../plugins/agent/HEngineer'
-import { createHCriticAgent } from '../../../plugins/agent/HCritic'
+import { createHArchitectAgent } from '../../../builtin/agents/HArchitect'
+import { createHEngineerAgent } from '../../../builtin/agents/HEngineer'
+import { createHCriticAgent } from '../../../builtin/agents/HCritic'
 import { loadPromptForStage, getWorkflowDefinition, initializeWorkflowState } from '../../../workflows/core'
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")

@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { createHArchitectAgent } from '../../../plugins/agent/HArchitect'
+import { createHArchitectAgent } from '../../../builtin/agents/HArchitect'
 import { readFileSync } from "fs"
 import { join, dirname } from "path"
 import { fileURLToPath } from "url"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const IDENTITY_PATH = join(__dirname, '..', '..', '..', 'plugins', 'agent', 'HArchitect', 'prompts', 'identity.md')
+const IDENTITY_PATH = join(__dirname, '..', '..', '..', 'builtin', 'agents', 'HArchitect', 'prompts', 'identity.md')
 
 describe("prompt order compliance", () => {
   describe("HArchitect", () => {

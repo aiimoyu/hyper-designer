@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { sdk } from '../../../sdk'
+import { bootstrapPluginRegistries, sdk } from '../../../sdk'
 import { getWorkflowDefinition } from '../../../workflows/core'
 
 describe('plugins sdk exports', () => {
   it('exports workflow and agent plugin APIs from sdk entry', async () => {
     sdk.workflow.plugins.clear()
     sdk.agent.plugins.clear()
+    await bootstrapPluginRegistries()
 
     sdk.workflow.plugins.register(() => ({
       id: 'sdk-workflow',
@@ -41,6 +42,7 @@ describe('plugins sdk exports', () => {
   it('exports unified sdk facade object', async () => {
     sdk.workflow.plugins.clear()
     sdk.agent.plugins.clear()
+    await bootstrapPluginRegistries()
 
     sdk.workflow.plugins.register(() => ({
       id: 'sdk-unified-export',

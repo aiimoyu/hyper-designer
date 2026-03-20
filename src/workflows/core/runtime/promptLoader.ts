@@ -8,7 +8,7 @@
  */
 
 import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
+import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import type {
   WorkflowDefinition,
@@ -20,17 +20,7 @@ import { FRAMEWORK_FALLBACK_PROMPT_TOKEN } from './tokens'
 const LEGACY_WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
 const LEGACY_WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
-
-// Get the directory of the current module file
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
-
-// Navigate from src/workflows/core/runtime/ to src/workflows/ then to plugins/
-const WORKFLOWS_PLUGINS_DIR = join(__dirname, '..', '..', 'plugins')
-
-function getWorkflowDir(definition: WorkflowDefinition): string {
-  return join(WORKFLOWS_PLUGINS_DIR, definition.id)
-}
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const FRAMEWORK_FALLBACK_PROMPT_FILE = join(__dirname, '../prompts/fallback.md')
 
@@ -63,8 +53,17 @@ function loadPromptFile(
   relativePath: string,
   context: Record<string, unknown>,
 ): string {
-  const workflowDir = getWorkflowDir(definition)
-  const promptPath = join(workflowDir, relativePath)
+  if (!definition.promptBasePath) {
+    HyperDesignerLogger.warn('Workflow', '工作流未定义提示词基路径，无法加载提示词文件', {
+      workflowId: definition.id,
+      promptFile: relativePath,
+      ...context,
+      error: 'Workflow promptBasePath is not defined',
+    })
+    return ''
+  }
+
+  const promptPath = resolve(definition.promptBasePath, relativePath)
 
   try {
     const rawPrompt = readFileSync(promptPath, 'utf-8')

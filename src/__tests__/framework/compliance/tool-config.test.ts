@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { createHArchitectAgent } from '../../../plugins/agent/HArchitect'
-import { createHEngineerAgent } from '../../../plugins/agent/HEngineer'
-import { createHCriticAgent } from '../../../plugins/agent/HCritic'
+import { createHArchitectAgent } from '../../../builtin/agents/HArchitect'
+import { createHEngineerAgent } from '../../../builtin/agents/HEngineer'
+import { createHCriticAgent } from '../../../builtin/agents/HCritic'
 import type { AgentConfig as LocalAgentConfig } from "../../../agents/types"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
 

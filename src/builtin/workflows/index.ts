@@ -1,5 +1,4 @@
 import type { WorkflowPluginRegistration } from '../../sdk/contracts'
-
 import { classicWorkflow } from './classic'
 import { liteWorkflow } from './lite'
 import { projectAnalysisWorkflow } from './projectAnalysis'

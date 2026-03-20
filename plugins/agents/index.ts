@@ -1,18 +1,11 @@
-import type { AgentConfig, AgentPluginRegistration } from '../../src/sdk/contracts'
+import type { AgentPluginRegistration } from '../../src/sdk/contracts'
+import {
+  buildPluginRegistrations,
+  toAgentPluginRegistrations,
+} from '../../src/plugin'
+import { EXAMPLE_USER_PLUGIN } from '../example'
 
-export const userExampleAgentPlugin: AgentPluginRegistration = {
-  name: 'UserExampleAgent',
-  factory: () => {
-    const config: AgentConfig = {
-      name: 'UserExampleAgent',
-      description: 'Minimal user-defined agent plugin example',
-      mode: 'subagent',
-      prompt: 'You are a user example agent plugin.',
-    }
-    return config
-  },
-}
+const registrations = await buildPluginRegistrations([EXAMPLE_USER_PLUGIN])
 
-export const USER_AGENT_PLUGINS: AgentPluginRegistration[] = [
-  userExampleAgentPlugin,
-]
+export const USER_AGENT_PLUGINS: AgentPluginRegistration[] =
+  toAgentPluginRegistrations(registrations.agent)

@@ -1,8 +1,7 @@
 import type { WorkflowDefinition } from './types'
 import type { WorkflowPluginFactory, WorkflowPluginRegistration } from '../../sdk/contracts'
 
-import { BUILTIN_WORKFLOW_PLUGINS } from '../../plugins/workflows'
-import { USER_WORKFLOW_PLUGINS } from '../../../plugins/workflows'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 const pluginWorkflowRegistry = new Map<string, WorkflowPluginFactory>()
 let initialized = false
@@ -12,7 +11,9 @@ export type { WorkflowPluginFactory, WorkflowPluginRegistration }
 export function registerWorkflowPlugin(factory: WorkflowPluginFactory): void {
   const definition = factory()
   if (!definition?.id) {
-    console.warn('Workflow plugin factory must return a definition with an id')
+    HyperDesignerLogger.warn('Workflow', 'Workflow plugin factory must return a definition with an id', {
+      action: 'registerWorkflowPlugin',
+    })
     return
   }
   pluginWorkflowRegistry.set(definition.id, factory)
@@ -29,9 +30,9 @@ export function ensureWorkflowPluginsBootstrapped(): void {
     return
   }
 
-  registerWorkflowPlugins(BUILTIN_WORKFLOW_PLUGINS)
-  registerWorkflowPlugins(USER_WORKFLOW_PLUGINS)
-  initialized = true
+  if (pluginWorkflowRegistry.size > 0) {
+    initialized = true
+  }
 }
 
 export function resetWorkflowPluginBootstrapForTest(): void {

@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { sdk } from '../../../sdk'
+import { bootstrapPluginRegistries, sdk } from '../../../sdk'
 import { getWorkflowDefinition } from '../../../workflows/core'
 
 describe('sdk facade', () => {
-  it('exposes builtin workflows through plugin registry namespace', () => {
+  it('loads user plugins only after explicit bootstrap', async () => {
+    sdk.workflow.plugins.clear()
+    sdk.agent.plugins.clear()
+
+    await bootstrapPluginRegistries()
+
     expect(sdk.workflow.plugins.list()).toContain('classic')
     expect(sdk.workflow.plugins.list()).toContain('projectAnalysis')
     expect(sdk.workflow.plugins.list()).toContain('lite-designer')

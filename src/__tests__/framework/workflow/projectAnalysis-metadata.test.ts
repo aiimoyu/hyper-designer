@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest'
 import type { WorkflowDefinition } from '../../../workflows/core'
 import { getStageOrder } from '../../../workflows/core'
-import { projectAnalysisWorkflow } from '../../../plugins/workflows/projectAnalysis'
+import { projectAnalysisWorkflow } from '../../../builtin/workflows/projectAnalysis'
 
 function getProjectAnalysisWorkflow(): WorkflowDefinition {
   return projectAnalysisWorkflow

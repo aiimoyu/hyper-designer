@@ -24,6 +24,13 @@ export interface WorkflowPluginRegistration {
   factory: WorkflowPluginFactory
 }
 
+export type ToolPluginFactory = () => Record<string, unknown> | Promise<Record<string, unknown>>
+
+export interface ToolPluginRegistration {
+  name: string
+  factory: ToolPluginFactory
+}
+
 export type {
   AgentConfig,
   AgentDefinition,

@@ -1,5 +1,6 @@
 import type { ToolDefinition } from '../toolTypes'
-import { resolveAgentConfig } from '../../../transform/agentRouting'
+import { resolveAgentConfig } from '../agentConfig'
+import { getStageOrder } from '../stageOrder'
 
 /**
  * WorkflowService - 工作流服务类
@@ -32,34 +33,6 @@ import {
   isGateMilestoneDetail,
 } from '../stageMilestone'
 import { checkStageOutputs, formatMissingOutputsMessage } from '../outputChecker'
-
-function getStageOrder(definition: WorkflowDefinition): string[] {
-  const visited = new Set<string>()
-  const order: string[] = []
-  const walk = (stageId: string): void => {
-    if (visited.has(stageId) || !definition.stages[stageId]) {
-      return
-    }
-    visited.add(stageId)
-    order.push(stageId)
-    const transitions: StageTransitionDefinition[] = definition.stages[stageId].transitions ?? []
-    const autoTransitions = [...transitions]
-      .filter(item => item.mode === 'auto')
-      .sort((a, b) => a.priority - b.priority)
-    for (const transition of autoTransitions) {
-      walk(transition.toStageId)
-    }
-  }
-  if (typeof definition.entryStageId === 'string') {
-    walk(definition.entryStageId)
-  }
-  for (const stageId of Object.keys(definition.stages)) {
-    if (!visited.has(stageId)) {
-      walk(stageId)
-    }
-  }
-  return order
-}
 
 function resolveNextSelectedStage(
   definition: WorkflowDefinition,
@@ -715,7 +688,6 @@ export class WorkflowService extends EventEmitter {
       }
       return state;
     } catch (error) {
-      console.log('executeHandover catch block entered, toStep:', toStep);
       HyperDesignerLogger.error("Workflow", "handover执行失败，清除handoverTo防止重复执行",
         error instanceof Error ? error : new Error(String(error)), {
           fromStep,
@@ -725,14 +697,12 @@ export class WorkflowService extends EventEmitter {
 
       try {
         const currentState = readWorkflowStateFile();
-        console.log('currentState from file:', JSON.stringify(currentState?.current, null, 2));
         if (currentState?.current?.handoverTo === toStep) {
           currentState.current.handoverTo = null;
           writeWorkflowStateFile(currentState);
           HyperDesignerLogger.info("Workflow", "已清除失败的handoverTo", { toStep });
         }
       } catch (clearError) {
-        console.log('Inner catch block - clearError:', clearError instanceof Error ? clearError.message : String(clearError));
         HyperDesignerLogger.error("Workflow", "清除handoverTo失败",
           clearError instanceof Error ? clearError : new Error(String(clearError)));
       }

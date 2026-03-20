@@ -1,4 +1,5 @@
-export { resolveNodeConfig, resolveAgentConfig, type NodeRuntimeConfig, type AgentRuntimeConfig } from './agentRouting'
+export { resolveNodeConfig, type NodeRuntimeConfig } from './agentRouting'
+export { resolveAgentConfig, type AgentRuntimeConfig } from '../workflows/core/agentConfig'
 export { transformSystemMessages } from './systemTransformer'
 export { replacePlaceholders, type PlaceholderResolver } from './placeholder'
 export {

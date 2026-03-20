@@ -5,10 +5,18 @@
  * 与具体 AI 框架（OpenCode 等）解耦，可在不同平台实现中复用。
  */
 
-import { existsSync } from 'fs'
+import * as fs from 'fs'
 import { join } from 'path'
 import type { StageHookFn } from '../types'
 import { HyperDesignerLogger } from '../../../utils/logger'
+
+export function pathExists(path: string): boolean {
+  return fs.existsSync(path)
+}
+
+export const hCollectorFs = {
+  pathExists,
+}
 
 /** HCollector 最大重试次数 */
 const MAX_COLLECTION_RETRIES = 5
@@ -54,13 +62,13 @@ export function createHCollectorHook(options: HCollectorHookOptions): StageHookF
     )
 
     for (let attempt = 0; attempt < MAX_COLLECTION_RETRIES; attempt += 1) {
-      const allCompleted = completedFilePaths.every((path) => existsSync(path))
+      const allCompleted = completedFilePaths.every((path) => hCollectorFs.pathExists(path))
       if (allCompleted) {
         HyperDesignerLogger.debug('ClassicHooks', '资料收集已完成', { stageKey, stageName, domains, attempt })
         return
       }
 
-      const incompleteDomains = domains.filter((_, index) => !existsSync(completedFilePaths[index]))
+      const incompleteDomains = domains.filter((_, index) => !hCollectorFs.pathExists(completedFilePaths[index]))
 
       let text: string
       if (attempt === 0) {
@@ -127,13 +135,13 @@ export function createHCollectorHook(options: HCollectorHookOptions): StageHookF
       await adapter.sendPrompt({ sessionId: sessionID, agent: 'HCollector', text })
     }
 
-    const allCompleted = completedFilePaths.every((path) => existsSync(path))
+    const allCompleted = completedFilePaths.every((path) => hCollectorFs.pathExists(path))
     if (allCompleted) {
       HyperDesignerLogger.debug('ClassicHooks', '资料收集已完成（最终检查通过）', { stageKey, stageName, domains })
       return
     }
 
-    const stillIncomplete = domains.filter((_, index) => !existsSync(completedFilePaths[index]))
+    const stillIncomplete = domains.filter((_, index) => !hCollectorFs.pathExists(completedFilePaths[index]))
 
     HyperDesignerLogger.warn('ClassicHooks', '达到最大重试次数，部分资料收集未完成', {
       stageKey,

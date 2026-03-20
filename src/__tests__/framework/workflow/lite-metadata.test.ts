@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { liteWorkflow } from '../../../plugins/workflows/lite'
+import { liteWorkflow } from '../../../builtin/workflows/lite'
 
 describe('lite workflow stage metadata', () => {
   const stages = liteWorkflow.stages

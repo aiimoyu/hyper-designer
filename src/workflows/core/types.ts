@@ -108,6 +108,7 @@ export interface WorkflowDefinition {
   version?: string
   /** Prompt file path relative to the workflow directory for the entire process */
   promptFile?: string
+  promptBasePath?: string
   /** Placeholder bindings shared by all stages in this workflow */
   promptBindings?: WorkflowPromptBindings
   promptTransform?: WorkflowPromptTransformConfig

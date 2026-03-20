@@ -1,7 +1,21 @@
 import type { AgentConfig } from '../agents/types'
 import type { WorkflowDefinition } from '../workflows/core/types'
-import type { AgentPluginFactory, AgentPluginRegistration, WorkflowPluginRegistration } from './contracts'
+import type {
+  AgentPluginFactory,
+  AgentPluginRegistration,
+  ToolPluginRegistration,
+  WorkflowPluginRegistration,
+} from './contracts'
 export * from './contracts'
+export { bootstrapPluginRegistries } from './pluginBootstrap'
+export {
+  buildPluginRegistrations,
+  defineHyperDesignerPlugin,
+  toAgentPluginRegistrations,
+  toToolPluginRegistrations,
+  toWorkflowPluginRegistrations,
+} from '../plugin'
+import { bootstrapPluginRegistries } from './pluginBootstrap'
 
 export type {
   AgentPluginFactory,
@@ -31,6 +45,13 @@ import {
   registerWorkflowPlugins,
 } from '../workflows/core/pluginRegistry'
 import { getAvailableWorkflows, getWorkflowDefinition } from '../workflows/core/registry'
+import {
+  clearToolPluginsForTest,
+  createPluginTools,
+  getToolPluginNames,
+  registerToolPlugin,
+  registerToolPlugins,
+} from '../tools/pluginRegistry'
 
 export type { ToolContext } from '../workflows/core/toolTypes'
 export { convertWorkflowToolsToOpenCode } from '../workflows/integrations/opencode'
@@ -52,7 +73,7 @@ interface SDK {
     isKnown: (agentName: string | undefined) => boolean
     plugins: {
       register: (name: string, factory: AgentPluginFactory) => void
-      registerMany: (registrations: AgentPluginRegistration[]) => void
+      registerMany: (registrations: AgentPluginRegistration[]) => Promise<void>
       list: () => string[]
       create: (model?: string) => Promise<Record<string, AgentConfig>>
       clear: () => void
@@ -63,9 +84,18 @@ interface SDK {
     list: () => string[]
     plugins: {
       register: (factory: () => WorkflowDefinition) => void
-      registerMany: (registrations: WorkflowPluginRegistration[]) => void
+      registerMany: (registrations: WorkflowPluginRegistration[]) => Promise<void>
       list: () => string[]
       get: (typeId: string) => WorkflowDefinition | null
+      clear: () => void
+    }
+  }
+  tool: {
+    plugins: {
+      register: (name: string, factory: () => Record<string, unknown> | Promise<Record<string, unknown>>) => void
+      registerMany: (registrations: ToolPluginRegistration[]) => Promise<void>
+      list: () => string[]
+      getAll: () => Promise<Record<string, unknown>>
       clear: () => void
     }
   }
@@ -80,13 +110,14 @@ export const sdk: SDK = {
     isKnown: isHDAgent,
     plugins: {
       register: registerAgentPlugin,
-      registerMany: registerAgentPlugins,
+      registerMany: async (registrations: AgentPluginRegistration[]) => {
+        registerAgentPlugins(registrations)
+      },
       list: getAgentPluginNames,
       create: createPluginAgents,
       clear: () => {
         clearAgentPluginsForTest()
         resetAgentPluginBootstrapForTest()
-        ensureAgentPluginsBootstrapped()
       },
     },
   },
@@ -95,17 +126,42 @@ export const sdk: SDK = {
     list: getAvailableWorkflows,
     plugins: {
       register: registerWorkflowPlugin,
-      registerMany: registerWorkflowPlugins,
+      registerMany: async (registrations: WorkflowPluginRegistration[]) => {
+        registerWorkflowPlugins(registrations)
+      },
       list: getAvailableWorkflowPlugins,
       get: getWorkflowPluginDefinition,
       clear: () => {
         clearWorkflowPluginsForTest()
         resetWorkflowPluginBootstrapForTest()
-        ensureWorkflowPluginsBootstrapped()
       },
+    },
+  },
+  tool: {
+    plugins: {
+      register: registerToolPlugin,
+      registerMany: async (registrations: ToolPluginRegistration[]) => {
+        registerToolPlugins(registrations)
+      },
+      list: getToolPluginNames,
+      getAll: createPluginTools,
+      clear: clearToolPluginsForTest,
     },
   },
 }
 
+const bootstrapOptions: {
+  pluginDirectories?: string[]
+  rootDirectory: string
+} = {
+  rootDirectory: process.cwd(),
+}
+if (process.env.HD_PLUGINS_DIR) {
+  bootstrapOptions.pluginDirectories = process.env.HD_PLUGINS_DIR
+    .split(':')
+    .filter(Boolean)
+}
+
+await bootstrapPluginRegistries(bootstrapOptions)
 ensureAgentPluginsBootstrapped()
 ensureWorkflowPluginsBootstrapped()

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getStageOrder, loadPromptForStage } from '../../../workflows/core'
-import { liteWorkflow } from '../../../plugins/workflows/lite'
+import { liteWorkflow } from '../../../builtin/workflows/lite'
 
 const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 

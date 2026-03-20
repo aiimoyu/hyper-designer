@@ -33,40 +33,7 @@ import {
   setCurrentNodeContext,
   setCurrentNodeMilestone,
 } from './history'
-
-function getDefinitionStageOrder(definition: WorkflowDefinition): string[] {
-  const visited = new Set<string>()
-  const order: string[] = []
-
-  const walk = (stageId: string): void => {
-    if (visited.has(stageId) || !definition.stages[stageId]) {
-      return
-    }
-    visited.add(stageId)
-    order.push(stageId)
-    const stage = definition.stages[stageId]
-    const transitions = stage.transitions ?? []
-    const autoTransitions = [...transitions]
-      .filter(item => item.mode === 'auto')
-      .sort((a, b) => a.priority - b.priority)
-    for (const transition of autoTransitions) {
-      walk(transition.toStageId)
-    }
-  }
-
-  const entry = definition.entryStageId
-  if (typeof entry === 'string') {
-    walk(entry)
-  }
-
-  for (const stageId of Object.keys(definition.stages)) {
-    if (!visited.has(stageId)) {
-      walk(stageId)
-    }
-  }
-
-  return order
-}
+import { getStageOrder as getDefinitionStageOrder } from '../stageOrder'
 
 function resolveNextSelectedStage(
   definition: WorkflowDefinition,

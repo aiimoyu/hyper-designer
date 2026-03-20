@@ -9,7 +9,7 @@ import {
 const WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
 const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
-import { classicWorkflow } from '../../../plugins/workflows/classic'
+import { classicWorkflow } from '../../../builtin/workflows/classic'
 import type { WorkflowDefinition } from '../../../workflows/core'
 
 function getClassicWorkflow(): WorkflowDefinition {

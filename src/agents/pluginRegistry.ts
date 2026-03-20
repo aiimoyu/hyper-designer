@@ -1,9 +1,6 @@
 import type { AgentConfig } from './types'
 import type { AgentPluginFactory, AgentPluginRegistration } from '../sdk/contracts'
 
-import { BUILTIN_AGENT_PLUGINS } from '../plugins/agent'
-import { USER_AGENT_PLUGINS } from '../../plugins/agents'
-
 const pluginAgentRegistry = new Map<string, AgentPluginFactory>()
 let initialized = false
 
@@ -24,9 +21,9 @@ export function ensureAgentPluginsBootstrapped(): void {
     return
   }
 
-  registerAgentPlugins(BUILTIN_AGENT_PLUGINS)
-  registerAgentPlugins(USER_AGENT_PLUGINS)
-  initialized = true
+  if (pluginAgentRegistry.size > 0) {
+    initialized = true
+  }
 }
 
 export function resetAgentPluginBootstrapForTest(): void {

@@ -1,22 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createReferenceSetupHook, referenceSetupHook } from '../../../../plugins/workflows/classic/hooks/referenceSetupHook'
+import * as referenceSetupHookModule from '../../../../builtin/workflows/classic/hooks/referenceSetupHook'
+
+import { createReferenceSetupHook, referenceSetupHook } from '../../../../builtin/workflows/classic/hooks/referenceSetupHook'
 import { createMockAdapter } from '../../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../../utils/logger'
 import type { WorkflowDefinition } from '../../../../workflows/core/types'
-
-vi.mock('fs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('fs')>()
-  return {
-    ...actual,
-    existsSync: vi.fn().mockReturnValue(false),
-    writeFileSync: vi.fn(),
-  }
-})
-
-import { existsSync, writeFileSync } from 'fs'
-
-const mockedExistsSync = vi.mocked(existsSync)
-const mockedWriteFileSync = vi.mocked(writeFileSync)
 
 const stubWorkflow: WorkflowDefinition = {
   id: 'test',
@@ -37,8 +25,8 @@ const stubWorkflow: WorkflowDefinition = {
 describe('referenceSetupHook', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    mockedExistsSync.mockReturnValue(false)
-    mockedWriteFileSync.mockReturnValue()
+    vi.spyOn(referenceSetupHookModule.referenceFs, 'referencePathExists').mockReturnValue(false)
+    vi.spyOn(referenceSetupHookModule.referenceFs, 'writeReferenceFile').mockImplementation(() => undefined)
   })
 
   afterEach(() => {
@@ -89,7 +77,7 @@ describe('referenceSetupHook', () => {
     it('should create REFERENCE.md when file does not exist', async () => {
       const adapter = createMockAdapter()
       const infoSpy = vi.spyOn(HyperDesignerLogger, 'info')
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(referenceSetupHookModule.referenceFs.referencePathExists).mockReturnValue(false)
 
       const hook = createReferenceSetupHook()
 
@@ -101,11 +89,10 @@ describe('referenceSetupHook', () => {
         adapter,
       })
 
-      expect(mockedWriteFileSync).toHaveBeenCalledTimes(1)
-      expect(mockedWriteFileSync).toHaveBeenCalledWith(
+      expect(referenceSetupHookModule.referenceFs.writeReferenceFile).toHaveBeenCalledTimes(1)
+      expect(referenceSetupHookModule.referenceFs.writeReferenceFile).toHaveBeenCalledWith(
         expect.stringContaining('REFERENCE.md'),
         expect.stringContaining('# 参考资料清单'),
-        'utf-8',
       )
       expect(infoSpy).toHaveBeenCalledWith(
         'ReferenceSetupHook',
@@ -117,7 +104,7 @@ describe('referenceSetupHook', () => {
     it('should skip file creation when REFERENCE.md already exists', async () => {
       const adapter = createMockAdapter()
       const debugSpy = vi.spyOn(HyperDesignerLogger, 'debug')
-      mockedExistsSync.mockReturnValue(true)
+      vi.mocked(referenceSetupHookModule.referenceFs.referencePathExists).mockReturnValue(true)
 
       const hook = createReferenceSetupHook()
 
@@ -129,7 +116,7 @@ describe('referenceSetupHook', () => {
         adapter,
       })
 
-      expect(mockedWriteFileSync).not.toHaveBeenCalled()
+      expect(referenceSetupHookModule.referenceFs.writeReferenceFile).not.toHaveBeenCalled()
       expect(debugSpy).toHaveBeenCalledWith(
         'ReferenceSetupHook',
         '参考资料清单文件已存在，跳过创建',
@@ -217,7 +204,7 @@ describe('referenceSetupHook', () => {
   describe('REFERENCE.md template content', () => {
     it('should include all required sections in the template', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(referenceSetupHookModule.referenceFs.referencePathExists).mockReturnValue(false)
 
       const hook = createReferenceSetupHook()
 
@@ -229,7 +216,7 @@ describe('referenceSetupHook', () => {
         adapter,
       })
 
-      const writtenContent = mockedWriteFileSync.mock.calls[0][1] as string
+      const writtenContent = vi.mocked(referenceSetupHookModule.referenceFs.writeReferenceFile).mock.calls[0][1] as string
 
       expect(writtenContent).toContain('## 1. Codebase (代码库)')
       expect(writtenContent).toContain('## 2. Domain Analysis Materials (领域分析资料)')
@@ -239,7 +226,7 @@ describe('referenceSetupHook', () => {
 
     it('should include subcategory rows in tables', async () => {
       const adapter = createMockAdapter()
-      mockedExistsSync.mockReturnValue(false)
+      vi.mocked(referenceSetupHookModule.referenceFs.referencePathExists).mockReturnValue(false)
 
       const hook = createReferenceSetupHook()
 
@@ -251,7 +238,7 @@ describe('referenceSetupHook', () => {
         adapter,
       })
 
-      const writtenContent = mockedWriteFileSync.mock.calls[0][1] as string
+      const writtenContent = vi.mocked(referenceSetupHookModule.referenceFs.writeReferenceFile).mock.calls[0][1] as string
 
       expect(writtenContent).toContain('Project Code (本项目代码)')
       expect(writtenContent).toContain('Reference Code (参考项目代码)')

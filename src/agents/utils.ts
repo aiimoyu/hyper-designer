@@ -6,7 +6,7 @@ import {
 } from './pluginRegistry'
 import {
   BUILTIN_AGENT_PLUGINS,
-} from '../plugins/agent'
+} from '../builtin/agents'
 
 const BUILTIN_AGENT_NAME_SET = new Set(BUILTIN_AGENT_PLUGINS.map(item => item.name))
 

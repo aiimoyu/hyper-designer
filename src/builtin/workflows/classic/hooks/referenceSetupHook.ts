@@ -7,9 +7,22 @@
  * 3. 阻塞直到用户确认完成
  */
 
-import { existsSync, writeFileSync } from 'fs'
+import * as fs from 'fs'
 import { join } from 'path'
 import { type StageHookFn, HyperDesignerLogger } from '../../../../sdk/contracts'
+
+export function referencePathExists(path: string): boolean {
+  return fs.existsSync(path)
+}
+
+export function writeReferenceFile(path: string, content: string): void {
+  fs.writeFileSync(path, content, 'utf-8')
+}
+
+export const referenceFs = {
+  referencePathExists,
+  writeReferenceFile,
+}
 
 /** REFERENCE.md 文件名 */
 const REFERENCE_FILENAME = 'REFERENCE.md'
@@ -71,9 +84,9 @@ export function createReferenceSetupHook(): StageHookFn {
     const referencePath = join(process.cwd(), REFERENCE_FILENAME)
 
     // 步骤1: 创建 REFERENCE.md 文件（如果不存在）
-    if (!existsSync(referencePath)) {
+    if (!referenceFs.referencePathExists(referencePath)) {
       try {
-        writeFileSync(referencePath, REFERENCE_TEMPLATE, 'utf-8')
+        referenceFs.writeReferenceFile(referencePath, REFERENCE_TEMPLATE)
         HyperDesignerLogger.info('ReferenceSetupHook', '已创建参考资料清单文件', {
           path: referencePath,
           stageKey,
