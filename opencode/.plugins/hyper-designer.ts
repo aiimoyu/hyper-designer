@@ -1,23 +1,21 @@
-import type { Plugin } from "@opencode-ai/plugin"
+import type { Hooks, Plugin } from "@opencode-ai/plugin"
 import { tool } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
 import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import {
   type AgentConfig as LocalAgentConfig,
-  type ToolContext,
   bootstrapPluginRegistries,
-  convertWorkflowToolsToOpenCode,
-  createAgentTransformer,
-  createDocumentReviewTools,
   createHyperAgent,
-  createTransformHooks,
-  createUsingHyperDesignerTransformer,
-  createWorkflowHooks,
   initLogger,
   sdk,
   workflowService,
 } from '../../src/sdk'
+import {
+  createOpenCodePlatformCapabilities,
+  createOpenCodePlatformOrchestrator,
+  mapLocalAgentsToOpenCode,
+} from '../../src/platformBridge'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const HD_PACKAGE_ROOT = resolve(__dirname, '../..')
@@ -45,14 +43,6 @@ const toOpencodeAgentConfig = (agent: LocalAgentConfig): OpencodeAgentConfig => 
   return result
 }
 
-const toOpencodeAgents = (
-  agents: Record<string, LocalAgentConfig>,
-): Record<string, OpencodeAgentConfig> => {
-  return Object.fromEntries(
-    Object.entries(agents).map(([key, agent]) => [key, toOpencodeAgentConfig(agent)]),
-  )
-}
-
 export const HyperDesignerPlugin: Plugin = async (ctx) => {
   // Initialize logger - respects HYPER_DESIGNER_LOG_PERSIST env var
   initLogger()
@@ -71,9 +61,11 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     rootDirectory: HD_PACKAGE_ROOT,
   })
 
+  const platformCapabilities = createOpenCodePlatformCapabilities(ctx)
+
   const agents = await sdk.agent.createAll()
   const mappedBuiltinAgents = Object.fromEntries(
-    Object.entries(toOpencodeAgents(agents)).map(([name, config]) => [
+    Object.entries(mapLocalAgentsToOpenCode({ agents: agents as Record<string, LocalAgentConfig> })).map(([name, config]) => [
       name,
       {
         ...config,
@@ -94,9 +86,6 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   }
 
 
-  const workflowHooks = await createWorkflowHooks(ctx)
-  const transformHooks = await createTransformHooks(ctx)
-  const documentReviewTools = createDocumentReviewTools()
 
   const hdTools = {
     // XXX 暂时解决GLM模型推理问题
@@ -209,46 +198,23 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     }),
   }
 
-  // ── 收集工作流工具 ─────────────────────────────────────────────────────────
-  // 从所有已注册工作流中收集工具定义，转换为 OpenCode 工具格式
-  const workflowTools = (() => {
-    const allWorkflowTools = workflowService.listAllTools()
-    if (allWorkflowTools.length === 0) {
-      return {}
-    }
-
-    // 创建 ToolContext 工厂（每次工具执行时获取最新上下文）
-    const getContext = (): ToolContext => ({
-      workflowId: workflowService.getDefinition()?.id ?? '',
-      currentStage: workflowService.getCurrentStage(),
-      state: workflowService.getState() as unknown as Record<string, unknown> | null,
-    })
-
-    return convertWorkflowToolsToOpenCode(allWorkflowTools, getContext)
-  })()
-  // ── 工作流工具收集完成 ─────────────────────────────────────────────────────
-
   const pluginTools = await sdk.tool.plugins.getAll()
 
+  const orchestrator = await createOpenCodePlatformOrchestrator({
+    ctx,
+    capabilities: platformCapabilities,
+    workflowService,
+    pluginTools: pluginTools as NonNullable<Hooks['tool']>,
+    hdTools: hdTools as NonNullable<Hooks['tool']>,
+    mappedAgents,
+  })
+
+  const hooks = orchestrator.toPluginHooks()
   return {
-    config: agentHandler,
-    tool: {
-      ...hdTools,
-      ...documentReviewTools,
-      ...workflowTools,
-      ...pluginTools,
-    },
-    event: async (input) => {
-      await workflowHooks.event(input)
-    },
-    "chat.message": async (input, output) => {
-      const agentTransformer = createAgentTransformer(ctx)
-      const usingHyperDesignerTransformer = createUsingHyperDesignerTransformer(ctx)
-      await agentTransformer(input, output)
-      await usingHyperDesignerTransformer(input, output)
-    },
-    "experimental.chat.system.transform": async (input: unknown, output: { system: string[] }) => {
-      await transformHooks['experimental.chat.system.transform'](input, output)
+    ...hooks,
+    config: async (config: Record<string, unknown>) => {
+      await hooks.config(config)
+      await agentHandler(config)
     },
   }
 }

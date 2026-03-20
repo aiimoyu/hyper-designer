@@ -15,8 +15,8 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 
 import { workflowService } from "../../core/service"
-import { HyperDesignerLogger } from "../../../utils/logger"
-import { createEventHandler } from "./event-handler"
+import { createOpenCodePlatformCapabilities } from '../../../platformBridge/capabilities/opencode'
+import { createWorkflowHooks as createBridgeWorkflowHooks } from '../../../platformBridge/opencode/workflows'
 
 export { convertWorkflowToolsToOpenCode } from './workflow-tools'
 
@@ -27,23 +27,6 @@ export { convertWorkflowToolsToOpenCode } from './workflow-tools'
  * @returns 平台集成钩子对象
  */
 export async function createWorkflowHooks(ctx: PluginInput) {
-  workflowService.on('handoverExecuted', ({ fromStep, toStep }: { fromStep: string; toStep: string }) => {
-    HyperDesignerLogger.info('Integrations', `Handover completed: ${fromStep || '(none)'} → ${toStep}`)
-  })
-
-  workflowService.on('stageCompleted', ({ stageName, isCompleted }: { stageName: string; isCompleted: boolean }) => {
-    HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
-  })
-
-  if (!workflowService.getDefinition()) {
-    HyperDesignerLogger.warn('OpenCode', '工作流未初始化，进入 fallback 模式，等待 hd_workflow_select。', {
-      action: 'createWorkflowHooks',
-      mode: 'fallback',
-    })
-  }
-
-  return {
-    /** 事件处理器：监听 session.idle 触发工作流交接 */
-    event: createEventHandler(ctx),
-  }
+  const capabilities = createOpenCodePlatformCapabilities(ctx)
+  return createBridgeWorkflowHooks(ctx, workflowService, capabilities)
 }
