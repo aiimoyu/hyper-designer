@@ -24,13 +24,19 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
   )
 }
 
-const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
+const HANDOVER_MILESTONES: MilestoneDefinition[] = [
   {
-    id: 'gate',
+    id: 'hd-gate',
     name: 'Quality Gate',
     description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
     failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
   },
+  {
+    id: "hd-int-mod",
+    name: "Interactive Modification",
+    description: "This milestone will be automatically activated after the document has been interactively modified with the user. To ensure document quality and alignment with user intent, interactive modification is required. Use the `hd_prepare_review` and `hd_finalize_review` tools to retrieve the modifications and complete this milestone.",
+    failureMessage: "The 'Interactive Modification' milestone is not completed. You must use `hd_prepare_review` and `hd_finalize_review` tools to retrieve changes and activate this milestone. Only then can you proceed to the next stage.",
+  }
 ]
 
 const REQUIREMENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
@@ -98,7 +104,7 @@ export const liteWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementAnalysis.md')),
       },
-      requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
+      requiredMilestones: [...HANDOVER_MILESTONES],
       required: true,
       inputs: [],
       outputs: REQUIREMENT_ANALYSIS_OUTPUTS,
@@ -118,7 +124,7 @@ export const liteWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDesign.md')),
       },
-      requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
+      requiredMilestones: [...HANDOVER_MILESTONES],
       required: true,
       inputs: FUNCTIONAL_DESIGN_INPUTS,
       outputs: FUNCTIONAL_DESIGN_OUTPUTS,
@@ -137,7 +143,7 @@ export const liteWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'developmentPlan.md')),
       },
-      requiredMilestones: [...CLASSIC_HANDOVER_MILESTONES],
+      requiredMilestones: [...HANDOVER_MILESTONES],
       required: true,
       inputs: SDD_PLAN_INPUTS,
       outputs: SDD_PLAN_OUTPUTS,

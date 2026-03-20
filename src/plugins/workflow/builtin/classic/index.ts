@@ -7,13 +7,19 @@ import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const CLASSIC_HANDOVER_MILESTONES: MilestoneDefinition[] = [
+const HANDOVER_MILESTONES: MilestoneDefinition[] = [
   {
     id: 'gate',
     name: 'Quality Gate',
     description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
     failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
   },
+  {
+    id: "hd-int-mod",
+    name: "Interactive Modification",
+    description: "This milestone will be automatically activated after the document has been interactively modified with the user. To ensure document quality and alignment with user intent, interactive modification is required. Use the `hd_prepare_review` and `hd_finalize_review` tools to retrieve the modifications and complete this milestone.",
+    failureMessage: "The 'Interactive Modification' milestone is not completed. You must use `hd_prepare_review` and `hd_finalize_review` tools to retrieve changes and activate this milestone. Only then can you proceed to the next stage.",
+  }
 ]
 
 const IR_ANALYSIS_OUTPUTS: StageFileItem[] = [
@@ -264,7 +270,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: [],
       outputs: IR_ANALYSIS_OUTPUTS,
@@ -284,7 +290,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: SCENARIO_ANALYSIS_INPUTS,
       outputs: SCENARIO_ANALYSIS_OUTPUTS,
@@ -304,7 +310,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: USE_CASE_ANALYSIS_INPUTS,
       outputs: USE_CASE_ANALYSIS_OUTPUTS,
@@ -323,7 +329,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: FUNCTIONAL_REFINEMENT_INPUTS,
       outputs: FUNCTIONAL_REFINEMENT_OUTPUTS,
@@ -342,7 +348,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: REQUIREMENT_DECOMPOSITION_INPUTS,
       outputs: REQUIREMENT_DECOMPOSITION_OUTPUTS,
@@ -361,7 +367,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: SYSTEM_FUNCTIONAL_DESIGN_INPUTS,
       outputs: SYSTEM_FUNCTIONAL_DESIGN_OUTPUTS,
@@ -381,7 +387,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: true,
       inputs: MODULE_FUNCTIONAL_DESIGN_INPUTS,
       outputs: MODULE_FUNCTIONAL_DESIGN_OUTPUTS,
@@ -400,7 +406,7 @@ export const classicWorkflow: WorkflowDefinition = {
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
-      requiredMilestones: CLASSIC_HANDOVER_MILESTONES,
+      requiredMilestones: HANDOVER_MILESTONES,
       required: false,
       inputs: SDD_PLAN_GENERATION_INPUTS,
       outputs: SDD_PLAN_GENERATION_OUTPUTS,

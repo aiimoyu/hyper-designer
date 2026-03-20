@@ -77,10 +77,11 @@ Before rendering any output to the user, call `hd_record_milestone` with:
 **Pass Threshold**: Score >= 75 means the document passes the quality gate and the workflow may proceed to the next stage.
 
 Example (passed):
+
 ```json
 {
   "milestone": {
-    "type": "gate",
+    "type": "hd-gate",
     "isCompleted": true,
     "detail": {
       "score": 85,
@@ -91,10 +92,11 @@ Example (passed):
 ```
 
 Example (failed):
+
 ```json
 {
   "milestone": {
-    "type": "gate",
+    "type": "hd-gate",
     "isCompleted": false,
     "detail": {
       "score": 60,
