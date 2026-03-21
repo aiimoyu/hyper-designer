@@ -51,8 +51,9 @@ An OpenCode plugin that implements specialized agents and workflow management fo
    # Create plugin symbolic link
    ln -s ~/.config/opencode/hyper-designer/opencode/.plugins/hyper-designer.ts ~/.config/opencode/plugins/hyper-designer.ts
 
-   # Create skill symbolic links
-   ln -s ~/.config/opencode/hyper-designer/src/skills/hyper-designer ~/.config/opencode/skills/hyper-designer
+   # Create skill symbolic links (builtin skills -> hyper-designer, user skills -> hyper-designer-user)
+   ln -s ~/.config/opencode/hyper-designer/src/builtin/skills ~/.config/opencode/skills/hyper-designer
+   ln -s ~/.config/opencode/hyper-designer/plugins/skills ~/.config/opencode/skills/hyper-designer-user
    ```
 
    - To force overwrite existing links: use `ln -sf ...` for files and `ln -sfn ...` for directories
@@ -89,7 +90,9 @@ mkdir "%USERPROFILE%\.config\opencode\skills"
 
 mklink "%USERPROFILE%\.config\opencode\plugins\hyper-designer.ts" "%USERPROFILE%\.config\opencode\hyper-designer\opencode\.plugins\hyper-designer.ts"
 
-mklink /J "%USERPROFILE%\.config\opencode\skills\hyper-designer" "%USERPROFILE%\.config\opencode\hyper-designer\src\skills\hyper-designer"
+mklink /J "%USERPROFILE%\.config\opencode\skills\hyper-designer" "%USERPROFILE%\.config\opencode\hyper-designer\src\builtin\skills"
+
+mklink /J "%USERPROFILE%\.config\opencode\skills\hyper-designer-user" "%USERPROFILE%\.config\opencode\hyper-designer\plugins\skills"
 
 REM (Optional) Verify installation
 node verify.js
@@ -180,6 +183,7 @@ If you used copies instead of symbolic links, you will need to re-copy the files
      ```bash
      rm ~/.config/opencode/plugins/hyper-designer.ts
      rm -rf ~/.config/opencode/skills/hyper-designer
+     rm -rf ~/.config/opencode/skills/hyper-designer-user
      ```
 
    - Windows (Administrator CMD):

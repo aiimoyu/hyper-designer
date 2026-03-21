@@ -58,7 +58,7 @@ export function resolveVerificationContext(options = {}) {
     packageJsonPath: join(rootDir, 'package.json'),
     nodeModulesDir: join(rootDir, 'node_modules'),
     sourcePluginFile: join(rootDir, 'opencode', '.plugins', 'hyper-designer.ts'),
-    skillsDir: join(rootDir, 'src', 'skills', 'hyper-designer'),
+    skillsDir: join(rootDir, 'src', 'builtin', 'skills'),
   }
 }
 
