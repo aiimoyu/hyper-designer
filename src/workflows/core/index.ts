@@ -13,7 +13,7 @@
 
 // Core types
 export type {
-  PlatformAdapter,
+  WorkflowPlatformAdapter,
   StageHookFn,
   StageHook,
   WorkflowPromptBindings,

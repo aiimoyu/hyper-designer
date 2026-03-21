@@ -5,9 +5,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import { prepareReview } from '../../../tools/documentReview/prepareReview'
-import { finalizeReview } from '../../../tools/documentReview/finalizeReview'
-import { convertToHunks } from '../../../tools/documentReview/diffUtils'
+import { prepareReview } from '../../../builtin/tools/documentReview/prepareReview'
+import { finalizeReview } from '../../../builtin/tools/documentReview/finalizeReview'
+import { convertToHunks } from '../../../builtin/tools/documentReview/diffUtils'
 
 describe('documentReview', () => {
   const tempDir = path.join(process.cwd(), '.test-temp', 'document-review-tests')
@@ -221,8 +221,8 @@ describe('documentReview', () => {
       const hunks = convertToHunks(oldContent, newContent)
 
       expect(hunks).toHaveLength(1)
-      const beforeLines = hunks[0].contextBefore.split('\n').filter(l => l.length > 0)
-      const afterLines = hunks[0].contextAfter.split('\n').filter(l => l.length > 0)
+      const beforeLines = hunks[0].contextBefore.split('\n').filter((line: string) => line.length > 0)
+      const afterLines = hunks[0].contextAfter.split('\n').filter((line: string) => line.length > 0)
       expect(beforeLines.length).toBeGreaterThanOrEqual(1)
       expect(beforeLines.length).toBeLessThanOrEqual(5)
       expect(afterLines.length).toBeGreaterThanOrEqual(1)

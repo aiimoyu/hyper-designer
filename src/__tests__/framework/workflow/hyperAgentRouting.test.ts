@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { existsSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import type { PluginInput } from '@opencode-ai/plugin'
 
 import type { WorkflowDefinition } from '../../../workflows/core'
 import {
@@ -11,7 +10,7 @@ import {
   writeWorkflowStateFile,
 } from '../../../workflows/core/state'
 import { workflowService } from '../../../workflows/core/service'
-import { createAgentTransformer } from '../../../platformBridge/platform/opencode/transform/agent-transform'
+import { createAgentTransformer } from '../../../transform/chatMessageTransform'
 
 const STATE_FILE = join(process.cwd(), '.hyper-designer', 'workflow_state.json')
 
@@ -158,7 +157,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
     it('chat.message keeps Hyper unchanged when workflow state is null', async () => {
       vi.spyOn(workflowService, 'getState').mockReturnValue(null)
 
-      const transformer = createAgentTransformer({} as PluginInput)
+      const transformer = createAgentTransformer()
       const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
       const output = {
         message: { agent: 'Hyper' },
@@ -178,7 +177,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         current: null,
       })
 
-      const transformer = createAgentTransformer({} as PluginInput)
+      const transformer = createAgentTransformer()
       const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
       const output = {
         message: { agent: 'Hyper' },
@@ -207,7 +206,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         },
       })
 
-      const transformer = createAgentTransformer({} as PluginInput)
+      const transformer = createAgentTransformer()
       const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
       const output = {
         message: { agent: 'Hyper' },
@@ -234,7 +233,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         },
       })
 
-      const transformer = createAgentTransformer({} as PluginInput)
+      const transformer = createAgentTransformer()
       const input = { agent: 'Hyper' } as Parameters<ReturnType<typeof createAgentTransformer>>[0]
       const output = {
         message: { agent: 'Hyper' },

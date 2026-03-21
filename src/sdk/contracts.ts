@@ -2,6 +2,7 @@ import type { AgentConfig, AgentPromptMetadata } from '../agents/types'
 import type { AgentDefinition } from '../agents/factory'
 import { createAgent, filePrompt as agentFilePrompt, stringPrompt as agentStringPrompt } from '../agents/factory'
 import { HyperDesignerLogger } from '../utils/logger'
+import type { ToolDefinition } from '../tools/types'
 import type {
   MilestoneDefinition,
   StageFileItem,
@@ -24,7 +25,7 @@ export interface WorkflowPluginRegistration {
   factory: WorkflowPluginFactory
 }
 
-export type ToolPluginFactory = () => Record<string, unknown> | Promise<Record<string, unknown>>
+export type ToolPluginFactory = () => ToolDefinition | Promise<ToolDefinition>
 
 export interface ToolPluginRegistration {
   name: string

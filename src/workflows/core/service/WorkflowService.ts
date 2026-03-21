@@ -1,4 +1,4 @@
-import type { ToolDefinition } from '../toolTypes'
+import type { ToolDefinition } from '../../../tools/types'
 import { resolveAgentConfig } from '../agentConfig'
 import { getStageOrder } from '../stageOrder'
 
@@ -10,7 +10,7 @@ import { getStageOrder } from '../stageOrder'
  */
 
 import { EventEmitter } from "events";
-import type { StageTransitionDefinition, WorkflowDefinition, PlatformAdapter, MilestoneDefinition, StageFileItem } from "../types";
+import type { StageTransitionDefinition, WorkflowDefinition, WorkflowPlatformAdapter, MilestoneDefinition, StageFileItem } from "../types";
 import type { WorkflowState, GateMilestoneDetail } from "../state/types";
 import {
   getWorkflowState,
@@ -673,7 +673,7 @@ export class WorkflowService extends EventEmitter {
    * @param adapter 可选的平台适配器
    * @returns 更新后的工作流状态
    */
-  async executeHandover(sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
+  async executeHandover(sessionID?: string, adapter?: WorkflowPlatformAdapter): Promise<WorkflowState> {
     if (!this.definition) {
       throw new Error("Workflow not initialized. Call selectWorkflow first.");
     }

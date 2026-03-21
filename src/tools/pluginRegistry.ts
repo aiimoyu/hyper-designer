@@ -1,4 +1,5 @@
 import type { ToolPluginFactory, ToolPluginRegistration } from '../sdk/contracts'
+import type { ToolDefinition } from './types'
 
 const pluginToolRegistry = new Map<string, ToolPluginFactory>()
 
@@ -18,12 +19,12 @@ export function getToolPluginNames(): string[] {
   return Array.from(pluginToolRegistry.keys())
 }
 
-export async function createPluginTools(): Promise<Record<string, unknown>> {
-  const result: Record<string, unknown> = {}
+export async function createPluginTools(): Promise<ToolDefinition[]> {
+  const result: ToolDefinition[] = []
 
   for (const factory of pluginToolRegistry.values()) {
-    const tools = await factory()
-    Object.assign(result, tools)
+    const tool = await factory()
+    result.push(tool)
   }
 
   return result

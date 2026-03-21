@@ -1,4 +1,5 @@
 import type { AgentConfig } from '../agents/types'
+import type { ToolDefinition } from '../tools/types'
 import type { WorkflowDefinition } from '../workflows/core/types'
 import type {
   AgentPluginFactory,
@@ -53,15 +54,15 @@ import {
   registerToolPlugins,
 } from '../tools/pluginRegistry'
 
-export type { ToolContext } from '../workflows/core/toolTypes'
-export { convertWorkflowToolsToOpenCode } from '../platformBridge/platform/opencode/workflows/workflow-tools'
+export type { ToolContext } from '../tools/types'
+export {
+  convertWorkflowToolsToOpenCode,
+  buildOpenCodeTools,
+  createOpenCodeAgentTransformer,
+  createOpenCodeUsingHyperDesignerTransformer,
+} from '../platformBridge/platform/opencode/orchestrator'
 export { createHyperAgent } from '../agents/Hyper'
 export { workflowService } from '../workflows/core/service'
-export { createAgentTransformer } from '../platformBridge/platform/opencode/transform/agent-transform'
-export { createUsingHyperDesignerTransformer } from '../platformBridge/platform/opencode/transform/using-hyperdesigner-transform'
-export { createTransformHooks } from '../platformBridge/platform/opencode/transform/hooks'
-export { createWorkflowHooks } from '../platformBridge/platform/opencode/workflows'
-export { createDocumentReviewTools } from '../platformBridge/platform/opencode/tools/documentReview'
 export { initLogger } from '../utils/logger'
 
 interface SDK {
@@ -92,10 +93,10 @@ interface SDK {
   }
   tool: {
     plugins: {
-      register: (name: string, factory: () => Record<string, unknown> | Promise<Record<string, unknown>>) => void
+      register: (name: string, factory: () => ToolDefinition | Promise<ToolDefinition>) => void
       registerMany: (registrations: ToolPluginRegistration[]) => Promise<void>
       list: () => string[]
-      getAll: () => Promise<Record<string, unknown>>
+      getAll: () => Promise<ToolDefinition[]>
       clear: () => void
     }
   }

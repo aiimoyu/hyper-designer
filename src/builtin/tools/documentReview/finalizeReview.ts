@@ -1,33 +1,18 @@
-/**
- * 完成文档审核工具
- *
- * 获取用户修改前后的差异，返回结构化差异数据，并删除临时审核文件。
- */
-
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import type { DocumentReviewParams, FinalizeReviewResult } from './types'
-import { convertToHunks, calculateSummary, generateUnifiedDiff } from './diffUtils'
-import { HyperDesignerLogger } from '../../utils/logger'
 
-/**
- * 获取默认审核文件路径
- * @param sourcePath 源文件路径
- * @param projectRoot 项目根目录
- * @returns 审核文件路径
- */
+import { HyperDesignerLogger } from '../../../sdk/runtime'
+
+import { convertToHunks, calculateSummary, generateUnifiedDiff } from './diffUtils'
+import type { DocumentReviewParams, FinalizeReviewResult } from './types'
+
 function getDefaultReviewPath(sourcePath: string, projectRoot: string): string {
   const fileName = path.basename(sourcePath)
   return path.join(projectRoot, fileName)
 }
 
-/**
- * 完成文档审核
- * @param params 参数
- * @returns 审核结果
- */
 export async function finalizeReview(
-  params: DocumentReviewParams & { projectRoot?: string }
+  params: DocumentReviewParams & { projectRoot?: string },
 ): Promise<FinalizeReviewResult> {
   const { sourcePath, reviewPath: customReviewPath, projectRoot = process.cwd() } = params
 
@@ -45,14 +30,14 @@ export async function finalizeReview(
       hunks: [],
       summary: { additions: 0, deletions: 0, modifications: 0 },
       message: `Review file has been deleted, please call hd_prepare_review again: ${reviewPath}`,
-      unifiedDiff: ''
+      unifiedDiff: '',
     }
   }
 
   try {
     const [oldContent, newContent] = await Promise.all([
       fs.readFile(sourcePath, 'utf-8'),
-      fs.readFile(reviewPath, 'utf-8')
+      fs.readFile(reviewPath, 'utf-8'),
     ])
 
     const hunks = convertToHunks(oldContent, newContent)
@@ -64,7 +49,7 @@ export async function finalizeReview(
     HyperDesignerLogger.info('DocumentReview', '文档审核完成', {
       sourcePath,
       hasChanges,
-      summary
+      summary,
     })
 
     if (!hasChanges) {
@@ -75,7 +60,7 @@ export async function finalizeReview(
         hunks: [],
         summary: { additions: 0, deletions: 0, modifications: 0 },
         message: 'Document has no modifications. You can proceed to the next step.',
-        unifiedDiff: ''
+        unifiedDiff: '',
       }
     }
 
@@ -88,7 +73,7 @@ export async function finalizeReview(
       hunks,
       summary,
       message: `Detected ${summary.modifications} modification hunks. Process all user changes (apply additions, deletions, and // annotations) to the source document first, then call hd_prepare_review to start the next revision round.`,
-      unifiedDiff
+      unifiedDiff,
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -100,7 +85,7 @@ export async function finalizeReview(
       hunks: [],
       summary: { additions: 0, deletions: 0, modifications: 0 },
       message: `Failed to get diff: ${err.message}`,
-      unifiedDiff: ''
+      unifiedDiff: '',
     }
   }
 }

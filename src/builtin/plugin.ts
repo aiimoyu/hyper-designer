@@ -2,6 +2,7 @@ import { BUILTIN_AGENT_PLUGINS } from './agents'
 import { BUILTIN_TOOL_PLUGINS } from './tools'
 import { BUILTIN_WORKFLOW_PLUGINS } from './workflows'
 import type { AgentConfig, WorkflowDefinition } from '../sdk/contracts'
+import type { ToolDefinition } from '../tools/types'
 import { defineHyperDesignerPlugin, type HyperDesignerPluginContext } from '../plugin'
 import { resolve } from 'path'
 
@@ -32,11 +33,11 @@ function buildBuiltinWorkflows(ctx: HyperDesignerPluginContext | undefined): Rec
   return workflows
 }
 
-async function buildBuiltinTools(): Promise<Record<string, unknown>> {
-  const tools: Record<string, unknown> = {}
+async function buildBuiltinTools(): Promise<Record<string, ToolDefinition>> {
+  const tools: Record<string, ToolDefinition> = {}
   for (const registration of BUILTIN_TOOL_PLUGINS) {
     const created = await registration.factory()
-    Object.assign(tools, created)
+    tools[created.name] = created
   }
   return tools
 }

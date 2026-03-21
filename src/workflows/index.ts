@@ -44,5 +44,4 @@ export type {
   ToolParamSchema,
   ToolParamsSchema,
   ToolRegistration,
-} from './core/toolTypes'
-export { ToolRegistry, toolRegistry } from './core/toolRegistry'
+} from '../tools/types'

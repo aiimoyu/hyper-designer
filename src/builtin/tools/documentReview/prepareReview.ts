@@ -1,32 +1,17 @@
-/**
- * 准备文档审核工具
- *
- * 将源文件拷贝到项目根目录供用户修改。
- */
-
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import type { DocumentReviewParams, PrepareReviewResult } from './types'
-import { HyperDesignerLogger } from '../../utils/logger'
 
-/**
- * 获取默认审核文件路径
- * @param sourcePath 源文件路径
- * @param projectRoot 项目根目录
- * @returns 审核文件路径
- */
+import { HyperDesignerLogger } from '../../../sdk/runtime'
+
+import type { DocumentReviewParams, PrepareReviewResult } from './types'
+
 function getDefaultReviewPath(sourcePath: string, projectRoot: string): string {
   const fileName = path.basename(sourcePath)
   return path.join(projectRoot, fileName)
 }
 
-/**
- * 准备文档审核
- * @param params 参数
- * @returns 准备结果
- */
 export async function prepareReview(
-  params: DocumentReviewParams & { projectRoot?: string }
+  params: DocumentReviewParams & { projectRoot?: string },
 ): Promise<PrepareReviewResult> {
   const { sourcePath, reviewPath: customReviewPath, projectRoot = process.cwd() } = params
 
@@ -42,7 +27,7 @@ export async function prepareReview(
       success: false,
       sourcePath,
       reviewPath,
-      message: `Source file does not exist: ${sourcePath}`
+      message: `Source file does not exist: ${sourcePath}`,
     }
   }
 
@@ -52,14 +37,14 @@ export async function prepareReview(
 
     HyperDesignerLogger.info('DocumentReview', '文档已拷贝到审核目录', {
       sourcePath,
-      reviewPath
+      reviewPath,
     })
 
     return {
       success: true,
       sourcePath,
       reviewPath,
-      message: `User annotation document generated: ${reviewPath}. Please guide the user to modify the file at the above path and ask the user to answer "修改完成" (modifications completed) or "无需修改" (no modifications needed). After the user responds, call hd_finalize_review to get the user's modified content`
+      message: `User annotation document generated: ${reviewPath}. Please guide the user to modify the file at the above path and ask the user to answer "修改完成" (modifications completed) or "无需修改" (no modifications needed). After the user responds, call hd_finalize_review to get the user's modified content`,
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error))
@@ -68,7 +53,7 @@ export async function prepareReview(
       success: false,
       sourcePath,
       reviewPath,
-      message: `Failed to copy document: ${err.message}`
+      message: `Failed to copy document: ${err.message}`,
     }
   }
 }

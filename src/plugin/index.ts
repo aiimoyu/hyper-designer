@@ -5,6 +5,7 @@ import type {
   WorkflowDefinition,
   WorkflowPluginRegistration,
 } from '../sdk/contracts'
+import type { ToolDefinition } from '../tools/types'
 import { existsSync } from 'fs'
 import { dirname, resolve } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
@@ -25,8 +26,8 @@ export interface HyperDesignerPluginHooks {
     workflows: Record<string, WorkflowDefinition>,
   ) => Record<string, WorkflowDefinition> | Promise<Record<string, WorkflowDefinition>>
   tool?: (
-    tools: Record<string, unknown>,
-  ) => Record<string, unknown> | Promise<Record<string, unknown>>
+    tools: Record<string, ToolDefinition>,
+  ) => Record<string, ToolDefinition> | Promise<Record<string, ToolDefinition>>
 }
 
 export type HyperDesignerPluginFactory = (
@@ -40,7 +41,7 @@ interface BrandedHyperDesignerPluginFactory extends HyperDesignerPluginFactory {
 export interface HyperDesignerPluginRegistrations {
   agent: Record<string, AgentConfig>
   workflow: Record<string, WorkflowDefinition>
-  tool: Record<string, unknown>
+  tool: Record<string, ToolDefinition>
 }
 
 export interface BuildPluginRegistrationsOptions {
@@ -161,7 +162,7 @@ export async function buildPluginRegistrations(
 
   let agents: Record<string, AgentConfig> = {}
   let workflows: Record<string, WorkflowDefinition> = {}
-  let tools: Record<string, unknown> = {}
+  let tools: Record<string, ToolDefinition> = {}
 
   for (const plugin of options.plugins) {
     const hooks = await plugin(options.ctx)
@@ -201,12 +202,10 @@ export function toWorkflowPluginRegistrations(
 }
 
 export function toToolPluginRegistrations(
-  tools: Record<string, unknown>,
+  tools: Record<string, ToolDefinition>,
 ): ToolPluginRegistration[] {
   return Object.entries(tools).map(([name, tool]) => ({
     name,
-    factory: () => ({
-      [name]: tool,
-    }),
+    factory: () => tool,
   }))
 }

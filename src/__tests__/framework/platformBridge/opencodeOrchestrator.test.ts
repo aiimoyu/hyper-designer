@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { PluginInput } from '@opencode-ai/plugin'
-import type { ToolDefinition } from '../../../workflows/core/toolTypes'
+import type { ToolDefinition } from '../../../tools/types'
 
 import { createOpenCodePlatformCapabilities } from '../../../platformBridge/platform/opencode/capabilities'
 import { createOpenCodePlatformOrchestrator } from '../../../platformBridge/platform/opencode/orchestrator'
@@ -100,5 +100,54 @@ describe('createOpenCodePlatformOrchestrator', () => {
 
     const hooks = orchestrator.toPluginHooks()
     expect(hooks.tool).toHaveProperty('hd_test_tool')
+  })
+
+  it('builds unified opencode tools from workflow and plugin definitions', async () => {
+    const ctx = createMockCtx()
+    const capabilities = createOpenCodePlatformCapabilities(ctx)
+    const orchestrator = await createOpenCodePlatformOrchestrator({
+      ctx,
+      capabilities,
+      workflowService: {
+        listAllTools: () => [],
+        getDefinition: () => workflowService.getDefinition(),
+        getCurrentStage: () => workflowService.getCurrentStage(),
+        getState: () => workflowService.getState(),
+        on: () => workflowService,
+        isHandoverInProgress: () => false,
+        getHandoverAgent: () => null,
+        getHandoverPrompt: () => null,
+        executeHandover: async () => ({ success: true }),
+      },
+      pluginTools: {
+        hd_plugin_tool: {
+          name: 'hd_plugin_tool',
+          description: 'plugin tool definition',
+          params: {
+            value: { type: 'string' },
+          },
+          execute: async (params: Record<string, unknown>) => JSON.stringify(params),
+        } as ToolDefinition,
+      },
+      mappedAgents: {},
+    })
+
+    const hooks = orchestrator.toPluginHooks()
+    expect(hooks.tool).toHaveProperty('hd_plugin_tool')
+
+    const output = await hooks.tool.hd_plugin_tool.execute(
+      { value: 'ok' },
+      {
+        sessionID: 'test-session',
+        messageID: 'test-message',
+        agent: 'Hyper',
+        directory: process.cwd(),
+        worktree: process.cwd(),
+        abort: new AbortController().signal,
+        metadata: () => undefined,
+        ask: async () => undefined,
+      },
+    )
+    expect(output).toContain('ok')
   })
 })

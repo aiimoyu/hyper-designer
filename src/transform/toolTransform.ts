@@ -7,11 +7,6 @@ export type HdToolPlaceholder = (typeof HD_TOOL_PLACEHOLDERS)[keyof typeof HD_TO
 
 export type ToolNameMapping = Record<HdToolPlaceholder, string>
 
-export const OPENCODE_TOOL_MAPPING: ToolNameMapping = {
-  [HD_TOOL_PLACEHOLDERS.ASK_USER]: 'question',
-  [HD_TOOL_PLACEHOLDERS.DELEGATE]: 'task',
-}
-
 export function replaceToolPlaceholders(text: string, mapping: ToolNameMapping): string {
   let result = text
   for (const [placeholder, actualName] of Object.entries(mapping)) {
@@ -20,6 +15,6 @@ export function replaceToolPlaceholders(text: string, mapping: ToolNameMapping):
   return result
 }
 
-export function createToolTransformer(mapping: ToolNameMapping = OPENCODE_TOOL_MAPPING) {
+export function createToolTransformer(mapping: ToolNameMapping) {
   return (text: string): string => replaceToolPlaceholders(text, mapping)
 }

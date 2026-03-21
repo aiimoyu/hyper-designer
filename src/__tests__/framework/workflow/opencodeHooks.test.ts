@@ -27,10 +27,6 @@ vi.mock('../../../config/loader', () => ({
   loadHDConfig: () => ({ workflow: 'classic', agents: {} }),
 }))
 
-vi.mock('../../../platformBridge/platform/opencode/workflows/workflow-tools', () => ({
-  convertWorkflowToolsToOpenCode: () => ({}),
-}))
-
 describe('createWorkflowHooks', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -41,7 +37,7 @@ describe('createWorkflowHooks', () => {
   it('keeps hooks functional in fallback mode before workflow selection', async () => {
     getDefinition.mockReturnValue(null)
 
-    const { createWorkflowHooks } = await import('../../../platformBridge/platform/opencode/workflows')
+    const { createWorkflowHooks } = await import('../../../platformBridge/platform/opencode/orchestrator')
     const { createOpenCodePlatformCapabilities } = await import('../../../platformBridge/platform/opencode/capabilities')
     const capabilities = createOpenCodePlatformCapabilities({
       client: {

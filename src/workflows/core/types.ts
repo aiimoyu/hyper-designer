@@ -1,9 +1,11 @@
-import type { ToolDefinition } from './toolTypes'
+import type { ToolDefinition } from '../../tools/types'
 
-import type { PlatformAdapter } from '../../platformBridge/capabilities/types'
-
-// 重新导出供上层直接使用
-export type { PlatformAdapter } from '../../platformBridge/capabilities/types'
+export interface WorkflowPlatformAdapter {
+  sendPrompt: (params: { sessionId: string; agent: string; text: string; schema?: Record<string, unknown>; system?: string }) => Promise<{ structuredOutput?: unknown; text: string }>
+  summarizeSession: (sessionId: string) => Promise<void>
+  clearSession: (sessionId: string) => Promise<string>
+  registerTools?: (tools: Array<{ name: string; description: string; params: Record<string, { type: string; description?: string; optional?: boolean }>; handler: (params: Record<string, unknown>) => Promise<string> }>) => void
+}
 
 export interface WorkflowPromptBindings {
   [placeholder: string]: string
@@ -30,7 +32,7 @@ export type StageHookFn = (ctx: {
   setInfo?: (patch: Record<string, unknown>) => void
   sessionID?: string
   /** 平台适配器（平台注入），提供会话管理与 prompt 能力 */
-  adapter?: PlatformAdapter
+  adapter?: WorkflowPlatformAdapter
 }) => Promise<void>
 
 export interface WorkflowHookDefinition {

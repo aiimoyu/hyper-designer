@@ -2,7 +2,7 @@ import type { Hooks, PluginInput } from '@opencode-ai/plugin'
 import type { AgentConfig as OpencodeAgentConfig } from '@opencode-ai/sdk'
 
 import type { AgentConfig as LocalAgentConfig } from '../../agents/types'
-import type { ToolContext } from '../../workflows/core/toolTypes'
+import type { ToolContext, ToolDefinition } from '../../tools/types'
 import type { PlatformCapabilities } from '../capabilities/types'
 
 export interface PlatformOrchestratorPluginHooks {
@@ -33,7 +33,7 @@ export interface CreateOpenCodeOrchestratorInput {
   ctx: PluginInput
   capabilities: PlatformCapabilities
   workflowService: WorkflowServiceLike
-  pluginTools: NonNullable<Hooks['tool']>
+  pluginTools: Record<string, ToolDefinition>
   mappedAgents: Record<string, OpencodeAgentConfig & { hidden?: boolean }>
 }
 

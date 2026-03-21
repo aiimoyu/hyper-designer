@@ -10,7 +10,7 @@
  * 6. 设置质量门结果
  */
 
-import type { WorkflowDefinition, PlatformAdapter, StageTransitionDefinition, MilestoneDefinition } from "../types";
+import type { WorkflowDefinition, WorkflowPlatformAdapter, StageTransitionDefinition, MilestoneDefinition } from "../types";
 import type {
   WorkflowState,
   WorkflowStage,
@@ -533,7 +533,7 @@ export function setWorkflowStageMilestone(input: StageMilestoneInput): WorkflowS
  * @returns Updated workflow state
  * @throws Error if workflow not initialized
  */
-export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, adapter?: PlatformAdapter): Promise<WorkflowState> {
+export async function executeWorkflowHandover(definition: WorkflowDefinition, sessionID?: string, adapter?: WorkflowPlatformAdapter): Promise<WorkflowState> {
   HyperDesignerLogger.info("Workflow", "执行工作流交接");
 
   const state = readWorkflowStateFile();

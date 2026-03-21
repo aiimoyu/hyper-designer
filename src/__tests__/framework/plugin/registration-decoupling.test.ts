@@ -33,6 +33,7 @@ describe('plugin registration decoupling', () => {
   it('bootstrap registers builtin first then user plugins can override builtin names', async () => {
     sdk.agent.plugins.clear()
     sdk.workflow.plugins.clear()
+    sdk.tool.plugins.clear()
 
     await bootstrapPluginRegistries({
       plugins: [
@@ -78,5 +79,22 @@ describe('plugin registration decoupling', () => {
     expect(agents.HCollector).toBeUndefined()
     expect(agents.HArchitect?.description).toBe('user override architect')
     expect(classicWorkflow?.name).toBe('classic override')
+  })
+
+  it('builtin tools are registered via plugin pipeline', async () => {
+    sdk.tool.plugins.clear()
+
+    await bootstrapPluginRegistries({
+      plugins: [BUILTIN_PLUGIN],
+    })
+
+    const tools = await sdk.tool.plugins.getAll()
+    const names = tools.map(tool => tool.name)
+
+    expect(names).toContain('hd_workflow_state')
+    expect(names).toContain('hd_workflow_list')
+    expect(names).toContain('hd_handover')
+    expect(names).toContain('hd_prepare_review')
+    expect(names).toContain('hd_finalize_review')
   })
 })

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Hooks, PluginInput } from '@opencode-ai/plugin'
+import type { Hooks } from '@opencode-ai/plugin'
 import type { UserMessage, Part } from '@opencode-ai/sdk'
 
-import { createUsingHyperDesignerTransformer } from '../../../platformBridge/platform/opencode/transform/using-hyperdesigner-transform'
+import { createUsingHyperDesignerTransformer } from '../../../transform/chatMessageTransform'
 import { BUILTIN_AGENT_PLUGINS } from '../../../builtin/agents'
 import { clearAgentPluginsForTest, registerAgentPlugins } from '../../../agents/pluginRegistry'
 
@@ -39,7 +39,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('injects system prompt for hyper-designer builtin agents', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
       agent: 'HArchitect',
@@ -54,7 +54,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('injects system prompt for Hyper agent', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
       agent: 'Hyper',
@@ -71,7 +71,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('does not inject system prompt for non-hyper-designer agents', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
       agent: 'build',
@@ -87,7 +87,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('does not inject system prompt when agent is undefined', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
     }
@@ -99,7 +99,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('appends to existing system prompt', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
       agent: 'HArchitect',
@@ -114,7 +114,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('includes all hyper-designer agents in the prompt', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
       agent: 'HCritic',
@@ -132,7 +132,7 @@ describe('createUsingHyperDesignerTransformer', () => {
   })
 
   it('includes workflow tools guidance in the prompt', async () => {
-    const transformer = createUsingHyperDesignerTransformer({} as PluginInput)
+    const transformer = createUsingHyperDesignerTransformer()
     const input: ChatMessageInput = {
       sessionID: 'session-1',
       agent: 'HArchitect',

@@ -5,9 +5,13 @@
 import { describe, it, expect } from 'vitest'
 import {
   HD_TOOL_PLACEHOLDERS,
-  OPENCODE_TOOL_MAPPING,
   replaceToolPlaceholders,
 } from '../../../transform/toolTransform'
+
+const OPENCODE_TOOL_MAPPING = {
+  HD_TOOL_ASK_USER: 'question',
+  HD_TOOL_DELEGATE: 'task',
+} as const
 
 describe('tool-transform', () => {
   describe('HD_TOOL_PLACEHOLDERS', () => {

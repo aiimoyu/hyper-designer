@@ -20,7 +20,7 @@ describe('transform opencode hooks', () => {
     getDefinition.mockReturnValue(null)
     getState.mockReturnValue(null)
 
-    const { createTransformHooks } = await import('../../../platformBridge/platform/opencode/transform/hooks')
+    const { createTransformHooks } = await import('../../../platformBridge/platform/opencode/orchestrator')
     const hooks = await createTransformHooks({} as never)
 
     const output = { system: ['<using-hyper-designer>\n{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'] }
@@ -33,7 +33,7 @@ describe('transform opencode hooks', () => {
     getDefinition.mockReturnValue(null)
     getState.mockReturnValue(null)
 
-    const { createTransformHooks } = await import('../../../platformBridge/platform/opencode/transform/hooks')
+    const { createTransformHooks } = await import('../../../platformBridge/platform/opencode/orchestrator')
     const hooks = await createTransformHooks({} as never)
 
     const output = { system: ['{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}'] }
@@ -46,7 +46,7 @@ describe('transform opencode hooks', () => {
     getDefinition.mockReturnValue(null)
     getState.mockReturnValue(null)
 
-    const { createTransformHooks } = await import('../../../platformBridge/platform/opencode/transform/hooks')
+    const { createTransformHooks } = await import('../../../platformBridge/platform/opencode/orchestrator')
     const hooks = await createTransformHooks({} as never)
 
     const output = { system: [] as string[] }
