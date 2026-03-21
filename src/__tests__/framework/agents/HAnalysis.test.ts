@@ -7,7 +7,7 @@ import {
 } from "../../../agents/utils"
 import type { AgentConfig } from "../../../agents/types"
 
-describe("HAnalysis agent - RED tests", () => {
+describe("HAnalysis agent", () => {
   describe("builtin registry", () => {
     it("includes HAnalysis in BUILTIN_AGENT_FACTORIES", () => {
       expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
@@ -34,7 +34,6 @@ describe("HAnalysis agent - RED tests", () => {
 
   describe("agent creation", () => {
     it("createHAnalysisAgent returns valid AgentConfig", () => {
-      // Check if factory exists first to avoid import crash
       expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
       const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
       expect(typeof factory).toBe("function")
@@ -58,7 +57,6 @@ describe("HAnalysis agent - RED tests", () => {
       const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
       const agent = factory()
 
-      // HAnalysis should be a primary agent like other built-in agents
       expect(agent.mode).toBe("primary")
     })
 
@@ -72,26 +70,6 @@ describe("HAnalysis agent - RED tests", () => {
   })
 
   describe("prompt composition", () => {
-    it("includes workflow overview token placeholder", () => {
-      expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
-      const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
-      const agent = factory()
-
-      // HAnalysis should support workflow overview token like HArchitect
-      expect(agent.prompt).toBeDefined()
-      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}")
-    })
-
-    it("includes workflow step token placeholder", () => {
-      expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
-      const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
-      const agent = factory()
-
-      // HAnalysis should support workflow step token like HArchitect
-      expect(agent.prompt).toBeDefined()
-      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}")
-    })
-
     it("has non-empty prompt content", () => {
       expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
       const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
@@ -100,6 +78,24 @@ describe("HAnalysis agent - RED tests", () => {
       expect(agent.prompt).toBeDefined()
       expect(agent.prompt!.length).toBeGreaterThan(0)
       expect(agent.prompt!.trim()).not.toBe("")
+    })
+
+    it("prompt contains workflow tokens for dynamic injection", () => {
+      expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
+      const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
+      const agent = factory()
+
+      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}")
+      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}")
+    })
+
+    it("prompt is structured with content sections", () => {
+      expect(BUILTIN_AGENT_FACTORIES).toHaveProperty("HAnalysis")
+      const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
+      const agent = factory()
+
+      expect(agent.prompt).toContain("HAnalysis")
+      expect(agent.prompt!.length).toBeGreaterThan(100)
     })
   })
 
@@ -118,7 +114,6 @@ describe("HAnalysis agent - RED tests", () => {
       const factory = BUILTIN_AGENT_FACTORIES.HAnalysis
       const agent = factory()
 
-      // HAnalysis should have workflow state management permissions
       expect(agent.permission).toHaveProperty("hd_workflow_state")
       expect(agent.permission).toHaveProperty("hd_handover")
     })

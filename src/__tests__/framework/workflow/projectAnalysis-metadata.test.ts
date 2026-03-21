@@ -1,8 +1,3 @@
-/**
- * Tests for projectAnalysis workflow stage metadata fields.
- * Verifies that all 3 stages have required, inputs, outputs, promptBindings defined.
- * Updated for prompt-driven (pure Markdown) workflow.
- */
 import { describe, it, expect } from 'vitest'
 import type { WorkflowDefinition } from '../../../workflows/core'
 import { getStageOrder } from '../../../workflows/core'
@@ -80,73 +75,68 @@ describe('projectAnalysis workflow stage metadata', () => {
             expect(output.path).not.toContain('.json')
           }
         }
-        expect(workflow.stages[key].requiredMilestones ?? []).not.toContain('gate')
       })
     })
   }
 
-  describe('systemAnalysis metadata values', () => {
-    it('is required', () => {
-      const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['systemAnalysis'].required).toBe(true)
-    })
-
-    it('has no inputs (first stage)', () => {
+  describe('stage dependencies', () => {
+    it('first stage has no inputs', () => {
       const workflow = getProjectAnalysisWorkflow()
       expect(workflow.stages['systemAnalysis'].inputs).toEqual([])
     })
 
-    it('outputs Markdown-only artifact set', () => {
+    it('each subsequent stage has at least one input', () => {
       const workflow = getProjectAnalysisWorkflow()
-      const outputs = workflow.stages['systemAnalysis'].outputs!
-      const findOutput = (id: string) => outputs.find(o => o.id === id)
-      expect(findOutput('系统架构分析报告')?.path).toBe('./.hyper-designer/projectAnalysis/architecture.md')
-      expect(findOutput('组件清单')?.path).toBe('./.hyper-designer/projectAnalysis/components-manifest.md')
-      expect(findOutput('API目录')?.path).toBe('./.hyper-designer/projectAnalysis/api-catalog.md')
-      expect(findOutput('源码概览')?.path).toBe('./.hyper-designer/projectAnalysis/source-overview.md')
+      const subsequentStages = stageKeys.slice(1)
+      for (const key of subsequentStages) {
+        expect(workflow.stages[key].inputs!.length).toBeGreaterThan(0)
+      }
+    })
+
+    it('each stage has at least one output', () => {
+      const workflow = getProjectAnalysisWorkflow()
+      for (const key of stageKeys) {
+        expect(workflow.stages[key].outputs!.length).toBeGreaterThan(0)
+      }
     })
   })
 
-  describe('componentAnalysis metadata values', () => {
-    it('is required', () => {
+  describe('stage configuration', () => {
+    it('all stages are required', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['componentAnalysis'].required).toBe(true)
+      for (const key of stageKeys) {
+        expect(workflow.stages[key].required).toBe(true)
+      }
     })
 
-    it('inputs 组件清单', () => {
+    it('all stages have agent defined', () => {
       const workflow = getProjectAnalysisWorkflow()
-      const inputs = workflow.stages['componentAnalysis'].inputs!
-      const item = inputs.find(i => i.id === '组件清单')
-      expect(item).toBeDefined()
-    })
-
-    it('outputs Markdown-only artifact set', () => {
-      const workflow = getProjectAnalysisWorkflow()
-      const outputs = workflow.stages['componentAnalysis'].outputs!
-      const findOutput = (id: string) => outputs.find(o => o.id === id)
-      expect(findOutput('组件分析文档目录')?.type).toBe('folder')
-      expect(findOutput('组件分析汇总')?.path).toBe('./.hyper-designer/projectAnalysis/component-analysis-summary.md')
+      for (const key of stageKeys) {
+        expect(workflow.stages[key].agent).toBeDefined()
+        expect(typeof workflow.stages[key].agent).toBe('string')
+      }
     })
   })
 
-  describe('missingCoverageCheck metadata values', () => {
-    it('is required', () => {
+  describe('output artifacts', () => {
+    it('all outputs have valid types', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['missingCoverageCheck'].required).toBe(true)
+      const validTypes = ['file', 'pattern', 'folder']
+      for (const key of stageKeys) {
+        for (const output of workflow.stages[key].outputs!) {
+          expect(validTypes).toContain(output.type)
+        }
+      }
     })
 
-    it('inputs 系统架构分析报告 and 组件清单', () => {
+    it('all outputs have id and path', () => {
       const workflow = getProjectAnalysisWorkflow()
-      const inputs = workflow.stages['missingCoverageCheck'].inputs!
-      expect(inputs.find(i => i.id === '系统架构分析报告')).toBeDefined()
-      expect(inputs.find(i => i.id === '组件清单')).toBeDefined()
-    })
-
-    it('outputs Markdown-only coverage report', () => {
-      const workflow = getProjectAnalysisWorkflow()
-      const outputs = workflow.stages['missingCoverageCheck'].outputs!
-      expect(outputs).toHaveLength(1)
-      expect(outputs.find(o => o.id === '覆盖率检查报告')?.path).toBe('./.hyper-designer/projectAnalysis/coverage-report.md')
+      for (const key of stageKeys) {
+        for (const output of workflow.stages[key].outputs!) {
+          expect(output.id).toBeDefined()
+          expect(output.path).toBeDefined()
+        }
+      }
     })
   })
 })

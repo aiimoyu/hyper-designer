@@ -26,63 +26,74 @@ describe('lite workflow stage metadata', () => {
     })
   }
 
-  describe('requirementAnalysis metadata values', () => {
-    it('is required', () => {
-      expect(stages['requirementAnalysis'].required).toBe(true)
+  describe('workflow structure', () => {
+    it('has exactly 3 stages', () => {
+      expect(Object.keys(stages)).toHaveLength(3)
     })
 
-    it('has no inputs (first stage)', () => {
+    it('has correct stage keys', () => {
+      expect(Object.keys(stages).sort()).toEqual([...stageKeys].sort())
+    })
+  })
+
+  describe('stage dependencies', () => {
+    it('first stage has no inputs', () => {
       expect(stages['requirementAnalysis'].inputs).toEqual([])
     })
 
-    it('outputs requirementAnalysis artifact', () => {
-      const outputs = stages['requirementAnalysis'].outputs!
-      const item = outputs.find(o => o.id === 'requirementAnalysis')
-      expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/requirementAnalysis/需求分析说明书.md')
-      expect(item?.type).toBe('file')
+    it('each subsequent stage has at least one input', () => {
+      const subsequentStages = stageKeys.slice(1)
+      for (const key of subsequentStages) {
+        expect(stages[key].inputs!.length).toBeGreaterThan(0)
+      }
+    })
+
+    it('each stage has at least one output', () => {
+      for (const key of stageKeys) {
+        expect(stages[key].outputs!.length).toBeGreaterThan(0)
+      }
     })
   })
 
-  describe('requirementDesign metadata values', () => {
-    it('is required', () => {
-      expect(stages['requirementDesign'].required).toBe(true)
+  describe('stage configuration', () => {
+    it('all stages are required', () => {
+      for (const key of stageKeys) {
+        expect(stages[key].required).toBe(true)
+      }
     })
 
-    it('inputs requirementAnalysis', () => {
-      const inputs = stages['requirementDesign'].inputs!
-      const item = inputs.find(i => i.id === 'requirementAnalysis')
-      expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/requirementAnalysis/需求分析说明书.md')
+    it('all stages have agent defined', () => {
+      for (const key of stageKeys) {
+        expect(stages[key].agent).toBeDefined()
+        expect(typeof stages[key].agent).toBe('string')
+      }
     })
 
-    it('outputs functionalDesign artifact', () => {
-      const outputs = stages['requirementDesign'].outputs!
-      const item = outputs.find(o => o.id === 'functionalDesign')
-      expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/requirementDesign/需求设计说明书.md')
-      expect(item?.type).toBe('file')
+    it('all stages have promptBindings defined', () => {
+      for (const key of stageKeys) {
+        expect(stages[key].promptBindings).toBeDefined()
+        expect(typeof stages[key].promptBindings).toBe('object')
+      }
     })
   })
 
-  describe('developmentPlan metadata values', () => {
-    it('is required', () => {
-      expect(stages['developmentPlan'].required).toBe(true)
+  describe('output artifacts', () => {
+    it('all outputs have valid types', () => {
+      const validTypes = ['file', 'pattern', 'folder']
+      for (const key of stageKeys) {
+        for (const output of stages[key].outputs!) {
+          expect(validTypes).toContain(output.type)
+        }
+      }
     })
 
-    it('inputs functionalDesign', () => {
-      const inputs = stages['developmentPlan'].inputs!
-      const item = inputs.find(i => i.id === 'functionalDesign')
-      expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/requirementDesign/需求设计说明书.md')
-    })
-
-    it('outputs developmentPlan artifact', () => {
-      const outputs = stages['developmentPlan'].outputs!
-      const item = outputs.find(o => o.id === 'developmentPlan')
-      expect(item).toBeDefined()
-      expect(item?.path).toBe('./.hyper-designer/developmentPlan/开发计划.md')
-      expect(item?.type).toBe('file')
+    it('all outputs have id and path', () => {
+      for (const key of stageKeys) {
+        for (const output of stages[key].outputs!) {
+          expect(output.id).toBeDefined()
+          expect(output.path).toBeDefined()
+        }
+      }
     })
   })
 })

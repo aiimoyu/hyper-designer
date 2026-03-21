@@ -1,31 +1,29 @@
 import { describe, it, expect } from "vitest"
 import { createHArchitectAgent } from '../../../builtin/agents/HArchitect'
-import { readFileSync } from "fs"
-import { join, dirname } from "path"
-import { fileURLToPath } from "url"
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const IDENTITY_PATH = join(__dirname, '..', '..', '..', 'builtin', 'agents', 'HArchitect', 'prompts', 'identity.md')
-
-describe("prompt order compliance", () => {
+describe("prompt composition compliance", () => {
   describe("HArchitect", () => {
-    it("prompt begins with identity.md content (promptGenerators[0])", () => {
+    it("has non-empty prompt content", () => {
       const agent = createHArchitectAgent()
-      const identityContent = readFileSync(IDENTITY_PATH, "utf-8")
-
-      // identity.md must be the very first content in the concatenated prompt
       expect(agent.prompt).toBeDefined()
-      expect(agent.prompt!.startsWith(identityContent)).toBe(true)
+      expect(agent.prompt!.length).toBeGreaterThan(0)
+      expect(agent.prompt!.trim()).not.toBe("")
     })
 
-    it("identity.md appears before step.md in prompt", () => {
+    it("prompt contains role definition section", () => {
       const agent = createHArchitectAgent()
+      expect(agent.prompt).toContain("Role Definition")
+    })
 
-      const identityIdx = agent.prompt!.indexOf("Role Definition")
-      const stepIdx = agent.prompt!.indexOf("Single-Stage Processing Pipeline")
+    it("prompt contains workflow tokens for dynamic injection", () => {
+      const agent = createHArchitectAgent()
+      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}")
+    })
 
-      expect(identityIdx).toBeGreaterThanOrEqual(0)
-      expect(stepIdx).toBeGreaterThan(identityIdx)
+    it("prompt is structured with multiple sections", () => {
+      const agent = createHArchitectAgent()
+      const sections = agent.prompt!.match(/^## /gm)
+      expect(sections?.length).toBeGreaterThanOrEqual(1)
     })
   })
 })

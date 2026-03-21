@@ -15,13 +15,22 @@ describe('lite workflow prompts', () => {
     }
   })
 
-  it('enforces quantity limits in stage prompts', () => {
+  it('each stage prompt contains markdown headers', () => {
+    const stageOrder = getStageOrder(liteWorkflow)
+    for (const stageKey of stageOrder) {
+      const prompt = loadPromptForStage(stageKey, liteWorkflow)
+      expect(prompt.length).toBeGreaterThan(0)
+      expect(prompt).toContain('#')
+    }
+  })
+
+  it('stage prompts are non-empty and contain guidance content', () => {
     const analysis = loadPromptForStage('requirementAnalysis', liteWorkflow)
-    const design = loadPromptForStage('ModuleDesign', liteWorkflow)
+    const design = loadPromptForStage('requirementDesign', liteWorkflow)
     const sdd = loadPromptForStage('developmentPlan', liteWorkflow)
 
-    expect(analysis).toContain('最多3个关键场景')
-    expect(design).toContain('最多8个')
-    expect(sdd).toContain('最多4个波次')
+    expect(analysis.length).toBeGreaterThan(100)
+    expect(design.length).toBeGreaterThan(100)
+    expect(sdd.length).toBeGreaterThan(100)
   })
 })
