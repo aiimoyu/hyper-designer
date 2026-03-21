@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { PluginInput } from '@opencode-ai/plugin'
 
-import { createOpenCodePlatformCapabilities } from '../../../platformBridge/capabilities/opencode'
+import { createOpenCodePlatformCapabilities } from '../../../platformBridge/platform/opencode/capabilities'
 
 function createMockCtx(): PluginInput {
   return {

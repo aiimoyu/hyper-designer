@@ -1,9 +1,9 @@
 import type { ToolDefinition } from './toolTypes'
 
-import type { PlatformAdapter } from '../../adapters/types'
+import type { PlatformAdapter } from '../../platformBridge/capabilities/types'
 
 // 重新导出供上层直接使用
-export type { PlatformAdapter } from '../../adapters/types'
+export type { PlatformAdapter } from '../../platformBridge/capabilities/types'
 
 export interface WorkflowPromptBindings {
   [placeholder: string]: string

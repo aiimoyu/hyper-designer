@@ -54,14 +54,14 @@ import {
 } from '../tools/pluginRegistry'
 
 export type { ToolContext } from '../workflows/core/toolTypes'
-export { convertWorkflowToolsToOpenCode } from '../workflows/integrations/opencode'
+export { convertWorkflowToolsToOpenCode } from '../platformBridge/platform/opencode/workflows/workflow-tools'
 export { createHyperAgent } from '../agents/Hyper'
 export { workflowService } from '../workflows/core/service'
-export { createAgentTransformer } from '../transform/opencode/agent-transform'
-export { createUsingHyperDesignerTransformer } from '../transform/opencode/using-hyperdesigner-transform'
-export { createTransformHooks } from '../transform/opencode/hooks'
-export { createWorkflowHooks } from '../workflows/integrations/opencode'
-export { createDocumentReviewTools } from '../tools/integrations/opencode'
+export { createAgentTransformer } from '../platformBridge/platform/opencode/transform/agent-transform'
+export { createUsingHyperDesignerTransformer } from '../platformBridge/platform/opencode/transform/using-hyperdesigner-transform'
+export { createTransformHooks } from '../platformBridge/platform/opencode/transform/hooks'
+export { createWorkflowHooks } from '../platformBridge/platform/opencode/workflows'
+export { createDocumentReviewTools } from '../platformBridge/platform/opencode/tools/documentReview'
 export { initLogger } from '../utils/logger'
 
 interface SDK {

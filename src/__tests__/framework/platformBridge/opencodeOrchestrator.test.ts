@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest'
 import type { PluginInput } from '@opencode-ai/plugin'
 import type { ToolDefinition } from '../../../workflows/core/toolTypes'
 
-import { createOpenCodePlatformCapabilities } from '../../../platformBridge/capabilities/opencode'
-import { createOpenCodePlatformOrchestrator } from '../../../platformBridge/orchestration/opencode'
+import { createOpenCodePlatformCapabilities } from '../../../platformBridge/platform/opencode/capabilities'
+import { createOpenCodePlatformOrchestrator } from '../../../platformBridge/platform/opencode/orchestrator'
 import { workflowService } from '../../../workflows/core/service'
 
 vi.mock('@opencode-ai/plugin', () => {
@@ -55,7 +55,6 @@ describe('createOpenCodePlatformOrchestrator', () => {
       capabilities,
       workflowService,
       pluginTools: {},
-      hdTools: {},
       mappedAgents: {},
     })
 
@@ -96,7 +95,6 @@ describe('createOpenCodePlatformOrchestrator', () => {
         executeHandover: async () => ({ success: true }),
       },
       pluginTools: {},
-      hdTools: {},
       mappedAgents: {},
     })
 

@@ -17,10 +17,10 @@ export {
   createPromptInjectionRegistry,
   DEFAULT_PROMPT_INJECTION_PROVIDER_IDS,
 } from './injections/factory'
-export { createAgentTransformer } from './opencode/agent-transform'
-export { createUsingHyperDesignerTransformer } from './opencode/using-hyperdesigner-transform'
-export { createSystemTransformer } from './opencode/system-transform'
-export { createTransformHooks } from './opencode/hooks'
+export { createAgentTransformer } from '../platformBridge/platform/opencode/transform/agent-transform'
+export { createUsingHyperDesignerTransformer } from '../platformBridge/platform/opencode/transform/using-hyperdesigner-transform'
+export { createSystemTransformer } from '../platformBridge/platform/opencode/transform/system-transform'
+export { createTransformHooks } from '../platformBridge/platform/opencode/transform/hooks'
 export type {
   PromptTransformWorkflowContext,
   PromptInjectionRequest,

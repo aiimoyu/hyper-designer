@@ -1,9 +1,9 @@
 import { tool } from '@opencode-ai/plugin'
 
-import { prepareReview } from '../../../tools/documentReview/prepareReview'
-import { finalizeReview } from '../../../tools/documentReview/finalizeReview'
-import { HyperDesignerLogger } from '../../../utils/logger'
-import { workflowService } from '../../../workflows/core/service/WorkflowService'
+import { prepareReview } from '../../../../tools/documentReview/prepareReview'
+import { finalizeReview } from '../../../../tools/documentReview/finalizeReview'
+import { HyperDesignerLogger } from '../../../../utils/logger'
+import { workflowService } from '../../../../workflows/core/service/WorkflowService'
 
 const INTERACTIVE_MODIFICATION_MILESTONE_ID = 'hd-int-mod'
 

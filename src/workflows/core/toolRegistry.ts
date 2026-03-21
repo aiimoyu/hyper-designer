@@ -23,7 +23,7 @@ import type {
   ToolContext,
   ToolRegistration,
 } from './toolTypes'
-import type { PlatformAdapter } from '../../adapters/types'
+import type { PlatformAdapter } from '../../platformBridge/capabilities/types'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 const MODULE_NAME = 'ToolRegistry'

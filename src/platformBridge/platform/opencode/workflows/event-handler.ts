@@ -1,8 +1,8 @@
 import type { Hooks } from '@opencode-ai/plugin'
 
-import { HyperDesignerLogger } from '../../../utils/logger'
-import type { PlatformCapabilities } from '../../capabilities/types'
-import type { WorkflowServiceLike } from '../../orchestration/types'
+import { HyperDesignerLogger } from '../../../../utils/logger'
+import type { PlatformCapabilities } from '../../../capabilities/types'
+import type { WorkflowServiceLike } from '../../../orchestration/types'
 
 type EventHook = NonNullable<Hooks['event']>
 interface EventInput {

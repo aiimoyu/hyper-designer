@@ -32,7 +32,7 @@ describe('system transform', () => {
   })
 
   it('replaces workflow prompt placeholders', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -74,7 +74,7 @@ describe('system transform', () => {
   })
 
   it('lets stage prompt bindings override workflow bindings for the same token', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -118,7 +118,7 @@ describe('system transform', () => {
   })
 
   it('injects framework fallback prompt and clears workflow tokens when no active stage', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -170,7 +170,7 @@ describe('system transform', () => {
   })
 
   it('resolves dynamic workflow/stage tokens and clears fallback token in active stage', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -227,7 +227,7 @@ describe('system transform', () => {
   })
 
   it('clears default workflow tokens and injects framework fallback when workflow is undefined', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
 
     getDefinition.mockReturnValue(null)
     getState.mockReturnValue(null)
@@ -252,7 +252,7 @@ describe('system transform', () => {
   })
 
   it('removes blocked skills from system prompt output', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
 
     loadHDConfig.mockReturnValue({
       agents: {},
@@ -278,7 +278,7 @@ describe('system transform', () => {
   })
 
   it('appends stage injection content when stage has inject configured', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -337,7 +337,7 @@ describe('system transform', () => {
   })
 
   it('does not append injection when stage has no inject configured', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -377,7 +377,7 @@ describe('system transform', () => {
   })
 
   it('injects only selected provider content when providers are explicitly configured', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -425,7 +425,7 @@ describe('system transform', () => {
   })
 
   it('injects both providers when multiple are configured', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',
@@ -472,7 +472,7 @@ describe('system transform', () => {
   })
 
   it('merges stage injection into the first system message to avoid multi-system drop', async () => {
-    const { createSystemTransformer } = await import('../../../transform/opencode/system-transform')
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/transform/system-transform')
     const workflow: WorkflowDefinition = {
       id: 'test-workflow',
       name: 'Test Workflow',

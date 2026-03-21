@@ -7,7 +7,7 @@ import {
   HD_TOOL_PLACEHOLDERS,
   OPENCODE_TOOL_MAPPING,
   replaceToolPlaceholders,
-} from '../../../transform/opencode/tool-transform'
+} from '../../../transform/toolTransform'
 
 describe('tool-transform', () => {
   describe('HD_TOOL_PLACEHOLDERS', () => {

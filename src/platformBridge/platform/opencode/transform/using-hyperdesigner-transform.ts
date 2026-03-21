@@ -1,7 +1,7 @@
 import type { Hooks, PluginInput } from '@opencode-ai/plugin'
 
-import { isHDAgent } from '../../../agents/utils'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { isHDAgent } from '../../../../agents/utils'
+import { HyperDesignerLogger } from '../../../../utils/logger'
 
 type ChatMessageHook = NonNullable<Hooks['chat.message']>
 

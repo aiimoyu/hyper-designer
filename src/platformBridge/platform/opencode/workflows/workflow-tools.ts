@@ -1,10 +1,9 @@
 import { tool } from '@opencode-ai/plugin'
-import type { ToolDefinition, ToolContext, ToolParamsSchema } from '../../../workflows/core/toolTypes'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import type { ToolDefinition, ToolContext, ToolParamsSchema } from '../../../../workflows/core/toolTypes'
+import { HyperDesignerLogger } from '../../../../utils/logger'
 
 const MODULE_NAME = 'Integrations:WorkflowTools'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type OpenCodeArg = any
 
@@ -57,7 +56,6 @@ function convertParamsToOpenCodeArgs(
   return args
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function convertWorkflowToolsToOpenCode(
   tools: ToolDefinition[],

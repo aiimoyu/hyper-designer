@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { resolveDefaultModel } from '../../../adapters/opencode/modelResolver'
-import type { ModelInfo } from '../../../adapters/opencode/modelResolver'
+import { resolveDefaultModel } from '../../../platformBridge/platform/opencode/capabilities'
+import type { ModelInfo } from '../../../platformBridge/platform/opencode/capabilities'
 import { HyperDesignerLogger } from '../../../utils/logger'
 
 /**

@@ -1,8 +1,8 @@
 import type { Hooks, PluginInput } from '@opencode-ai/plugin'
 
-import { workflowService } from '../../../workflows/core/service'
-import { resolveNodeConfig } from '../../../transform/agentRouting'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { workflowService } from '../../../../workflows/core/service'
+import { resolveNodeConfig } from '../../../../transform/agentRouting'
+import { HyperDesignerLogger } from '../../../../utils/logger'
 
 type ChatMessageHook = NonNullable<Hooks['chat.message']>
 

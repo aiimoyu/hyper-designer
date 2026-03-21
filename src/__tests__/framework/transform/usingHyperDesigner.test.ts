@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Hooks, PluginInput } from '@opencode-ai/plugin'
 import type { UserMessage, Part } from '@opencode-ai/sdk'
 
-import { createUsingHyperDesignerTransformer } from '../../../transform/opencode/using-hyperdesigner-transform'
+import { createUsingHyperDesignerTransformer } from '../../../platformBridge/platform/opencode/transform/using-hyperdesigner-transform'
 import { BUILTIN_AGENT_PLUGINS } from '../../../builtin/agents'
 import { clearAgentPluginsForTest, registerAgentPlugins } from '../../../agents/pluginRegistry'
 

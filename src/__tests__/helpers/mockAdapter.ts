@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { PlatformAdapter } from '../../adapters/types'
+import type { PlatformAdapter } from '../../platformBridge/capabilities/types'
 
 /**
  * Creates a mock PlatformAdapter for unit testing.

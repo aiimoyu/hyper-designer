@@ -1,6 +1,6 @@
-import { workflowService } from '../../../workflows/core/service'
-import { getBlockedSkillsFromConfig, transformSystemMessages } from '../../../transform/systemTransformer'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { workflowService } from '../../../../workflows/core/service'
+import { getBlockedSkillsFromConfig, transformSystemMessages } from '../../../../transform/systemTransformer'
+import { HyperDesignerLogger } from '../../../../utils/logger'
 
 const SKILL_BLOCK_PATTERN = /<skill>[\s\S]*?<\/skill>/g
 const SKILL_NAME_PATTERN = /<name>([\s\S]*?)<\/name>/

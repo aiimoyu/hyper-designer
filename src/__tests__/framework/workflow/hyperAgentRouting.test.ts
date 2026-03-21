@@ -11,7 +11,7 @@ import {
   writeWorkflowStateFile,
 } from '../../../workflows/core/state'
 import { workflowService } from '../../../workflows/core/service'
-import { createAgentTransformer } from '../../../transform/opencode/agent-transform'
+import { createAgentTransformer } from '../../../platformBridge/platform/opencode/transform/agent-transform'
 
 const STATE_FILE = join(process.cwd(), '.hyper-designer', 'workflow_state.json')
 

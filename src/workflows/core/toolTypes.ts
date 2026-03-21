@@ -9,7 +9,7 @@
  * - 工具名称遵循 hd_<plugin>_<action> 命名空间约定
  */
 
-import type { PlatformAdapter } from '../../adapters/types'
+import type { PlatformAdapter } from '../../platformBridge/capabilities/types'
 
 // ── 参数 Schema 定义 ─────────────────────────────────────────────────────────
 

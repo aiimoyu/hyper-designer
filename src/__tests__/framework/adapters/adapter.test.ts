@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createOpenCodeAdapter } from '../../../adapters/opencode/adapter'
+import { createOpenCodeAdapter } from '../../../platformBridge/platform/opencode/capabilities'
 import { HyperDesignerLogger } from '../../../utils/logger'
 import type { PluginInput } from '@opencode-ai/plugin'
 

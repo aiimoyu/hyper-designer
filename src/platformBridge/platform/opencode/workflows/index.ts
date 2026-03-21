@@ -1,8 +1,8 @@
 import type { PluginInput } from '@opencode-ai/plugin'
 
-import { HyperDesignerLogger } from '../../../utils/logger'
-import type { PlatformCapabilities } from '../../capabilities/types'
-import type { WorkflowServiceLike } from '../../orchestration/types'
+import { HyperDesignerLogger } from '../../../../utils/logger'
+import type { PlatformCapabilities } from '../../../capabilities/types'
+import type { WorkflowServiceLike } from '../../../orchestration/types'
 import { createEventHandler } from './event-handler'
 
 export async function createWorkflowHooks(

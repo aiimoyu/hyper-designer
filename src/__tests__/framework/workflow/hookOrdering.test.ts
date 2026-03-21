@@ -13,7 +13,7 @@ import { executeWorkflowHandover } from "../../../workflows/core"
 import { readWorkflowStateFile, writeWorkflowStateFile } from "../../../workflows/core/state"
 import type { WorkflowDefinition, StageHookFn, StageHook, PlatformAdapter } from "../../../workflows/core"
 import { createMockAdapter } from "../../helpers/mockAdapter"
-import type { SendPromptParams, SendPromptResult } from "../../../adapters/types"
+import type { SendPromptParams, SendPromptResult } from "../../../platformBridge/capabilities/types"
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 

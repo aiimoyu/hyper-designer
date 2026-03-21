@@ -34,7 +34,6 @@ export interface CreateOpenCodeOrchestratorInput {
   capabilities: PlatformCapabilities
   workflowService: WorkflowServiceLike
   pluginTools: NonNullable<Hooks['tool']>
-  hdTools: NonNullable<Hooks['tool']>
   mappedAgents: Record<string, OpencodeAgentConfig & { hidden?: boolean }>
 }
 
