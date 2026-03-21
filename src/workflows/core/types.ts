@@ -1,10 +1,54 @@
 import type { ToolDefinition } from '../../tools/types'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 export interface WorkflowPlatformAdapter {
   sendPrompt: (params: { sessionId: string; agent: string; text: string; schema?: Record<string, unknown>; system?: string }) => Promise<{ structuredOutput?: unknown; text: string }>
   summarizeSession: (sessionId: string) => Promise<void>
   clearSession: (sessionId: string) => Promise<string>
   registerTools?: (tools: Array<{ name: string; description: string; params: Record<string, { type: string; description?: string; optional?: boolean }>; handler: (params: Record<string, unknown>) => Promise<string> }>) => void
+}
+
+export function safeRegisterTools(
+  adapter: WorkflowPlatformAdapter | undefined,
+  tools: Array<{ name: string; description: string; params: Record<string, { type: string; description?: string; optional?: boolean }>; handler: (params: Record<string, unknown>) => Promise<string> }>,
+  context?: { stageKey?: string; hookId?: string }
+): boolean {
+  if (!adapter) {
+    HyperDesignerLogger.warn('Workflow', '无法注册工具：adapter 未提供', {
+      toolCount: tools.length,
+      toolNames: tools.map(t => t.name),
+      ...context,
+    })
+    return false
+  }
+
+  if (!adapter.registerTools) {
+    HyperDesignerLogger.warn('Workflow', '无法注册工具：adapter 未实现 registerTools 方法', {
+      toolCount: tools.length,
+      toolNames: tools.map(t => t.name),
+      ...context,
+      hint: '平台适配器应实现 registerTools 方法以支持动态工具注册',
+    })
+    return false
+  }
+
+  try {
+    adapter.registerTools(tools)
+    HyperDesignerLogger.debug('Workflow', '工具注册成功', {
+      toolCount: tools.length,
+      toolNames: tools.map(t => t.name),
+      ...context,
+    })
+    return true
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error))
+    HyperDesignerLogger.error('Workflow', '工具注册失败', err, {
+      toolCount: tools.length,
+      toolNames: tools.map(t => t.name),
+      ...context,
+    })
+    return false
+  }
 }
 
 export interface WorkflowPromptBindings {

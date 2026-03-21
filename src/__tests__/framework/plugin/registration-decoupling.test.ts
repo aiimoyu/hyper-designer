@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-import { bootstrapPluginRegistries, sdk } from '../../../sdk'
+import { bootstrapSDK, resetSDKBootstrapForTest, sdk } from '../../../sdk'
 import { BUILTIN_PLUGIN } from '../../../builtin/plugin'
 import { defineHyperDesignerPlugin } from '../../../plugin'
 
@@ -34,8 +34,9 @@ describe('plugin registration decoupling', () => {
     sdk.agent.plugins.clear()
     sdk.workflow.plugins.clear()
     sdk.tool.plugins.clear()
+    resetSDKBootstrapForTest()
 
-    await bootstrapPluginRegistries({
+    await bootstrapSDK({
       plugins: [
         BUILTIN_PLUGIN,
         defineHyperDesignerPlugin({
@@ -83,8 +84,9 @@ describe('plugin registration decoupling', () => {
 
   it('builtin tools are registered via plugin pipeline', async () => {
     sdk.tool.plugins.clear()
+    resetSDKBootstrapForTest()
 
-    await bootstrapPluginRegistries({
+    await bootstrapSDK({
       plugins: [BUILTIN_PLUGIN],
     })
 

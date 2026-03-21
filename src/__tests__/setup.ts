@@ -24,5 +24,5 @@ vi.mock('@opencode-ai/plugin', () => {
   return { tool }
 })
 
-const { bootstrapPluginRegistries } = await import('../sdk/pluginBootstrap')
-await bootstrapPluginRegistries({ rootDirectory: process.cwd() })
+const { bootstrapSDK } = await import('../sdk/bootstrap')
+await bootstrapSDK({ rootDirectory: process.cwd() })

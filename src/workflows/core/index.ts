@@ -20,6 +20,7 @@ export type {
   WorkflowStageDefinition,
   WorkflowDefinition,
 } from './types'
+export { safeRegisterTools } from './types'
 export { filePrompt, stringPrompt } from './utils'
 
 // Registry

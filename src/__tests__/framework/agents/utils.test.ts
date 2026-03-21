@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { bootstrapPluginRegistries, sdk } from '../../../sdk'
+import { bootstrapSDK, resetSDKBootstrapForTest, sdk } from '../../../sdk'
 import {
   BUILTIN_AGENT_FACTORIES,
   HD_BUILTIN_AGENT_NAMES,
@@ -13,7 +13,8 @@ import {
 describe("agents utils", () => {
   it('setup plugin registries for this suite', async () => {
     sdk.agent.plugins.clear()
-    await bootstrapPluginRegistries()
+    resetSDKBootstrapForTest()
+    await bootstrapSDK()
     expect(sdk.agent.plugins.list().length).toBeGreaterThan(0)
   })
 

@@ -10,7 +10,7 @@
  * 6. 设置质量门结果
  */
 
-import type { WorkflowDefinition, WorkflowPlatformAdapter, StageTransitionDefinition, MilestoneDefinition } from "../types";
+import type { WorkflowDefinition, WorkflowPlatformAdapter, MilestoneDefinition } from "../types";
 import type {
   WorkflowState,
   WorkflowStage,
@@ -33,45 +33,7 @@ import {
   setCurrentNodeContext,
   setCurrentNodeMilestone,
 } from './history'
-import { getStageOrder as getDefinitionStageOrder } from '../stageOrder'
-
-function resolveNextSelectedStage(
-  definition: WorkflowDefinition,
-  selectedSet: Set<string>,
-  fromStageId: string,
-): string | null {
-  const visited = new Set<string>()
-  let cursor: string | null = fromStageId
-
-  while (cursor !== null) {
-    if (visited.has(cursor)) {
-      throw new Error(`Detected transition cycle while resolving next stage from ${fromStageId}`)
-    }
-    visited.add(cursor)
-
-    const stage = definition.stages[cursor]
-    if (!stage) {
-      return null
-    }
-
-    const transitions: StageTransitionDefinition[] = stage.transitions ?? []
-    const nextTransition = [...transitions]
-      .filter(item => item.mode === 'auto')
-      .sort((a, b) => a.priority - b.priority)[0]
-
-    if (!nextTransition) {
-      return null
-    }
-
-    const nextStageId: string = nextTransition.toStageId
-    if (selectedSet.has(nextStageId)) {
-      return nextStageId
-    }
-    cursor = nextStageId
-  }
-
-  return null
-}
+import { getStageOrder as getDefinitionStageOrder, resolveNextSelectedStage } from '../stageOrder'
 
 function createHookNodeId(stageKey: string, lane: 'before' | 'after', hookId: string): string {
   return `workflow.${stageKey}.${lane}.${hookId}`
