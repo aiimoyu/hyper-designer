@@ -133,14 +133,16 @@ export function createAgent(
     result.color = definition.color
   }
 
-  // 合并模型配置（覆盖配置优先于参数）
-  const modelValue = agentConfig?.model ?? model
+  // 合并模型配置
+  // 如果 inheritHyperModel 为 true，则忽略 agent 配置的 model，直接使用传入的 model 参数
+  // 否则，agent 配置的 model 优先于传入的 model 参数
+  const modelValue = config.inheritHyperModel ? model : (agentConfig?.model ?? model)
   if (modelValue !== undefined) {
     result.model = modelValue
   }
 
   // 合并变体配置（覆盖配置优先）
-  const variantValue = agentConfig?.variant ?? definition.defaultVariant
+  const variantValue = config.inheritHyperModel ? undefined : agentConfig?.variant ?? undefined
   if (variantValue !== undefined) {
     result.variant = variantValue
   }

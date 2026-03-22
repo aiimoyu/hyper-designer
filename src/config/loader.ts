@@ -53,6 +53,8 @@ export interface HDConfig {
   agents: Record<string, AgentOverrideConfig>
   /** Optional transform configuration overrides */
   transform?: TransformConfig
+  /** Optional flag to inherit hyper's model for all agents, ignoring agent-specific model overrides */
+  inheritHyperModel?: boolean
 }
 /** Default name for the configuration file */
 export const DEFAULT_CONFIG_PATH = "hd-config.json"
@@ -183,6 +185,10 @@ export function loadHDConfig(configPath?: string): HDConfig {
 
     if (config.defaultModel !== undefined) {
       mergedConfig.defaultModel = config.defaultModel
+    }
+
+    if (config.inheritHyperModel !== undefined) {
+      mergedConfig.inheritHyperModel = config.inheritHyperModel
     }
 
     HyperDesignerLogger.info("Config", `配置加载成功`, {

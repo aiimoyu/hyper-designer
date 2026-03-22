@@ -202,4 +202,85 @@ describe("createAgent", () => {
       expect(agent.prompt).toBe("")
     })
   })
+
+  describe("inheritHyperModel", () => {
+    it("should use agent-specific model when inheritHyperModel is false", () => {
+      mkdirSync(TEST_DIR, { recursive: true })
+      writeFileSync(join(TEST_DIR, "test.md"), "Content")
+
+      mkdirSync(PROJECT_CONFIG_DIR, { recursive: true })
+      const config = {
+        inheritHyperModel: false,
+        agents: {
+          TestAgent: {
+            model: "agent-specific-model",
+          }
+        }
+      }
+      writeFileSync(PROJECT_CONFIG_PATH, JSON.stringify(config, null, 2))
+
+      const agent = createAgent(getBaseDefinition(), "hyper-model")
+
+      expect(agent.model).toBe("agent-specific-model")
+    })
+
+    it("should use hyper model when inheritHyperModel is true", () => {
+      mkdirSync(TEST_DIR, { recursive: true })
+      writeFileSync(join(TEST_DIR, "test.md"), "Content")
+
+      mkdirSync(PROJECT_CONFIG_DIR, { recursive: true })
+      const config = {
+        inheritHyperModel: true,
+        agents: {
+          TestAgent: {
+            model: "agent-specific-model",
+          }
+        }
+      }
+      writeFileSync(PROJECT_CONFIG_PATH, JSON.stringify(config, null, 2))
+
+      const agent = createAgent(getBaseDefinition(), "hyper-model")
+
+      expect(agent.model).toBe("hyper-model")
+    })
+
+    it("should not set model when inheritHyperModel is true and no hyper model provided", () => {
+      mkdirSync(TEST_DIR, { recursive: true })
+      writeFileSync(join(TEST_DIR, "test.md"), "Content")
+
+      mkdirSync(PROJECT_CONFIG_DIR, { recursive: true })
+      const config = {
+        inheritHyperModel: true,
+        agents: {
+          TestAgent: {
+            model: "agent-specific-model",
+          }
+        }
+      }
+      writeFileSync(PROJECT_CONFIG_PATH, JSON.stringify(config, null, 2))
+
+      const agent = createAgent(getBaseDefinition())
+
+      expect(agent.model).toBeUndefined()
+    })
+
+    it("should default to agent model when inheritHyperModel is not set", () => {
+      mkdirSync(TEST_DIR, { recursive: true })
+      writeFileSync(join(TEST_DIR, "test.md"), "Content")
+
+      mkdirSync(PROJECT_CONFIG_DIR, { recursive: true })
+      const config = {
+        agents: {
+          TestAgent: {
+            model: "agent-specific-model",
+          }
+        }
+      }
+      writeFileSync(PROJECT_CONFIG_PATH, JSON.stringify(config, null, 2))
+
+      const agent = createAgent(getBaseDefinition(), "hyper-model")
+
+      expect(agent.model).toBe("agent-specific-model")
+    })
+  })
 })
