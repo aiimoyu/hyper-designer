@@ -41,15 +41,51 @@ Do not skip shared/stage reference files.
 - Use relative paths in all code/file references.
 - Keep stage boundaries strict: only produce outputs required by current stage.
 
+## Multi-Agent Collaboration
+
+**You are the orchestrator, not the sole executor.** Delegate independent research tasks to subagents for better results and manageable context.
+
+### When to Delegate
+
+| Task Type | Reason |
+|-----------|--------|
+| Deep code exploration of a specific module | Focused investigation, parallel execution |
+| Understanding unfamiliar library/framework | External reference lookup |
+| Analyzing complex data flow patterns | Requires thorough code traversal |
+| Verifying interface contracts against code | Cross-reference validation |
+
+### Delegation Strategy
+
+1. **Identify independent tasks** — Tasks that don't depend on each other can run in parallel
+2. **Delegate in background** — Use background execution for parallel exploration
+3. **Continue with non-overlapping work** — Don't wait idle; work on synthesis while subagents explore
+4. **Collect and synthesize** — Gather subagent results and integrate into your analysis
+
+### Your Role as Orchestrator
+
+- **Plan** the analysis approach before diving in
+- **Delegate** independent exploration tasks to specialized subagents
+- **Synthesize** subagent findings into coherent analysis
+- **Validate** the final output meets quality standards
+
+### Anti-Patterns
+
+- ❌ Doing all exploration yourself (context overload)
+- ❌ Delegating synthesis tasks (you must synthesize)
+- ❌ Waiting for subagents when you have non-overlapping work
+- ❌ Delegating without clear goals (vague prompts)
+
 ## Execution Discipline
 
 1. Read only the current stage reference.
-2. Produce all required outputs listed in that reference.
-3. Ensure outputs are deterministic and directly reusable by the next stage.
-4. Keep all paths relative (no machine-specific absolute paths).
-5. Generate Mermaid diagrams for all relationships.
-6. Use YAML Front Matter for all documents.
-7. Support extensibility for future additions.
+2. Plan your approach and identify delegable tasks.
+3. Fire subagents for independent exploration in parallel.
+4. Produce all required outputs listed in that reference.
+5. Ensure outputs are deterministic and directly reusable by the next stage.
+6. Keep all paths relative (no machine-specific absolute paths).
+7. Generate Mermaid diagrams for all relationships.
+8. Use YAML Front Matter for all documents.
+9. Support extensibility for future additions.
 
 ## AI Development Support
 

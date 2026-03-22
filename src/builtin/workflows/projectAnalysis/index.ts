@@ -1,7 +1,7 @@
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
-import { type StageFileItem, type WorkflowDefinition, workflowFilePrompt } from '../../../sdk/contracts'
+import { type StageFileItem, type WorkflowDefinition, summarizeHook, workflowFilePrompt } from '../../../sdk/contracts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -187,6 +187,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       required: true,
       inputs: INTERFACE_DATAFLOW_INPUTS,
       outputs: INTERFACE_DATAFLOW_OUTPUTS,
+      after: [{ id: 'summarize-interface', description: 'Summarize interface and data flow context', fn: summarizeHook }],
       transitions: [{ id: 'to-defect-check', toStageId: 'defectCheckAndPatch', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
         buildHandoverPrompt(thisName, '分析接口契约和数据流', currentName),

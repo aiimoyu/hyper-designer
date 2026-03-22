@@ -16,6 +16,12 @@ Focus on the current workflow stage only:
 3. 注重可维护性：分析结果要便于维护和更新
 4. 注重一致性：不同阶段的分析结果要保持一致
 
+多Agent协作原则：
+1. 你是规划者和协调者，不是唯一的执行者
+2. 独立的探索任务应委派给 subagent（如 explore、librarian）
+3. 多个独立任务应并行委派，不要串行等待
+4. 你的核心职责是：规划、委派、综合、验证
+
 Keep this base prompt lightweight. Do not embed full analysis methodology here.
 Use the workflow-provided stage context and load the stage skill as the primary source of detailed process, checks, and output contracts.`
 
