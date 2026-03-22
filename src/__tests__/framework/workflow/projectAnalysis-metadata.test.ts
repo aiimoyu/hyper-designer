@@ -9,15 +9,16 @@ function getProjectAnalysisWorkflow(): WorkflowDefinition {
 
 describe('projectAnalysis workflow stage metadata', () => {
   const stageKeys = [
-    'systemAnalysis',
-    'componentAnalysis',
-    'missingCoverageCheck',
+    'projectOverview',
+    'functionTreeAndModule',
+    'interfaceAndDataFlow',
+    'defectCheckAndPatch',
   ] as const
 
   describe('workflow structure', () => {
-    it('has exactly 3 stages', () => {
+    it('has exactly 4 stages', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(Object.keys(workflow.stages)).toHaveLength(3)
+      expect(Object.keys(workflow.stages)).toHaveLength(4)
     })
 
     it('has correct stage keys', () => {
@@ -28,7 +29,7 @@ describe('projectAnalysis workflow stage metadata', () => {
     it('has stageOrder matching stage keys', () => {
       const workflow = getProjectAnalysisWorkflow()
       const stageOrder = getStageOrder(workflow)
-      expect(stageOrder).toHaveLength(3)
+      expect(stageOrder).toHaveLength(4)
       expect(stageOrder).toEqual(stageKeys)
     })
 
@@ -82,7 +83,7 @@ describe('projectAnalysis workflow stage metadata', () => {
   describe('stage dependencies', () => {
     it('first stage has no inputs', () => {
       const workflow = getProjectAnalysisWorkflow()
-      expect(workflow.stages['systemAnalysis'].inputs).toEqual([])
+      expect(workflow.stages['projectOverview'].inputs).toEqual([])
     })
 
     it('each subsequent stage has at least one input', () => {

@@ -25,13 +25,15 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     expect(workflow.id).toBe('projectAnalysis')
     expect(workflow.name).toBe('Project Analysis')
     expect(stageOrder).toEqual([
-      'systemAnalysis',
-      'componentAnalysis',
-      'missingCoverageCheck',
+      'projectOverview',
+      'functionTreeAndModule',
+      'interfaceAndDataFlow',
+      'defectCheckAndPatch',
     ])
-    expect(workflow.stages.systemAnalysis.agent).toBe('HAnalysis')
-    expect(workflow.stages.componentAnalysis.agent).toBe('HAnalysis')
-    expect(workflow.stages.missingCoverageCheck.agent).toBe('HAnalysis')
+    expect(workflow.stages.projectOverview.agent).toBe('HAnalysis')
+    expect(workflow.stages.functionTreeAndModule.agent).toBe('HAnalysis')
+    expect(workflow.stages.interfaceAndDataFlow.agent).toBe('HAnalysis')
+    expect(workflow.stages.defectCheckAndPatch.agent).toBe('HAnalysis')
   })
 
   it('has no tools defined (prompt-driven workflow)', () => {
@@ -47,7 +49,7 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     for (const stageKey of stageOrder) {
       const stage = workflow.stages[stageKey]
       if (stage.outputs) {
-        for (const [_name, output] of Object.entries(stage.outputs)) {
+        for (const output of stage.outputs) {
           expect(output.path).toMatch(/(\.md\/?|\/)$/)
           expect(output.path).not.toContain('_meta/')
           expect(output.path).not.toContain('.json')
@@ -56,20 +58,20 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     }
   })
 
-  it('loads workflow overview and componentAnalysis stage prompts through runtime APIs', () => {
+  it('loads workflow overview and functionTreeAndModule stage prompts through runtime APIs', () => {
     const workflow = getProjectAnalysisWorkflow()
 
     const overviewPrompt = loadPromptForStage(null, workflow)
-    const componentPrompt = loadPromptForStage('componentAnalysis', workflow)
+    const functionTreePrompt = loadPromptForStage('functionTreeAndModule', workflow)
 
     expect(overviewPrompt.length).toBeGreaterThan(0)
     expect(overviewPrompt).toContain('## Project Analysis')
-    expect(overviewPrompt).toContain('systemAnalysis')
+    expect(overviewPrompt).toContain('projectOverview')
 
-    expect(componentPrompt.length).toBeGreaterThan(overviewPrompt.length)
-    expect(componentPrompt).toContain('## Project Analysis')
-    expect(componentPrompt).toContain('## Current Phase: Component Analysis')
-    expect(componentPrompt).toContain('components-manifest.md')
+    expect(functionTreePrompt.length).toBeGreaterThan(overviewPrompt.length)
+    expect(functionTreePrompt).toContain('## Project Analysis')
+    expect(functionTreePrompt).toContain('## Current Phase: Function Tree and Module')
+    expect(functionTreePrompt).toContain('project-overview.md')
   })
 
   it('creates HAnalysis agent with workflow prompt tokens and primary-agent config', () => {
@@ -94,22 +96,28 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     expect(Object.keys(state.workflow)).toEqual(stageOrder)
     expect(state.current).toBeNull()
 
-    expect(state.workflow.systemAnalysis).toMatchObject({
+    expect(state.workflow.projectOverview).toMatchObject({
       isCompleted: false,
       selected: true,
       previousStage: null,
-      nextStage: 'componentAnalysis',
+      nextStage: 'functionTreeAndModule',
     })
-    expect(state.workflow.componentAnalysis).toMatchObject({
+    expect(state.workflow.functionTreeAndModule).toMatchObject({
       isCompleted: false,
       selected: true,
-      previousStage: 'systemAnalysis',
-      nextStage: 'missingCoverageCheck',
+      previousStage: 'projectOverview',
+      nextStage: 'interfaceAndDataFlow',
     })
-    expect(state.workflow.missingCoverageCheck).toMatchObject({
+    expect(state.workflow.interfaceAndDataFlow).toMatchObject({
       isCompleted: false,
       selected: true,
-      previousStage: 'componentAnalysis',
+      previousStage: 'functionTreeAndModule',
+      nextStage: 'defectCheckAndPatch',
+    })
+    expect(state.workflow.defectCheckAndPatch).toMatchObject({
+      isCompleted: false,
+      selected: true,
+      previousStage: 'interfaceAndDataFlow',
       nextStage: null,
     })
   })

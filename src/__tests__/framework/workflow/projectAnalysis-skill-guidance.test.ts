@@ -13,19 +13,21 @@ function getProjectAnalysisWorkflow() {
   return workflow
 }
 
-const SKILL_BASE_PATH = resolve(process.cwd(), 'src/skills/hyper-designer/projectAnalysis')
+const SKILL_BASE_PATH = resolve(process.cwd(), 'src/builtin/skills/projectAnalysis')
 
 describe('projectAnalysis workflow skill guidance', () => {
   it('each stage prompt references the skill', () => {
     const workflow = getProjectAnalysisWorkflow()
 
-    const systemPrompt = loadPromptForStage('systemAnalysis', workflow)
-    const componentPrompt = loadPromptForStage('componentAnalysis', workflow)
-    const missingPrompt = loadPromptForStage('missingCoverageCheck', workflow)
+    const projectOverviewPrompt = loadPromptForStage('projectOverview', workflow)
+    const functionTreePrompt = loadPromptForStage('functionTreeAndModule', workflow)
+    const interfacePrompt = loadPromptForStage('interfaceAndDataFlow', workflow)
+    const defectCheckPrompt = loadPromptForStage('defectCheckAndPatch', workflow)
 
-    expect(systemPrompt).toContain('projectAnalysis')
-    expect(componentPrompt).toContain('projectAnalysis')
-    expect(missingPrompt).toContain('projectAnalysis')
+    expect(projectOverviewPrompt).toContain('projectAnalysis')
+    expect(functionTreePrompt).toContain('projectAnalysis')
+    expect(interfacePrompt).toContain('projectAnalysis')
+    expect(defectCheckPrompt).toContain('projectAnalysis')
   })
 
   it('projectAnalysis skill exists with reference files', () => {
@@ -45,21 +47,25 @@ describe('projectAnalysis workflow skill guidance', () => {
   })
 
   it('references files exist and contain methodology content', () => {
-    const systemRefPath = resolve(SKILL_BASE_PATH, 'references/systemAnalysis.md')
-    const componentRefPath = resolve(SKILL_BASE_PATH, 'references/componentAnalysis.md')
-    const missingRefPath = resolve(SKILL_BASE_PATH, 'references/missingCoverageCheck.md')
+    const projectOverviewRefPath = resolve(SKILL_BASE_PATH, 'references/projectOverview.md')
+    const functionTreeRefPath = resolve(SKILL_BASE_PATH, 'references/functionTreeAndModule.md')
+    const interfaceRefPath = resolve(SKILL_BASE_PATH, 'references/interfaceAndDataFlow.md')
+    const defectCheckRefPath = resolve(SKILL_BASE_PATH, 'references/defectCheckAndPatch.md')
 
-    expect(existsSync(systemRefPath)).toBe(true)
-    expect(existsSync(componentRefPath)).toBe(true)
-    expect(existsSync(missingRefPath)).toBe(true)
+    expect(existsSync(projectOverviewRefPath)).toBe(true)
+    expect(existsSync(functionTreeRefPath)).toBe(true)
+    expect(existsSync(interfaceRefPath)).toBe(true)
+    expect(existsSync(defectCheckRefPath)).toBe(true)
 
-    const systemContent = readFileSync(systemRefPath, 'utf-8')
-    const componentContent = readFileSync(componentRefPath, 'utf-8')
-    const missingContent = readFileSync(missingRefPath, 'utf-8')
+    const projectOverviewContent = readFileSync(projectOverviewRefPath, 'utf-8')
+    const functionTreeContent = readFileSync(functionTreeRefPath, 'utf-8')
+    const interfaceContent = readFileSync(interfaceRefPath, 'utf-8')
+    const defectCheckContent = readFileSync(defectCheckRefPath, 'utf-8')
 
-    expect(systemContent.length).toBeGreaterThan(100)
-    expect(componentContent.length).toBeGreaterThan(100)
-    expect(missingContent.length).toBeGreaterThan(100)
+    expect(projectOverviewContent.length).toBeGreaterThan(100)
+    expect(functionTreeContent.length).toBeGreaterThan(100)
+    expect(interfaceContent.length).toBeGreaterThan(100)
+    expect(defectCheckContent.length).toBeGreaterThan(100)
   })
 
   it('skill provides shared workflow methodology reference', () => {

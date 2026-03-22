@@ -22,150 +22,192 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
   )
 }
 
-const SYSTEM_ANALYSIS_OUTPUTS: StageFileItem[] = [
+const PROJECT_OVERVIEW_OUTPUTS: StageFileItem[] = [
   {
-    id: '系统架构分析报告',
-    path: './.hyper-designer/projectAnalysis/architecture.md',
+    id: '项目概览',
+    path: './.hyper-designer/projectAnalysis/project-overview.md',
     type: 'file',
-    description: 'System architecture analysis report (5 dimensions + Mermaid)',
-  },
-  {
-    id: '组件清单',
-    path: './.hyper-designer/projectAnalysis/components-manifest.md',
-    type: 'file',
-    description: 'Component manifest (markdown table, source of truth for Stage 2)',
-  },
-  {
-    id: 'API目录',
-    path: './.hyper-designer/projectAnalysis/api-catalog.md',
-    type: 'file',
-    description: 'API catalog and component mapping',
-  },
-  {
-    id: '源码概览',
-    path: './.hyper-designer/projectAnalysis/source-overview.md',
-    type: 'file',
-    description: 'Source file inventory and statistics',
+    description: 'Project overview with basic info, tech stack, directory structure, and entry points',
   },
 ]
 
-const COMPONENT_ANALYSIS_INPUTS: StageFileItem[] = [
+const FUNCTION_TREE_MODULE_INPUTS: StageFileItem[] = [
   {
-    id: '系统架构分析报告',
-    path: './.hyper-designer/projectAnalysis/architecture.md',
+    id: '项目概览',
+    path: './.hyper-designer/projectAnalysis/project-overview.md',
     type: 'file',
-    description: 'System architecture analysis report',
-  },
-  {
-    id: '组件清单',
-    path: './.hyper-designer/projectAnalysis/components-manifest.md',
-    type: 'file',
-    description: 'Component manifest',
+    description: 'Project overview from stage 1',
   },
 ]
 
-const COMPONENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
+const FUNCTION_TREE_MODULE_OUTPUTS: StageFileItem[] = [
   {
-    id: '组件分析文档目录',
-    path: './.hyper-designer/projectAnalysis/components/',
-    type: 'folder',
-    description: 'Per-component analysis markdown files',
+    id: '功能树',
+    path: './.hyper-designer/projectAnalysis/function-tree.md',
+    type: 'file',
+    description: 'Function tree with hierarchy, dependencies, and module mapping',
   },
   {
-    id: '组件分析汇总',
-    path: './.hyper-designer/projectAnalysis/component-analysis-summary.md',
+    id: '模块关系',
+    path: './.hyper-designer/projectAnalysis/module-relationships.md',
     type: 'file',
-    description: 'Component analysis summary report',
-  },
-]
-
-const COVERAGE_CHECK_INPUTS: StageFileItem[] = [
-  {
-    id: '系统架构分析报告',
-    path: './.hyper-designer/projectAnalysis/architecture.md',
-    type: 'file',
-    description: 'System architecture analysis report',
-  },
-  {
-    id: '组件清单',
-    path: './.hyper-designer/projectAnalysis/components-manifest.md',
-    type: 'file',
-    description: 'Component manifest',
+    description: 'Module relationships with dependencies, interfaces, and data flow',
   },
 ]
 
-const COVERAGE_CHECK_OUTPUTS: StageFileItem[] = [
+const INTERFACE_DATAFLOW_INPUTS: StageFileItem[] = [
   {
-    id: '覆盖率检查报告',
-    path: './.hyper-designer/projectAnalysis/coverage-report.md',
+    id: '功能树',
+    path: './.hyper-designer/projectAnalysis/function-tree.md',
     type: 'file',
-    description: 'Coverage report with verdict, severity, and remediation guidance',
+    description: 'Function tree from stage 2',
+  },
+  {
+    id: '模块关系',
+    path: './.hyper-designer/projectAnalysis/module-relationships.md',
+    type: 'file',
+    description: 'Module relationships from stage 2',
+  },
+]
+
+const INTERFACE_DATAFLOW_OUTPUTS: StageFileItem[] = [
+  {
+    id: '接口契约',
+    path: './.hyper-designer/projectAnalysis/interface-contracts.md',
+    type: 'file',
+    description: 'Interface contracts with API catalog, function signatures, and error contracts',
+  },
+  {
+    id: '数据流',
+    path: './.hyper-designer/projectAnalysis/data-flow.md',
+    type: 'file',
+    description: 'Data flow with models, flow diagrams, transformations, and storage',
+  },
+]
+
+const DEFECT_CHECK_INPUTS: StageFileItem[] = [
+  {
+    id: '项目概览',
+    path: './.hyper-designer/projectAnalysis/project-overview.md',
+    type: 'file',
+    description: 'Project overview from stage 1',
+  },
+  {
+    id: '功能树',
+    path: './.hyper-designer/projectAnalysis/function-tree.md',
+    type: 'file',
+    description: 'Function tree from stage 2',
+  },
+  {
+    id: '模块关系',
+    path: './.hyper-designer/projectAnalysis/module-relationships.md',
+    type: 'file',
+    description: 'Module relationships from stage 2',
+  },
+  {
+    id: '接口契约',
+    path: './.hyper-designer/projectAnalysis/interface-contracts.md',
+    type: 'file',
+    description: 'Interface contracts from stage 3',
+  },
+  {
+    id: '数据流',
+    path: './.hyper-designer/projectAnalysis/data-flow.md',
+    type: 'file',
+    description: 'Data flow from stage 3',
+  },
+]
+
+const DEFECT_CHECK_OUTPUTS: StageFileItem[] = [
+  {
+    id: '最终分析报告',
+    path: './.hyper-designer/projectAnalysis/analysis-report.md',
+    type: 'file',
+    description: 'Final analysis report with completeness check, consistency check, defects found, and patches applied',
   },
 ]
 
 export const projectAnalysisWorkflow: WorkflowDefinition = {
   id: 'projectAnalysis',
   name: 'Project Analysis',
-  description: '3-stage prompt-driven workflow: system analysis → component analysis → missing coverage check. All outputs are pure Markdown.',
-  entryStageId: 'systemAnalysis',
+  description: '4-stage prompt-driven workflow: project overview → function tree and module → interface and data flow → defect check and patch. All outputs are pure Markdown with YAML Front Matter.',
+  entryStageId: 'projectOverview',
 
   promptBindings: {
     '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'workflow.md')),
   },
 
   stages: {
-    systemAnalysis: {
-      stageId: 'systemAnalysis',
-      name: 'System Analysis',
-      description: 'Analyze the target project at system level and produce the system architecture report',
+    projectOverview: {
+      stageId: 'projectOverview',
+      name: 'Project Overview',
+      description: 'Analyze the target project and generate project overview and directory structure',
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'projectOverview.md')),
       },
       requiredMilestones: [],
       required: true,
       inputs: [],
-      outputs: SYSTEM_ANALYSIS_OUTPUTS,
-      transitions: [{ id: 'to-component', toStageId: 'componentAnalysis', mode: 'auto', priority: 0 }],
+      outputs: PROJECT_OVERVIEW_OUTPUTS,
+      transitions: [{ id: 'to-function-tree', toStageId: 'functionTreeAndModule', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '执行系统级分析', currentName),
+        buildHandoverPrompt(thisName, '执行项目概览分析', currentName),
     },
 
-    componentAnalysis: {
-      stageId: 'componentAnalysis',
-      name: 'Component Analysis',
-      description: 'Analyze each component from the manifest across 4 dimensions',
+    functionTreeAndModule: {
+      stageId: 'functionTreeAndModule',
+      name: 'Function Tree and Module',
+      description: 'Build function tree and analyze module relationships',
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'componentAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'functionTreeAndModule.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: COMPONENT_ANALYSIS_INPUTS,
-      outputs: COMPONENT_ANALYSIS_OUTPUTS,
-      transitions: [{ id: 'to-coverage', toStageId: 'missingCoverageCheck', mode: 'auto', priority: 0 }],
+      inputs: FUNCTION_TREE_MODULE_INPUTS,
+      outputs: FUNCTION_TREE_MODULE_OUTPUTS,
+      transitions: [{ id: 'to-interface', toStageId: 'interfaceAndDataFlow', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '基于组件清单执行组件分析', currentName),
+        buildHandoverPrompt(thisName, '建立功能树并分析模块关系', currentName),
     },
 
-    missingCoverageCheck: {
-      stageId: 'missingCoverageCheck',
-      name: 'Missing Coverage Check',
-      description: 'Check missing analysis coverage across 7 categories (diagnostic, non-gating)',
+    interfaceAndDataFlow: {
+      stageId: 'interfaceAndDataFlow',
+      name: 'Interface and Data Flow',
+      description: 'Analyze interface contracts and data flow',
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'missingCoverageCheck.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'interfaceAndDataFlow.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: COVERAGE_CHECK_INPUTS,
-      outputs: COVERAGE_CHECK_OUTPUTS,
+      inputs: INTERFACE_DATAFLOW_INPUTS,
+      outputs: INTERFACE_DATAFLOW_OUTPUTS,
+      transitions: [{ id: 'to-defect-check', toStageId: 'defectCheckAndPatch', mode: 'auto', priority: 0 }],
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, '分析接口契约和数据流', currentName),
+    },
+
+    defectCheckAndPatch: {
+      stageId: 'defectCheckAndPatch',
+      name: 'Defect Check and Patch',
+      description: 'Check analysis completeness, patch previous outputs, and generate final report',
+      agent: 'HAnalysis',
+      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'defectCheckAndPatch.md')),
+      },
+      requiredMilestones: [],
+      required: true,
+      inputs: DEFECT_CHECK_INPUTS,
+      outputs: DEFECT_CHECK_OUTPUTS,
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '执行缺失覆盖率检查', currentName),
+        buildHandoverPrompt(thisName, '检查分析完整性，修补输出，生成最终报告', currentName),
     },
   },
 }
