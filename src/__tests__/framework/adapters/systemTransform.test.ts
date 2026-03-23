@@ -251,6 +251,37 @@ describe('system transform', () => {
     expect(output.system[3]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
   })
 
+  it('injects framework fallback prompt when workflow definition is missing even if state has current stage', async () => {
+    const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/orchestrator')
+
+    getDefinition.mockReturnValue(null)
+    getState.mockReturnValue({
+      initialized: true,
+      typeId: 'classic',
+      workflow: {
+        IRAnalysis: { isCompleted: false, selected: true },
+      },
+      current: {
+        name: 'IRAnalysis',
+        handoverTo: null,
+      },
+    })
+
+    const transform = createSystemTransformer()
+    const output = {
+      system: [
+        '<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
+        FRAMEWORK_FALLBACK_PROMPT_TOKEN,
+      ],
+    }
+
+    await transform({ model: {} } as never, output)
+
+    expect(output.system[0]).toBe('<using-hyper-designer></using-hyper-designer>')
+    expect(output.system[1]).toContain('Current Stage: Workflow Initialization')
+    expect(output.system[1]).not.toContain(FRAMEWORK_FALLBACK_PROMPT_TOKEN)
+  })
+
   it('removes blocked skills from system prompt output', async () => {
     const { createSystemTransformer } = await import('../../../platformBridge/platform/opencode/orchestrator')
 

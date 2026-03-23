@@ -60,6 +60,21 @@ describe('Integration Tests: Hyper routing', () => {
     }
   })
 
+  it('registers Hyper with custom prompt and fallback token', async () => {
+    const pluginInstance = await HyperDesignerPlugin(createMockPluginInput())
+    const configInput: Record<string, unknown> = {}
+
+    await pluginInstance.config?.(configInput)
+
+    const mappedAgents = configInput.agent as Record<string, { prompt?: string; mode?: string }>
+    const hyperPrompt = mappedAgents.Hyper?.prompt
+
+    expect(typeof hyperPrompt).toBe('string')
+    expect(hyperPrompt).toContain('You are Hyper, a senior system architect')
+    expect(hyperPrompt).toContain('{HYPER_DESIGNER_WORKFLOW_FALLBACK_PROMPT}')
+    expect(mappedAgents.Hyper?.mode).toBe('primary')
+  })
+
   it('returns chat.message hook from plugin', async () => {
     const pluginInstance = await HyperDesignerPlugin(createMockPluginInput())
 
