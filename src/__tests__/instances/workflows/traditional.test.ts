@@ -4,13 +4,13 @@ import {
   loadPromptForStage,
   getWorkflowDefinition,
   getAvailableWorkflows,
-} from '../../../workflows/core'
+} from '../../../workflows'
 
 const WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'
 const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
 
 import { classicWorkflow } from '../../../builtin/workflows/classic'
-import type { WorkflowDefinition } from '../../../workflows/core'
+import type { WorkflowDefinition } from '../../../workflows'
 
 function getClassicWorkflow(): WorkflowDefinition {
   const workflow = getWorkflowDefinition('classic')

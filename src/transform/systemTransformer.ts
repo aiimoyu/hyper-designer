@@ -1,7 +1,7 @@
 import {
   loadPromptBindings,
   resolvePromptBindingsForMode,
-} from '../workflows/core/runtime'
+} from '../workflows/runtime'
 import { replacePlaceholders, type PlaceholderResolver } from './placeholder'
 import { replaceToolPlaceholders, type ToolNameMapping } from './toolTransform'
 import {
@@ -10,8 +10,8 @@ import {
 import type { InjectionResult } from './injectionRegistry'
 import { HyperDesignerLogger } from '../utils/logger'
 import { loadHDConfig } from '../config/loader'
-import type { WorkflowDefinition } from '../workflows/core/types'
-import type { WorkflowState } from '../workflows/core/state/types'
+import type { WorkflowDefinition } from '../workflows/types'
+import type { WorkflowState } from '../workflows/state/types'
 import type { HDConfig } from '../config/loader'
 
 const WORKFLOW_PROMPT_TOKEN_PATTERN = /\{HYPER_DESIGNER_WORKFLOW_(?!FALLBACK_PROMPT\})[A-Z0-9_]+_PROMPT\}/g

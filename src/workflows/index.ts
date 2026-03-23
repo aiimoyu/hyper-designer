@@ -1,47 +1,58 @@
 /**
- * 工作流模块主入口
- * 
- * 提供工作流系统的完整 API 导出，包括：
- * 1. 类型定义：工作流定义、阶段定义、状态接口
- * 2. 工作流注册：定义获取、可用工作流列表
- * 3. 状态管理：工作流状态操作和阶段管理
- * 4. 交接处理：代理交接和提示词生成
- * 5. 内置工作流：经典和开源工作流
+ * 工作流核心模块
+ *
+ * 统一导出所有子模块的公开接口。
+ *
+ * 模块结构：
+ * - types: 核心类型定义
+ * - registry: 工作流注册表
+ * - state: 状态管理（持久化、操作）
+ * - service: 工作流服务层（WorkflowService）
+ * - runtime: 运行时（交接、提示词加载）
  */
 
-export type { WorkflowDefinition, WorkflowStageDefinition } from "./core/types"
-export type { WorkflowStage, WorkflowState } from "./core/state"
+// Core types
+export type {
+  WorkflowPlatformAdapter,
+  StageHookFn,
+  StageHook,
+  WorkflowPromptBindings,
+  WorkflowStageDefinition,
+  WorkflowDefinition,
+} from './types'
+export { safeRegisterTools } from './types'
+export { filePrompt, stringPrompt } from './utils'
 
-export {
-  getWorkflowDefinition,
-  getAvailableWorkflows,
-} from "./core/registry"
+// Registry
+export { getWorkflowDefinition, getAvailableWorkflows } from './registry'
 
+// State module
+export type { WorkflowStage, WorkflowState } from './state/types'
 export {
+  getStageOrder,
+  initializeWorkflowState,
+  getWorkflowState,
   setWorkflowStage,
   setWorkflowCurrent,
   setWorkflowHandover,
+  setWorkflowGateResult,
+  setWorkflowStageMilestone,
   executeWorkflowHandover,
-  initializeWorkflowState,
-  getStageOrder,
-} from "./core/state"
+} from './state'
 
+// Service module
+export { WorkflowService, workflowService } from './service'
+export type { WorkflowServiceEvents } from './service'
 
-export { getHandoverAgent, getHandoverPrompt } from "./core/runtime"
-export { loadPromptForStage } from "./core/runtime"
-
-export { classicWorkflow } from '../builtin/workflows/classic'
-export { liteWorkflow } from '../builtin/workflows/lite'
-export { projectAnalysisWorkflow } from '../builtin/workflows/projectAnalysis'
-
-export { WorkflowService, workflowService } from "./core/service"
-
-
-// 工具注册系统
-export type {
-  ToolDefinition,
-  ToolContext,
-  ToolParamSchema,
-  ToolParamsSchema,
-  ToolRegistration,
-} from '../tools/types'
+// Runtime module
+export {
+  getHandoverAgent,
+  getHandoverPrompt,
+  loadPromptBindings,
+  loadWorkflowPrompt,
+  loadStagePrompt,
+  loadPromptForStage,
+  getFrameworkFallbackPrompt,
+  resolvePromptBindingsForMode,
+  FRAMEWORK_FALLBACK_PROMPT_TOKEN,
+} from './runtime'

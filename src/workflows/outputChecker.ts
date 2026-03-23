@@ -2,7 +2,7 @@ import { stat, readdir } from 'fs/promises'
 import { resolve } from 'path'
 import * as glob from 'glob'
 import type { StageFileItem } from './types'
-import { HyperDesignerLogger } from '../../utils/logger'
+import { HyperDesignerLogger } from '../utils/logger'
 
 export interface OutputCheckResult {
   success: boolean

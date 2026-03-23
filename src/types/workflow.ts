@@ -1,54 +1,10 @@
-import type { ToolDefinition } from '../../tools/types'
-import { HyperDesignerLogger } from '../../utils/logger'
+import type { ToolDefinition } from './tool'
 
 export interface WorkflowPlatformAdapter {
   sendPrompt: (params: { sessionId: string; agent: string; text: string; schema?: Record<string, unknown>; system?: string }) => Promise<{ structuredOutput?: unknown; text: string }>
   summarizeSession: (sessionId: string) => Promise<void>
   clearSession: (sessionId: string) => Promise<string>
   registerTools?: (tools: Array<{ name: string; description: string; params: Record<string, { type: string; description?: string; optional?: boolean }>; handler: (params: Record<string, unknown>) => Promise<string> }>) => void
-}
-
-export function safeRegisterTools(
-  adapter: WorkflowPlatformAdapter | undefined,
-  tools: Array<{ name: string; description: string; params: Record<string, { type: string; description?: string; optional?: boolean }>; handler: (params: Record<string, unknown>) => Promise<string> }>,
-  context?: { stageKey?: string; hookId?: string }
-): boolean {
-  if (!adapter) {
-    HyperDesignerLogger.warn('Workflow', '无法注册工具：adapter 未提供', {
-      toolCount: tools.length,
-      toolNames: tools.map(t => t.name),
-      ...context,
-    })
-    return false
-  }
-
-  if (!adapter.registerTools) {
-    HyperDesignerLogger.warn('Workflow', '无法注册工具：adapter 未实现 registerTools 方法', {
-      toolCount: tools.length,
-      toolNames: tools.map(t => t.name),
-      ...context,
-      hint: '平台适配器应实现 registerTools 方法以支持动态工具注册',
-    })
-    return false
-  }
-
-  try {
-    adapter.registerTools(tools)
-    HyperDesignerLogger.debug('Workflow', '工具注册成功', {
-      toolCount: tools.length,
-      toolNames: tools.map(t => t.name),
-      ...context,
-    })
-    return true
-  } catch (error) {
-    const err = error instanceof Error ? error : new Error(String(error))
-    HyperDesignerLogger.error('Workflow', '工具注册失败', err, {
-      toolCount: tools.length,
-      toolNames: tools.map(t => t.name),
-      ...context,
-    })
-    return false
-  }
 }
 
 export interface WorkflowPromptBindings {
@@ -67,7 +23,6 @@ export interface StageFileItem {
 }
 
 export type StageHookFn = (ctx: {
-  /** 阶段 key，如 "IRAnalysis" */
   stageKey: string
   stageName: string
   workflow: WorkflowDefinition
@@ -75,7 +30,6 @@ export type StageHookFn = (ctx: {
   setMilestone?: (input: { key: string; isCompleted: boolean; detail: unknown }) => void
   setInfo?: (patch: Record<string, unknown>) => void
   sessionID?: string
-  /** 平台适配器（平台注入），提供会话管理与 prompt 能力 */
   adapter?: WorkflowPlatformAdapter
 }) => Promise<void>
 
@@ -120,16 +74,11 @@ export interface WorkflowStageDefinition {
   promptBindings?: WorkflowPromptBindings
   inject?: InjectionConfig[]
   injectContent?: string[]
-  /** Hooks to run before the stage's primary agent starts */
   before?: WorkflowHookDefinition[]
   after?: WorkflowHookDefinition[]
-  /** Milestones required for handover - can be string IDs or full definitions */
   requiredMilestones?: (string | MilestoneDefinition)[]
-  /** Whether this stage is required to be completed */
   required?: boolean
-  /** Input specifications for this stage */
   inputs?: StageFileItem[]
-  /** Output specifications for this stage */
   outputs?: StageFileItem[]
   transitions?: StageTransitionDefinition[]
   getHandoverPrompt: (currentStageName: string | null, thisStageName: string) => string
@@ -145,24 +94,15 @@ export interface WorkflowPromptTransformConfig {
 }
 
 export interface WorkflowDefinition {
-  /** Unique workflow identifier */
   id: string
-  /** Human-readable name */
   name: string
-  /** Description */
   description: string
   version?: string
-  /** Prompt file path relative to the workflow directory for the entire process */
   promptFile?: string
   promptBasePath?: string
-  /** Placeholder bindings shared by all stages in this workflow */
   promptBindings?: WorkflowPromptBindings
   promptTransform?: WorkflowPromptTransformConfig
   entryStageId: string
   stages: Record<string, WorkflowStageDefinition>
-  /**
-   * 该工作流提供的工具列表
-   * 框架会自动将这些工具注册到运行平台（OpenCode、Claude Code 等）
-   */
   tools?: ToolDefinition[]
 }

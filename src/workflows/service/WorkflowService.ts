@@ -1,4 +1,4 @@
-import type { ToolDefinition } from '../../../tools/types'
+import type { ToolDefinition } from '../../tools/types'
 import { resolveAgentConfig } from '../agentConfig'
 import { getStageOrder, resolveNextSelectedStage } from '../stageOrder'
 
@@ -26,7 +26,7 @@ import {
 } from "../state";
 import { getWorkflowDefinition, getAvailableWorkflows } from "../registry";
 import { getHandoverAgent, getHandoverPrompt } from "../runtime/handover";
-import { HyperDesignerLogger } from "../../../utils/logger";
+import { HyperDesignerLogger } from "../../utils/logger";
 import {
   GATE_MILESTONE_KEY,
   GATE_PASS_THRESHOLD,

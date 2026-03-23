@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   FRAMEWORK_FALLBACK_PROMPT_TOKEN,
-} from '../../../workflows/core/runtime'
+} from '../../../workflows/runtime'
 
 describe('workflow runtime tokens', () => {
   it('exports builtin fallback token from centralized module', () => {

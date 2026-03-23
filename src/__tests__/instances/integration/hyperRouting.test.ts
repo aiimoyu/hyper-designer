@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PluginInput } from '@opencode-ai/plugin'
 
-import { workflowService } from '../../../workflows/core/service'
+import { workflowService } from '../../../workflows/service'
 import { HyperDesignerPlugin } from '../../../../opencode/.plugins/hyper-designer'
 
 vi.mock('@opencode-ai/plugin', () => {

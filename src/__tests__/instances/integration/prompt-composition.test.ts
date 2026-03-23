@@ -4,7 +4,7 @@ import { join } from "path"
 import { createHArchitectAgent } from '../../../builtin/agents/HArchitect'
 import { createHEngineerAgent } from '../../../builtin/agents/HEngineer'
 import { createHCriticAgent } from '../../../builtin/agents/HCritic'
-import { loadPromptForStage, getWorkflowDefinition, initializeWorkflowState } from '../../../workflows/core'
+import { loadPromptForStage, getWorkflowDefinition, initializeWorkflowState } from '../../../workflows'
 
 const WORKFLOW_STATE_PATH = join(process.cwd(), ".hyper-designer", "workflow_state.json")
 

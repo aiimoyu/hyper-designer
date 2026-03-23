@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { summarizeHook } from '../../../workflows/core/stageHooks/summarizeHook'
+import { summarizeHook } from '../../../workflows/stageHooks/summarizeHook'
 import { createMockAdapter } from '../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../utils/logger'
-import type { StageHookFn } from '../../../workflows/core/types'
-import type { WorkflowDefinition } from '../../../workflows/core/types'
+import type { StageHookFn } from '../../../workflows/types'
+import type { WorkflowDefinition } from '../../../workflows/types'
 
 /** Minimal workflow definition for StageHookFn context */
 const stubWorkflow: WorkflowDefinition = {

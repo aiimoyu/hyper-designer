@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import type { WorkflowDefinition } from '../../../workflows/core'
+import type { WorkflowDefinition } from '../../../workflows'
 import {
   getAvailableWorkflows,
   getWorkflowDefinition,
-} from '../../../workflows/core'
+} from '../../../workflows'
 import {
   resetWorkflowPluginBootstrapForTest,
   clearWorkflowPluginsForTest,
   registerWorkflowPlugin,
-} from '../../../workflows/core/pluginRegistry'
+} from '../../../workflows/pluginRegistry'
 
 describe('workflow plugin registry', () => {
   beforeEach(() => {

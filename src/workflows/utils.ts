@@ -5,7 +5,7 @@
  */
 
 import { readFileSync } from 'fs'
-import { HyperDesignerLogger } from '../../utils/logger'
+import { HyperDesignerLogger } from '../utils/logger'
 
 /**
  * Create a prompt binding by loading content from a file immediately.

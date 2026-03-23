@@ -6,7 +6,7 @@
  */
 
 import type { StageHookFn } from '../types'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 /**
  * 上下文清空钩子（after）

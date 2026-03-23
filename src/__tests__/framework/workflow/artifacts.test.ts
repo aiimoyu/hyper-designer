@@ -3,9 +3,9 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
-import type { WorkflowDefinition, StageFileItem } from '../../../workflows/core/types'
-import type { WorkflowState } from '../../../workflows/core/state/types'
-import { resolveStageInputs, validateStageOutputs } from '../../../workflows/core/artifacts'
+import type { WorkflowDefinition, StageFileItem } from '../../../workflows/types'
+import type { WorkflowState } from '../../../workflows/state/types'
+import { resolveStageInputs, validateStageOutputs } from '../../../workflows/artifacts'
 
 const IR_ANALYSIS_OUTPUTS: StageFileItem[] = [
   { id: '需求信息', path: './docs/需求信息.md', type: 'file', description: 'IR document' },

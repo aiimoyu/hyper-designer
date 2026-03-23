@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { WorkflowService } from '../../../workflows/core/service/WorkflowService'
-import { initializeWorkflowState, writeWorkflowStateFile, readWorkflowStateFile } from '../../../workflows/core/state'
+import { WorkflowService } from '../../../workflows/service/WorkflowService'
+import { initializeWorkflowState, writeWorkflowStateFile, readWorkflowStateFile } from '../../../workflows/state'
 import { rmSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
-import type { WorkflowDefinition } from '../../../workflows/core/types'
+import type { WorkflowDefinition } from '../../../workflows/types'
 import { createMockAdapter } from '../../helpers/mockAdapter'
 
 const STATE_FILE = join(process.cwd(), ".hyper-designer", "workflow_state.json");

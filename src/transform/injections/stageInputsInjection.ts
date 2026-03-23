@@ -1,5 +1,5 @@
 import type { PromptInjectionProvider } from '../types'
-import type { StageFileItem } from '../../workflows/core/types'
+import type { StageFileItem } from '../../workflows/types'
 import { HyperDesignerLogger } from '../../utils/logger'
 import { readFile } from 'fs/promises'
 import { readdir } from 'fs/promises'

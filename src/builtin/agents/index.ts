@@ -1,4 +1,4 @@
-import type { AgentPluginRegistration } from '../../sdk/contracts'
+import type { AgentPluginRegistration } from '../../types'
 
 import { createHAnalysisAgent } from './HAnalysis'
 import { createHArchitectAgent } from './HArchitect'

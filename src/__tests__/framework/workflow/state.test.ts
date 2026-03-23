@@ -10,9 +10,9 @@ import {
   initializeWorkflowState,
   getStageOrder,
   writeWorkflowStateFile,
-} from '../../../workflows/core/state'
+} from '../../../workflows/state'
 
-import type { WorkflowDefinition } from '../../../workflows/core'
+import type { WorkflowDefinition } from '../../../workflows'
 import { rmSync, existsSync, writeFileSync } from "fs"
 import { join } from "path"
 import { readFileSync } from 'fs'

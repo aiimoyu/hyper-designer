@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest"
-import type { WorkflowStageDefinition, StageFileItem } from '../../../workflows/core/types'
+import type { WorkflowStageDefinition, StageFileItem } from '../../../workflows/types'
 import type {
   CurrentStageState,
   WorkflowState,
   WorkflowStage,
   StageMilestone,
   GateMilestoneDetail,
-} from '../../../workflows/core/state/types'
+} from '../../../workflows/state/types'
 
 describe('workflow type definitions', () => {
   describe('WorkflowStageDefinition', () => {

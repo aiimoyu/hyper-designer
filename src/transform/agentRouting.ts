@@ -1,5 +1,5 @@
-import type { WorkflowState } from '../workflows/core/state/types'
-import { resolveAgentConfig } from '../workflows/core/agentConfig'
+import type { WorkflowState } from '../workflows/state/types'
+import { resolveAgentConfig } from '../workflows/agentConfig'
 
 export interface NodeRuntimeConfig {
   agent: string

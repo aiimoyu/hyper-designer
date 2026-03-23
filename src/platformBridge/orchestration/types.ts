@@ -18,10 +18,10 @@ export interface PlatformOrchestrator {
 }
 
 export interface WorkflowServiceLike {
-  listAllTools: () => ReturnType<typeof import('../../workflows/core/service').workflowService.listAllTools>
-  getDefinition: () => ReturnType<typeof import('../../workflows/core/service').workflowService.getDefinition>
-  getCurrentStage: () => ReturnType<typeof import('../../workflows/core/service').workflowService.getCurrentStage>
-  getState: () => ReturnType<typeof import('../../workflows/core/service').workflowService.getState>
+  listAllTools: () => ReturnType<typeof import('../../workflows/service').workflowService.listAllTools>
+  getDefinition: () => ReturnType<typeof import('../../workflows/service').workflowService.getDefinition>
+  getCurrentStage: () => ReturnType<typeof import('../../workflows/service').workflowService.getCurrentStage>
+  getState: () => ReturnType<typeof import('../../workflows/service').workflowService.getState>
   on: (event: 'handoverExecuted' | 'stageCompleted', listener: (payload: { fromStep?: string; toStep?: string; stageName?: string; isCompleted?: boolean }) => void) => void
   isHandoverInProgress: () => boolean
   getHandoverAgent: (stage: string) => string | null

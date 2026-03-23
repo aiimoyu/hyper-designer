@@ -4,7 +4,7 @@ import type { ToolDefinition } from '../../../tools/types'
 
 import { createOpenCodePlatformCapabilities } from '../../../platformBridge/platform/opencode/capabilities'
 import { createOpenCodePlatformOrchestrator } from '../../../platformBridge/platform/opencode/orchestrator'
-import { workflowService } from '../../../workflows/core/service'
+import { workflowService } from '../../../workflows/service'
 
 vi.mock('@opencode-ai/plugin', () => {
   const tool = (definition: Record<string, unknown>) => definition

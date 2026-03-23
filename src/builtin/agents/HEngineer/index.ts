@@ -1,5 +1,5 @@
-import type { AgentDefinition, AgentPromptMetadata } from '../../../sdk/contracts'
-import { agentFilePrompt, agentStringPrompt, createSdkAgent } from '../../../sdk/contracts'
+import type { AgentDefinition, AgentPromptMetadata } from '../../../types'
+import { filePrompt as agentFilePrompt, stringPrompt as agentStringPrompt, createAgent as createSdkAgent } from '../../../agents/factory'
 import { join } from "path"
 import { dirname } from "path"
 import { fileURLToPath } from "url"

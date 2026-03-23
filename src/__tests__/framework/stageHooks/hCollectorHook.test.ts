@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import * as collectorHookModule from '../../../workflows/core/stageHooks/hCollectorHook'
-import { createHCollectorHook } from '../../../workflows/core/stageHooks/hCollectorHook'
-import type { HCollectorHookOptions, CollectionDomain } from '../../../workflows/core/stageHooks/hCollectorHook'
+import * as collectorHookModule from '../../../workflows/stageHooks/hCollectorHook'
+import { createHCollectorHook } from '../../../workflows/stageHooks/hCollectorHook'
+import type { HCollectorHookOptions, CollectionDomain } from '../../../workflows/stageHooks/hCollectorHook'
 import { createMockAdapter } from '../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../utils/logger'
-import type { WorkflowDefinition } from '../../../workflows/core/types'
+import type { WorkflowDefinition } from '../../../workflows/types'
 
 /** Minimal workflow definition for hook context */
 const stubWorkflow: WorkflowDefinition = {

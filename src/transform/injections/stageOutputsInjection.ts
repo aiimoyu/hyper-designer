@@ -1,5 +1,5 @@
 import type { PromptInjectionProvider } from '../types'
-import type { StageFileItem } from '../../workflows/core/types'
+import type { StageFileItem } from '../../workflows/types'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 function formatOutputFileItem(item: StageFileItem): string {

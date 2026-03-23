@@ -2,7 +2,7 @@ import { isHDAgent } from '../agents/utils'
 import { resolveNodeConfig } from './agentRouting'
 import { appendUsingHyperDesignerSystemPrompt } from './systemTransformer'
 import { HyperDesignerLogger } from '../utils/logger'
-import { workflowService } from '../workflows/core/service'
+import { workflowService } from '../workflows/service'
 
 export interface ChatMessageInput {
   agent?: string

@@ -1,5 +1,5 @@
-import type { AgentConfig, AgentDefinition, AgentPromptMetadata } from '../../../sdk/contracts'
-import { createSdkAgent, agentStringPrompt } from '../../../sdk/contracts'
+import type { AgentConfig, AgentDefinition, AgentPromptMetadata } from '../../../types'
+import { createAgent as createSdkAgent, stringPrompt as agentStringPrompt } from '../../../agents/factory'
 
 const BASE_PROMPT = `You are HAnalysis, the Hyper Designer project-analysis specialist.
 

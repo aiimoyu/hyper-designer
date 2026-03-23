@@ -4,7 +4,7 @@ import {
   loadPromptForStage,
   stringPrompt,
   type WorkflowDefinition,
-} from '../../../workflows/core'
+} from '../../../workflows'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 

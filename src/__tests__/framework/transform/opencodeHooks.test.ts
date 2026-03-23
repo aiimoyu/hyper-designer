@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
+import type { WorkflowDefinition, WorkflowState } from '../../../workflows'
 
 const getDefinition = vi.fn<[], WorkflowDefinition | null>()
 const getState = vi.fn<[], WorkflowState | null>()
 
-vi.mock('../../../workflows/core/service', () => ({
+vi.mock('../../../workflows/service', () => ({
   workflowService: {
     getDefinition,
     getState,

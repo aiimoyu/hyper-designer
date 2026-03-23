@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
+import type { WorkflowDefinition, WorkflowState } from '../../../workflows'
 import { HyperDesignerLogger } from '../../../utils/logger'
 import type { HDConfig } from '../../../config/loader'
 
@@ -15,7 +15,7 @@ const loadHDConfig = vi.fn<[], HDConfig>(() => ({
   },
 }))
 
-vi.mock('../../../workflows/core/service', () => ({
+vi.mock('../../../workflows/service', () => ({
   workflowService: {
     getDefinition,
     getState,

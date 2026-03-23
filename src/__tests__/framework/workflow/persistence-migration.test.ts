@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { readWorkflowStateFile, writeWorkflowStateFile, getWorkflowStatePath } from '../../../workflows/core/state/persistence'
+import { readWorkflowStateFile, writeWorkflowStateFile, getWorkflowStatePath } from '../../../workflows/state/persistence'
 import { rmSync, existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs'
 import { dirname } from 'path'
 

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PluginInput } from '@opencode-ai/plugin'
-import type { WorkflowDefinition, WorkflowState } from '../../../workflows/core'
+import type { WorkflowDefinition, WorkflowState } from '../../../workflows'
 import type { WorkflowServiceLike } from '../../../platformBridge/orchestration/types'
 
 const getDefinition = vi.fn<[], WorkflowDefinition | null>()
@@ -11,7 +11,7 @@ const getHandoverAgent = vi.fn<[string], string | null>()
 const getHandoverPrompt = vi.fn<[string | null, string], string | null>()
 const executeHandover = vi.fn(async (_sessionID?: string, _adapter?: unknown) => ({}))
 
-vi.mock('../../../workflows/core/service', () => ({
+vi.mock('../../../workflows/service', () => ({
   workflowService: {
     getDefinition,
     getState,

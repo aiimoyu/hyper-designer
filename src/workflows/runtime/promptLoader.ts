@@ -14,7 +14,7 @@ import type {
   WorkflowDefinition,
   WorkflowPromptBindings,
 } from '../types'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../utils/logger'
 import { FRAMEWORK_FALLBACK_PROMPT_TOKEN } from './tokens'
 
 const LEGACY_WORKFLOW_OVERVIEW_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'

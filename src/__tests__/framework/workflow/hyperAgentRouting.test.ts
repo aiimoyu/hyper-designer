@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { existsSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 
-import type { WorkflowDefinition } from '../../../workflows/core'
+import type { WorkflowDefinition } from '../../../workflows'
 import {
   executeWorkflowHandover,
   forceWorkflowNextStep,
   readWorkflowStateFile,
   writeWorkflowStateFile,
-} from '../../../workflows/core/state'
-import { workflowService } from '../../../workflows/core/service'
+} from '../../../workflows/state'
+import { workflowService } from '../../../workflows/service'
 import { createAgentTransformer } from '../../../transform/chatMessageTransform'
 
 const STATE_FILE = join(process.cwd(), '.hyper-designer', 'workflow_state.json')
@@ -322,9 +322,9 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
 
       const capturedStates: CapturedState[] = []
 
-      vi.doMock('../../../workflows/core/state/persistence', async () => {
-        const actual = await vi.importActual<typeof import('../../../workflows/core/state/persistence')>(
-          '../../../workflows/core/state/persistence',
+      vi.doMock('../../../workflows/state/persistence', async () => {
+        const actual = await vi.importActual<typeof import('../../../workflows/state/persistence')>(
+          '../../../workflows/state/persistence',
         )
         return {
           ...actual,
@@ -342,7 +342,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         }
       })
 
-      const stateModule = await import('../../../workflows/core/state')
+      const stateModule = await import('../../../workflows/state')
       const definition = makeTwoStageWorkflow({
         beforeAgentOverride: 'HCollector',
         onBefore: async () => {},
@@ -369,7 +369,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       const beforeHookWrite = capturedStates.find((entry) => entry.current?.agent === 'HCollector')
       expect(beforeHookWrite).toBeDefined()
 
-      vi.doUnmock('../../../workflows/core/state/persistence')
+      vi.doUnmock('../../../workflows/state/persistence')
     })
   })
 })

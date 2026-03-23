@@ -1,211 +1,106 @@
 import type {
   AgentConfig,
-  AgentPluginRegistration,
-  ToolPluginRegistration,
+  PluginContext,
+  PluginFactory,
+  PluginRegistrations,
+  ToolDefinition,
   WorkflowDefinition,
-  WorkflowPluginRegistration,
-} from '../sdk/contracts'
-import type { ToolDefinition } from '../tools/types'
+} from '../types'
 import { existsSync } from 'fs'
 import { dirname, resolve } from 'path'
-import { fileURLToPath, pathToFileURL } from 'url'
+import { pathToFileURL } from 'url'
 import * as glob from 'glob'
 
-const HYPER_DESIGNER_PLUGIN_BRAND = '___hyperDesignerPluginBrand'
-const DEFAULT_PLUGIN_ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
+const BRAND = Symbol('plugin')
 
-export interface HyperDesignerPluginContext {
-  path?: string
+interface Branded extends PluginFactory {
+  [BRAND]: true
 }
 
-export interface HyperDesignerPluginHooks {
-  agent?: (
-    agents: Record<string, AgentConfig>,
-  ) => Record<string, AgentConfig> | Promise<Record<string, AgentConfig>>
-  workflow?: (
-    workflows: Record<string, WorkflowDefinition>,
-  ) => Record<string, WorkflowDefinition> | Promise<Record<string, WorkflowDefinition>>
-  tool?: (
-    tools: Record<string, ToolDefinition>,
-  ) => Record<string, ToolDefinition> | Promise<Record<string, ToolDefinition>>
-}
-
-export type HyperDesignerPluginFactory = (
-  ctx?: HyperDesignerPluginContext,
-) => HyperDesignerPluginHooks | Promise<HyperDesignerPluginHooks>
-
-interface BrandedHyperDesignerPluginFactory extends HyperDesignerPluginFactory {
-  [HYPER_DESIGNER_PLUGIN_BRAND]: true
-}
-
-export interface HyperDesignerPluginRegistrations {
-  agent: Record<string, AgentConfig>
-  workflow: Record<string, WorkflowDefinition>
-  tool: Record<string, ToolDefinition>
-}
-
-export interface BuildPluginRegistrationsOptions {
-  plugins: HyperDesignerPluginFactory[]
-  ctx?: HyperDesignerPluginContext
-}
-
-export interface PluginDirectoryLoadOptions {
+export interface LoadOptions {
   directory: string
   pattern?: string
 }
 
-export interface DefaultPluginLoadOptions {
+export interface PipelineOptions {
   rootDirectory?: string
   builtinDirectory?: string
   userDirectory?: string
 }
 
-function isPluginFactory(
-  input: HyperDesignerPluginFactory | HyperDesignerPluginHooks,
-): input is HyperDesignerPluginFactory {
+function isFactory(input: PluginFactory | Record<string, unknown>): input is PluginFactory {
   return typeof input === 'function'
 }
 
-export function defineHyperDesignerPlugin(
-  input: HyperDesignerPluginFactory | HyperDesignerPluginHooks,
-): HyperDesignerPluginFactory {
-  const factory: HyperDesignerPluginFactory = isPluginFactory(input)
-    ? input
-    : async () => input
-  const brandedFactory = factory as BrandedHyperDesignerPluginFactory
-  brandedFactory[HYPER_DESIGNER_PLUGIN_BRAND] = true
-  return brandedFactory
+export function definePlugin(input: PluginFactory | Record<string, unknown>): PluginFactory {
+  const factory: PluginFactory = isFactory(input) ? input : async () => input
+  const branded = factory as Branded
+  branded[BRAND] = true
+  return branded
 }
 
-export function isHyperDesignerPluginFactory(
-  value: unknown,
-): value is HyperDesignerPluginFactory {
-  if (typeof value !== 'function') {
-    return false
-  }
-  const brandedValue = value as Partial<BrandedHyperDesignerPluginFactory>
-  return brandedValue[HYPER_DESIGNER_PLUGIN_BRAND] === true
+export function isPluginFactory(value: unknown): value is PluginFactory {
+  if (typeof value !== 'function') return false
+  return (value as Partial<Branded>)[BRAND] === true
 }
 
-export async function loadPluginsFromDirectory(
-  options: PluginDirectoryLoadOptions,
-): Promise<HyperDesignerPluginFactory[]> {
-  const absoluteDirectory = resolve(options.directory)
-  if (!existsSync(absoluteDirectory)) {
-    return []
-  }
+export async function loadPlugins(opts: LoadOptions): Promise<PluginFactory[]> {
+  const dir = resolve(opts.directory)
+  if (!existsSync(dir)) return []
 
-  const pattern = options.pattern ?? '**/*.ts'
+  const pattern = opts.pattern ?? '**/*.ts'
   const files = glob
     .sync(pattern, {
-      cwd: absoluteDirectory,
+      cwd: dir,
       absolute: true,
       nodir: true,
       ignore: ['**/node_modules/**', '**/*.test.ts', '**/*.spec.ts'],
     })
-    .filter(filePath => !filePath.includes('/hooks/'))
-    .filter(filePath => !filePath.includes('\\hooks\\'))
-    .filter(filePath => !filePath.endsWith('.d.ts'))
-    .sort((left, right) => left.localeCompare(right))
+    .filter(f => !f.includes('/hooks/'))
+    .filter(f => !f.endsWith('.d.ts'))
+    .sort()
 
-  const plugins: HyperDesignerPluginFactory[] = []
-  for (const filePath of files) {
-    const moduleExports: unknown = await import(pathToFileURL(filePath).href)
-    const record = moduleExports as Record<string, unknown>
-    for (const exportedValue of Object.values(record)) {
-      if (isHyperDesignerPluginFactory(exportedValue)) {
-        const pluginDirectory = dirname(filePath)
-        const pluginFactory: HyperDesignerPluginFactory = async ctx => exportedValue({
-          ...(ctx ?? {}),
-          path: pluginDirectory,
-        })
-        const brandedFactory = pluginFactory as BrandedHyperDesignerPluginFactory
-        brandedFactory[HYPER_DESIGNER_PLUGIN_BRAND] = true
-        plugins.push(brandedFactory)
+  const plugins: PluginFactory[] = []
+  for (const file of files) {
+    const mod: unknown = await import(pathToFileURL(file).href)
+    for (const value of Object.values(mod as Record<string, unknown>)) {
+      if (isPluginFactory(value)) {
+        const dir = dirname(file)
+        const factory: PluginFactory = async ctx => value({ ...(ctx ?? {}), path: dir })
+        const branded = factory as Branded
+        branded[BRAND] = true
+        plugins.push(branded)
       }
     }
   }
-
   return plugins
 }
 
-export async function loadDefaultPluginPipeline(
-  options: DefaultPluginLoadOptions = {},
-): Promise<HyperDesignerPluginFactory[]> {
-  const rootDirectory = resolve(options.rootDirectory ?? DEFAULT_PLUGIN_ROOT)
-  const builtinDirectory = resolve(
-    rootDirectory,
-    options.builtinDirectory ?? 'src/builtin',
-  )
-  const userDirectory = resolve(
-    rootDirectory,
-    options.userDirectory ?? 'plugins',
-  )
+export async function loadDefaultPlugins(opts: PipelineOptions = {}): Promise<PluginFactory[]> {
+  const root = resolve(opts.rootDirectory ?? process.cwd())
+  const builtin = resolve(root, opts.builtinDirectory ?? 'src/builtin')
+  const user = resolve(root, opts.userDirectory ?? 'plugins')
 
-  const builtinPlugins = await loadPluginsFromDirectory({
-    directory: builtinDirectory,
-    pattern: '**/plugin.ts',
-  })
-  const userPlugins = await loadPluginsFromDirectory({
-    directory: userDirectory,
-  })
-
+  const builtinPlugins = await loadPlugins({ directory: builtin, pattern: '**/plugin.ts' })
+  const userPlugins = await loadPlugins({ directory: user })
   return [...builtinPlugins, ...userPlugins]
 }
 
-export async function buildPluginRegistrations(
-  pluginsOrOptions: HyperDesignerPluginFactory[] | BuildPluginRegistrationsOptions,
-): Promise<HyperDesignerPluginRegistrations> {
-  const options = Array.isArray(pluginsOrOptions)
-    ? { plugins: pluginsOrOptions }
-    : pluginsOrOptions
+export async function buildRegistrations(
+  input: PluginFactory[] | { plugins: PluginFactory[]; ctx?: PluginContext },
+): Promise<PluginRegistrations> {
+  const { plugins, ctx } = Array.isArray(input) ? { plugins: input, ctx: undefined } : input
 
   let agents: Record<string, AgentConfig> = {}
   let workflows: Record<string, WorkflowDefinition> = {}
   let tools: Record<string, ToolDefinition> = {}
 
-  for (const plugin of options.plugins) {
-    const hooks = await plugin(options.ctx)
-    if (hooks.agent) {
-      agents = await hooks.agent(agents)
-    }
-    if (hooks.workflow) {
-      workflows = await hooks.workflow(workflows)
-    }
-    if (hooks.tool) {
-      tools = await hooks.tool(tools)
-    }
+  for (const plugin of plugins) {
+    const hooks = await plugin(ctx)
+    if (hooks.agent) agents = await hooks.agent(agents)
+    if (hooks.workflow) workflows = await hooks.workflow(workflows)
+    if (hooks.tool) tools = await hooks.tool(tools)
   }
 
-  return {
-    agent: agents,
-    workflow: workflows,
-    tool: tools,
-  }
-}
-
-export function toAgentPluginRegistrations(
-  agents: Record<string, AgentConfig>,
-): AgentPluginRegistration[] {
-  return Object.entries(agents).map(([name, config]) => ({
-    name,
-    factory: () => config,
-  }))
-}
-
-export function toWorkflowPluginRegistrations(
-  workflows: Record<string, WorkflowDefinition>,
-): WorkflowPluginRegistration[] {
-  return Object.values(workflows).map(definition => ({
-    factory: () => definition,
-  }))
-}
-
-export function toToolPluginRegistrations(
-  tools: Record<string, ToolDefinition>,
-): ToolPluginRegistration[] {
-  return Object.entries(tools).map(([name, tool]) => ({
-    name,
-    factory: () => tool,
-  }))
+  return { agent: agents, workflow: workflows, tool: tools }
 }

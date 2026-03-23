@@ -1,6 +1,6 @@
 import type { WorkflowDefinition } from '../types'
 import type { WorkflowState } from '../state/types'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../utils/logger'
 import { getStageOrder } from '../stageOrder'
 
 export function forceAdvanceToNextSelectedStage(

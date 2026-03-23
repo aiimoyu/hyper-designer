@@ -1,5 +1,5 @@
 import type { PromptInjectionProvider } from '../types'
-import { resolveNextSelectedStage } from '../../workflows/core/stageOrder'
+import { resolveNextSelectedStage } from '../../workflows/stageOrder'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 export const nextStageInjectionProvider: PromptInjectionProvider = {

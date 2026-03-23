@@ -1,10 +1,6 @@
-import {
-  type MilestoneDefinition,
-  type StageFileItem,
-  type WorkflowDefinition,
-  summarizeHook,
-  workflowFilePrompt,
-} from '../../../sdk/contracts'
+import type { MilestoneDefinition, StageFileItem, WorkflowDefinition } from '../../../types'
+import { summarizeHook } from '../../../workflows/stageHooks'
+import { filePrompt as workflowFilePrompt } from '../../../workflows/utils'
 import { referenceSetupHook } from './hooks/referenceSetupHook'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'

@@ -10,7 +10,7 @@ import {
   hasUsingHyperDesignerTag,
 } from '../../../transform'
 import { HyperDesignerLogger } from '../../../utils/logger'
-import { workflowService } from '../../../workflows/core/service'
+import { workflowService } from '../../../workflows/service'
 import type { ToolContext, ToolDefinition, ToolParamsSchema } from '../../../tools/types'
 import type { PlatformCapabilities } from '../../capabilities/types'
 import type {

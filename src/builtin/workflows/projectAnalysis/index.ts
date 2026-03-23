@@ -1,7 +1,8 @@
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
-
-import { type StageFileItem, type WorkflowDefinition, summarizeHook, workflowFilePrompt } from '../../../sdk/contracts'
+import type { StageFileItem, WorkflowDefinition } from '../../../types'
+import { summarizeHook } from '../../../workflows/stageHooks'
+import { filePrompt as workflowFilePrompt } from '../../../workflows/utils'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 

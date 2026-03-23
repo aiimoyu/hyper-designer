@@ -1,6 +1,6 @@
-export type { InjectionConfig } from '../workflows/core/types'
-import type { InjectionConfig, WorkflowDefinition, WorkflowStageDefinition } from '../workflows/core/types'
-import type { WorkflowState } from '../workflows/core/state/types'
+export type { InjectionConfig } from '../workflows/types'
+import type { InjectionConfig, WorkflowDefinition, WorkflowStageDefinition } from '../workflows/types'
+import type { WorkflowState } from '../workflows/state/types'
 
 export interface PromptTransformWorkflowContext {
   workflow: WorkflowDefinition | null

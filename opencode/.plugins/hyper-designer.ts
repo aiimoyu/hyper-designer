@@ -1,11 +1,10 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
-import type { ToolDefinition } from '../../src/tools/types'
+import type { ToolDefinition } from '../../src/types'
 import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import {
-  bootstrapPluginRegistries,
-  createHyperAgent,
+  bootstrapSDK,
   initLogger,
   sdk,
   workflowService,
@@ -22,7 +21,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const HD_PACKAGE_ROOT = resolve(__dirname, '../..')
 
 export const HyperDesignerPlugin: Plugin = async (ctx) => {
-  // Initialize logger - respects HYPER_DESIGNER_LOG_PERSIST env var
   initLogger()
 
   sdk.agent.plugins.clear()
@@ -34,17 +32,17 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   if (process.env.HD_PLUGINS_DIR) {
     pluginDirectories.push(...process.env.HD_PLUGINS_DIR.split(':').filter(Boolean))
   }
-  await bootstrapPluginRegistries({
+  await bootstrapSDK({
     pluginDirectories,
     rootDirectory: HD_PACKAGE_ROOT,
   })
 
   const platformCapabilities = createOpenCodePlatformCapabilities(ctx)
 
-  const agents = await sdk.agent.createAll()
+  const agents = await sdk.agent.create()
   const mappedAgents = buildOpenCodeMappedAgents({
     agents,
-    hyperAgent: createHyperAgent(),
+    hyperAgent: {},
   }) as Record<string, OpencodeAgentConfig & { hidden?: boolean }>
   const agentHandler = async (config: Record<string, unknown>) => {
     config.agent = {
@@ -52,8 +50,6 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
       ...mappedAgents,
     }
   }
-
-
 
   const pluginToolDefinitions = await sdk.tool.plugins.getAll()
   const pluginTools = Object.fromEntries(

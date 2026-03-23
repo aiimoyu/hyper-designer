@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AgentRuntimeConfig } from '../../../workflows/core/agentConfig'
+import type { AgentRuntimeConfig } from '../../../workflows/agentConfig'
 import type { HDConfig } from '../../../config/loader'
 
 describe('resolveAgentConfig', () => {
@@ -16,7 +16,7 @@ describe('resolveAgentConfig', () => {
     vi.doMock('../../../config/loader', () => ({
       loadHDConfig: () => config,
     }))
-    return import('../../../workflows/core/agentConfig')
+    return import('../../../workflows/agentConfig')
   }
 
   it('returns agent-specific model when configured', async () => {

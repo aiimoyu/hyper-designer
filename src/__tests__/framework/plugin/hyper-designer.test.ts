@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import type { PluginInput, ToolContext } from "@opencode-ai/plugin"
 import { existsSync, rmSync } from "fs"
 import { join } from "path"
-import { workflowService } from "../../../workflows/core/service"
+import { workflowService } from "../../../workflows/service"
 
 vi.mock("@opencode-ai/plugin", () => {
   const tool = (definition: Record<string, unknown>) => definition

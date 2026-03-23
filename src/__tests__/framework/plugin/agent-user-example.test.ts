@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { bootstrapSDK, resetSDKBootstrapForTest, sdk } from '../../../sdk'
+import { bootstrapSDK, resetSDKForTest, sdk } from '../../../sdk'
 
 describe('agent user example', () => {
   it('loads UserExampleAgent from user plugin bootstrap', async () => {
     sdk.agent.plugins.clear()
-    resetSDKBootstrapForTest()
-    await bootstrapSDK()
+    resetSDKForTest()
+    await bootstrapSDK({ plugins: [] })
 
     const agents = await sdk.agent.plugins.create()
 

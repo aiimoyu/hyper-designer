@@ -1,4 +1,4 @@
-import type { ToolPluginRegistration } from '../../sdk/contracts'
+import type { ToolPluginRegistration } from '../../types'
 import { createDocumentReviewToolDefinitions } from './documentReview/toolDefinitions'
 import { createHdCoreToolDefinitions } from './hdCoreTools'
 

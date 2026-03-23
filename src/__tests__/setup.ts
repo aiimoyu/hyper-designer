@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, beforeEach } from 'vitest'
 
 process.env.HD_STRICT_ERRORS = "1"
 process.env.HD_PROJECT_CONFIG_PATH = ".test-temp/config-tests/hd-config.json"
@@ -24,5 +24,21 @@ vi.mock('@opencode-ai/plugin', () => {
   return { tool }
 })
 
-const { bootstrapSDK } = await import('../sdk/bootstrap')
-await bootstrapSDK({ rootDirectory: process.cwd() })
+const { BUILTIN_PLUGIN } = await import('../builtin/plugin')
+const { buildRegistrations } = await import('../plugin')
+const { registerAgentsFromRecord, registerWorkflowsFromRecord, registerToolsFromRecord, markBootstrapped, clearAllForTest } = await import('../plugin/registry')
+
+async function registerBuiltinPlugins() {
+  clearAllForTest()
+  const registrations = await buildRegistrations([BUILTIN_PLUGIN])
+  registerAgentsFromRecord(registrations.agent)
+  registerWorkflowsFromRecord(registrations.workflow)
+  registerToolsFromRecord(registrations.tool)
+  markBootstrapped()
+}
+
+await registerBuiltinPlugins()
+
+beforeEach(async () => {
+  await registerBuiltinPlugins()
+})

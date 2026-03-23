@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
-import { bootstrapSDK, resetSDKBootstrapForTest, sdk } from '../../../sdk'
-import { getWorkflowDefinition } from '../../../workflows/core'
+import { bootstrapSDK, resetSDKForTest, sdk } from '../../../sdk'
+import { getWorkflowDefinition } from '../../../workflows'
 
 describe('sdk facade', () => {
   it('loads user plugins only after explicit bootstrap', async () => {
     sdk.workflow.plugins.clear()
     sdk.agent.plugins.clear()
-    resetSDKBootstrapForTest()
+    resetSDKForTest()
 
-    await bootstrapSDK()
+    await bootstrapSDK({ plugins: [] })
 
     expect(sdk.workflow.plugins.list()).toContain('classic')
     expect(sdk.workflow.plugins.list()).toContain('projectAnalysis')

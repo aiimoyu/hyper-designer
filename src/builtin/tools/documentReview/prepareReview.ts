@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
-import { HyperDesignerLogger } from '../../../sdk/runtime'
+import { HyperDesignerLogger } from '../../../utils/logger'
 
 import type { DocumentReviewParams, PrepareReviewResult } from './types'
 

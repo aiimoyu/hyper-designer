@@ -4,7 +4,7 @@ import * as referenceSetupHookModule from '../../../../builtin/workflows/classic
 import { createReferenceSetupHook, referenceSetupHook } from '../../../../builtin/workflows/classic/hooks/referenceSetupHook'
 import { createMockAdapter } from '../../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../../utils/logger'
-import type { WorkflowDefinition } from '../../../../workflows/core/types'
+import type { WorkflowDefinition } from '../../../../workflows/types'
 
 const stubWorkflow: WorkflowDefinition = {
   id: 'test',

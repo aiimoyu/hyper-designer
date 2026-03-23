@@ -8,7 +8,7 @@
 import * as fs from 'fs'
 import { join } from 'path'
 import type { StageHookFn } from '../types'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 export function pathExists(path: string): boolean {
   return fs.existsSync(path)

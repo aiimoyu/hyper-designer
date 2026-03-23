@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { getHandoverAgent, getHandoverPrompt } from '../../../workflows/core'
+import { getHandoverAgent, getHandoverPrompt } from '../../../workflows'
 import { classicWorkflow } from '../../../builtin/workflows/classic'
-import type { WorkflowDefinition } from '../../../workflows/core'
+import type { WorkflowDefinition } from '../../../workflows'
 
 describe("workflow/handover", () => {
   describe("getHandoverAgent", () => {

@@ -1,4 +1,4 @@
-import { loadHDConfig } from '../../config/loader'
+import { loadHDConfig } from '../config/loader'
 
 interface ModelConfig {
   providerID: string

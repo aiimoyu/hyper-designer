@@ -9,9 +9,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { existsSync, rmSync } from "fs"
 import { join } from "path"
-import { executeWorkflowHandover } from "../../../workflows/core"
-import { readWorkflowStateFile, writeWorkflowStateFile } from "../../../workflows/core/state"
-import type { WorkflowDefinition, StageHookFn, StageHook, WorkflowPlatformAdapter } from "../../../workflows/core"
+import { executeWorkflowHandover } from "../../../workflows"
+import { readWorkflowStateFile, writeWorkflowStateFile } from "../../../workflows/state"
+import type { WorkflowDefinition, StageHookFn, StageHook, WorkflowPlatformAdapter } from "../../../workflows"
 import { createMockAdapter } from "../../helpers/mockAdapter"
 import type { SendPromptParams, SendPromptResult } from "../../../platformBridge/capabilities/types"
 

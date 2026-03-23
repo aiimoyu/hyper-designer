@@ -7,7 +7,7 @@
  */
 
 import type { WorkflowDefinition } from "../types";
-import { HyperDesignerLogger } from "../../../utils/logger";
+import { HyperDesignerLogger } from "../../utils/logger";
 
 export function getHandoverAgent(definition: WorkflowDefinition, stage: string): string | null {
   const stageConfig = definition.stages[stage];

@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-import { bootstrapSDK, resetSDKBootstrapForTest, sdk } from '../../../sdk'
+import { bootstrapSDK, resetSDKForTest, sdk } from '../../../sdk'
 import { BUILTIN_PLUGIN } from '../../../builtin/plugin'
-import { defineHyperDesignerPlugin } from '../../../plugin'
+import { definePlugin } from '../../../plugin'
+import type { AgentConfig, WorkflowDefinition } from '../../../types'
 
 describe('plugin registration decoupling', () => {
   it('agent registry should not import top-level user plugins directly', () => {
@@ -15,7 +16,7 @@ describe('plugin registration decoupling', () => {
   })
 
   it('workflow registry should not import top-level user plugins directly', () => {
-    const filePath = join(process.cwd(), 'src', 'workflows', 'core', 'pluginRegistry.ts')
+    const filePath = join(process.cwd(), 'src', 'workflows', 'pluginRegistry.ts')
     const content = readFileSync(filePath, 'utf-8')
 
     expect(content).not.toContain("../../../plugins/workflows")
@@ -25,7 +26,7 @@ describe('plugin registration decoupling', () => {
     expect(sdk).toHaveProperty('tool')
     expect(sdk.tool).toHaveProperty('plugins')
     expect(typeof sdk.tool.plugins.register).toBe('function')
-    expect(typeof sdk.tool.plugins.registerMany).toBe('function')
+    expect(typeof sdk.tool.plugins.register).toBe('function')
     expect(typeof sdk.tool.plugins.list).toBe('function')
     expect(typeof sdk.tool.plugins.getAll).toBe('function')
   })
@@ -34,13 +35,13 @@ describe('plugin registration decoupling', () => {
     sdk.agent.plugins.clear()
     sdk.workflow.plugins.clear()
     sdk.tool.plugins.clear()
-    resetSDKBootstrapForTest()
+    resetSDKForTest()
 
     await bootstrapSDK({
       plugins: [
         BUILTIN_PLUGIN,
-        defineHyperDesignerPlugin({
-          agent: async agents => {
+        definePlugin({
+          agent: async (agents: Record<string, AgentConfig>) => {
             const next = { ...(agents ?? {}) }
             delete next.HCollector
             next.HArchitect = {
@@ -51,7 +52,7 @@ describe('plugin registration decoupling', () => {
             }
             return next
           },
-          workflow: async workflows => ({
+          workflow: async (workflows: Record<string, WorkflowDefinition>) => ({
             ...(workflows ?? {}),
             classic: {
               id: 'classic',
@@ -84,7 +85,7 @@ describe('plugin registration decoupling', () => {
 
   it('builtin tools are registered via plugin pipeline', async () => {
     sdk.tool.plugins.clear()
-    resetSDKBootstrapForTest()
+    resetSDKForTest()
 
     await bootstrapSDK({
       plugins: [BUILTIN_PLUGIN],

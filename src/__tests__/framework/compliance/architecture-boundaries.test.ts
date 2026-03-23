@@ -28,7 +28,7 @@ describe('architecture boundaries', () => {
     expect(workflowsIndexContent).not.toContain('ToolRegistry')
   })
 
-  it('tool contracts live under src/tools, not workflows/core', () => {
+  it('tool contracts live under src/tools, not workflows', () => {
     const workflowToolTypesPath = join(SRC_DIR, 'workflows', 'core', 'toolTypes.ts')
     const toolsTypesPath = join(SRC_DIR, 'tools', 'types.ts')
 
@@ -46,19 +46,19 @@ describe('architecture boundaries', () => {
     const prepareReviewContent = readFileSync(join(SRC_DIR, 'builtin', 'tools', 'documentReview', 'prepareReview.ts'), 'utf-8')
     const finalizeReviewContent = readFileSync(join(SRC_DIR, 'builtin', 'tools', 'documentReview', 'finalizeReview.ts'), 'utf-8')
 
-    expect(hdCoreToolsContent).toContain("from '../../sdk/runtime'")
+    expect(hdCoreToolsContent).toContain("from '../../types'")
     expect(hdCoreToolsContent).not.toContain("from '../../tools/types'")
-    expect(hdCoreToolsContent).not.toContain("from '../../workflows/core/service/WorkflowService'")
+    expect(hdCoreToolsContent).not.toContain("from '../../workflows/service/WorkflowService'")
 
-    expect(docReviewDefsContent).toContain("from '../../../sdk/runtime'")
+    expect(docReviewDefsContent).toContain("from '../../../types'")
     expect(docReviewDefsContent).not.toContain("from '../../../tools/types'")
     expect(docReviewDefsContent).not.toContain("from '../../../utils/logger'")
-    expect(docReviewDefsContent).not.toContain("from '../../../workflows/core/service/WorkflowService'")
+    expect(docReviewDefsContent).not.toContain("from '../../../workflows/service/WorkflowService'")
 
-    expect(prepareReviewContent).toContain("from '../../../sdk/runtime'")
+    expect(prepareReviewContent).toContain("from '../../../types'")
     expect(prepareReviewContent).not.toContain("from '../../../utils/logger'")
 
-    expect(finalizeReviewContent).toContain("from '../../../sdk/runtime'")
+    expect(finalizeReviewContent).toContain("from '../../../types'")
     expect(finalizeReviewContent).not.toContain("from '../../../utils/logger'")
   })
 })

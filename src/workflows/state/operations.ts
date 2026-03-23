@@ -19,7 +19,7 @@ import type {
 } from "./types";
 import { readWorkflowStateFile, writeWorkflowStateFile } from "./persistence";
 import { getWorkflowDefinition } from "../registry";
-import { HyperDesignerLogger } from "../../../utils/logger";
+import { HyperDesignerLogger } from "../../utils/logger";
 import {
   GATE_MILESTONE_KEY,
   GATE_PASS_THRESHOLD,

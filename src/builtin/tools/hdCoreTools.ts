@@ -1,5 +1,5 @@
-import type { ToolDefinition } from '../../sdk/runtime'
-import { workflowService } from '../../sdk/runtime'
+import type { ToolDefinition } from '../../types'
+import { workflowService } from '../../workflows/service'
 
 export function createHdCoreToolDefinitions(): ToolDefinition[] {
   return [

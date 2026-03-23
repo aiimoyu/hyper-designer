@@ -4,7 +4,7 @@ import * as glob from 'glob'
 
 import type { WorkflowDefinition, StageFileItem } from '../types'
 import type { WorkflowState } from '../state/types'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../utils/logger'
 import type { ArtifactValidationResult, ResolvedInputs } from './types'
 import { ArtifactResolutionError } from './types'
 

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearHook } from '../../../workflows/core/stageHooks/clearHook'
+import { clearHook } from '../../../workflows/stageHooks/clearHook'
 import { createMockAdapter } from '../../helpers/mockAdapter'
 import { HyperDesignerLogger } from '../../../utils/logger'
-import type { StageHookFn } from '../../../workflows/core/types'
-import type { WorkflowDefinition } from '../../../workflows/core/types'
+import type { StageHookFn } from '../../../workflows/types'
+import type { WorkflowDefinition } from '../../../workflows/types'
 
 const stubWorkflow: WorkflowDefinition = {
   id: 'test',

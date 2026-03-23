@@ -16,7 +16,7 @@ import type {
   WorkflowStage,
   WorkflowState,
 } from './types'
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 /** Path to the workflow state file */
 const WORKFLOW_STATE_PATH = join(process.cwd(), '.hyper-designer', 'workflow_state.json')

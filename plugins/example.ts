@@ -1,5 +1,5 @@
-import type { AgentConfig, WorkflowDefinition } from '../src/sdk/contracts'
-import { defineHyperDesignerPlugin } from '../src/plugin'
+import type { AgentConfig, WorkflowDefinition } from '../src/types'
+import { definePlugin } from '../src/plugin'
 import { resolve } from 'path'
 
 const userExampleAgent: AgentConfig = {
@@ -26,7 +26,7 @@ const userExampleWorkflow: WorkflowDefinition = {
   },
 }
 
-export const EXAMPLE_USER_PLUGIN = defineHyperDesignerPlugin(async ctx => {
+export const EXAMPLE_USER_PLUGIN = definePlugin(async ctx => {
   const workflowWithBasePath: WorkflowDefinition = ctx?.path
     ? {
       ...userExampleWorkflow,

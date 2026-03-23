@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { resolve } from 'path'
 import { skillContentInjectionProvider } from '../../../transform/injections/skillContentInjection'
-import type { InjectionConfig } from '../../../workflows/core/types'
+import type { InjectionConfig } from '../../../workflows/types'
 
 vi.mock('fs/promises', () => ({
   readFile: vi.fn(),

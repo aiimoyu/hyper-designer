@@ -9,7 +9,8 @@
 
 import { existsSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { type StageHookFn, HyperDesignerLogger } from '../../../../sdk/contracts'
+import type { StageHookFn } from '../../../../types'
+import { HyperDesignerLogger } from '../../../../utils/logger'
 
 /** REFERENCE.md 文件名 */
 const REFERENCE_FILENAME = 'REFERENCE.md'

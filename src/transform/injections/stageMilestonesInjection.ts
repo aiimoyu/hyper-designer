@@ -1,5 +1,5 @@
 import type { PromptInjectionProvider } from '../types'
-import type { MilestoneDefinition } from '../../workflows/core/types'
+import type { MilestoneDefinition } from '../../workflows/types'
 import { HyperDesignerLogger } from '../../utils/logger'
 
 function getMilestoneId(milestone: string | MilestoneDefinition): string {
