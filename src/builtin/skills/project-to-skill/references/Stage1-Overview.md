@@ -5,9 +5,11 @@
 **核心目标：** 建立项目的基础认知，生成项目概览、系统架构、操作指南和开发纲领。
 
 **输入依赖：**
+
 - 用户提供的目标项目绝对路径
 
 **输出文件：**
+
 - `Overview.md` — 项目概览
 - `Architecture.md` — 系统架构
 - `Guides.md` — 操作指南
@@ -20,20 +22,21 @@
 ### 1.1 收集项目信息
 
 向用户确认：
+
 - **目标项目路径**：项目的绝对路径
 - **项目领域**：项目的业务领域和用途（可选）
 - **Skill名称**：最终生成的技能名称
 
-### 1.2 初始化 GitNexus（可选）
+### 1.2 初始化 GitNexus
 
-如果项目较大或需要深度分析，可以初始化 GitNexus：
+**尽可能使用 GitNexus** 进行深度分析：
 
 ```bash
-gitnexus analyze <project-path>
-gitnexus status  # 验证索引成功
+npx gitnexus analyze <project-path>
+npx gitnexus status  # 验证索引成功
 ```
 
-**注意**：GitNexus 是可选的辅助工具。即使不使用，本工作流也可以正常执行。
+**注意**：GitNexus 提供更强大的代码分析能力，应优先使用。
 
 ### 1.3 并行探索
 
@@ -113,6 +116,7 @@ graph TD
 ```
 
 ### 目录说明
+
 | 目录 | 用途 | 关键文件 |
 |------|------|----------|
 | src/ | 源代码 | {files} |
@@ -121,19 +125,23 @@ graph TD
 ## 入口点
 
 ### 主入口
+
 - 文件: `{entry_file}`
 - 命令: `{run_command}`
 - 描述: {描述}
 
 ### 其他入口
+
 | 入口 | 命令 | 用途 |
 |------|------|------|
 | {entry} | {command} | {purpose} |
 
 ## 配置文件
+
 | 文件 | 用途 | 格式 |
 |------|------|------|
 | {file} | {purpose} | {format} |
+
 ```
 
 ---
@@ -173,6 +181,7 @@ graph TD
 ```
 
 ### 层次说明
+
 | 层次 | 职责 | 关键组件 |
 |------|------|----------|
 | {layer} | {responsibility} | {components} |
@@ -180,6 +189,7 @@ graph TD
 ## 设计模式
 
 ### 模式: {模式名称}
+
 - **用途**: {使用位置}
 - **原因**: {为什么使用}
 - **文件**: {相关文件}
@@ -206,9 +216,11 @@ graph LR
 ```
 
 ## 外部集成
+
 | 服务 | 协议 | 用途 | 文件 |
 |------|------|------|------|
 | {service} | {protocol} | {purpose} | {files} |
+
 ```
 
 ---
@@ -239,6 +251,7 @@ type: operational-guides
 ```
 
 ### 运行
+
 ```bash
 {run_command}
 ```
@@ -246,6 +259,7 @@ type: operational-guides
 ## 开发环境
 
 ### 环境设置
+
 ```bash
 {setup_commands}
 ```
@@ -253,11 +267,13 @@ type: operational-guides
 ## 构建与部署
 
 ### 构建
+
 ```bash
 {build_command}
 ```
 
 ### 部署
+
 ```bash
 {deploy_command}
 ```
@@ -265,11 +281,13 @@ type: operational-guides
 ## 测试
 
 ### 运行所有测试
+
 ```bash
 {test_command}
 ```
 
 ### 运行特定测试
+
 ```bash
 {specific_test_command}
 ```
@@ -277,11 +295,13 @@ type: operational-guides
 ## 配置
 
 ### 环境变量
+
 | 变量 | 必需 | 默认值 | 描述 |
 |------|------|--------|------|
 | {var} | {yes/no} | {default} | {description} |
 
 ### 配置文件
+
 | 文件 | 格式 | 用途 |
 |------|------|------|
 | {file} | {format} | {purpose} |
@@ -289,6 +309,7 @@ type: operational-guides
 ## 常见任务
 
 ### 任务: {任务名称}
+
 ```bash
 {commands}
 ```
@@ -296,7 +317,9 @@ type: operational-guides
 ## 故障排除
 
 ### 问题: {问题描述}
+
 **解决方案**: {solution}
+
 ```
 
 ---
@@ -312,26 +335,31 @@ type: operational-guides
 1. **分析代码模式**：识别项目中已有的设计模式和约定
 2. **向用户呈现发现**：
    ```
+
    根据代码分析，我发现了以下设计模式和约定：
 
    **检测到的模式：**
+
    1. {pattern} — 用于 {位置}
    2. {pattern} — 用于 {位置}
 
    **检测到的约定：**
-   - {convention}
-   - {convention}
+
+- {convention}
+- {convention}
 
    **问题：**
+
    1. 这些模式是有意的吗？应该记录为原则吗？
    2. 有哪些不成文的规则新开发者应该知道？
    3. 冲突时应该优先考虑什么？
    4. 有哪些"永远不要这样做"的规则？
    5. 新增功能/模块时应该遵循什么流程？
    6. 项目对工具/框架有什么偏好？（如包管理器、测试框架等）
+
    ```
 
-3. **综合用户回答**：基于用户回答生成 Principles.md
+1. **综合用户回答**：基于用户回答生成 Principles.md
 
 #### 输出模板
 
@@ -406,6 +434,7 @@ type: development-principles
 生成 Architecture.md 后，**必须委派验证任务**：
 
 **任务内容：**
+
 - 验证所有主要组件是否已识别
 - 检查层次描述是否与实际代码组织匹配
 - 确认设计模式是否正确识别
@@ -428,6 +457,7 @@ type: development-principles
 ## 反模式
 
 **禁止：**
+
 - 跳过任何分析维度
 - 未分析实际源代码就生成输出
 - 使用绝对路径
@@ -435,6 +465,7 @@ type: development-principles
 - 未与用户确认就生成 Principles.md
 
 **应该：**
+
 - 系统性地分析所有维度
 - 生成人类可读的文档
 - 建立清晰的目录结构说明

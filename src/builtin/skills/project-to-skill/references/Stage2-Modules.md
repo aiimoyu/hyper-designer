@@ -29,10 +29,10 @@
 
 ```bash
 # 查找所有功能集群
-gitnexus cypher "MATCH (c:Community) RETURN c.heuristicLabel, c.size ORDER BY c.size DESC"
+npx gitnexus cypher "MATCH (c:Community) RETURN c.heuristicLabel, c.size ORDER BY c.size DESC"
 
 # 查找模块边界
-gitnexus cypher "MATCH (f:File)-[:MEMBER_OF]->(c:Community) RETURN c.heuristicLabel, collect(f.name) LIMIT 20"
+npx gitnexus cypher "MATCH (f:File)-[:MEMBER_OF]->(c:Community) RETURN c.heuristicLabel, collect(f.name) LIMIT 20"
 ```
 
 ### 2.2 模块粒度确认

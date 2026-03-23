@@ -1,5 +1,15 @@
 # 阶段 4: SKILL.md 和洞察生成
 
+## 重要说明
+
+本阶段是 **project-to-skill** skill 的一部分。project-to-skill 是一个将项目代码库转化为可复用 skill 的完整工作流，包含4个阶段：
+1. 项目概览分析
+2. 模块分析
+3. 详细模块分析
+4. SKILL.md 生成（当前阶段）
+
+在使用本阶段提示词时，请确保理解整个 skill 的上下文和目标。
+
 ## 任务
 
 生成最终的 SKILL.md 和 Insights.md。

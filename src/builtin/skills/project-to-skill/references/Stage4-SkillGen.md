@@ -136,16 +136,16 @@ graph TD
 
 ```bash
 # 索引项目
-gitnexus analyze <project-path>
+npx gitnexus analyze <project-path>
 
 # 按概念查找代码
-gitnexus query "auth validation" --repo {repo}
+npx gitnexus query "auth validation" --repo {repo}
 
 # 获取符号的 360° 视图
-gitnexus context validateUser --repo {repo}
+npx gitnexus context validateUser --repo {repo}
 
 # 更改前检查影响
-gitnexus impact FunctionName --direction upstream --repo {repo}
+npx gitnexus impact FunctionName --direction upstream --repo {repo}
 ```
 
 ## 参考文件

@@ -61,13 +61,13 @@
 
 ```bash
 # 查找涉及模块的执行流
-gitnexus query "{ModuleName} execution flow" --repo <repo>
+npx gitnexus query "{ModuleName} execution flow" --repo <repo>
 
 # 获取入口点上下文
-gitnexus context {MainClass} --repo <repo>
+npx gitnexus context {MainClass} --repo <repo>
 
 # 检查更改影响
-gitnexus impact {ExportedSymbol} --direction upstream --repo <repo>
+npx gitnexus impact {ExportedSymbol} --direction upstream --repo <repo>
 ```
 
 ### 3.4 结果收集

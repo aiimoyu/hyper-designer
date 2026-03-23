@@ -123,11 +123,11 @@ project: {project_name}
 GitNexus 是可选的代码智能工具：
 
 ```bash
-gitnexus analyze <project-path>     # 索引项目
-gitnexus query "concept" --repo r   # 查询执行流
-gitnexus context Symbol --repo r    # 获取符号上下文
-gitnexus impact Symbol --direction upstream --repo r  # 检查影响
-gitnexus status                     # 检查索引状态
+npx gitnexus analyze <project-path>     # 索引项目
+npx gitnexus query "concept" --repo r   # 查询执行流
+npx gitnexus context Symbol --repo r    # 获取符号上下文
+npx gitnexus impact Symbol --direction upstream --repo r  # 检查影响
+npx gitnexus status                     # 检查索引状态
 ```
 
 ## Multi-Agent Collaboration
