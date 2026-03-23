@@ -2,6 +2,7 @@ import type { WorkflowPluginRegistration } from '../../types'
 import { classicWorkflow } from './classic'
 import { liteWorkflow } from './lite'
 import { projectAnalysisWorkflow } from './projectAnalysis'
+import { projectToSkillWorkflow } from './projectToSkill'
 
 export const BUILTIN_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] = [
   {
@@ -12,5 +13,8 @@ export const BUILTIN_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] = [
   },
   {
     factory: () => liteWorkflow,
+  },
+  {
+    factory: () => projectToSkillWorkflow,
   },
 ]
