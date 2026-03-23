@@ -84,7 +84,7 @@ const DEFINITION: AgentDefinition = {
     agentStringPrompt('{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'),
   ],
   defaultPermission: {
-    bash: 'deny',
+    bash: 'allow',
     edit: 'allow',
     skill: 'allow',
     todoread: 'allow',
