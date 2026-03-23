@@ -41,6 +41,7 @@ const DEFINITION: AgentDefinition = {
   defaultTemperature: 0.4,
   promptGenerators: [
     agentFilePrompt(join(__dirname, "prompts", "identity.md")),
+    agentFilePrompt(join(__dirname, "prompts", "first-principles.md")),
     agentStringPrompt("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}"),
     agentFilePrompt(join(__dirname, "prompts", "step.md")),
     agentFilePrompt(join(__dirname, "prompts", "file.md")),

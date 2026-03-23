@@ -215,9 +215,9 @@ const SDD_PLAN_GENERATION_INPUTS: StageFileItem[] = [
 const SDD_PLAN_GENERATION_OUTPUTS: StageFileItem[] = [
   {
     id: 'SDD计划',
-    path: './dev-plan/*-dev-plan.md',
-    type: 'pattern',
-    description: 'SDD development plans with task waves, complexity ratings, and QA scenarios',
+    path: './dev-plan/',
+    type: 'folder',
+    description: 'SDD development plans folder, one plan file per module with task waves, complexity ratings, and QA scenarios',
   },
 ]
 

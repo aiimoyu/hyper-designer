@@ -34,6 +34,7 @@
 ```
 
 **关键交互节点**：
+
 1. **代码阅读确认修改位置**（P3内）：阅读代码后，明确每个任务要修改的文件路径、位置和内容
 2. **里程碑确认**（P3内）：使用 HD_TOOL_ASK_USER 确认里程碑时间节点是否符合预期
 3. **交互式修改**（P4）：文档生成后，调用 `hd_prepare_review` 和 `hd_finalize_review` 进行交互式修改
@@ -141,9 +142,18 @@ references/phase3-sdd-plan.md
 
 ### 5. 阶段交付物
 
+**输出目录**：`.hyper-designer/developmentPlan/`
+
+每个模块生成一个独立的开发计划文件，命名格式：`{模块名}-dev-plan.md`
+
 | 文件名 | 路径 | 格式要求 |
 | :--- | :--- | :--- |
-| **开发计划.md** | `.hyper-designer/developmentPlan/开发计划.md` | Markdown，**严格遵循 phase3-sdd-plan.md 中的完整模板** |
+| **{模块名}-dev-plan.md** | `.hyper-designer/developmentPlan/{模块名}-dev-plan.md` | Markdown，**严格遵循 phase3-sdd-plan.md 中的完整模板** |
+
+**命名规范**：
+
+- 模块名使用英文小写，多个单词用连字符连接
+- 例如：`feedback-service-dev-plan.md`、`user-auth-dev-plan.md`
 
 ---
 
@@ -171,8 +181,10 @@ references/phase3-sdd-plan.md
 # 文档审核任务
 
 ## 📁 审核目标
-请对以下文档进行全面的质量审核：
-**文件路径**: `.hyper-designer/developmentPlan/开发计划.md`
+请对以下目录中的所有开发计划文件进行全面的质量审核：
+**目录路径**: `.hyper-designer/developmentPlan/`
+
+每个文件命名格式：`{模块名}-dev-plan.md`
 
 ---
 

@@ -82,9 +82,9 @@ const SDD_PLAN_INPUTS: StageFileItem[] = [
 const SDD_PLAN_OUTPUTS: StageFileItem[] = [
   {
     id: 'developmentPlan',
-    path: './.hyper-designer/developmentPlan/开发计划.md',
-    type: 'file',
-    description: 'SDD development plan',
+    path: './.hyper-designer/developmentPlan/',
+    type: 'folder',
+    description: 'SDD development plans folder, one plan file per module',
   },
 ]
 

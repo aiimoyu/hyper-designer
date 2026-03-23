@@ -56,3 +56,4 @@ vitest.config.*.mjs
 
 # Git worktrees
 .worktrees/
+.gitnexus

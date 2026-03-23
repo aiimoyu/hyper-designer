@@ -46,7 +46,7 @@ Summarize your understanding of the user's idea in one sentence and ask for conf
 
 #### Round 2 — Scenario Mining (3–4 questions, presented together)
 
-Use a questioning tool to ask all relevant dimensions simultaneously when they are independent of each other. Focus on:
+Use a questioning tool to ask all relevant dimensions simultaneously when they are independent of each other. **注意**：必须通过提问工具以列表形式一次性呈现多个独立问题，而非在自然语言中直接列出多个问题，确保信息收集的完整性和效率。Focus on:
 
 - **Scale**: user volume, data volume, team size
 - **Core features**: the most essential 2–3 capabilities
@@ -169,6 +169,7 @@ Before finalizing the document, verify:
 **User**: "我想做一个实时监控系统"
 
 **Round 1**:
+
 ```
 我理解您想构建一个能对某类数据进行实时监控并及时预警的系统。
 这个方向理解正确吗？是哪个领域的监控？
@@ -187,6 +188,7 @@ Before finalizing the document, verify:
 ```
 
 **Round 3**:
+
 ```
 让我描述一个典型场景确认理解：
 
@@ -205,6 +207,7 @@ Before finalizing the document, verify:
 ## Anti-Patterns to Avoid
 
 **Don't**:
+
 - 跳过上下文收集、直接进入对话
 - 一次提问超过 4 个问题（工具并行提问时也应保持聚焦）
 - 在未收到用户回复前自行推进到下一轮
@@ -212,6 +215,7 @@ Before finalizing the document, verify:
 - 对"性能要好"、"用户体验佳"等模糊描述不加追问就接受
 
 **Do**:
+
 - 优先从现有上下文中提取信息，减少冗余提问
 - 能并行的问题合并在一轮中通过提问工具呈现
 - 每一轮结束都与用户确认理解
