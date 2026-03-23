@@ -94,21 +94,28 @@ function clearUnresolvedWorkflowPromptTokens(systemMessages: string[]): void {
 function buildPlaceholderResolvers(
   workflow: WorkflowDefinition | null,
   currentStage: string | null,
-): PlaceholderResolver[] {
+): { resolvers: PlaceholderResolver[]; isFallbackMode: boolean } {
+  const hasActiveStage = workflow !== null
+    && currentStage !== null
+    && workflow.stages[currentStage] !== undefined
+  const stageForBindings = hasActiveStage ? currentStage : null
   const promptBindings = loadPromptBindings({
     definition: workflow ?? undefined,
-    stage: currentStage,
+    stage: stageForBindings,
   })
 
   const resolvedBindings = resolvePromptBindingsForMode({
     bindings: promptBindings,
-    isFallbackMode: currentStage === null,
+    isFallbackMode: !hasActiveStage,
   })
 
-  return Object.keys(resolvedBindings).map(token => ({
+  return {
+    isFallbackMode: !hasActiveStage,
+    resolvers: Object.keys(resolvedBindings).map(token => ({
     token,
     resolve: () => resolvedBindings[token] ?? '',
-  }))
+    })),
+  }
 }
 
 function getCurrentStageContext(state: WorkflowState | null): string | null {
@@ -194,7 +201,7 @@ export async function transformSystemMessages(
 ): Promise<void> {
   const currentStage = getCurrentStageContext(state)
   const beforeLengths = systemMessages.map(item => item.length)
-  const placeholderResolvers = buildPlaceholderResolvers(workflow, currentStage)
+  const { resolvers: placeholderResolvers, isFallbackMode } = buildPlaceholderResolvers(workflow, currentStage)
 
   HyperDesignerLogger.debug('SystemTransform', 'placeholder resolvers prepared', {
     currentStage,
@@ -203,7 +210,7 @@ export async function transformSystemMessages(
 
   replacePlaceholders(systemMessages, placeholderResolvers)
 
-  if (currentStage === null) {
+  if (isFallbackMode) {
     clearUnresolvedWorkflowPromptTokens(systemMessages)
   }
 

@@ -5,6 +5,7 @@ import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import {
   bootstrapSDK,
+  createHyperAgent,
   initLogger,
   sdk,
   workflowService,
@@ -42,7 +43,7 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
   const agents = await sdk.agent.create()
   const mappedAgents = buildOpenCodeMappedAgents({
     agents,
-    hyperAgent: {},
+    hyperAgent: createHyperAgent(),
   }) as Record<string, OpencodeAgentConfig & { hidden?: boolean }>
   const agentHandler = async (config: Record<string, unknown>) => {
     config.agent = {
