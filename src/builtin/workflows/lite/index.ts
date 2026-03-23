@@ -104,7 +104,7 @@ export const liteWorkflow: WorkflowDefinition = {
       name: 'Requirement Scenario Analysis',
       description: 'Consolidate requirement analysis and scenario analysis',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementAnalysis.md')),
       },

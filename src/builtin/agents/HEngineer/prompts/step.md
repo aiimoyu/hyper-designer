@@ -8,10 +8,11 @@
    [P1] Planning           → Load skills, build TODO list
    [P2] Context Load       → Retrieve historical context & requirements
    [P3] Execution          → Execute step-by-step, Human-in-the-Loop (concept clarification)
-   [P4] Interactive Revision → User-driven document refinement (final draft editing)
-   [P5] HCritic Review     → Automated quality gate (max 3 retries)
-   [P6] Confirmation       → User authorization
-   [P7] Handover           → Trigger state transition
+   [P4] HCritic Initial Review → First automated quality gate with revision loop
+   [P5] Interactive Revision → User-driven document refinement (final draft editing)
+   [P6] HCritic Final Review → Second automated quality gate (max 3 retries)
+   [P7] Confirmation       → User authorization
+   [P8] Handover           → Trigger state transition
    ```
 
    **Mandatory Loop Rules:**
@@ -19,19 +20,23 @@
    ```
    P3 Execution ──failed/modified──▶ P3 Execution
         │
-        └──done──▶ P4 Interactive Revision ──modified──▶ P4 Interactive Revision
-                         │
-                    no changes
-                         │
-                  P5 HCritic Review ──FAIL──▶ P3 Execution
+        └──done──▶ P4 HCritic Initial Review ──FAIL──▶ P3 Execution
                          │
                        PASS
                          │
-                  P6 User Confirmation ──needs changes──▶ P3 Execution
+                  P5 Interactive Revision ──modified──▶ P5 Interactive Revision
+                         │
+                    no changes
+                         │
+                  P6 HCritic Final Review ──FAIL──▶ P3 Execution
+                         │
+                       PASS
+                         │
+                  P7 User Confirmation ──needs changes──▶ P3 Execution
                          │
                      confirmed
                          │
-                  P7 Handover (terminate)
+                  P8 Handover (terminate)
    ```
 
    **Mandatory Rule: After completing each TODO sub-task, you MUST synchronously update both the TODO list and the stage draft file.**
@@ -109,13 +114,27 @@
 
    **⚠️ P3 完成后必须进入 P4，不能跳过！**
 
+---
+
+### [P4] HCritic Initial Review
+
+   **🎯 Goal:** First quality gate — identify fundamental issues before user review.
+
+   **Actions:**
+
+   1. **Notify**: Announce to the user: `"Submitting to HCritic for initial review..."`
+   2. **Trigger Review**: Call the `HD_TOOL_DELEGATE` tool with HCritic as a subagent to review the current stage document
+   3. **Handle Result**:
+      - `FAIL` → Return to **[P3]** for corrections, then resubmit to this step
+      - `PASS` → Proceed to **[P5]**
+
    ---
 
-### [P4] Interactive Revision
+### [P5] Interactive Revision
 
    **🎯 Goal:** Enable user-driven document refinement through an annotation-driven review loop.
 
-   P4 的交互目的是让用户对已生成的完整文档进行最后修改。交互后进入 HCritic 审查。
+   P5 的交互目的是让用户对已生成的完整文档进行最后修改。交互后进入 HCritic 复审。
 
    **Review File Location:** `hd_prepare_review` creates a snapshot with the **same filename as the source document in the project root directory**. Always tell the user the exact path from the `reviewPath` field of the return value.
 
@@ -139,7 +158,7 @@
       - Options: `["Done editing", "No changes needed"]`
    3. **Finalize Review**: Call `hd_finalize_review` to retrieve the diff and clean up the snapshot
    4. **Check `canProceedToNextStep`** from the `hd_finalize_review` return value:
-      - `canProceedToNextStep === true` → **Exit P4**, proceed to **[P5]**
+      - `canProceedToNextStep === true` → **Exit P5**, proceed to **[P6]**
       - `canProceedToNextStep === false` → Process all changes (step 5), then **immediately return to step 1**
    5. **Process changes** (only when step 4 directs you to loop):
       - Read `hunks` and `unifiedDiff` to understand every change
@@ -153,42 +172,42 @@
 
    **Exit Condition:** `hd_finalize_review` returns `canProceedToNextStep === true`.
 
-   **Loop Rule:** P4 repeats until `canProceedToNextStep` is `true`.
+   **Loop Rule:** P5 repeats until `canProceedToNextStep` is `true`.
 
    ---
 
-### [P5] HCritic Review
+### [P6] HCritic Final Review
 
-   **🎯 Goal:** Enforce quality gate — design output must meet standards before the stage can proceed.
+   **🎯 Goal:** Second quality gate — verify document quality after user modifications.
 
    **Actions:**
 
-   1. **Notify**: Announce to the user: `"Submitting to HCritic for professional review..."`
+   1. **Notify**: Announce to the user: `"Submitting to HCritic for final review..."`
    2. **Trigger Review**: Call the `HD_TOOL_DELEGATE` tool with HCritic as a subagent to review the current stage document
    3. **Handle Result**:
       - `FAIL` → Return to **[P3]** for corrections, then resubmit to this step
-      - `PASS` → Proceed to **[P6]**
+      - `PASS` → Proceed to **[P7]**
    4. **Retry Limit**: Maximum 3 attempts. If still failing after the 3rd attempt → call `HD_TOOL_ASK_USER` to request human intervention, providing specific failure reasons
 
    ---
 
-### [P6] Confirmation
+### [P7] Confirmation
 
    **🎯 Goal:** Obtain explicit user authorization as the gatekeeper for stage transition.
 
-   **Prerequisite:** Only execute after [P5] review has passed.
+   **Prerequisite:** Only execute after [P6] review has passed.
 
    **Actions:**
 
    1. **Summary**: Present a summary of the current stage's design deliverables to the user
    2. **Ask**: Call `HD_TOOL_ASK_USER` with the message: `"This design stage is complete. Confirm to proceed to the next stage?"`
    3. **Handle Response**:
-      - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P5] → [P6] flow again
-      - `Confirmed` → Proceed to **[P7]**
+      - `Needs changes` → Return to **[P3]**; after changes are made, run the full [P4] → [P5] → [P6] → [P7] flow again
+      - `Confirmed` → Proceed to **[P8]**
 
    ---
 
-### [P7] Handover
+### [P8] Handover
 
    **🎯 Goal:** Complete stage archiving and trigger workflow state transition.
 

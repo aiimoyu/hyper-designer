@@ -17,6 +17,11 @@
         "github-copilot/claude-sonnet-4.5"
       ]
     },
+    "inheritHyperModel": {
+      "type": "boolean",
+      "description": "When true, all agents inherit hyper's model, ignoring agent-specific model overrides",
+      "default": false
+    },
     "agents": {
       "type": "object",
       "description": "Per-agent configuration overrides",

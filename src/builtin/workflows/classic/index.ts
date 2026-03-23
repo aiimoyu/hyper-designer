@@ -270,7 +270,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Initial Requirement Analysis',
       description: 'Conduct initial requirement analysis using 5W2H framework and Socratic questioning',
       agent: 'HArchitect',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],  
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
@@ -367,7 +367,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'System Functional Design',
       description: 'Design system architecture, select technology stack, define data models and interaction protocols',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
@@ -387,7 +387,7 @@ export const classicWorkflow: WorkflowDefinition = {
       name: 'Module Functional Design',
       description: 'Output detailed technical specifications for each module: responsibilities, interfaces, internal structure, algorithms, data structures, test strategies',
       agent: 'HEngineer',
-      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },

@@ -89,13 +89,14 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     {
       name: 'hd_handover',
       description: `Set the handover workflow stage of the Hyper Designer project.
+- PREFERRED: Pass stage_name explicitly for clarity and reliability
 - If stage_name is omitted: automatically selects the next stage (first stage if current is null, next stage otherwise)
 - IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.`,
       params: {
         stage_name: {
           type: 'string',
           optional: true,
-          description: 'The name of the workflow stage to set as handover. If omitted, automatically selects the next stage.',
+          description: 'The name of the workflow stage to set as handover. PREFERRED to pass explicitly. If omitted, automatically selects the next stage.',
         },
       },
       execute: async params => {
