@@ -393,6 +393,9 @@ export class WorkflowService extends EventEmitter {
    * @returns 当前工作流定义或 null（未初始化）
    */
   getDefinition(): WorkflowDefinition | null {
+    if (this.definition === null) {
+      this.definition = this.tryRestoreDefinition();
+    }
     return this.definition;
   }
 
