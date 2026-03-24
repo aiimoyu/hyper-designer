@@ -55,10 +55,10 @@ describe('architecture boundaries', () => {
     expect(docReviewDefsContent).not.toContain("from '../../../utils/logger'")
     expect(docReviewDefsContent).not.toContain("from '../../../workflows/service/WorkflowService'")
 
-    expect(prepareReviewContent).toContain("from '../../../types'")
+    expect(prepareReviewContent).toContain("from '../../../sdk'")
     expect(prepareReviewContent).not.toContain("from '../../../utils/logger'")
 
-    expect(finalizeReviewContent).toContain("from '../../../types'")
+    expect(finalizeReviewContent).toContain("from '../../../sdk'")
     expect(finalizeReviewContent).not.toContain("from '../../../utils/logger'")
   })
 })

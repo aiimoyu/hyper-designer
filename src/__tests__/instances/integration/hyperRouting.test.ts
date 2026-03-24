@@ -14,14 +14,16 @@ vi.mock('@opencode-ai/plugin', () => {
   chainable.nullable = chainFn
   chainable.min = chainFn
   chainable.max = chainFn
+  const objectFn = (_args?: Record<string, unknown>) => chainable
+  const arrayFn = (_item?: unknown) => chainable
 
   tool.schema = {
     enum: () => chainable,
     boolean: () => chainable,
     number: () => chainable,
     string: () => chainable,
-    object: () => chainable,
-    array: () => chainable,
+    object: objectFn,
+    array: arrayFn,
   }
 
   return { tool }
@@ -33,7 +35,7 @@ interface AgentConfigWithHidden {
 
 function createMockPluginInput(): PluginInput {
   return {
-    client: { session: { prompt: async () => {} } },
+    client: { session: { prompt: async () => { } } },
     directory: process.cwd(),
   } as unknown as PluginInput
 }

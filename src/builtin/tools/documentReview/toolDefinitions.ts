@@ -1,6 +1,5 @@
 import type { ToolDefinition } from '../../../types'
-import { HyperDesignerLogger } from '../../../utils/logger'
-import { workflowService } from '../../../workflows/service'
+import { HyperDesignerLogger, workflowService } from '../../../sdk'
 import { finalizeReview } from './finalizeReview'
 import { prepareReview } from './prepareReview'
 

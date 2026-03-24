@@ -53,23 +53,42 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     },
     {
       name: 'hd_workflow_select',
-      description: 'Select and initialize a workflow for the Hyper Designer project. This MUST be called before any workflow operations (hd_handover, etc.). The stages parameter allows selecting which stages to include - use [{ key, selected }] format. Required stages cannot be deselected.',
+      description: 'Select and initialize a workflow for the Hyper Designer project. This MUST be called before any workflow operations. Required stages cannot be deselected.',
       params: {
         type_id: {
           type: 'string',
-          description: "The ID of the workflow to select (e.g., 'classic')",
+          description: "The workflow ID to select (e.g., 'classic', 'lite-designer')",
         },
         stages: {
           type: 'array',
           optional: true,
-          description: "Stage selection array. If omitted, all stages are selected. Example: [{ key: 'IRAnalysis', selected: true }, { key: 'moduleFunctionalDesign', selected: false }]",
+          description: 'Stage selection array. If omitted, all stages are selected.',
+          items: {
+            type: 'object',
+            properties: {
+              key: {
+                type: 'string',
+                description: 'Stage key (e.g., "IRAnalysis")',
+              },
+              selected: {
+                type: 'boolean',
+                description: 'Whether to include this stage',
+              },
+            },
+          },
         },
       },
       execute: async params => {
         const typeId = String(params.type_id)
         const detail = workflowService.getWorkflowDetail(typeId)
         if (!detail) {
-          return JSON.stringify({ success: false, error: `Workflow '${typeId}' not found` }, null, 2)
+          const availableWorkflows = workflowService.listWorkflows()
+          return JSON.stringify({
+            success: false,
+            error: `Workflow '${typeId}' not found.`,
+            hint: 'Use hd_workflow_list to see all available workflows.',
+            availableWorkflows: availableWorkflows.map(w => ({ id: w.id, name: w.name })),
+          }, null, 2)
         }
 
         const inputStages = Array.isArray(params.stages) ? params.stages : undefined
@@ -107,17 +126,45 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     },
     {
       name: 'hd_record_milestone',
-      description: 'Record or overwrite a milestone for the current workflow stage. For gate milestones, detail may include score/comment and isCompleted should reflect pass/fail.',
+      description: 'Record or overwrite a milestone for the current workflow stage. For gate milestones, detail should include score and comment.',
       params: {
         milestone: {
           type: 'object',
-          description: 'The milestone to record',
+          description: 'The milestone object to record',
+          properties: {
+            type: {
+              type: 'string',
+              description: 'Milestone type. Common: "gate", "hd-gate", "hd-int-mod"',
+            },
+            isCompleted: {
+              type: 'boolean',
+              description: 'Whether completed. true = passed, false = failed',
+            },
+            detail: {
+              type: 'object',
+              description: 'Additional details. For gates: { score: number, comment: string }',
+              properties: {
+                score: {
+                  type: 'number',
+                  description: 'Quality score 0-100. 90+ ready, 75-89 gaps, 60-74 revision, <60 rewrite',
+                },
+                comment: {
+                  type: 'string',
+                  description: 'Review comment',
+                },
+              },
+            },
+          },
         },
       },
       execute: async params => {
         const milestoneInput = params.milestone
         if (typeof milestoneInput !== 'object' || milestoneInput === null) {
-          return JSON.stringify({ success: false, error: 'Invalid milestone payload.' }, null, 2)
+          return JSON.stringify({
+            success: false,
+            error: 'Invalid milestone payload. Expected an object with: { type: string, isCompleted: boolean, detail?: object }',
+            example: { type: 'gate', isCompleted: true, detail: { score: 85, comment: 'Review passed' } },
+          }, null, 2)
         }
 
         const milestone = milestoneInput as {
@@ -127,14 +174,26 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
         }
 
         if (typeof milestone.type !== 'string' || typeof milestone.isCompleted !== 'boolean') {
-          return JSON.stringify({ success: false, error: 'Invalid milestone payload.' }, null, 2)
+          return JSON.stringify({
+            success: false,
+            error: `Invalid milestone payload. Missing or invalid required fields:
+- type: expected string, got ${milestone.type === undefined ? 'undefined' : typeof milestone.type}
+- isCompleted: expected boolean, got ${milestone.isCompleted === undefined ? 'undefined' : typeof milestone.isCompleted}`,
+            requiredFields: {
+              type: 'string (e.g., "gate", "hd-gate", "hd-int-mod")',
+              isCompleted: 'boolean (true for passed, false for failed)',
+              detail: 'object (optional, e.g., { score: 85, comment: "..." })',
+            },
+            example: { type: 'gate', isCompleted: true, detail: { score: 85, comment: 'Review passed' } },
+          }, null, 2)
         }
 
         const stage = workflowService.getCurrentStage()
         if (!stage) {
           return JSON.stringify({
             success: false,
-            error: 'No current stage. Cannot record milestone.',
+            error: 'No current stage. Cannot record milestone. Please ensure a workflow stage is active before recording milestones.',
+            hint: 'Call hd_workflow_state to check current stage, or hd_workflow_select to initialize a workflow.',
           }, null, 2)
         }
 

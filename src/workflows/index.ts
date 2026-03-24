@@ -11,6 +11,15 @@
  * - runtime: 运行时（交接、提示词加载）
  */
 
+// Re-export tool types from src/tools for backward compatibility
+export type {
+  ToolParamSchema,
+  ToolParamsSchema,
+  ToolContext,
+  ToolDefinition,
+  ToolRegistration,
+} from '../tools/types'
+
 // Core types
 export type {
   WorkflowPlatformAdapter,

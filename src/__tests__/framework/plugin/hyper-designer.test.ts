@@ -3,6 +3,7 @@ import type { PluginInput, ToolContext } from "@opencode-ai/plugin"
 import { existsSync, rmSync } from "fs"
 import { join } from "path"
 import { workflowService } from "../../../workflows/service"
+import { resetSDKForTest } from "../../../sdk"
 
 vi.mock("@opencode-ai/plugin", () => {
   const tool = (definition: Record<string, unknown>) => definition
@@ -14,13 +15,15 @@ vi.mock("@opencode-ai/plugin", () => {
   chainable.nullable = chainFn
   chainable.min = chainFn
   chainable.max = chainFn
+  const objectFn = (_args?: Record<string, unknown>) => chainable
+  const arrayFn = (_item?: unknown) => chainable
   tool.schema = {
     enum: () => chainable,
     boolean: () => chainable,
     number: () => chainable,
     string: () => chainable,
-    object: () => chainable,
-    array: () => chainable,
+    object: objectFn,
+    array: arrayFn,
   }
   return { tool }
 })
@@ -59,6 +62,7 @@ function createMockToolContext(): ToolContext {
 
 describe("HyperDesigner Plugin", () => {
   beforeEach(() => {
+    resetSDKForTest()
     if (existsSync(STATE_FILE)) {
       rmSync(STATE_FILE, { force: true })
     }
@@ -74,7 +78,7 @@ describe("HyperDesigner Plugin", () => {
 
   it("should return plugin object with expected structure", async () => {
     const mockCtx = {
-      client: { session: { prompt: async () => {} } },
+      client: { session: { prompt: async () => { } } },
       directory: process.cwd(),
     } as unknown as PluginInput
 
@@ -97,7 +101,7 @@ describe("HyperDesigner Plugin", () => {
       client: {
         session: {
           create: async () => ({ data: { id: "review-session" } }),
-          prompt: async () => {},
+          prompt: async () => { },
           delete: async () => ({}),
         },
       },
@@ -119,7 +123,7 @@ describe("HyperDesigner Plugin", () => {
 
   it("should handle config agent mapping", async () => {
     const mockCtx = {
-      client: { session: { prompt: async () => {} } },
+      client: { session: { prompt: async () => { } } },
       directory: process.cwd(),
     } as unknown as PluginInput
     const { HyperDesignerPlugin } = await import("../../../../opencode/.plugins/hyper-designer")
@@ -141,7 +145,7 @@ describe("HyperDesigner Plugin", () => {
 
   it("should NOT have hd_submit_evaluation tool", async () => {
     const mockCtx = {
-      client: { session: { prompt: async () => {} } },
+      client: { session: { prompt: async () => { } } },
       directory: process.cwd(),
     } as unknown as PluginInput
 
@@ -154,7 +158,7 @@ describe("HyperDesigner Plugin", () => {
   describe("hd_record_milestone", () => {
     it("should exist as a tool", async () => {
       const mockCtx = {
-        client: { session: { prompt: async () => {} } },
+        client: { session: { prompt: async () => { } } },
         directory: process.cwd(),
       } as unknown as PluginInput
 

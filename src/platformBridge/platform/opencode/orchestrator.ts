@@ -11,7 +11,7 @@ import {
 } from '../../../transform'
 import { HyperDesignerLogger } from '../../../utils/logger'
 import { workflowService } from '../../../workflows/service'
-import type { ToolContext, ToolDefinition, ToolParamsSchema } from '../../../tools/types'
+import type { ToolContext, ToolDefinition, ToolParamSchema, ToolParamsSchema } from '../../../tools/types'
 import type { PlatformCapabilities } from '../../capabilities/types'
 import type {
   AgentMappingInput,
@@ -57,10 +57,20 @@ function convertParamsToOpenCodeArgs(
         arg = tool.schema.boolean()
         break
       case 'array':
-        arg = tool.schema.array(tool.schema.string())
+        if (schema.items) {
+          const itemArg = convertSingleSchemaToOpenCodeArg(schema.items)
+          arg = tool.schema.array(itemArg)
+        } else {
+          arg = tool.schema.array(tool.schema.string())
+        }
         break
       case 'object':
-        arg = tool.schema.object({})
+        if (schema.properties) {
+          const nestedArgs = convertParamsToOpenCodeArgs(schema.properties)
+          arg = tool.schema.object(nestedArgs)
+        } else {
+          arg = tool.schema.object({})
+        }
         break
       default:
         arg = tool.schema.string()
@@ -85,6 +95,50 @@ function convertParamsToOpenCodeArgs(
   }
 
   return args
+}
+
+function convertSingleSchemaToOpenCodeArg(schema: ToolParamSchema): OpenCodeArg {
+  let arg: OpenCodeArg
+
+  switch (schema.type) {
+    case 'string':
+      arg = tool.schema.string()
+      break
+    case 'number':
+      arg = tool.schema.number()
+      break
+    case 'boolean':
+      arg = tool.schema.boolean()
+      break
+    case 'array':
+      if (schema.items) {
+        const itemArg = convertSingleSchemaToOpenCodeArg(schema.items)
+        arg = tool.schema.array(itemArg)
+      } else {
+        arg = tool.schema.array(tool.schema.string())
+      }
+      break
+    case 'object':
+      if (schema.properties) {
+        const nestedArgs = convertParamsToOpenCodeArgs(schema.properties)
+        arg = tool.schema.object(nestedArgs)
+      } else {
+        arg = tool.schema.object({})
+      }
+      break
+    default:
+      arg = tool.schema.string()
+  }
+
+  if (schema.description) {
+    arg = (arg as { describe: (text: string) => OpenCodeArg }).describe(schema.description)
+  }
+
+  if (schema.optional) {
+    arg = (arg as { optional: () => OpenCodeArg }).optional()
+  }
+
+  return arg
 }
 
 export function convertWorkflowToolsToOpenCode(

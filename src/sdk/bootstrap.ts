@@ -31,7 +31,7 @@ export async function bootstrapSDK(opts: BootstrapOptions = {}): Promise<void> {
   }
 
   let plugins = opts.plugins
-  if (!plugins) {
+  if (!plugins || plugins.length === 0) {
     const root = opts.rootDirectory ?? process.cwd()
     const builtin = opts.builtinDirectory ?? `${root}/src/builtin`
     const user = opts.userDirectory ?? `${root}/plugins`

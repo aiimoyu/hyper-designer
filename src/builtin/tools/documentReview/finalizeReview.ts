@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
-import { HyperDesignerLogger } from '../../../utils/logger'
+import { HyperDesignerLogger } from '../../../sdk'
 
 import { convertToHunks, calculateSummary, generateUnifiedDiff } from './diffUtils'
 import type { DocumentReviewParams, FinalizeReviewResult } from './types'
