@@ -535,6 +535,7 @@ export class WorkflowService extends EventEmitter {
     const newState: WorkflowState = {
       initialized: false,
       typeId: definition.id,
+      projectRoot: process.cwd(),
       workflow,
       current: null,
     };
@@ -716,6 +717,7 @@ export class WorkflowService extends EventEmitter {
       return this.getState() ?? {
         initialized: false,
         typeId: null,
+        projectRoot: null,
         workflow: {},
         current: null,
       }
@@ -918,7 +920,8 @@ export class WorkflowService extends EventEmitter {
     // 检查当前阶段的输出文件是否完整
     const currentStageDef = this.definition.stages[currentStage];
     if (currentStageDef?.outputs && currentStageDef.outputs.length > 0) {
-      const outputCheck = await checkStageOutputs(currentStageDef.outputs);
+      const projectRoot = stateForCheck?.projectRoot ?? undefined;
+      const outputCheck = await checkStageOutputs(currentStageDef.outputs, projectRoot);
       if (!outputCheck.success) {
         this.incrementCurrentFailureCount();
         const missingMessage = formatMissingOutputsMessage(outputCheck.missing, outputCheck.matchCounts);

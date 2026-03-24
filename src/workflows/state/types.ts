@@ -44,6 +44,8 @@ export interface WorkflowState {
   initialized: boolean;
   /** Unique identifier for the workflow type, null if not initialized */
   typeId: string | null;
+  /** 项目根目录路径，初始化时锁定，用于解析所有相对路径 */
+  projectRoot: string | null;
   /** Map of stage names to their historical/completion state */
   workflow: Record<string, WorkflowStage>;
   /** 

@@ -56,6 +56,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -101,6 +102,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -144,6 +146,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -199,6 +202,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -258,6 +262,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: 'classic',
+    projectRoot: null,
       workflow: {
         IRAnalysis: { isCompleted: false, selected: true },
       },
@@ -333,6 +338,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -390,6 +396,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -432,6 +439,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -480,6 +488,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         stage1: { isCompleted: false, selected: true },
       },
@@ -526,6 +535,7 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: workflow.id,
+      projectRoot: null,
       workflow: {
         IRAnalysis: { isCompleted: false, selected: true },
       },

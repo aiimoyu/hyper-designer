@@ -60,6 +60,7 @@ describe('workflow persistence migration', () => {
   it('migrates legacy state with typeId - sets initialized to true', () => {
     const legacyState = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: { isCompleted: true }
       },
@@ -81,6 +82,7 @@ describe('workflow persistence migration', () => {
   it('migrates legacy state without failureCount - defaults to 0', () => {
     const legacyState = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: { isCompleted: true }
       },
@@ -100,6 +102,7 @@ describe('workflow persistence migration', () => {
   it('migrates legacy selectedStages to workflow[].selected', () => {
     const legacyState = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         IRAnalysis: { isCompleted: true },
         scenarioAnalysis: { isCompleted: false },
@@ -127,6 +130,7 @@ describe('workflow persistence migration', () => {
   it('preserves existing failureCount value', () => {
     const stateWithFailureCount = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: { isCompleted: true }
       },
@@ -147,6 +151,7 @@ describe('workflow persistence migration', () => {
   it('ignores legacy current.gateResult and per-stage score/comment fields', () => {
     const legacyState = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         IRAnalysis: {
           isCompleted: false,
@@ -182,6 +187,7 @@ describe('workflow persistence migration', () => {
     const stateToWrite = {
       initialized: true,
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         IRAnalysis: {
           isCompleted: true,
@@ -233,6 +239,7 @@ describe('workflow persistence migration', () => {
     const stateToWrite = {
       initialized: true,
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         IRAnalysis: {
           isCompleted: true,

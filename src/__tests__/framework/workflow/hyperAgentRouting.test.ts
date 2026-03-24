@@ -71,6 +71,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           {
             initialized: true,
             typeId: 'classic',
+        projectRoot: null,
             workflow: {
               stage1: { isCompleted: false, selected: true },
             },
@@ -98,6 +99,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           {
             initialized: true,
             typeId: 'classic',
+        projectRoot: null,
             workflow: {
               stage1: { isCompleted: false, selected: true },
             },
@@ -121,6 +123,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       writeWorkflowStateFile({
         initialized: true,
         typeId: 'classic',
+        projectRoot: null,
         workflow: {
           stage1: {
             isCompleted: false,
@@ -173,6 +176,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       vi.spyOn(workflowService, 'getState').mockReturnValue({
         initialized: true,
         typeId: 'classic',
+        projectRoot: null,
         workflow: {},
         current: null,
       })
@@ -195,6 +199,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       vi.spyOn(workflowService, 'getState').mockReturnValue({
         initialized: true,
         typeId: 'classic',
+        projectRoot: null,
         workflow: {},
         current: {
           name: 'IRAnalysis',
@@ -223,6 +228,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       vi.spyOn(workflowService, 'getState').mockReturnValue({
         initialized: true,
         typeId: 'classic',
+        projectRoot: null,
         workflow: {},
         current: {
           name: 'IRAnalysis',
@@ -266,6 +272,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       writeWorkflowStateFile({
         initialized: true,
         typeId: incompleteDefinition.id,
+        projectRoot: null,
         workflow: {
           stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
           stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
@@ -288,6 +295,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       writeWorkflowStateFile({
         initialized: true,
         typeId: definition.id,
+        projectRoot: null,
         workflow: {
           stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
           stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
@@ -351,6 +359,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       stateModule.writeWorkflowStateFile({
         initialized: true,
         typeId: definition.id,
+        projectRoot: null,
         workflow: {
           stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
           stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },

@@ -163,7 +163,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition, selected
     const currentStage = selectedStageList[i];
     const previousStage = i > 0 ? selectedStageList[i - 1] : null;
     const nextStage = i < selectedStageList.length - 1 ? selectedStageList[i + 1] : null;
-    
+
     if (workflow[currentStage]) {
       workflow[currentStage].previousStage = previousStage;
       workflow[currentStage].nextStage = resolveNextSelectedStage(definition, selectedSet, currentStage) ?? nextStage;
@@ -173,6 +173,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition, selected
   const state: WorkflowState = {
     initialized: false,
     typeId: definition.id,
+    projectRoot: process.cwd(),
     workflow,
     current: null,
   };
@@ -214,6 +215,7 @@ export function ensureWorkflowStateExists(): WorkflowState {
   const uninitializedState: WorkflowState = {
     initialized: false,
     typeId: null,
+    projectRoot: null,
     workflow: {},
     current: null,
   };
@@ -554,7 +556,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
   const departingStage = fromStep ? definition.stages[fromStep] : null;
   const incomingStage = definition.stages[toStep];
   const departingAfterHooks = departingStage ? departingStage.after ?? [] : []
-  
+
   try {
     if (departingStage && departingAfterHooks.length > 0) {
       HyperDesignerLogger.debug("Workflow", "执行 after 钩子", { step: fromStep, hookCount: departingAfterHooks.length });
@@ -587,7 +589,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     }
     throw error;
   }
-  
+
   // Stage 切换
   const previousNodeId = state.runtime?.flow.currentNodeId ?? null
   const nextMainNodeId = createMainNodeId(toStep)
@@ -605,7 +607,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     nextStage: state.workflow[toStep]?.nextStage ?? null,
     failureCount: 0,
   };
-  
+
   // 首次交接：设置 initialized 为 true
   if (!state.initialized) {
     state.initialized = true;
@@ -619,7 +621,7 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     state.runtime.flow.currentNodeId = nextMainNodeId
     state.runtime.flow.nextNodeId = null
   }
-  
+
   writeWorkflowStateFile(state);
   HyperDesignerLogger.info("Workflow", "工作流交接执行完成", {
     toStep,

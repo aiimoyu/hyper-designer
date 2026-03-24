@@ -5,6 +5,12 @@
 **核心目标：** 深入分析阶段2确认的每个模块，生成可作为开发参考的模块详情文件。
 每个文件必须达到的标准：**一个新开发者读完后，能独立修改该模块，不需要问别人。**
 
+**核心原则：代码优先**
+
+- 代码是唯一的事实来源，README/文档可能过时或错误
+- 所有分析结论必须有代码证据支撑
+- GitNexus 是导航工具，必须结合实际代码阅读
+
 **输入依赖：**
 
 - `Modules.md` (阶段2，必须已通过用户确认)
@@ -34,75 +40,73 @@
 
 ### 3.1 并行模块分析（核心约束）
 
-**必须并行委派。** 串行分析是严重的效率问题。
+**对每个模块并行委派一个 subagent 进行深入分析。**
 
-对于 N 个模块，同时发起 N 个任务：
+对于 N 个模块，同时发起 N 个 subagent 任务：
 
 ```
-[并行] 任务 1: 分析 M001-Core
-[并行] 任务 2: 分析 M002-API
-[并行] 任务 3: 分析 M003-Auth
+[并行] Subagent 1: 深入分析 M001-Core，生成 M001-Core.md
+[并行] Subagent 2: 深入分析 M002-API，生成 M002-API.md
+[并行] Subagent 3: 深入分析 M003-Auth，生成 M003-Auth.md
 ...（不等待任何一个完成）
 ```
 
 **禁止：**
 
-- ❌ 完成任务1，再开始任务2
+- ❌ 完成模块1分析，再开始模块2
 - ❌ 因为某个模块"更重要"而串行化
 - ❌ 自己完成所有模块分析（上下文过载）
 
 ---
 
-### 3.2 每个分析任务的标准提示
+### 3.2 每个 Subagent 的任务描述
 
 向每个 subagent 发送的任务描述：
 
 ```
-任务：详细分析模块 {ModuleID}-{ModuleName}
+任务：深入分析模块 {ModuleID}-{ModuleName} 并生成模块详情文件
 
 项目路径：{project-path}
 模块路径：{module_path}
 优先级：{高/中/低}
 依赖于：{dependencies}（需要理解其接口）
 被依赖于：{dependents}（需要理解什么依赖我）
+输出文件：references/modules/{ModuleID}-{ModuleName}.md
 
-必须完成（不可跳过）：
-1. 读取模块目录中的【所有】文件（不要抽样）
-2. 识别所有公开（export）的类、函数、接口、类型
-3. 对于每个公开接口：记录完整签名、参数类型、返回类型、抛出的异常
-4. 记录模块内部的文件间调用关系（不是全部，只是关键路径）
-5. 识别使用的设计模式（必须有代码证据，不能猜测）
-6. 记录模块内数据流（入站 → 处理 → 出站）
-7. 列出外部依赖（npm/pip 包）和内部依赖（其他模块）
+核心原则：代码优先
+- 代码是唯一的事实来源
+- 所有分析结论必须有代码证据支撑
+- GitNexus 是导航工具，必须结合实际代码阅读
 
-GitNexus 辅助（如果已索引，必须使用，优先于手动读文件）：
+执行步骤：
 
-```bash
-# 搜索该模块的核心逻辑执行流
-npx gitnexus query "{ModuleName} core logic flow" --repo <repo>
-npx gitnexus query "{ModuleName} data processing" --content --repo <repo>
+**步骤 1：GitNexus 导航（可选，如果可用）**
 
-# 获取主要类/函数的 360° 视图（调用者 + 被调用者 + 定义位置）
-npx gitnexus context {主要类名} --repo <repo>
-npx gitnexus context {主要类名} --file {module_path}/index.ts --repo <repo>  # 有同名时指定文件
+使用 GitNexus 快速定位模块内的关键符号和调用关系。
 
-# 分析导出函数的影响范围（用于理解接口契约的重要性）
-npx gitnexus impact {主要导出函数} --direction upstream --repo <repo>
+**步骤 2：代码深度阅读（核心步骤，不可跳过）**
 
-# 查看模块所有导出（不遗漏公共接口）
-npx gitnexus cypher "MATCH (n:Function) WHERE n.isExported = true AND n.filePath CONTAINS '{module_path}' RETURN n.name, n.filePath, n.startLine" --repo <repo>
+阅读模块内所有文件，完成以下分析：
 
-# 查看模块内部调用关系
-npx gitnexus cypher "MATCH (a)-[:CodeRelation {type: 'CALLS'}]->(b) WHERE a.filePath CONTAINS '{module_path}' AND b.filePath CONTAINS '{module_path}' RETURN a.name AS caller, b.name AS callee LIMIT 20" --repo <repo>
-```
+1. **公开接口与依赖分析**
+   - 识别所有对外暴露的函数、类、类型、常量
+   - 记录完整签名、参数类型、返回类型
+   - 分析外部依赖（第三方库/框架）和内部依赖（项目内其他模块）
 
-输出格式：
+2. **内部实现分析**
+   - 追踪模块内文件间的函数调用，识别关键执行路径
+   - 分析数据流：入站（数据来源）→ 处理（数据变换）→ 出站（数据去向）
+   - 识别使用的设计模式，引用具体代码位置作为证据
 
-- 严格遵循 Stage3-Detailed.md 中的模板
-- 所有路径使用相对路径
-- 所有代码引用包含行号
-- 不要包含绝对路径
+**步骤 3：生成模块详情文件**
 
+按照模板格式生成 {ModuleID}-{ModuleName}.md，确保：
+- 所有公开接口已列出
+- 代码引用有行号
+- 设计模式有代码证据
+- 数据流有具体文件引用链
+- 无绝对路径
+- 每个结论都要有代码证据
 ```
 
 ---
@@ -337,22 +341,22 @@ Modules.md 路径：{path}
 
 检查清单（每个模块）：
 
-1. 接口完整性：模块中所有 export 是否都在文档中列出？
-   （运行 grep -r "export " {module_path} 并对比）
+1. 接口完整性：模块中所有公开接口是否都在文档中列出？
 2. 签名准确性：文档中的函数签名是否与代码一致？（抽查3个）
 3. 行号有效性：引用的行号是否指向正确的代码？（抽查3个）
-4. 依赖准确性：列出的依赖是否真实存在 import/require？
+4. 依赖准确性：列出的依赖是否真实存在？（检查 import/use/require 等语句）
 5. 设计模式：声称使用了某模式，代码中是否有证据？
 6. 数据流：关键路径的文件引用是否正确？
 7. 模块一致性：与 Modules.md 中的描述是否一致？
+8. **关键检查**：分析是否基于实际代码阅读（不是仅凭 GitNexus）？
 
 输出格式：
 按模块组织：
 
 ## M001-Core
 
-✅ 接口完整性 — 5/5 exports 已文档化
-❌ 行号准确性 — validateUser() 文档说 line 45，实际在 line 52 [File: src/auth/validator.ts]
+✅ 接口完整性 — 5/5 公开接口已文档化
+❌ 行号准确性 — validateUser() 文档说 line 45，实际在 line 52 [File: src/auth/validator.py]
 ⚠️ 设计模式 — 声称使用了"观察者模式"，但未找到明确证据
 
 ## M002-API
@@ -378,8 +382,9 @@ Modules.md 路径：{path}
 - [ ] 已评估模块优先级并决定分析深度
 - [ ] 模块数量 > 8 时已与用户确认范围
 - [ ] 所有模块并行委派（不是串行）
-- [ ] GitNexus 查询已在每个模块分析中使用（或已说明原因）
-- [ ] 每个模块文件：所有 export 已列出
+- [ ] **阶段 B 代码深度阅读已执行（核心步骤，不可跳过）**
+- [ ] **阶段 C 补充 GitNexus 缺失细节已执行**
+- [ ] 每个模块文件：所有公开接口已列出
 - [ ] 每个模块文件：代码引用有行号
 - [ ] 每个模块文件：设计模式有代码证据
 - [ ] 每个模块文件：数据流有具体文件引用链

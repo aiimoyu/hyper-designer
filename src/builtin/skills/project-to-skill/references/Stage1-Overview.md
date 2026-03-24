@@ -4,6 +4,12 @@
 
 **核心目标：** 通过工具驱动的探索 + 精准的用户对齐，生成反映项目**真实设计意图**的基础文档。
 
+**核心原则：代码优先**
+
+- 代码是唯一的事实来源，README/文档可能过时或错误
+- 所有分析结论必须有代码证据支撑
+- GitNexus 是导航工具，必须结合实际代码阅读
+
 **输出文件：** Overview.md、Architecture.md、Guides.md、Principles.md
 
 ---
@@ -19,29 +25,31 @@ cd <project-path>
 npx gitnexus analyze .
 ```
 
-- ✅ 成功：记录节点数、边数、集群数，后续所有分析优先使用 GitNexus
+- ✅ 成功：记录节点数、边数、集群数，后续分析可使用 GitNexus 作为导航辅助
 - ❌ 失败：记录失败原因，后续使用文件系统工具（find/grep）替代，并在文档中注明
+
+**重要**：GitNexus 成功后，它只是"索引/地图"，不能替代实际代码阅读。
 
 ---
 
-### 步骤 2：全面项目探索（并行执行，不等待对方完成）
+### 步骤 2：项目结构探索（不读取文档文件）
 
-**同时发起以下所有探索——目标是建立完整的项目认知，为后续提问做好准备。**
+**目标：建立项目物理结构认知，但不依赖 README/docs 等可能过时的文档。**
 
-#### 2A：结构与技术栈探索
+#### 2A：物理结构探索
 
 ```bash
 # 目录结构
 find <project-path> -maxdepth 3 -type d
-# 技术栈（根据项目类型选择）
+
+# 技术栈配置文件（这些是事实，不是文档）
 cat package.json / go.mod / requirements.txt / Cargo.toml / pom.xml
-# 现有文档
-cat README.md / docs/ 目录
-# 配置文件
-ls .env* *.yaml *.toml *.json（根目录）
+
+# 配置文件（这些是事实）
+ls -la <project-path>/ | grep -E '\.(json|yaml|yml|toml|ini|env)'
 ```
 
-#### 2B：GitNexus 核心分析
+#### 2B：GitNexus 导航分析（定位关键代码区域）
 
 ```bash
 # 项目规模
@@ -55,37 +63,79 @@ npx gitnexus cypher "MATCH (f:File)<-[:CodeRelation {type: 'IMPORTS'}]-(g:File) 
 
 # 自然模块社区
 npx gitnexus cypher "MATCH (c:Community) RETURN c.heuristicLabel, c.symbolCount ORDER BY c.symbolCount DESC LIMIT 12" --repo <repo>
-
-# 入口点与初始化
-npx gitnexus query "project entry point and initialization" --repo <repo>
-
-# 核心业务流程
-npx gitnexus query "main business logic flow" --repo <repo>
 ```
 
-#### 2C：架构模式探索
+**⚠️ 此时你只有"地图"，还没有"实地考察"。继续下一步。**
 
-```bash
-# 公共 API（导出函数）
-npx gitnexus cypher "MATCH (n:Function) WHERE n.isExported = true RETURN n.name, n.filePath LIMIT 25" --repo <repo>
+---
 
-# 模块间依赖强度
-npx gitnexus cypher "MATCH (a)-[:CodeRelation {type: 'CALLS'}]->(b) WHERE a.filePath <> b.filePath WITH a.filePath AS from, b.filePath AS to, count(*) AS n ORDER BY n DESC LIMIT 10 RETURN from, to, n" --repo <repo>
+### 步骤 3：代码深度阅读（核心步骤，不可跳过）
 
-# 核心数据流
-npx gitnexus query "data flow and processing pipeline" --repo <repo>
+**这是最关键的步骤。GitNexus 告诉你"去哪里看"，这一步你要"实际去看"。**
+
+**必须并行委派 subagent 执行以下任务：**
+
+| 任务 | 目标 |
+|------|------|
+| 入口点分析 | 理解项目初始化流程和核心模块加载顺序 |
+| 核心模块分析 | 理解核心数据结构和主要业务逻辑 |
+| 配置与类型分析 | 理解系统配置结构和核心类型定义 |
+| 架构模式分析 | 理解模块边界和模块间交互方式 |
+
+#### 3A：入口点代码阅读（必须执行）
+
+根据 GitNexus 或目录结构识别的入口文件，**必须阅读实际代码**。
+
+**使用 Read 工具读取入口文件完整内容**，理解：
+
+- 项目如何初始化
+- 依赖注入方式
+- 核心模块加载顺序
+- 配置加载方式
+
+#### 3B：核心模块代码并行阅读（必须执行）
+
+根据步骤 2B 的 GitNexus 分析结果，识别出最核心的 3-5 个文件，**并行读取**：
+
 ```
+[并行] Read: {核心文件1}
+[并行] Read: {核心文件2}
+[并行] Read: {核心文件3}
+[并行] Read: {核心文件4}
+[并行] Read: {核心文件5}
+```
+
+**阅读目标：**
+
+- 理解核心数据结构定义
+- 理解主要业务逻辑流程
+- 识别关键设计模式的使用
+- 发现模块间的实际依赖关系（不是 GitNexus 的静态分析，而是运行时逻辑）
+
+#### 3C：配置与类型定义阅读
+
+读取配置类型/接口定义、核心类型定义文件，理解系统配置结构和数据模型。
+
+#### 3D：架构模式代码深入理解
+
+根据 GitNexus 的模块社区分析，并行委派 subagent 阅读各模块入口文件，深入理解模块职责、模块间交互方式、设计决策和权衡。
+
+---
+
+### 步骤 4：整理认知与准备用户对齐
 
 **探索完成后，整理你的认知：**
 
 - 项目整体架构风格是什么？（分层/微服务/事件驱动/...）
-- 核心数据流路径是什么？
+- 核心数据流路径是什么？（基于代码阅读，不是 GitNexus）
 - 最重要的模块/文件是哪些？
 - 你对架构有哪些不确定的地方？
 
+**⚠️ 此时你应该已经阅读了关键代码文件，而不是仅凭 GitNexus 输出。**
+
 ---
 
-### 步骤 3：第一性原则——与用户对齐（基于探索结果提问）
+### 步骤 5：第一性原则——与用户对齐（基于代码阅读结果提问）
 
 **这一步的目的：** 确认你的技术理解是否正确，并获取无法从代码中推断的隐性知识。**不要问与开发无关的问题（如技能名称、文档用途等）。**
 
@@ -147,31 +197,34 @@ npx gitnexus query "data flow and processing pipeline" --repo <repo>
 
 ---
 
-**等待用户回答后再进行步骤 4。** 根据回答调整对架构的理解，记录所有隐性知识。
+**等待用户回答后再进行步骤 6。** 根据回答调整对架构的理解，记录所有隐性知识。
 
 ---
 
-### 步骤 4：生成 Overview.md 和 Guides.md
+### 步骤 6：生成 Overview.md 和 Guides.md
 
-基于步骤 2 的探索结果直接生成，相对客观，无需额外交互。
+基于步骤 2-3 的探索和代码阅读结果直接生成，相对客观，无需额外交互。
 
 生成后自检：
 
 - [ ] 技术栈版本是否来自配置文件（不是推测）？
 - [ ] 入口点命令是否真实可执行？
 - [ ] 目录说明是否与实际用途一致？
+- [ ] 所有结论是否基于代码阅读（不是仅凭 GitNexus）？
 
 ---
 
-### 步骤 5：生成 Architecture.md
+### 步骤 7：生成 Architecture.md
 
-基于步骤 2 探索 + 步骤 3 用户确认的信息生成。此文档必须体现用户纠正后的架构理解，不能只反映代码表面结构。
+基于步骤 2-3 探索 + 步骤 5 用户确认的信息生成。此文档必须体现用户纠正后的架构理解，不能只反映代码表面结构。
+
+**必须包含代码证据**：每个架构判断都要引用具体代码文件和行号。
 
 ---
 
-### 步骤 6：生成 Principles.md
+### 步骤 8：生成 Principles.md
 
-基于步骤 3 用户提供的隐性知识 + 步骤 2 识别的代码模式共同生成。
+基于步骤 5 用户提供的隐性知识 + 步骤 3 识别的代码模式共同生成。
 
 生成后向用户确认：
 
@@ -184,7 +237,7 @@ npx gitnexus query "data flow and processing pipeline" --repo <repo>
 
 ---
 
-### 步骤 7：委派 Subagent 验证（不得跳过）
+### 步骤 9：委派 Subagent 验证（不得跳过）
 
 ```
 任务：验证 Stage 1 四份文档的完整性和准确性
@@ -198,9 +251,10 @@ npx gitnexus query "data flow and processing pipeline" --repo <repo>
 3. Architecture：层次划分是否与实际目录结构匹配？
 4. Architecture：数据流是否与实际调用链一致（抽查 2-3 个流程）？
 5. Architecture：设计模式是否有代码证据（引用具体文件行号）？
-6. Guides：安装/运行命令是否在 README 或 Makefile 中有依据？
+6. Guides：安装/运行命令是否在配置文件中有依据？
 7. Principles：记录的原则是否能在代码中找到对应实践？
 8. 所有文件：是否有绝对路径？是否有 YAML Front Matter？
+9. **关键检查**：文档结论是否基于实际代码阅读（不是仅凭 GitNexus）？
 
 输出：✅ 已验证 | ❌ 问题：{具体描述} [File: {path}:{line}] | ⚠️ 建议用户确认：{说明}
 ```
@@ -212,9 +266,12 @@ npx gitnexus query "data flow and processing pipeline" --repo <repo>
 ## 完成检查清单
 
 - [ ] GitNexus 已初始化（成功或已告知失败原因）
-- [ ] 步骤 2 的探索任务并行完成
-- [ ] 步骤 3 的用户对齐已完成（架构确认 + 重点区域 + 最佳实践 + 纲领原则）
+- [ ] 步骤 2 的结构探索已完成
+- [ ] **步骤 3 的代码深度阅读已执行（核心步骤，不可跳过）**
+- [ ] 步骤 4 的认知整理已完成
+- [ ] 步骤 5 的用户对齐已完成（架构确认 + 重点区域 + 最佳实践 + 纲领原则）
 - [ ] Architecture.md 体现了用户纠正后的理解
+- [ ] Architecture.md 包含代码证据（文件引用 + 行号）
 - [ ] Principles.md 包含用户提供的隐性知识
 - [ ] 所有文件包含 YAML Front Matter
 - [ ] Subagent 验证已执行并展示给用户

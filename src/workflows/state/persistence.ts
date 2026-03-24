@@ -25,6 +25,7 @@ interface ParsedWorkflowState {
   schemaVersion?: number;
   initialized?: boolean;
   typeId?: string;
+  projectRoot?: string;
   plan?: unknown;
   execution?: unknown;
   workflow?: Record<string, unknown>;
@@ -50,10 +51,10 @@ interface PersistedPlan {
   workflowVersion?: string;
   entryNodeId?: string;
   nodePlan?: WorkflowState['instance'] extends infer T
-    ? T extends { nodePlan: infer N }
-      ? N
-      : never
-    : never;
+  ? T extends { nodePlan: infer N }
+  ? N
+  : never
+  : never;
   stages: Record<string, PersistedPlanStage>;
 }
 
@@ -73,10 +74,10 @@ interface PersistedExecution {
     next: string | null;
     lastEventSeq: number;
     context: WorkflowState['runtime'] extends infer T
-      ? T extends { currentNodeContext: infer C }
-        ? C
-        : null
-      : null;
+    ? T extends { currentNodeContext: infer C }
+    ? C
+    : null
+    : null;
   };
 }
 
@@ -161,12 +162,12 @@ function sanitizeRuntime(value: unknown): WorkflowState['runtime'] {
 
   const currentNodeContext = rawContext && typeof rawContext.nodeId === 'string'
     ? {
-        nodeId: rawContext.nodeId,
-        visit: typeof rawContext.visit === 'number' ? rawContext.visit : 1,
-        attempt: typeof rawContext.attempt === 'number' ? rawContext.attempt : 1,
-        milestones,
-        info: isObjectRecord(rawContext.info) ? rawContext.info : {},
-      }
+      nodeId: rawContext.nodeId,
+      visit: typeof rawContext.visit === 'number' ? rawContext.visit : 1,
+      attempt: typeof rawContext.attempt === 'number' ? rawContext.attempt : 1,
+      milestones,
+      info: isObjectRecord(rawContext.info) ? rawContext.info : {},
+    }
     : null
 
   return {
@@ -425,16 +426,17 @@ function sanitizeStateForWrite(state: WorkflowState): WorkflowState {
   return {
     initialized: state.initialized,
     typeId: state.typeId,
+    projectRoot: state.projectRoot ?? null,
     workflow: sanitizedWorkflow,
     current: state.current
       ? {
-          name: state.current.name,
-          handoverTo: state.current.handoverTo,
-          previousStage: state.current.previousStage ?? null,
-          nextStage: state.current.nextStage ?? null,
-          failureCount: state.current.failureCount ?? 0,
-          ...(state.current.agent ? { agent: state.current.agent } : {}),
-        }
+        name: state.current.name,
+        handoverTo: state.current.handoverTo,
+        previousStage: state.current.previousStage ?? null,
+        nextStage: state.current.nextStage ?? null,
+        failureCount: state.current.failureCount ?? 0,
+        ...(state.current.agent ? { agent: state.current.agent } : {}),
+      }
       : null,
     ...(state.instance ? { instance: state.instance } : {}),
     ...(state.runtime ? { runtime: state.runtime } : {}),
@@ -525,6 +527,7 @@ export function readWorkflowStateFile(): WorkflowState | null {
       const state: WorkflowState = {
         initialized: parsed.initialized ?? (typeof parsed.typeId === 'string'),
         typeId: typeof parsed.typeId === 'string' ? parsed.typeId : null,
+        projectRoot: typeof parsed.projectRoot === 'string' ? parsed.projectRoot : null,
         workflow,
         current,
         ...(instance !== undefined ? { instance } : {}),
@@ -562,6 +565,7 @@ export function readWorkflowStateFile(): WorkflowState | null {
     const state: WorkflowState = {
       initialized: parsed.initialized ?? (typeof parsed.typeId === 'string'),
       typeId: typeof parsed.typeId === 'string' ? parsed.typeId : null,
+      projectRoot: typeof parsed.projectRoot === 'string' ? parsed.projectRoot : null,
       workflow,
       current,
       ...(instance !== undefined ? { instance } : {}),

@@ -40,6 +40,7 @@ describe('workflow persistence', () => {
   it('ignores legacy top-level gatePassed while still reading currentStage', () => {
     const legacyState = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: { isCompleted: true }
       },
@@ -66,6 +67,7 @@ describe('workflow persistence', () => {
   it('ignores legacy top-level gateResult object while still reading currentStage', () => {
     const legacyState = {
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: { isCompleted: true }
       },
@@ -97,6 +99,7 @@ describe('workflow persistence', () => {
     const canonicalState = {
       initialized: true,
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: {
           isCompleted: true,
@@ -127,6 +130,7 @@ describe('workflow persistence', () => {
     const state = {
       initialized: true,
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         dataCollection: {
           isCompleted: true,
@@ -175,6 +179,7 @@ describe('workflow persistence', () => {
     const canonicalStateWithAgent = {
       initialized: true,
       typeId: 'classic',
+      projectRoot: null,
       workflow: {
         IRAnalysis: {
           isCompleted: false,

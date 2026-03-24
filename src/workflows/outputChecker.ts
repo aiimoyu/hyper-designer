@@ -42,8 +42,8 @@ function countPatternMatches(pattern: string): number {
   }
 }
 
-export async function checkStageOutputs(outputs: StageFileItem[]): Promise<OutputCheckResult> {
-  const cwd = process.cwd()
+export async function checkStageOutputs(outputs: StageFileItem[], basePath?: string): Promise<OutputCheckResult> {
+  const cwd = basePath ?? process.cwd()
   const missing: StageFileItem[] = []
   const matchCounts = new Map<string, number>()
 

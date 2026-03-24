@@ -245,6 +245,7 @@ describe('workflow type definitions', () => {
       const state: WorkflowState = {
         initialized: true,
         typeId: 'test-workflow',
+        projectRoot: null,
         workflow: {},
         current: null,
       }
@@ -257,6 +258,7 @@ describe('workflow type definitions', () => {
       const state: WorkflowState = {
         initialized: false,
         typeId: null,
+        projectRoot: null,
         workflow: {},
         current: null,
       }
@@ -269,6 +271,7 @@ describe('workflow type definitions', () => {
       const state: WorkflowState = {
         initialized: true,
         typeId: 'test-workflow',
+        projectRoot: null,
         workflow: {
           stage1: { isCompleted: false, selected: true },
           stage2: { isCompleted: false, selected: false },
