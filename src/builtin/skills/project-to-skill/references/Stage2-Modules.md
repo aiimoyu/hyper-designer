@@ -216,6 +216,73 @@ graph TD
 | M002 | API | {responsibility} | `src/api/` | 20 | 接口层 |
 | M003 | Auth | {responsibility} | `src/auth/` | 10 | 业务层 |
 
+---
+
+## 模块功能树概览
+
+> 每个模块的功能分解，展示 File → Class/Function 的层次关系
+
+### M001-Core 功能树
+
+```
+M001-Core (核心基础设施)
+├── 📁 config/
+│   ├── loader.ts
+│   │   └── fn: loadConfig() - 加载并验证配置
+│   │   └── fn: validateSchema() - 配置模式验证
+│   └── types.ts
+│       └── interface: ConfigOptions - 配置选项类型
+├── 📁 logger/
+│   └── index.ts
+│       └── class: Logger - 结构化日志工具
+│           ├── method: debug()
+│           ├── method: info()
+│           └── method: error()
+└── 📁 utils/
+    └── helpers.ts
+        └── fn: formatDate() - 日期格式化
+```
+
+### M002-API 功能树
+
+```
+M002-API (接口层)
+├── 📁 routes/
+│   ├── index.ts
+│   │   └── fn: createRouter() - 创建路由实例
+│   └── handlers/
+│       └── user.ts
+│           └── fn: handleGetUser() - 获取用户处理器
+├── 📁 middleware/
+│   └── auth.ts
+│       └── fn: authMiddleware() - 认证中间件
+└── 📁 validators/
+    └── user.ts
+        └── fn: validateUserInput() - 用户输入验证
+```
+
+### M003-Auth 功能树
+
+```
+M003-Auth (认证模块)
+├── 📁 service/
+│   └── index.ts
+│       └── class: AuthService
+│           ├── method: login()
+│           ├── method: logout()
+│           └── method: refreshToken()
+├── 📁 strategies/
+│   └── jwt.ts
+│       └── class: JwtStrategy - JWT认证策略
+└── 📁 tokens/
+    └── manager.ts
+        └── class: TokenManager
+            ├── method: generate()
+            └── method: verify()
+```
+
+---
+
 ## 模块依赖
 
 ```mermaid
@@ -237,18 +304,171 @@ graph LR
 | M002-API | M001 | M003 | 1 |
 | M003-Auth | M001, M002 | — | 2 |
 
-## 模块公共接口
+---
 
-### M001-Core
+## 模块公共接口（详细）
+
+> 模块间接口需要详细描述，模块内接口可适当简化
+
+### M001-Core 公共接口
+
+#### 接口关系图
+
+```mermaid
+erDiagram
+    CONFIG_OPTIONS ||--o{ CONFIG : defines
+    CONFIG ||--|| LOGGER : initializes
+    LOGGER ||--o{ LOG_ENTRY : produces
+    
+    CONFIG_OPTIONS {
+        string env "环境标识"
+        number port "服务端口"
+        object database "数据库配置"
+    }
+    
+    CONFIG {
+        string version "配置版本"
+        datetime loadedAt "加载时间"
+    }
+    
+    LOGGER {
+        string level "日志级别"
+        string format "输出格式"
+    }
+    
+    LOG_ENTRY {
+        string level "级别"
+        string message "消息"
+        datetime timestamp "时间戳"
+    }
+```
+
+#### 导出函数
+
+| 接口 | 类型 | 签名 | 描述 | 文件 |
+|------|------|------|------|------|
+| `loadConfig()` | Function | `(path: string) => Config` | 加载并验证配置文件，支持 JSON/YAML 格式 | `src/core/config/loader.ts:15` |
+| `validateSchema()` | Function | `(config: unknown) => boolean` | 使用 JSON Schema 验证配置结构 | `src/core/config/loader.ts:45` |
+
+#### 导出类
 
 | 接口 | 类型 | 描述 | 文件 |
 |------|------|------|------|
-| `loadConfig()` | Function | 加载并验证配置 | `src/core/config/loader.ts:15` |
-| `Logger` | Class | 结构化日志工具 | `src/core/logger.ts:10` |
+| `Logger` | Class | 结构化日志工具，支持多输出目标和格式化 | `src/core/logger.ts:10` |
+| `ConfigOptions` | Interface | 配置选项类型定义 | `src/core/config/types.ts:5` |
 
-### M002-API
+#### 接口使用示例
 
-[同上格式]
+```typescript
+// 加载配置
+import { loadConfig, Logger } from '@core';
+
+const config = loadConfig('./config/app.yaml');
+const logger = new Logger({ level: config.logLevel });
+
+logger.info('Application started', { port: config.port });
+```
+
+### M002-API 公共接口
+
+#### 接口关系图
+
+```mermaid
+erDiagram
+    ROUTER ||--o{ ROUTE : contains
+    ROUTE ||--|| HANDLER : executes
+    HANDLER ||--|| REQUEST : receives
+    HANDLER ||--|| RESPONSE : returns
+    
+    ROUTER {
+        string basePath "基础路径"
+        Route[] routes "路由列表"
+    }
+    
+    ROUTE {
+        string method "HTTP方法"
+        string path "路径模式"
+        Handler handler "处理函数"
+    }
+    
+    REQUEST {
+        string method "方法"
+        string path "路径"
+        object params "路径参数"
+        object query "查询参数"
+        object body "请求体"
+    }
+    
+    RESPONSE {
+        number status "状态码"
+        object body "响应体"
+    }
+```
+
+#### 导出函数
+
+| 接口 | 类型 | 签名 | 描述 | 文件 |
+|------|------|------|------|------|
+| `createRouter()` | Function | `(options?: RouterOptions) => Router` | 创建路由实例，支持中间件链 | `src/api/routes/index.ts:10` |
+| `authMiddleware()` | Function | `(req, res, next) => void` | 认证中间件，验证 JWT Token | `src/api/middleware/auth.ts:5` |
+
+#### 导出类
+
+| 接口 | 类型 | 描述 | 文件 |
+|------|------|------|------|
+| `Router` | Class | HTTP 路由器，支持 RESTful 风格 | `src/api/routes/index.ts:25` |
+| `RequestContext` | Interface | 请求上下文类型定义 | `src/api/types.ts:15` |
+
+### M003-Auth 公共接口
+
+#### 接口关系图
+
+```mermaid
+erDiagram
+    AUTH_SERVICE ||--|| TOKEN_MANAGER : uses
+    AUTH_SERVICE ||--|| USER : authenticates
+    TOKEN_MANAGER ||--o{ TOKEN : generates
+    TOKEN ||--|| USER : belongs_to
+    
+    AUTH_SERVICE {
+        method login "用户登录"
+        method logout "用户登出"
+        method refreshToken "刷新令牌"
+    }
+    
+    TOKEN_MANAGER {
+        string secret "密钥"
+        number expiresIn "过期时间"
+    }
+    
+    TOKEN {
+        string accessToken "访问令牌"
+        string refreshToken "刷新令牌"
+        datetime expiresAt "过期时间"
+    }
+    
+    USER {
+        string id "用户ID"
+        string username "用户名"
+        string[] roles "角色列表"
+    }
+```
+
+#### 导出函数
+
+| 接口 | 类型 | 签名 | 描述 | 文件 |
+|------|------|------|------|------|
+| `createAuthService()` | Function | `(options: AuthOptions) => AuthService` | 创建认证服务实例 | `src/auth/service/index.ts:10` |
+
+#### 导出类
+
+| 接口 | 类型 | 描述 | 文件 |
+|------|------|------|------|
+| `AuthService` | Class | 认证服务，处理登录/登出/令牌刷新 | `src/auth/service/index.ts:25` |
+| `TokenManager` | Class | 令牌管理器，生成和验证 JWT | `src/auth/tokens/manager.ts:5` |
+| `AuthResult` | Interface | 认证结果类型定义 | `src/auth/types.ts:10` |
+
+---
 
 ## 模块间数据流
 
@@ -278,6 +498,25 @@ graph LR
    {path}
    ```
 
+### 模块间调用序列图
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant M002 as M002-API
+    participant M003 as M003-Auth
+    participant M001 as M001-Core
+    
+    Client->>M002: POST /login
+    M002->>M003: AuthService.login()
+    M003->>M001: Logger.info()
+    M003->>M001: Config.get()
+    M003-->>M002: AuthResult
+    M002-->>Client: Response
+```
+
+---
+
 ## 循环依赖分析
 
 | 循环 | 严重程度 | 原因分析 | 建议 |
@@ -285,6 +524,8 @@ graph LR
 | {cycle} | 高/中/低 | {why} | {suggestion} |
 
 *无循环依赖* ✓ / *发现 {N} 个循环依赖，见上表*
+
+---
 
 ## 模块详情索引
 
