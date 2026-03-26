@@ -86,7 +86,7 @@ describe('skillContentInjectionProvider', () => {
       } as unknown as InjectionConfig,
     })
 
-    expect(result).toContain('<using_skill>')
+    expect(result).toContain('<hd-using-skill>')
     expect(result).toContain('<id>lite-designer</id>')
     expect(result).toContain('<name>SKILL.md</name>')
     expect(result).toContain('skill content')

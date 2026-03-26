@@ -9,12 +9,12 @@ function findLatestNodeMilestone(
   state: ReturnType<typeof readWorkflowStateFile>,
   nodeId: string,
   key: string,
-): { isCompleted?: boolean; detail?: unknown } | undefined {
+): { mark?: boolean; detail?: unknown } | undefined {
   const events = state?.history?.events ?? []
   for (let i = events.length - 1; i >= 0; i -= 1) {
     const event = events[i]
     if (event.type === 'milestone.set' && event.nodeId === nodeId && event.key === key) {
-      return event.value as { isCompleted?: boolean; detail?: unknown } | undefined
+      return event.value as { mark?: boolean; detail?: unknown } | undefined
     }
   }
   return undefined
@@ -42,7 +42,7 @@ describe('workflow persistence', () => {
       typeId: 'classic',
       projectRoot: null,
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { mark: true }
       },
       currentStage: 'dataCollection',
       gatePassed: true,
@@ -69,7 +69,7 @@ describe('workflow persistence', () => {
       typeId: 'classic',
       projectRoot: null,
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { mark: true }
       },
       currentStage: 'IRAnalysis',
       gateResult: {
@@ -102,10 +102,10 @@ describe('workflow persistence', () => {
       projectRoot: null,
       workflow: {
         dataCollection: {
-          isCompleted: true,
+          mark: true,
           selected: true,
           previousStage: null,
-            nextStage: 'IRAnalysis',
+          nextStage: 'IRAnalysis',
         }
       },
       current: {
@@ -133,10 +133,10 @@ describe('workflow persistence', () => {
       projectRoot: null,
       workflow: {
         dataCollection: {
-          isCompleted: true,
+          mark: true,
           selected: true,
           previousStage: null,
-            nextStage: 'IRAnalysis',
+          nextStage: 'IRAnalysis',
         }
       },
       current: {
@@ -182,7 +182,7 @@ describe('workflow persistence', () => {
       projectRoot: null,
       workflow: {
         IRAnalysis: {
-          isCompleted: false,
+          mark: false,
           selected: true,
           previousStage: null,
           nextStage: 'scenarioAnalysis',

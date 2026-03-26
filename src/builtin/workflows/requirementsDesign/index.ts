@@ -1,0 +1,153 @@
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
+import type { MilestoneDefinition, StageFileItem, WorkflowDefinition } from '../../../types'
+import { clearHook } from '../../../workflows/stageHooks'
+import { filePrompt as workflowFilePrompt } from '../../../workflows/utils'
+import { referenceSetupHook } from './hooks/referenceSetupHook'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: string | null): string {
+  const thisDisplay = thisName
+  const fromDisplay = currentName ?? null
+  const phaseHeader = fromDisplay
+    ? `[ PHASE: ${fromDisplay} → ${thisDisplay} ]`
+    : `[ PHASE: ${thisDisplay} ]`
+  const switchMsg = fromDisplay
+    ? `Workflow switched from \`${fromDisplay}\` to \`${thisDisplay}\`.`
+    : `Workflow switched to \`${thisDisplay}\`.`
+
+  return (
+    `${phaseHeader}\n\n` +
+    `${switchMsg} Based on current context and prior artifacts, ${stageTask}, and generate the required output for this stage.\n\n` +
+    'Follow the Single-Stage Processing Pipeline and begin immediately.'
+  )
+}
+
+const HANDOVER_MILESTONES: MilestoneDefinition[] = [
+  {
+    id: 'hd-gate',
+    name: 'Quality Gate',
+    description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
+    failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
+  },
+  {
+    id: "hd-int-mod",
+    name: "Interactive Modification",
+    description: "This milestone will be automatically activated after the document has been interactively modified with the user. To ensure document quality and alignment with user intent, interactive modification is required. Use the `hd_prepare_review` and `hd_finalize_review` tools to retrieve the modifications and complete this milestone.",
+    failureMessage: "The 'Interactive Modification' milestone is not completed. You must use `hd_prepare_review` and `hd_finalize_review` tools to retrieve changes and activate this milestone. Only then can you proceed to the next stage.",
+  }
+]
+
+const REQUIREMENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'requirementAnalysis',
+    path: './.hyper-designer/requirementAnalysis/需求分析说明书.md',
+    type: 'file',
+    description: 'Requirement analysis specification document',
+  },
+]
+
+const FUNCTIONAL_DESIGN_INPUTS: StageFileItem[] = [
+  {
+    id: 'requirementAnalysis',
+    path: './.hyper-designer/requirementAnalysis/需求分析说明书.md',
+    type: 'file',
+    description: 'Requirement analysis specification document',
+  },
+]
+
+const FUNCTIONAL_DESIGN_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'functionalDesign',
+    path: './.hyper-designer/requirementDesign/需求设计说明书.md',
+    type: 'file',
+    description: 'Functional design specification document',
+  },
+]
+
+const SDD_PLAN_INPUTS: StageFileItem[] = [
+  {
+    id: 'functionalDesign',
+    path: './.hyper-designer/requirementDesign/需求设计说明书.md',
+    type: 'file',
+    description: 'Functional design specification document',
+  },
+]
+
+const SDD_PLAN_OUTPUTS: StageFileItem[] = [
+  {
+    id: 'developmentPlan',
+    path: './.hyper-designer/developmentPlan/',
+    type: 'folder',
+    description: 'SDD development plans folder, one plan file per module',
+  },
+]
+
+export const requirementWorkflow: WorkflowDefinition = {
+  id: 'requirement-designer',
+  name: 'Requirement Designer',
+  description: '3-stage workflow for single-module changes: requirementAnalysis → requirementDesign → designdevelopmentPlan',
+  entryStageId: 'requirementAnalysis',
+
+  promptBindings: {},
+
+  stages: {
+    requirementAnalysis: {
+      stageId: 'requirementAnalysis',
+      name: 'Requirement Scenario Analysis',
+      description: 'Consolidate requirement analysis and scenario analysis',
+      agent: 'HDArchitect',
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementAnalysis.md')),
+      },
+      requiredMilestones: [...HANDOVER_MILESTONES],
+      required: true,
+      inputs: [],
+      outputs: REQUIREMENT_ANALYSIS_OUTPUTS,
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
+      after: [{ id: 'clear-context', description: 'Clear context', fn: clearHook }],
+      transitions: [{ id: 'to-requirementDesign', toStageId: 'requirementDesign', mode: 'auto', priority: 0 }],
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-design` skill，并路由至 `requirementAnalysis` 进行需求分析，并输出需求分析说明书', currentName),
+    },
+
+    requirementDesign: {
+      stageId: 'requirementDesign',
+      name: 'Requirement Design',
+      description: 'Produce module-level functional requirement design',
+      agent: 'HDEngineer',
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementDesign.md')),
+      },
+      requiredMilestones: [...HANDOVER_MILESTONES],
+      required: true,
+      inputs: FUNCTIONAL_DESIGN_INPUTS,
+      outputs: FUNCTIONAL_DESIGN_OUTPUTS,
+      after: [{ id: 'clear-context', description: 'Clear context', fn: clearHook }],
+      transitions: [{ id: 'to-developmentPlan', toStageId: 'developmentPlan', mode: 'auto', priority: 0 }],
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-design` skill，并路由至 `requirementDesign` 进行需求设计，并输出需求设计说明书', currentName),
+    },
+
+    developmentPlan: {
+      stageId: 'developmentPlan',
+      name: 'Development Plan',
+      description: 'Generate an SDD implementation plan from design artifacts',
+      agent: 'HDEngineer',
+      inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
+      promptBindings: {
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'developmentPlan.md')),
+      },
+      requiredMilestones: [...HANDOVER_MILESTONES],
+      required: true,
+      inputs: SDD_PLAN_INPUTS,
+      outputs: SDD_PLAN_OUTPUTS,
+      transitions: [],
+      getHandoverPrompt: (currentName, thisName) =>
+        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-design` skill，并路由至 `developmentPlan` 进行根据需求设计说明书，生成SDD实施计划', currentName),
+    },
+  },
+}

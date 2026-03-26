@@ -78,7 +78,7 @@ function getLatestNodeMilestone(
   state: WorkflowState,
   nodeId: string,
   key: string,
-): { isCompleted?: boolean; detail?: unknown } | null {
+): { mark?: boolean; detail?: unknown } | null {
   const events = state.history?.events
   if (!events) {
     return null
@@ -90,7 +90,7 @@ function getLatestNodeMilestone(
       continue
     }
     if (typeof event.value === 'object' && event.value !== null) {
-      return event.value as { isCompleted?: boolean; detail?: unknown }
+      return event.value as { mark?: boolean; detail?: unknown }
     }
     return null
   }
@@ -99,15 +99,15 @@ function getLatestNodeMilestone(
 }
 
 function createNodeContextSetters(state: WorkflowState): {
-  setMilestone: (input: { key: string; isCompleted: boolean; detail: unknown }) => void
+  setMilestone: (input: { key: string; mark: boolean; detail: unknown }) => void
   setInfo: (patch: Record<string, unknown>) => void
 } {
   return {
-    setMilestone: ({ key, isCompleted, detail }) => {
+    setMilestone: ({ key, mark, detail }) => {
       setCurrentNodeMilestone(state, {
         key,
         milestone: {
-          isCompleted,
+          mark,
           detail,
           updatedAt: new Date().toISOString(),
         },
@@ -154,7 +154,7 @@ export function initializeWorkflowState(definition: WorkflowDefinition, selected
   for (const stage of stageOrder) {
     // 如果提供了 selectedStages，则根据它设置 selected；否则默认全部选中
     const isSelected = selectedStages ? selectedStages.includes(stage) : true;
-    workflow[stage] = { isCompleted: false, selected: isSelected };
+    workflow[stage] = { mark: false, selected: isSelected };
   }
 
   // Compute neighbor links for selected stages
@@ -226,23 +226,23 @@ export function ensureWorkflowStateExists(): WorkflowState {
 /**
  * Updates the completion status of a workflow stage
  * @param stageName Name of the stage to update
- * @param isCompleted Whether the stage is completed
+ * @param mark Whether the stage is completed
  * @returns Updated workflow state
  */
-export function setWorkflowStage(stageName: string, isCompleted: boolean): WorkflowState {
+export function setWorkflowStage(stageName: string, mark: boolean): WorkflowState {
   HyperDesignerLogger.info("Workflow", "设置工作流阶段状态", {
     stage: stageName,
-    status: isCompleted ? "completed" : "not completed"
+    status: mark ? "completed" : "not completed"
   });
 
   const state = ensureWorkflowStateExists();
 
   if (state.workflow[stageName]) {
-    state.workflow[stageName].isCompleted = isCompleted;
+    state.workflow[stageName].mark = mark;
     writeWorkflowStateFile(state);
     HyperDesignerLogger.debug("Workflow", "工作流阶段状态更新完成", {
       stage: stageName,
-      status: isCompleted
+      status: mark
     });
   } else {
     HyperDesignerLogger.warn("Workflow", "无效的工作流阶段", {
@@ -423,7 +423,7 @@ interface StageMilestoneInput {
   nodeId: string
   milestone: {
     type: string
-    isCompleted: boolean
+    mark: boolean
     detail: unknown
   }
 }
@@ -433,7 +433,7 @@ function createGateMilestone(detail: GateMilestoneDetail): StageMilestone {
   return {
     type: GATE_MILESTONE_KEY,
     timestamp: new Date().toISOString(),
-    isCompleted: passed,
+    mark: passed,
     detail,
   };
 }
@@ -447,7 +447,7 @@ export function setWorkflowGateResult(gateEvaluation: GateEvaluationInput): Work
     setCurrentNodeMilestone(state, {
       key: GATE_MILESTONE_KEY,
       milestone: {
-        isCompleted: createGateMilestone(gateEvaluation.detail).isCompleted,
+        mark: createGateMilestone(gateEvaluation.detail).mark,
         detail: gateEvaluation.detail,
         updatedAt: new Date().toISOString(),
       },
@@ -457,7 +457,7 @@ export function setWorkflowGateResult(gateEvaluation: GateEvaluationInput): Work
       nodeId,
       key: GATE_MILESTONE_KEY,
       value: {
-        isCompleted: createGateMilestone(gateEvaluation.detail).isCompleted,
+        mark: createGateMilestone(gateEvaluation.detail).mark,
         detail: gateEvaluation.detail,
       },
     })
@@ -473,7 +473,7 @@ export function setWorkflowStageMilestone(input: StageMilestoneInput): WorkflowS
   setCurrentNodeMilestone(state, {
     key: input.milestone.type,
     milestone: {
-      isCompleted: input.milestone.isCompleted,
+      mark: input.milestone.mark,
       detail: input.milestone.detail,
       updatedAt: new Date().toISOString(),
     },
@@ -483,7 +483,7 @@ export function setWorkflowStageMilestone(input: StageMilestoneInput): WorkflowS
     nodeId: input.nodeId,
     key: input.milestone.type,
     value: {
-      isCompleted: input.milestone.isCompleted,
+      mark: input.milestone.mark,
       detail: input.milestone.detail,
     },
   })
@@ -539,14 +539,14 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
 
   if (toIndex > fromIndex && fromStep !== null) {
     // 向前移动时将当前步骤标记为完成
-    state.workflow[fromStep].isCompleted = true;
+    state.workflow[fromStep].mark = true;
     HyperDesignerLogger.debug("Workflow", "步骤标记为完成", { step: fromStep });
   } else if (toIndex < fromIndex && fromStep !== null) {
     // 重置正在重新访问的步骤的完成状态
     for (let i = toIndex; i <= fromIndex; i++) {
       const step = selectedStages[i];
       if (step) {
-        state.workflow[step].isCompleted = false;
+        state.workflow[step].mark = false;
       }
       HyperDesignerLogger.debug("Workflow", "步骤标记为未完成", { step });
     }
@@ -707,7 +707,7 @@ export function forceWorkflowNextStep(
       nodeId: createMainNodeId(fromStage),
       key: FORCE_ADVANCE_MILESTONE_KEY,
       value: {
-        isCompleted: true,
+        mark: true,
         detail: {
           reason: 'Forced transition after 3+ failed handover attempts',
         },
@@ -728,6 +728,6 @@ export function areRequiredMilestonesCompletedForStage(state: WorkflowState, def
   const mainNodeId = createMainNodeId(stageKey)
   return requiredMilestones.every(key => {
     const milestone = getLatestNodeMilestone(state, mainNodeId, key)
-    return milestone?.isCompleted === true
+    return milestone?.mark === true
   })
 }

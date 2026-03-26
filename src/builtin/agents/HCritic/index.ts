@@ -49,7 +49,7 @@ const DEFINITION: AgentDefinition = {
     websearch: "deny",
     question: "deny",
     task: "deny",
-    external_directory: "deny",
+    external_directory: "allow",
     hd_workflow_list: 'deny',
     hd_workflow_select: 'deny',
     hd_workflow_state: "allow",

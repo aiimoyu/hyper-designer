@@ -25,8 +25,8 @@ export const stageOutputsInjectionProvider: PromptInjectionProvider = {
 
     const itemsXml = outputs.map(formatOutputFileItem).join('\n')
 
-    return `<stage-output-files>
+    return `<hd-stage-output-files>
 ${itemsXml}
-</stage-output-files>`
+</hd-stage-output-files>`
   },
 }

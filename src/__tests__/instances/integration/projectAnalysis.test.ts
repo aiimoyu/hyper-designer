@@ -81,7 +81,7 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     expect(agent.mode).toBe('primary')
     expect(agent.prompt).toBeDefined()
     expect(agent.prompt).toContain('{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}')
-    expect(agent.prompt).toContain('{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}')
+    expect(agent.prompt).toContain('{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}')
     expect(agent.permission?.hd_workflow_state).toBe('allow')
     expect(agent.permission?.hd_handover).toBe('allow')
   })
@@ -97,25 +97,25 @@ describe('Integration Tests: projectAnalysis workflow', () => {
     expect(state.current).toBeNull()
 
     expect(state.workflow.projectOverview).toMatchObject({
-      isCompleted: false,
+      mark: false,
       selected: true,
       previousStage: null,
       nextStage: 'functionTreeAndModule',
     })
     expect(state.workflow.functionTreeAndModule).toMatchObject({
-      isCompleted: false,
+      mark: false,
       selected: true,
       previousStage: 'projectOverview',
       nextStage: 'interfaceAndDataFlow',
     })
     expect(state.workflow.interfaceAndDataFlow).toMatchObject({
-      isCompleted: false,
+      mark: false,
       selected: true,
       previousStage: 'functionTreeAndModule',
       nextStage: 'defectCheckAndPatch',
     })
     expect(state.workflow.defectCheckAndPatch).toMatchObject({
-      isCompleted: false,
+      mark: false,
       selected: true,
       previousStage: 'interfaceAndDataFlow',
       nextStage: null,

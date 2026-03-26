@@ -71,7 +71,7 @@ const transitionOnlyWorkflow: WorkflowDefinition = {
         id: 'before-b',
         description: 'before hook',
         fn: async ({ setMilestone }) => {
-          setMilestone?.({ key: 'hook_milestone', isCompleted: false, detail: { marker: true } })
+          setMilestone?.({ key: 'hook_milestone', mark: false, detail: { marker: true } })
         },
       }],
       transitions: [],
@@ -220,7 +220,7 @@ describe("WorkflowService", () => {
       service.setStage("IRAnalysis", true);
       const state = service.getState();
       expect(state).not.toBeNull();
-      expect(state?.workflow.IRAnalysis?.isCompleted).toBe(true);
+      expect(state?.workflow.IRAnalysis?.mark).toBe(true);
     });
   });
 
@@ -277,7 +277,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'hd-int-mod',
-          isCompleted: true,
+          mark: true,
           detail: { source: 'test' },
         },
       });
@@ -297,7 +297,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'gate',
-          isCompleted: false,
+          mark: false,
           detail: { score: 60, comment: 'Document needs revision' },
         },
       });
@@ -317,7 +317,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'hd-int-mod',
-          isCompleted: true,
+          mark: true,
           detail: { source: 'test' },
         },
       });
@@ -337,7 +337,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'hd-int-mod',
-          isCompleted: true,
+          mark: true,
           detail: { source: 'test' },
         },
       });
@@ -346,7 +346,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'doc_review',
-          isCompleted: false,
+          mark: false,
           detail: { reviewer: 'HCritic' },
         },
       });
@@ -365,7 +365,7 @@ describe("WorkflowService", () => {
         stage: 'stageA',
         milestone: {
           type: 'gate',
-          isCompleted: true,
+          mark: true,
           detail: { score: 90, comment: 'approved' },
         },
       });
@@ -373,7 +373,7 @@ describe("WorkflowService", () => {
         stage: 'stageA',
         milestone: {
           type: 'doc_review',
-          isCompleted: false,
+          mark: false,
           detail: { reviewer: 'HCritic' },
         },
       });
@@ -381,7 +381,7 @@ describe("WorkflowService", () => {
         stage: 'stageA',
         milestone: {
           type: 'traceability',
-          isCompleted: false,
+          mark: false,
           detail: { status: 'pending' },
         },
       });
@@ -396,7 +396,7 @@ describe("WorkflowService", () => {
         stage: 'stageA',
         milestone: {
           type: 'doc_review',
-          isCompleted: true,
+          mark: true,
           detail: { reviewer: 'HCritic' },
         },
       });
@@ -424,7 +424,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'hd-int-mod',
-          isCompleted: true,
+          mark: true,
           detail: { source: 'test' },
         },
       });
@@ -462,7 +462,7 @@ describe("WorkflowService", () => {
         stage: 'stageA',
         milestone: {
           type: 'gate',
-          isCompleted: true,
+          mark: true,
           detail: { score: 90 },
         },
       });
@@ -480,7 +480,7 @@ describe("WorkflowService", () => {
         stage: 'IRAnalysis',
         milestone: {
           type: 'hd-int-mod',
-          isCompleted: true,
+          mark: true,
           detail: { source: 'test' },
         },
       });
@@ -561,7 +561,7 @@ describe("WorkflowService", () => {
       );
       expect(result.success).toBe(true);
       expect(forceAdvanceEvent).toBeDefined();
-      expect((forceAdvanceEvent?.value as { isCompleted?: boolean } | undefined)?.isCompleted).toBe(true);
+      expect((forceAdvanceEvent?.value as { mark?: boolean } | undefined)?.mark).toBe(true);
       expect((forceAdvanceEvent?.value as { detail?: unknown } | undefined)?.detail).toMatchObject({
         reason: 'Forced transition after 3+ failed handover attempts',
       });
@@ -573,7 +573,7 @@ describe("WorkflowService", () => {
     it("updates stage completion status", () => {
       initWithWorkflow(service);
       const state = service.setStage("IRAnalysis", true);
-      expect(state.workflow.IRAnalysis?.isCompleted).toBe(true);
+      expect(state.workflow.IRAnalysis?.mark).toBe(true);
     });
   });
 
@@ -587,7 +587,7 @@ describe("WorkflowService", () => {
         event => event.type === 'milestone.set' && event.nodeId === 'workflow.IRAnalysis.main' && event.key === 'gate',
       )
       expect(gateEvent).toBeDefined();
-      expect((gateEvent?.value as { isCompleted?: boolean } | undefined)?.isCompleted).toBe(true);
+      expect((gateEvent?.value as { mark?: boolean } | undefined)?.mark).toBe(true);
       expect((gateEvent?.value as { detail?: unknown } | undefined)?.detail).toMatchObject({ score: 85, comment: 'Good work' });
     });
   });

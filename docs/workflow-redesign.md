@@ -77,7 +77,7 @@ projectOverview: {
   agent: 'HAnalysis',
   inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
   promptBindings: {
-    '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'projectOverview.md')),
+    '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'projectOverview.md')),
   },
   requiredMilestones: [],
   required: true,
@@ -105,7 +105,7 @@ functionTreeAndModule: {
   agent: 'HAnalysis',
   inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
   promptBindings: {
-    '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'functionTreeAndModule.md')),
+    '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'functionTreeAndModule.md')),
   },
   requiredMilestones: [],
   required: true,
@@ -146,7 +146,7 @@ interfaceAndDataFlow: {
   agent: 'HAnalysis',
   inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
   promptBindings: {
-    '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'interfaceAndDataFlow.md')),
+    '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'interfaceAndDataFlow.md')),
   },
   requiredMilestones: [],
   required: true,
@@ -193,7 +193,7 @@ defectCheckAndPatch: {
   agent: 'HAnalysis',
   inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
   promptBindings: {
-    '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'defectCheckAndPatch.md')),
+    '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'defectCheckAndPatch.md')),
   },
   requiredMilestones: [],
   required: true,

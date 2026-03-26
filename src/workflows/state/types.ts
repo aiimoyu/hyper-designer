@@ -13,7 +13,7 @@ export type { GateMilestoneDetail }
  */
 export interface WorkflowStage {
   /** Whether the stage has been completed */
-  isCompleted: boolean;
+  mark: boolean;
   /** 是否被选中执行（用于工作流选择时跳过某些阶段） */
   selected?: boolean;
   /** 前一个阶段的 key（null 表示无前驱） */
@@ -59,7 +59,7 @@ export interface WorkflowState {
 }
 
 export interface WorkflowCurrentMilestone {
-  isCompleted: boolean;
+  mark: boolean;
   detail: unknown;
   updatedAt: string;
 }

@@ -79,7 +79,7 @@ export const projectToSkillWorkflow: WorkflowDefinition = {
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'projectOverview.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'projectOverview.md')),
       },
       requiredMilestones: [],
       required: true,
@@ -97,7 +97,7 @@ export const projectToSkillWorkflow: WorkflowDefinition = {
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'moduleAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'moduleAnalysis.md')),
       },
       requiredMilestones: [],
       required: true,
@@ -115,7 +115,7 @@ export const projectToSkillWorkflow: WorkflowDefinition = {
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'detailedModules.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'detailedModules.md')),
       },
       requiredMilestones: [],
       required: true,
@@ -134,7 +134,7 @@ export const projectToSkillWorkflow: WorkflowDefinition = {
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'skillGeneration.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'skillGeneration.md')),
       },
       requiredMilestones: [],
       required: true,

@@ -145,8 +145,8 @@ export const stageInputsInjectionProvider: PromptInjectionProvider = {
     const enrichedItems = await Promise.all(expandedInputs.map(enrichInputItem))
     const itemsXml = enrichedItems.map(formatInputFileItem).join('\n')
 
-    return `<stage-input-files>
+    return `<hd-stage-input-files>
 ${itemsXml}
-</stage-input-files>`
+</hd-stage-input-files>`
   },
 }

@@ -72,9 +72,9 @@ function createState(overrides?: Partial<WorkflowState>): WorkflowState {
     typeId: 'classic',
     projectRoot: null,
     workflow: {
-      IRAnalysis: { isCompleted: true, selected: true },
-      scenarioAnalysis: { isCompleted: false, selected: true },
-      useCaseAnalysis: { isCompleted: false, selected: true },
+      IRAnalysis: { mark: true, selected: true },
+      scenarioAnalysis: { mark: false, selected: true },
+      useCaseAnalysis: { mark: false, selected: true },
     },
     current: null,
     ...overrides,

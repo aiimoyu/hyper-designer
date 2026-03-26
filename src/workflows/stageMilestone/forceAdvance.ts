@@ -50,12 +50,12 @@ export function forceAdvanceToNextSelectedStage(
   }
 
   if (toIndex > fromIndex) {
-    state.workflow[currentStage].isCompleted = true
+    state.workflow[currentStage].mark = true
   } else if (toIndex < fromIndex) {
     for (let i = toIndex; i <= fromIndex; i++) {
       const step = selectedStages[i]
       if (step) {
-        state.workflow[step].isCompleted = false
+        state.workflow[step].mark = false
       }
     }
   }

@@ -65,8 +65,8 @@ function setupInitialState(def: WorkflowDefinition): void {
     typeId: def.id,
     projectRoot: null,
     workflow: {
-      stage1: { isCompleted: false, selected: true },
-      stage2: { isCompleted: false, selected: true },
+      stage1: { mark: false, selected: true },
+      stage2: { mark: false, selected: true },
     },
     current: {
       name: "stage1",

@@ -194,7 +194,7 @@ function buildInstancePlan(
  * WorkflowService 事件类型映射
  */
 export interface WorkflowServiceEvents {
-  stageCompleted: { stageName: string; isCompleted: boolean };
+  stageCompleted: { stageName: string; mark: boolean };
   currentChanged: { previousStep: string | null; newStep: string };
   handoverScheduled: { targetStep: string };
   handoverExecuted: { fromStep: string; toStep: string };
@@ -515,10 +515,10 @@ export class WorkflowService extends EventEmitter {
     );
 
     // 创建初始状态
-    const workflow: Record<string, { isCompleted: boolean; selected?: boolean; previousStage?: string | null; nextStage?: string | null }> = {};
+    const workflow: Record<string, { mark: boolean; selected?: boolean; previousStage?: string | null; nextStage?: string | null }> = {};
     for (const stageKey of stageOrder) {
       workflow[stageKey] = {
-        isCompleted: false,
+        mark: false,
         selected: stageSelectionMap.get(stageKey) ?? false,
       };
     }
@@ -590,13 +590,13 @@ export class WorkflowService extends EventEmitter {
   /**
    * 设置阶段完成状态
    * @param stageName 阶段名称
-   * @param isCompleted 是否完成
+   * @param mark 是否完成
    * @returns 更新后的工作流状态
    */
-  setStage(stageName: string, isCompleted: boolean): WorkflowState {
-    const state = setWorkflowStage(stageName, isCompleted);
+  setStage(stageName: string, mark: boolean): WorkflowState {
+    const state = setWorkflowStage(stageName, mark);
     if (state.workflow[stageName]) {
-      this.emit('stageCompleted', { stageName, isCompleted });
+      this.emit('stageCompleted', { stageName, mark });
     }
     return state;
   }
@@ -656,10 +656,10 @@ export class WorkflowService extends EventEmitter {
     } catch (error) {
       HyperDesignerLogger.error("Workflow", "handover执行失败，清除handoverTo防止重复执行",
         error instanceof Error ? error : new Error(String(error)), {
-          fromStep,
-          toStep,
-          action: 'executeHandover.errorRecovery'
-        });
+        fromStep,
+        toStep,
+        action: 'executeHandover.errorRecovery'
+      });
 
       try {
         const currentState = readWorkflowStateFile();
@@ -725,12 +725,12 @@ export class WorkflowService extends EventEmitter {
         current: null,
       }
     }
-    const isCompleted = typeof detail.score === 'number' && detail.score > GATE_PASS_THRESHOLD
+    const mark = typeof detail.score === 'number' && detail.score > GATE_PASS_THRESHOLD
     const state = this.setStageMilestone({
       stage: targetStage,
       milestone: {
         type: GATE_MILESTONE_KEY,
-        isCompleted,
+        mark,
         detail,
       },
     })
@@ -738,7 +738,7 @@ export class WorkflowService extends EventEmitter {
     return state;
   }
 
-  setStageMilestone(params: { stage: string; milestone: { type: string; isCompleted: boolean; detail: unknown } }): WorkflowState {
+  setStageMilestone(params: { stage: string; milestone: { type: string; mark: boolean; detail: unknown } }): WorkflowState {
     const nodeId = `workflow.${params.stage}.main`
     return setWorkflowStageMilestone({ nodeId, milestone: params.milestone })
   }
@@ -903,8 +903,8 @@ export class WorkflowService extends EventEmitter {
         if (event.type !== 'milestone.set' || event.nodeId !== mainNodeId || event.key !== milestoneId) {
           continue;
         }
-        if (typeof event.value === 'object' && event.value !== null && 'isCompleted' in event.value) {
-          return (event.value as { isCompleted?: unknown }).isCompleted !== true;
+        if (typeof event.value === 'object' && event.value !== null && 'mark' in event.value) {
+          return (event.value as { mark?: unknown }).mark !== true;
         }
       }
       return true;

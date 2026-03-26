@@ -156,12 +156,12 @@ export const skillContentInjectionProvider: PromptInjectionProvider = {
     const skillDir = await resolveSkillDirectory(skillName)
     if (!skillDir) {
       HyperDesignerLogger.warn('SkillContentInjection', `Skill not found: ${skillName}`)
-      return `<using_skill>\n  <item>\n    <id>${skillName}</id>\n    <error>Skill not found</error>\n  </item>\n</using_skill>`
+      return `<hd-using-skill>\n  <item>\n    <id>${skillName}</id>\n    <error>Skill not found</error>\n  </item>\n</hd-using-skill>`
     }
 
     const fileResults = await Promise.all(filesToRead.map(file => readSkillFile(skillDir, file)))
     const filesXml = formatSkillFiles(fileResults)
 
-    return `<using_skill>\n  <item>\n    <id>${skillName}</id>\n${filesXml}\n  </item>\n</using_skill>`
+    return `<hd-using-skill>\n  <item>\n    <id>${skillName}</id>\n${filesXml}\n  </item>\n</hd-using-skill>`
   },
 }

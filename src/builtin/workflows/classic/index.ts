@@ -268,7 +268,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HArchitect',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'IRAnalysis.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -288,7 +288,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HArchitect',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'scenarioAnalysis.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -308,7 +308,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HArchitect',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'useCaseAnalysis.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -327,7 +327,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HArchitect',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'functionalRefinement.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -346,7 +346,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementDecomposition.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -365,7 +365,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'systemFunctionalDesign.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -385,7 +385,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'moduleFunctionalDesign.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: true,
@@ -404,7 +404,7 @@ export const classicWorkflow: WorkflowDefinition = {
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'sddPlanGeneration.md')),
       },
       requiredMilestones: HANDOVER_MILESTONES,
       required: false,

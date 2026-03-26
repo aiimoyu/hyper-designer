@@ -48,7 +48,7 @@ const DEFINITION: AgentDefinition = {
     agentFilePrompt(join(__dirname, "prompts", "file.md")),
     agentFilePrompt(join(__dirname, "prompts", "interview.md")),
     agentFilePrompt(join(__dirname, "prompts", "constraints.md")),
-    agentStringPrompt("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}"),
+    agentStringPrompt("{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}"),
   ],
   defaultPermission: {
     bash: "deny",

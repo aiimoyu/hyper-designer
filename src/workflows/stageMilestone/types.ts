@@ -4,7 +4,7 @@ export const GATE_PASS_THRESHOLD = 75
 export interface StageMilestoneRecord {
   type: string
   timestamp: string
-  isCompleted: boolean
+  mark: boolean
   detail: unknown
 }
 export interface GateMilestoneDetail {

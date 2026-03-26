@@ -126,65 +126,49 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     },
     {
       name: 'hd_record_milestone',
-      description: 'Record or overwrite a milestone for the current workflow stage. For gate milestones, detail should include score and comment.',
+      description: 'Record or overwrite a milestone for the current workflow stage. Multiple calls with the same type will overwrite the previous milestone.',
       params: {
-        milestone: {
+        type: {
+          type: 'string',
+          description: 'Milestone type identifier',
+        },
+        mark: {
+          type: 'boolean',
+          description: 'Mark the milestone as lit (true) or unlit (false)',
+        },
+        detail: {
           type: 'object',
-          description: 'The milestone object to record',
-          properties: {
-            type: {
-              type: 'string',
-              description: 'Milestone type. Common: "gate", "hd-gate", "hd-int-mod"',
-            },
-            isCompleted: {
-              type: 'boolean',
-              description: 'Whether completed. true = passed, false = failed',
-            },
-            detail: {
-              type: 'object',
-              description: 'Additional details. For gates: { score: number, comment: string }',
-              properties: {
-                score: {
-                  type: 'number',
-                  description: 'Quality score 0-100. 90+ ready, 75-89 gaps, 60-74 revision, <60 rewrite',
-                },
-                comment: {
-                  type: 'string',
-                  description: 'Review comment',
-                },
-              },
-            },
-          },
+          optional: true,
+          description: 'Additional details as key-value pairs. Structure is flexible and can contain any properties.',
         },
       },
       execute: async params => {
-        const milestoneInput = params.milestone
-        if (typeof milestoneInput !== 'object' || milestoneInput === null) {
+        const typeValue = params.type
+        const markValue = params.mark
+
+        if (typeof typeValue !== 'string') {
           return JSON.stringify({
             success: false,
-            error: 'Invalid milestone payload. Expected an object with: { type: string, isCompleted: boolean, detail?: object }',
-            example: { type: 'gate', isCompleted: true, detail: { score: 85, comment: 'Review passed' } },
+            error: `Invalid type parameter. Expected string, got ${typeValue === undefined ? 'undefined' : typeof typeValue}`,
+            requiredFields: {
+              type: 'string (the name of milestone)',
+              mark: 'boolean (true to light up, false to turn off)',
+              detail: 'object (optional, any key-value pairs)',
+            },
+            example: { type: 'example-milestone', mark: true, detail: { message: 'Example milestone passed' } },
           }, null, 2)
         }
 
-        const milestone = milestoneInput as {
-          type?: unknown
-          isCompleted?: unknown
-          detail?: unknown
-        }
-
-        if (typeof milestone.type !== 'string' || typeof milestone.isCompleted !== 'boolean') {
+        if (typeof markValue !== 'boolean') {
           return JSON.stringify({
             success: false,
-            error: `Invalid milestone payload. Missing or invalid required fields:
-- type: expected string, got ${milestone.type === undefined ? 'undefined' : typeof milestone.type}
-- isCompleted: expected boolean, got ${milestone.isCompleted === undefined ? 'undefined' : typeof milestone.isCompleted}`,
+            error: `Invalid mark parameter. Expected boolean, got ${markValue === undefined ? 'undefined' : typeof markValue}`,
             requiredFields: {
-              type: 'string (e.g., "gate", "hd-gate", "hd-int-mod")',
-              isCompleted: 'boolean (true for passed, false for failed)',
-              detail: 'object (optional, e.g., { score: 85, comment: "..." })',
+              type: 'string (the name of milestone)',
+              mark: 'boolean (true to light up, false to turn off)',
+              detail: 'object (optional, any key-value pairs)',
             },
-            example: { type: 'gate', isCompleted: true, detail: { score: 85, comment: 'Review passed' } },
+            example: { type: 'example-milestone', mark: true, detail: { message: 'Example milestone passed' } },
           }, null, 2)
         }
 
@@ -197,13 +181,14 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           }, null, 2)
         }
 
+        const detailValue = typeof params.detail === 'object' && params.detail !== null ? params.detail : undefined
         const timestamp = new Date().toISOString()
         workflowService.setStageMilestone({
           stage,
           milestone: {
-            type: milestone.type,
-            isCompleted: milestone.isCompleted,
-            detail: milestone.detail,
+            type: typeValue,
+            mark: markValue,
+            detail: detailValue,
           },
         })
 
@@ -211,10 +196,10 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           success: true,
           stage,
           milestone: {
-            type: milestone.type,
+            type: typeValue,
             timestamp,
-            isCompleted: milestone.isCompleted,
-            detail: milestone.detail,
+            mark: markValue,
+            detail: detailValue,
           },
         }, null, 2)
       },

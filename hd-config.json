@@ -1,5 +1,10 @@
 {
   "$schema": "https://raw.atomgit.com/u011501137/hyper-designer/raw/master/schemas/hd-config.schema.json",
   "inheritHyperModel": true,
-  "agents": {}
+  "defaultModel": "minimax-cn-coding-plan/MiniMax-M2.7-highspeed",
+  "agents": {
+    "Hyper": {
+      "model": "minimax-cn-coding-plan/MiniMax-M2.7-highspeed"
+    }
+  }
 }

@@ -123,7 +123,7 @@ describe("Integration Tests: Deep Decoupling System", () => {
       expect(workflow).not.toBeNull()
       expect(workflow!.id).toBe("classic")
       expect(workflow!.name).toBeDefined()
-      
+
       const stageOrder = getStageOrder(workflow!)
       expect(stageOrder.length).toBeGreaterThan(0)
 
@@ -178,17 +178,17 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
     it("should complete stages and persist to disk", () => {
       const state = workflowService.setStage("IRAnalysis", true)
-      expect(state.workflow.IRAnalysis?.isCompleted).toBe(true)
+      expect(state.workflow.IRAnalysis?.mark).toBe(true)
       expect(existsSync(STATE_FILE)).toBe(true)
     })
 
     it("should transition through multiple stages", () => {
       let state = workflowService.setStage("IRAnalysis", true)
-      expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
+      expect(state.workflow.IRAnalysis.mark).toBe(true)
 
       state = workflowService.setStage("scenarioAnalysis", true)
-      expect(state.workflow.IRAnalysis.isCompleted).toBe(true)
-      expect(state.workflow.scenarioAnalysis.isCompleted).toBe(true)
+      expect(state.workflow.IRAnalysis.mark).toBe(true)
+      expect(state.workflow.scenarioAnalysis.mark).toBe(true)
     })
   })
 
@@ -289,10 +289,10 @@ describe("Integration Tests: Deep Decoupling System", () => {
 
       expect(state).toHaveProperty("workflow")
       expect(state).toHaveProperty("current")
-      
+
       for (const stageName of getStageOrder(workflow)) {
-        expect(state.workflow[stageName]).toHaveProperty("isCompleted")
-        expect(typeof state.workflow[stageName].isCompleted).toBe("boolean")
+        expect(state.workflow[stageName]).toHaveProperty("mark")
+        expect(typeof state.workflow[stageName].mark).toBe("boolean")
       }
     })
 

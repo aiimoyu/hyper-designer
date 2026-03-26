@@ -41,8 +41,8 @@ function makeTwoStageWorkflow(overrides?: {
         getHandoverPrompt: () => 'handover to stage2',
         ...(overrides?.onBefore
           ? {
-              before: [{ fn: overrides.onBefore, ...(overrides.beforeAgentOverride ? { agent: overrides.beforeAgentOverride } : {}) }],
-            }
+            before: [{ fn: overrides.onBefore, ...(overrides.beforeAgentOverride ? { agent: overrides.beforeAgentOverride } : {}) }],
+          }
           : {}),
       },
     },
@@ -71,9 +71,9 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           {
             initialized: true,
             typeId: 'classic',
-        projectRoot: null,
+            projectRoot: null,
             workflow: {
-              stage1: { isCompleted: false, selected: true },
+              stage1: { mark: false, selected: true },
             },
             current: {
               name: 'stage1',
@@ -99,9 +99,9 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           {
             initialized: true,
             typeId: 'classic',
-        projectRoot: null,
+            projectRoot: null,
             workflow: {
-              stage1: { isCompleted: false, selected: true },
+              stage1: { mark: false, selected: true },
             },
             current: {
               name: 'stage1',
@@ -126,13 +126,13 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         projectRoot: null,
         workflow: {
           stage1: {
-            isCompleted: false,
+            mark: false,
             selected: true,
             previousStage: null,
             nextStage: 'stage2',
           },
           stage2: {
-            isCompleted: false,
+            mark: false,
             selected: true,
             previousStage: 'stage1',
             nextStage: null,
@@ -274,8 +274,8 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         typeId: incompleteDefinition.id,
         projectRoot: null,
         workflow: {
-          stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
-          stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
+          stage1: { mark: false, selected: true, previousStage: null, nextStage: 'stage2' },
+          stage2: { mark: false, selected: true, previousStage: 'stage1', nextStage: null },
         },
         current: {
           name: 'stage1',
@@ -297,8 +297,8 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         typeId: definition.id,
         projectRoot: null,
         workflow: {
-          stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
-          stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
+          stage1: { mark: false, selected: true, previousStage: null, nextStage: 'stage2' },
+          stage2: { mark: false, selected: true, previousStage: 'stage1', nextStage: null },
         },
         current: {
           name: 'stage1',
@@ -339,8 +339,8 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
           writeWorkflowStateFile: (state: Parameters<typeof actual.writeWorkflowStateFile>[0]) => {
             const currentSnapshot = state.current
               ? {
-                  ...(state.current.agent !== undefined ? { agent: state.current.agent } : {}),
-                }
+                ...(state.current.agent !== undefined ? { agent: state.current.agent } : {}),
+              }
               : null
             capturedStates.push({
               current: currentSnapshot,
@@ -353,7 +353,7 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
       const stateModule = await import('../../../workflows/state')
       const definition = makeTwoStageWorkflow({
         beforeAgentOverride: 'HCollector',
-        onBefore: async () => {},
+        onBefore: async () => { },
       })
 
       stateModule.writeWorkflowStateFile({
@@ -361,8 +361,8 @@ describe('hyper agent routing: backward compatibility and edge cases', () => {
         typeId: definition.id,
         projectRoot: null,
         workflow: {
-          stage1: { isCompleted: false, selected: true, previousStage: null, nextStage: 'stage2' },
-          stage2: { isCompleted: false, selected: true, previousStage: 'stage1', nextStage: null },
+          stage1: { mark: false, selected: true, previousStage: null, nextStage: 'stage2' },
+          stage2: { mark: false, selected: true, previousStage: 'stage1', nextStage: null },
         },
         current: {
           name: 'stage1',

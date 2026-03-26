@@ -277,8 +277,8 @@ export async function createWorkflowHooks(
     HyperDesignerLogger.info('Integrations', `Handover completed: ${fromStep || '(none)'} → ${toStep}`)
   })
 
-  workflowServiceLike.on('stageCompleted', ({ stageName, isCompleted }) => {
-    HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${isCompleted ? 'completed' : 'uncompleted'}`)
+  workflowServiceLike.on('stageCompleted', ({ stageName, mark }) => {
+    HyperDesignerLogger.info('Integrations', `Stage ${stageName} ${mark ? 'completed' : 'uncompleted'}`)
   })
 
   if (!workflowServiceLike.getDefinition()) {

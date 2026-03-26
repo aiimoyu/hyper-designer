@@ -126,7 +126,7 @@ const transitionOnlyWorkflowDef: WorkflowDefinition = {
           id: 'before-b',
           description: 'before hook for B',
           fn: async ({ setMilestone, setInfo }) => {
-            setMilestone?.({ key: 'hook_local', isCompleted: false, detail: { source: 'before' } })
+            setMilestone?.({ key: 'hook_local', mark: false, detail: { source: 'before' } })
             setInfo?.({ hookFlag: true })
           },
         },
@@ -147,7 +147,7 @@ describe("workflow state management", () => {
     for (let i = events.length - 1; i >= 0; i -= 1) {
       const event = events[i]
       if (event.type === 'milestone.set' && event.nodeId === nodeId && event.key === key) {
-        return event.value as { isCompleted?: boolean; detail?: unknown } | undefined
+        return event.value as { mark?: boolean; detail?: unknown } | undefined
       }
     }
     return undefined
@@ -349,8 +349,8 @@ describe("workflow state management", () => {
         initialized: true,
         typeId: 'classic',
         workflow: {
-          IRAnalysis: { isCompleted: true, selected: true, previousStage: null, nextStage: 'scenarioAnalysis' },
-          scenarioAnalysis: { isCompleted: false, selected: true, previousStage: 'IRAnalysis', nextStage: null },
+          IRAnalysis: { mark: true, selected: true, previousStage: null, nextStage: 'scenarioAnalysis' },
+          scenarioAnalysis: { mark: false, selected: true, previousStage: 'IRAnalysis', nextStage: null },
         },
         current: {
           name: 'scenarioAnalysis',
@@ -396,7 +396,7 @@ describe("workflow state management", () => {
 
       const loaded = getWorkflowState()
 
-      expect(loaded?.workflow.IRAnalysis?.isCompleted).toBe(true)
+      expect(loaded?.workflow.IRAnalysis?.mark).toBe(true)
       expect(loaded?.current?.name).toBe('scenarioAnalysis')
       expect(loaded?.instance?.instanceId).toBe('instance_abc123')
       expect(loaded?.runtime?.flow.currentNodeId).toBe('node_002')
@@ -413,14 +413,14 @@ describe("workflow state management", () => {
       setWorkflowStage("IRAnalysis", true)
 
       const updatedState = getWorkflowState()
-      expect(updatedState!.workflow.IRAnalysis?.isCompleted).toBe(true)
+      expect(updatedState!.workflow.IRAnalysis?.mark).toBe(true)
     })
 
     it("persists state to file", () => {
       setWorkflowStage("scenarioAnalysis", true)
 
       const reloadedState = getWorkflowState()
-      expect(reloadedState!.workflow.scenarioAnalysis?.isCompleted).toBe(true)
+      expect(reloadedState!.workflow.scenarioAnalysis?.mark).toBe(true)
     })
 
     it("ignores invalid stage name", () => {
@@ -461,7 +461,7 @@ describe("workflow state management", () => {
       setWorkflowCurrent("scenarioAnalysis")
       const state = getWorkflowState()
       const gateMilestone = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
-      expect(gateMilestone?.isCompleted).toBe(true)
+      expect(gateMilestone?.mark).toBe(true)
     })
 
     it("sets current.agent from stage definition for HArchitect stage", () => {
@@ -487,11 +487,11 @@ describe("workflow state management", () => {
       setWorkflowCurrent("IRAnalysis")
       const state = setWorkflowGateResult({ detail: { score: 100, comment: null } })
       const gateMilestone = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
-      expect(gateMilestone?.isCompleted).toBe(true)
+      expect(gateMilestone?.mark).toBe(true)
       expect((gateMilestone?.detail as { score?: number } | undefined)?.score).toBe(100)
       const reloaded = getWorkflowState()
       const reloadedGateMilestone = findLatestNodeMilestone(reloaded, 'workflow.IRAnalysis.main', 'gate')
-      expect(reloadedGateMilestone?.isCompleted).toBe(true)
+      expect(reloadedGateMilestone?.mark).toBe(true)
       expect((reloadedGateMilestone?.detail as { score?: number } | undefined)?.score).toBe(100)
     })
   })
@@ -581,7 +581,7 @@ describe("workflow state management", () => {
 
       expect(state.current?.name).toBe("scenarioAnalysis")
       expect(state.current?.handoverTo).toBeNull()
-      expect(state.workflow.IRAnalysis?.isCompleted).toBe(true)
+      expect(state.workflow.IRAnalysis?.mark).toBe(true)
     })
 
     it('resets failureCount to 0 after successful stage transition', async () => {
@@ -682,7 +682,7 @@ describe("workflow state management", () => {
       expect('error' in result).toBe(false)
       if (!('error' in result)) {
         const milestone = findLatestNodeMilestone(result, 'workflow.IRAnalysis.main', 'force_advance')
-        expect(milestone?.isCompleted).toBe(true)
+        expect(milestone?.mark).toBe(true)
         expect(milestone?.detail).toMatchObject({
           reason: 'Forced transition after 3+ failed handover attempts',
         })
@@ -703,7 +703,7 @@ describe("workflow state management", () => {
 
       let state = getWorkflowState()
       const irGateMilestoneBefore = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
-      expect(irGateMilestoneBefore?.isCompleted).toBe(true)
+      expect(irGateMilestoneBefore?.mark).toBe(true)
       expect((irGateMilestoneBefore?.detail as { score?: number } | undefined)?.score).toBe(100)
 
       setWorkflowCurrent("scenarioAnalysis")
@@ -711,7 +711,7 @@ describe("workflow state management", () => {
       state = getWorkflowState()
       const irGateMilestoneAfter = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
       const scenarioGateMilestone = findLatestNodeMilestone(state, 'workflow.scenarioAnalysis.main', 'gate')
-      expect(irGateMilestoneAfter?.isCompleted).toBe(true)
+      expect(irGateMilestoneAfter?.mark).toBe(true)
       expect(scenarioGateMilestone).toBeUndefined()
     })
 
@@ -721,14 +721,14 @@ describe("workflow state management", () => {
       setWorkflowHandover("scenarioAnalysis", classicWorkflowDef)
       let state = getWorkflowState()
       const irGateMilestoneBefore = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
-      expect(irGateMilestoneBefore?.isCompleted).toBe(true)
+      expect(irGateMilestoneBefore?.mark).toBe(true)
 
       await executeWorkflowHandover(classicWorkflowDef)
 
       state = getWorkflowState()
       expect(state?.current?.name).toBe("scenarioAnalysis")
       const irGateMilestoneAfter = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
-      expect(irGateMilestoneAfter?.isCompleted).toBe(true)
+      expect(irGateMilestoneAfter?.mark).toBe(true)
     })
 
     it("clears gateResult when currentStage is set to null", () => {
@@ -740,7 +740,7 @@ describe("workflow state management", () => {
       const state = getWorkflowState()
       expect(state?.current).toBeNull()
       const irGateMilestone = findLatestNodeMilestone(state, 'workflow.IRAnalysis.main', 'gate')
-      expect(irGateMilestone?.isCompleted).toBe(true)
+      expect(irGateMilestone?.mark).toBe(true)
     })
   })
 
@@ -769,7 +769,7 @@ describe("workflow state management", () => {
               id: 'setup-hook',
               description: 'Setup hook with Hyper agent',
               agent: 'Hyper',
-              fn: async () => {},
+              fn: async () => { },
             },
           ],
           transitions: [],

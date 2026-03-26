@@ -58,7 +58,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -82,7 +82,7 @@ describe('system transform', () => {
       description: 'Test workflow',
       entryStageId: 'stage1',
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'workflow step',
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': 'workflow step',
       },
       stages: {
         stage1: {
@@ -91,7 +91,7 @@ describe('system transform', () => {
           description: 'Stage 1',
           agent: 'HArchitect',
           promptBindings: {
-            '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'stage step',
+            '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': 'stage step',
           },
           getHandoverPrompt: () => 'handover',
         },
@@ -104,7 +104,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -112,7 +112,7 @@ describe('system transform', () => {
       },
     })
     const transform = createSystemTransformer()
-    const output = { system: ['<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}</using-hyper-designer>'] }
+    const output = { system: ['<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}</using-hyper-designer>'] }
 
     await transform({ model: {} } as never, output)
 
@@ -128,7 +128,7 @@ describe('system transform', () => {
       entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': 'workflow overview',
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'workflow step',
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': 'workflow step',
         '{HYPER_DESIGNER_CUSTOM_PROMPT}': 'custom prompt',
       },
       stages: {
@@ -148,7 +148,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: null,
     })
@@ -157,7 +157,7 @@ describe('system transform', () => {
     const output = {
       system: [
         '<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}',
         '{HYPER_DESIGNER_CUSTOM_PROMPT}',
         FRAMEWORK_FALLBACK_PROMPT_TOKEN,
       ],
@@ -190,7 +190,7 @@ describe('system transform', () => {
           description: 'Stage 1',
           agent: 'HArchitect',
           promptBindings: {
-            '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': 'stage step',
+            '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': 'stage step',
             '{HYPER_DESIGNER_CUSTOM_PROMPT}': 'stage custom',
           },
           getHandoverPrompt: () => 'handover',
@@ -204,7 +204,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -216,7 +216,7 @@ describe('system transform', () => {
     const output = {
       system: [
         '<using-hyper-designer>## Role Definition\n\nYou are **HArchitect**, collaborating with HEngineer.\n\n{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}',
         '{HYPER_DESIGNER_CUSTOM_PROMPT}',
         FRAMEWORK_FALLBACK_PROMPT_TOKEN,
       ],
@@ -240,7 +240,7 @@ describe('system transform', () => {
     const output = {
       system: [
         '<using-hyper-designer>{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}</using-hyper-designer>',
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}',
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}',
         '{HYPER_DESIGNER_WORKFLOW_CUSTOM_DYNAMIC_PROMPT}',
         FRAMEWORK_FALLBACK_PROMPT_TOKEN,
       ],
@@ -262,9 +262,9 @@ describe('system transform', () => {
     getState.mockReturnValue({
       initialized: true,
       typeId: 'classic',
-    projectRoot: null,
+      projectRoot: null,
       workflow: {
-        IRAnalysis: { isCompleted: false, selected: true },
+        IRAnalysis: { mark: false, selected: true },
       },
       current: {
         name: 'IRAnalysis',
@@ -340,7 +340,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -398,7 +398,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -441,7 +441,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -490,7 +490,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        stage1: { isCompleted: false, selected: true },
+        stage1: { mark: false, selected: true },
       },
       current: {
         name: 'stage1',
@@ -537,7 +537,7 @@ describe('system transform', () => {
       typeId: workflow.id,
       projectRoot: null,
       workflow: {
-        IRAnalysis: { isCompleted: false, selected: true },
+        IRAnalysis: { mark: false, selected: true },
       },
       current: {
         name: 'IRAnalysis',

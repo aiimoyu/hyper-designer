@@ -149,11 +149,11 @@ function sanitizeRuntime(value: unknown): WorkflowState['runtime'] {
       if (!isObjectRecord(milestone)) {
         continue
       }
-      if (typeof milestone.isCompleted !== 'boolean' || typeof milestone.updatedAt !== 'string') {
+      if (typeof milestone.mark !== 'boolean' || typeof milestone.updatedAt !== 'string') {
         continue
       }
       milestones[key] = {
-        isCompleted: milestone.isCompleted,
+        mark: milestone.mark,
         detail: 'detail' in milestone ? milestone.detail : null,
         updatedAt: milestone.updatedAt,
       }
@@ -244,7 +244,7 @@ function sanitizeWorkflowStage(value: unknown): WorkflowStage {
   const stage = isObjectRecord(value) ? value : {}
 
   const normalized: WorkflowStage = {
-    isCompleted: Boolean(stage.isCompleted),
+    mark: Boolean(stage.mark),
   }
 
   if (typeof stage.selected === 'boolean') {
@@ -277,7 +277,7 @@ function sanitizePlanState(plan: unknown): {
     }
     const inclusion = rawStage.inclusion === 'selected' ? 'selected' : 'skipped'
     const stage: WorkflowStage = {
-      isCompleted: Boolean(rawStage.completed),
+      mark: Boolean(rawStage.completed),
       selected: inclusion === 'selected',
     }
     if (typeof rawStage.previous === 'string' || rawStage.previous === null) {
@@ -408,7 +408,7 @@ function sanitizeStateForWrite(state: WorkflowState): WorkflowState {
   const sanitizedWorkflow: Record<string, WorkflowStage> = {}
   for (const [stageKey, stageValue] of Object.entries(state.workflow)) {
     const stage: WorkflowStage = {
-      isCompleted: Boolean(stageValue.isCompleted),
+      mark: Boolean(stageValue.mark),
     }
 
     if (typeof stageValue.selected === 'boolean') {
@@ -449,7 +449,7 @@ function buildPlanForWrite(state: WorkflowState): PersistedPlan {
   for (const [stageKey, stage] of Object.entries(state.workflow)) {
     const normalized: PersistedPlanStage = {
       inclusion: stage.selected === false ? 'skipped' : 'selected',
-      completed: Boolean(stage.isCompleted),
+      completed: Boolean(stage.mark),
     }
     if (typeof stage.previousStage === 'string' || stage.previousStage === null) {
       normalized.previous = stage.previousStage

@@ -1,0 +1,74 @@
+import type { AgentDefinition, AgentPromptMetadata } from '../../../types'
+import { filePrompt as agentFilePrompt, stringPrompt as agentStringPrompt, createAgent as createSdkAgent } from '../../../agents/factory'
+import { join } from "path"
+import { dirname } from "path"
+import { fileURLToPath } from "url"
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+export type HDArchitectPhase = "interview" | "workflow" | "full"
+
+export const HDARCHITECT_PROMPT_METADATA: AgentPromptMetadata = {
+  category: "specialist",
+  cost: "EXPENSIVE",
+  promptAlias: "HDArchitect",
+  keyTrigger: "Requirements engineering workflow coordinator (HD version) - from data collection to functional refinement. MUST delegate to @HCritic after completing each stage document.",
+  triggers: [
+    { domain: "Requirements Engineering", trigger: "Starting requirements analysis workflow (IR Analysis → Scenario → UseCase → Functional Refinement)" },
+    { domain: "System Analysis", trigger: "Need structured requirements breakdown before detailed design" },
+    { domain: "Workflow Coordination", trigger: "Managing multi-stage requirements process with quality gates (HCritic) and handover to HEngineer" },
+  ],
+  useWhen: [
+    "Starting a new system design from user requirements",
+    "Need to perform IR Analysis, Scenario Analysis, Use Case Analysis, or Functional Refinement",
+    "Require formal documentation at each analysis stage with quality reviews",
+    "Working on requirements phase (before system/module design)",
+    "User provides high-level requirements that need structured analysis",
+  ],
+  avoidWhen: [
+    "System functional design or module design (use @HEngineer instead - HDArchitect hands over after functional refinement)",
+    "Simple feature implementation with clear specs (no formal workflow needed)",
+    "Quick prototyping without formal process",
+    "Bug fixes or minor enhancements",
+  ],
+}
+
+const DEFINITION: AgentDefinition = {
+  name: "HDArchitect",
+  description:
+    "System Architect & Requirements Workflow Coordinator (HD version) - Manages requirements engineering from data collection through functional refinement. After completing each stage document, MUST call @HCritic for quality gate review. Hands over to @HEngineer for system/module design phases. Coordinates multi-stage design with formal documentation and review cycles.",
+  mode: "primary",
+  color: "#C8102E",
+  defaultTemperature: 0.6,
+  promptGenerators: [
+    agentFilePrompt(join(__dirname, "prompts", "identity.md")),
+    agentFilePrompt(join(__dirname, "prompts", "first-principles.md")),
+    agentFilePrompt(join(__dirname, "prompts", "role-constraints.md")),
+    agentFilePrompt(join(__dirname, "prompts", "framework-constraints.md")),
+    agentStringPrompt("{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}"),
+  ],
+  defaultPermission: {
+    bash: "deny",
+    edit: "allow",
+    skill: "allow",
+    todoread: "allow",
+    webfetch: "deny",
+    websearch: "deny",
+    question: "allow",
+    task: "allow",
+    external_directory: "allow",
+    hd_workflow_list: 'deny',
+    hd_workflow_select: 'deny',
+    hd_workflow_state: "allow",
+    hd_handover: "allow",
+    hd_force_next_step: "ask",
+    hd_record_milestone: "allow",
+    call_omo_agent: "deny",
+  },
+}
+
+export function createHDArchitectAgent(model?: string) {
+  return createSdkAgent(DEFINITION, model)
+}
+
+createHDArchitectAgent.mode = DEFINITION.mode

@@ -185,7 +185,7 @@ describe('workflow type definitions', () => {
   describe('WorkflowStage', () => {
     it('should have selected field', () => {
       const stage: WorkflowStage = {
-        isCompleted: false,
+        mark: false,
         selected: true,
       }
 
@@ -194,7 +194,7 @@ describe('workflow type definitions', () => {
 
     it('should work without selected', () => {
       const stage: WorkflowStage = {
-        isCompleted: false,
+        mark: false,
       }
 
       expect(stage.selected).toBeUndefined()
@@ -202,7 +202,7 @@ describe('workflow type definitions', () => {
 
     it('should not include legacy milestone map field on stage state', () => {
       const stage: WorkflowStage = {
-        isCompleted: false,
+        mark: false,
       }
 
       expect((stage as unknown as { legacyMilestones?: unknown }).legacyMilestones).toBeUndefined()
@@ -210,7 +210,7 @@ describe('workflow type definitions', () => {
 
     it('should have previousStage and nextStage fields', () => {
       const stage: WorkflowStage = {
-        isCompleted: false,
+        mark: false,
         previousStage: 'IRAnalysis',
         nextStage: 'ScenarioAnalysis',
       }
@@ -221,7 +221,7 @@ describe('workflow type definitions', () => {
 
     it('should allow null for previousStage and next', () => {
       const stage: WorkflowStage = {
-        isCompleted: false,
+        mark: false,
         previousStage: null,
         nextStage: null,
       }
@@ -232,7 +232,7 @@ describe('workflow type definitions', () => {
 
     it('should NOT have score or comment fields', () => {
       const stage: WorkflowStage = {
-        isCompleted: false,
+        mark: false,
       }
 
       expect('score' in stage).toBe(false)
@@ -273,8 +273,8 @@ describe('workflow type definitions', () => {
         typeId: 'test-workflow',
         projectRoot: null,
         workflow: {
-          stage1: { isCompleted: false, selected: true },
-          stage2: { isCompleted: false, selected: false },
+          stage1: { mark: false, selected: true },
+          stage2: { mark: false, selected: false },
         },
         current: null,
       }
@@ -290,7 +290,7 @@ describe('workflow type definitions', () => {
         const milestone: StageMilestone = {
           type: 'gate',
           timestamp: '2026-03-12T10:00:00Z',
-          isCompleted: true,
+          mark: true,
           detail: { score: 90 },
         }
 

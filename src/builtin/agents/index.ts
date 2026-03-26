@@ -5,6 +5,8 @@ import { createHArchitectAgent } from './HArchitect'
 import { createHCollectorAgent } from './HCollector'
 import { createHCriticAgent } from './HCritic'
 import { createHEngineerAgent } from './HEngineer'
+import { createHDArchitectAgent } from './HDArchitect'
+import { createHDEngineerAgent } from './HDEngineer'
 
 export const BUILTIN_AGENT_PLUGINS: AgentPluginRegistration[] = [
   {
@@ -26,5 +28,13 @@ export const BUILTIN_AGENT_PLUGINS: AgentPluginRegistration[] = [
   {
     name: 'HAnalysis',
     factory: model => createHAnalysisAgent(model),
+  },
+  {
+    name: 'HDArchitect',
+    factory: model => createHDArchitectAgent(model),
+  },
+  {
+    name: 'HDEngineer',
+    factory: model => createHDEngineerAgent(model),
   },
 ]

@@ -14,10 +14,10 @@ export const nextStageInjectionProvider: PromptInjectionProvider = {
 
     if (!nextStageId) {
       HyperDesignerLogger.debug('NextStageInjection', `No next stage, this is the final stage: ${currentStage}`)
-      return `<next-stage>
+      return `<hd-next-stage>
   <is-final>true</is-final>
   <instruction>This is the final stage of the workflow. After completing this stage and passing all milestones, the workflow will end.</instruction>
-</next-stage>`
+</hd-next-stage>`
     }
 
     const nextStage = workflow.stages[nextStageId]
@@ -27,10 +27,10 @@ export const nextStageInjectionProvider: PromptInjectionProvider = {
 
     HyperDesignerLogger.debug('NextStageInjection', `Injecting next stage info: ${nextStageId}`)
 
-    return `<next-stage>
+    return `<hd-next-stage>
   <id>${nextStageId}</id>
   <name>${nextStage.name}</name>
   <instruction>After completing this stage and passing all milestones, you will handover to the next stage.</instruction>
-</next-stage>`
+</hd-next-stage>`
   },
 }

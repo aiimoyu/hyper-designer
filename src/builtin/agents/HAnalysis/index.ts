@@ -81,7 +81,7 @@ const DEFINITION: AgentDefinition = {
   promptGenerators: [
     agentStringPrompt(BASE_PROMPT),
     agentStringPrompt('{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}'),
-    agentStringPrompt('{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'),
+    agentStringPrompt('{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}'),
   ],
   defaultPermission: {
     bash: 'allow',

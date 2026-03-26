@@ -9,12 +9,12 @@ function findLatestNodeMilestone(
   state: ReturnType<typeof readWorkflowStateFile>,
   nodeId: string,
   key: string,
-): { isCompleted?: boolean; detail?: unknown } | undefined {
+): { mark?: boolean; detail?: unknown } | undefined {
   const events = state?.history?.events ?? []
   for (let i = events.length - 1; i >= 0; i -= 1) {
     const event = events[i]
     if (event.type === 'milestone.set' && event.nodeId === nodeId && event.key === key) {
-      return event.value as { isCompleted?: boolean; detail?: unknown } | undefined
+      return event.value as { mark?: boolean; detail?: unknown } | undefined
     }
   }
   return undefined
@@ -40,7 +40,7 @@ describe('workflow persistence migration', () => {
   it('migrates legacy state without initialized - defaults to false when no typeId', () => {
     const legacyState = {
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { mark: true }
       },
       current: {
         name: 'IRAnalysis',
@@ -62,7 +62,7 @@ describe('workflow persistence migration', () => {
       typeId: 'classic',
       projectRoot: null,
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { mark: true }
       },
       current: {
         name: 'IRAnalysis',
@@ -84,7 +84,7 @@ describe('workflow persistence migration', () => {
       typeId: 'classic',
       projectRoot: null,
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { mark: true }
       },
       current: {
         name: 'IRAnalysis',
@@ -104,9 +104,9 @@ describe('workflow persistence migration', () => {
       typeId: 'classic',
       projectRoot: null,
       workflow: {
-        IRAnalysis: { isCompleted: true },
-        scenarioAnalysis: { isCompleted: false },
-        useCaseAnalysis: { isCompleted: false }
+        IRAnalysis: { mark: true },
+        scenarioAnalysis: { mark: false },
+        useCaseAnalysis: { mark: false }
       },
       current: {
         name: 'IRAnalysis',
@@ -132,7 +132,7 @@ describe('workflow persistence migration', () => {
       typeId: 'classic',
       projectRoot: null,
       workflow: {
-        dataCollection: { isCompleted: true }
+        dataCollection: { mark: true }
       },
       current: {
         name: 'IRAnalysis',
@@ -154,7 +154,7 @@ describe('workflow persistence migration', () => {
       projectRoot: null,
       workflow: {
         IRAnalysis: {
-          isCompleted: false,
+          mark: false,
           score: 85,
           comment: 'Old per-stage comment'
         }
@@ -190,19 +190,19 @@ describe('workflow persistence migration', () => {
       projectRoot: null,
       workflow: {
         IRAnalysis: {
-          isCompleted: true,
+          mark: true,
           selected: true,
           previousStage: null,
           nextStage: 'scenarioAnalysis',
         },
         scenarioAnalysis: {
-          isCompleted: false,
+          mark: false,
           selected: true,
           previousStage: 'IRAnalysis',
           nextStage: 'useCaseAnalysis',
         },
         useCaseAnalysis: {
-          isCompleted: false,
+          mark: false,
           selected: false,
           previousStage: 'scenarioAnalysis',
           nextStage: null,
@@ -242,7 +242,7 @@ describe('workflow persistence migration', () => {
       projectRoot: null,
       workflow: {
         IRAnalysis: {
-          isCompleted: true,
+          mark: true,
           selected: true,
           previousStage: null,
           nextStage: null,

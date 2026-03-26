@@ -19,7 +19,7 @@ describe('workflow prompt bindings', () => {
       entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': stringPrompt('workflow overview'),
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('workflow step'),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': stringPrompt('workflow step'),
       },
       stages: {
         stage1: {
@@ -28,7 +28,7 @@ describe('workflow prompt bindings', () => {
           description: 'Stage 1',
           agent: 'HArchitect',
           promptBindings: {
-            '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('stage step'),
+            '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': stringPrompt('stage step'),
           },
           getHandoverPrompt: () => 'handover',
         },
@@ -46,7 +46,7 @@ describe('workflow prompt bindings', () => {
       entryStageId: 'stage1',
       promptBindings: {
         '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': stringPrompt('workflow overview'),
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': stringPrompt('workflow step'),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': stringPrompt('workflow step'),
       },
       stages: {
         stage1: {
@@ -80,7 +80,7 @@ describe('workflow prompt bindings', () => {
           description: 'IR',
           agent: 'HArchitect',
           promptBindings: {
-            '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': filePrompt(
+            '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': filePrompt(
               join(__dirname, '..', '..', '..', 'builtin', 'workflows', 'classic', 'prompts', 'IRAnalysis.md'),
             ),
           },

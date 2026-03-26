@@ -3,7 +3,7 @@ import { getStageOrder, loadPromptForStage } from '../../../workflows'
 import { classicWorkflow } from '../../../builtin/workflows/classic'
 import type { WorkflowDefinition } from '../../../workflows'
 
-const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}'
+const WORKFLOW_STEP_PROMPT_TOKEN = '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}'
 
 describe("workflow/prompts", () => {
   describe("loadPromptForStage", () => {

@@ -102,7 +102,7 @@ export const liteWorkflow: WorkflowDefinition = {
       agent: 'HArchitect',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'next-stage' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementAnalysis.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementAnalysis.md')),
       },
       requiredMilestones: [...HANDOVER_MILESTONES],
       required: true,
@@ -122,7 +122,7 @@ export const liteWorkflow: WorkflowDefinition = {
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementDesign.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'requirementDesign.md')),
       },
       requiredMilestones: [...HANDOVER_MILESTONES],
       required: true,
@@ -141,7 +141,7 @@ export const liteWorkflow: WorkflowDefinition = {
       agent: 'HEngineer',
       inject: [{ provider: 'stage-milestones' }, { provider: 'stage-inputs' }, { provider: 'stage-outputs' }, { provider: 'file-content', tag: 'reference', path: './REFERENCE.md' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'developmentPlan.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'developmentPlan.md')),
       },
       requiredMilestones: [...HANDOVER_MILESTONES],
       required: true,

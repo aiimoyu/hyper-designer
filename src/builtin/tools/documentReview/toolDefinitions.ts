@@ -66,7 +66,7 @@ export function createDocumentReviewToolDefinitions(): ToolDefinition[] {
               stage: currentStage,
               milestone: {
                 type: INTERACTIVE_MODIFICATION_MILESTONE_ID,
-                isCompleted: true,
+                mark: true,
                 detail: { completedAt: new Date().toISOString() },
               },
             })

@@ -86,7 +86,7 @@ describe("HAnalysis agent", () => {
       const agent = factory()
 
       expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}")
-      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STEP_PROMPT}")
+      expect(agent.prompt).toContain("{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}")
     })
 
     it("prompt is structured with content sections", () => {

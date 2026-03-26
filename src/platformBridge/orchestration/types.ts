@@ -22,7 +22,7 @@ export interface WorkflowServiceLike {
   getDefinition: () => ReturnType<typeof import('../../workflows/service').workflowService.getDefinition>
   getCurrentStage: () => ReturnType<typeof import('../../workflows/service').workflowService.getCurrentStage>
   getState: () => ReturnType<typeof import('../../workflows/service').workflowService.getState>
-  on: (event: 'handoverExecuted' | 'stageCompleted', listener: (payload: { fromStep?: string; toStep?: string; stageName?: string; isCompleted?: boolean }) => void) => void
+  on: (event: 'handoverExecuted' | 'stageCompleted', listener: (payload: { fromStep?: string; toStep?: string; stageName?: string; mark?: boolean }) => void) => void
   isHandoverInProgress: () => boolean
   getHandoverAgent: (stage: string) => string | null
   getHandoverPrompt: (from: string | null, to: string) => string | null
