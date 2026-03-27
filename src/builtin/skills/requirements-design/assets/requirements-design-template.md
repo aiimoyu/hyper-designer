@@ -48,34 +48,51 @@
 
 ```mermaid
 graph LR
-    subgraph 新增
+    subgraph 外部
+        Client["👤 前端/用户"]
+    end
+
+    subgraph "🟢 新增"
         Approval[审批模块]
     end
-    subgraph 修改
+    subgraph "🟡 修改"
         Order[订单模块]
     end
-    subgraph 保护
+    subgraph "🔴 保护"
         User[用户模块]
-    end
-    subgraph 不涉及
         Notify[通知模块]
     end
+    subgraph "⚪ 不涉及"
+        Report[报表模块]
+    end
 
-    %% 新模块 消费 老系统
+    %% ── 外部接口 ──
+    Client -->|"IF-E1 修改·提交订单"| Order
+    Client -->|"IF-E2 新增·审批操作"| Approval
+    Client -->|"IF-E3 新增·查询审批列表"| Approval
+
+    %% ── 内部接口 ──
     Approval -->|"IF-R1 复用·查询用户"| User
+    Approval -->|"IF-R2 复用·发送通知"| Notify
     Approval -->|"IF-M1 修改·提交订单"| Order
-    Approval -.->|"IF-R2 复用·发送通知"| Notify
+    Order   -->|"IF-N1 新增·查询审批状态"| Approval
 
-    %% 新模块 提供 给老系统
-    Order -->|"IF-N1 新增·查询审批状态"| Approval
+    %% ── 不涉及：无连线 ──
+    %% Report 无任何箭头
 
-    style Approval fill:#90EE90
-    style Order fill:#FFD700
-    style User fill:#FF6B6B
-    style Notify fill:#FFFFFF
+    style Client   fill:#87CEEB,stroke:#333,color:#000
+    style Approval fill:#90EE90,stroke:#333,color:#000
+    style Order    fill:#FFD700,stroke:#333,color:#000
+    style User     fill:#FF6B6B,stroke:#333,color:#000
+    style Notify   fill:#FF6B6B,stroke:#333,color:#000
+    style Report   fill:#E0E0E0,stroke:#999,color:#666
 ```
 
-**图例**：🟢新增 🟡修改 🔴保护 ⚪不涉及｜箭头 = 调用方→提供方｜标注 = 接口编号 + 变更类型
+> 🔵外部用户 🟢新增 🟡修改 🔴保护（涉及该模块配合，但禁止修改） ⚪不涉及
+>
+> - 🔴 保护 = 图中**有箭头指向它**（被新增/修改模块调用），但本迭代**冻结代码与接口**。
+> - ⚪ 不涉及 = 图中**无任何箭头**，与本次变更完全无关，仅为上下文展示系统全貌。
+>
 
 ---
 
@@ -85,14 +102,15 @@ graph LR
 |------|------|----------|------|
 | 🟢 新增 | 审批模块 | 新增审批流引擎 | — |
 | 🟡 修改 | 订单模块 | 提交接口增加审批拦截 | 仅改提交流程，查询/退款不动 |
-| 🔴 保护 | 用户模块 | 不允许修改 | 跨团队共用，本迭代保护 |
-| ⚪ 不涉及 | 通知模块 | 不涉及 | — |
+| 🔴 保护 | 用户模块 | 被审批模块复用 `GET /users/{id}`，不允许修改 | 跨团队共用，本迭代保护 |
+| 🔴 保护 | 通知模块 | 被审批模块复用 `POST /notify/send`，不允许修改 | 公共基础服务，本迭代保护 |
+| ⚪ 不涉及 | 报表模块 | 无任何接口关联 | — |
 
 ---
 
 ### 3.3 接入关系与模块接口变更
 
-#### 3.3.1 新模块消费的接口（审批模块→老系统）
+#### 3.3.1 内部接口 — 新模块消费老系统
 
 | 编号 | 变更类型 | 接口名称 | 提供方 | 用途 | 备注 |
 |------|----------|----------|--------|------|------|
@@ -100,19 +118,27 @@ graph LR
 | IF-R2 | ⚪ 复用 | `POST /notify/send` | 通知模块 | 审批结果通知 | 无需改动 |
 | IF-M1 | 🟡 修改 | `POST /orders/submit` | 订单模块 | 提交前插入审批校验 | 需改签名，见下方定义 |
 
-#### 3.3.2 新模块提供的接口（老系统→审批模块）
+#### 3.3.2 内部接口 — 老系统消费新模块
 
 | 编号 | 变更类型 | 接口名称 | 消费方 | 用途 | 备注 |
 |------|----------|----------|--------|------|------|
 | IF-N1 | 🟢 新增 | `GET /approvals/{id}` | 订单模块 | 订单详情页展示审批状态 | — |
 | IF-N2 | 🟢 新增 | `POST /approvals` | 订单模块 | 提交时发起审批 | — |
 
+#### 3.3.3 外部接口 — 用户/前端 → 系统
+
+| 编号 | 变更类型 | 接口名称 | 提供方 | 触发方 | 用途 | 备注 |
+|------|----------|----------|--------|--------|------|------|
+| IF-E1 | 🟡 修改 | `POST /orders/submit` | 订单模块 | 用户（前端） | 用户提交订单，新增审批拦截 | 页面增加审批状态提示 |
+| IF-E2 | 🟢 新增 | `POST /approvals/{id}/decide` | 审批模块 | 审批人（前端） | 审批人通过/驳回 | 需鉴权：仅指定审批人可操作 |
+| IF-E3 | 🟢 新增 | `GET /approvals?assignee={uid}` | 审批模块 | 审批人（前端） | 查询待办审批列表 | 支持分页、状态筛选 |
+
 ---
 
 ### 3.4 接口定义（仅新增/修改）
 
 ```
-IF-M1  提交订单（修改）
+IF-M1  提交订单（修改·内部）
   类型：REST    提供方：订单模块    消费方：审批模块
   变更内容：
     - 原签名：POST /orders/submit  body: { orderId }

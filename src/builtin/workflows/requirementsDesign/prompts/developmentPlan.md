@@ -15,11 +15,13 @@
 ```
 
 ### 执行角色
+
 - **执行 Agent**: `HDArchitect`
 - **流程 Skill**: `hd-review-pipeline`
 - **核心 Skill**: `requirements-design`
 
 ### 执行要求
+
 在开始生成内容前，必须严格按以下顺序执行：
 
 1. 按 `hd-review-pipeline` 获取并执行当前阶段流程；
@@ -27,17 +29,21 @@
 3. 读取参考文件：`requirements-design/references/s3-development-plan.md`。
 
 ### 生成约束
+
 你只能依据上述参考文件中的**指南与模板**生成《开发计划》：
+
 - 不得跳过文档读取；
 - 不得使用默认模板、自行改写结构或省略必要字段；
 - 不得生成超出**单模块范围**的开发任务。
 
 ### 阶段交付物
+
 - **文件名**: `{模块名}-dev-plan.md`
 - **输出路径**: `.hyper-designer/developmentPlan/{模块名}-dev-plan.md`
 - **格式要求**: Markdown，且必须完整符合 Skill 模板结构。
 
 ### 质量审查
+
 文档写入后，必须调用：
 
 `HD_TOOL_DELEGATE(subagent=HCritic, skill=requirements-design)`
@@ -54,7 +60,7 @@
 ## 强制前置准备
 在输出评审结果前，必须读取：
 1. `requirements-design/references/reviewer.md`
-2. `requirements-design/references/development-plan-checklist.md`
+2. `requirements-design/references/development-plan-review-checklist.md`
 
 ## 输出要求
 请基于 Checklist 输出：
@@ -65,6 +71,7 @@
 ## 工具要求
 评审完成后，必须调用 `hd_record_milestone` 记录质量门状态。
 ```
+
 ```
 
 ---
@@ -94,23 +101,29 @@
 ```
 
 ### 执行角色
+
 - **执行 Agent**: `HDArchitect`
 - **流程 Skill**: `hd-review-pipeline`
 - **核心 Skill**: `requirements-design`
 
 ### 执行要求
+
 生成前必须按顺序执行：
+
 1. 执行 `hd-review-pipeline`；
 2. 按流程加载 `requirements-design`；
 3. 读取参考文件：`requirements-design/references/{stageRef}`。
 
 ### 生成约束
+
 仅可依据参考文件中的指南与模板生成文档：
+
 - 不得跳过文档读取；
 - 不得使用默认模板、自行改写结构或省略必要字段；
 - 不得超出**单模块范围**。
 
 ### 质量审查
+
 文档写入后，必须调用：
 `HD_TOOL_DELEGATE(subagent=HCritic, skill=requirements-design)`
 
@@ -130,7 +143,7 @@
 - [Proc2] 阅读评审标准
    必须读取 Skill 参考文件：
    1. `[requirements-design]/references/reviewer.md`
-   2. `[requirements-design]/references/development-plan-checklist.md`
+   2. `[requirements-design]/references/development-plan-review-checklist.md`
 - [Proc3] 执行评审
    1. 逐项检查文档内容，对照检查表的每一条规则
    2. 点亮里程碑

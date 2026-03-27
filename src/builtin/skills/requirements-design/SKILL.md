@@ -18,9 +18,9 @@ metadata:
 
 | 阶段 | 名称 | 简介 |
 |:---:|:---:|:---|
-| **Phase 1** | 需求分析 | 深入理解需求本质，通过苏格拉底式对话澄清目标、用户、场景、边界与约束，识别真实诉求与隐含前提。核心在于：**明确“要做什么、为谁而做，以及做到什么程度”**。 |
-| **Phase 2** | 需求设计 | 将初始需求逐层拆解为 **SR（系统需求）→ AR（分配需求）**，明确需求如何融入现有系统；梳理项目的黄金原则、工程约束与实现风格；细化模块、功能、文件层面的增删改及其依赖关系与接口设计，避免引入技术债。同时完成新需求的功能设计、设计模式选型与DFx设计。核心在于：**将需求转化为可落地、可集成、可演进的系统方案**。 |
-| **Phase 3** | SDD 开发计划 | 基于设计说明书，结合耦合关系与依赖顺序，将AR进一步拆解为具体开发任务、实施步骤与验收标准，形成可直接交付给开发 Agent 执行的开发计划。核心在于：**把系统设计转化为可执行、可验证、可交付的实施清单**。 |
+| **S1** | 需求分析 | 深入理解需求本质，通过苏格拉底式对话澄清目标、用户、场景、边界与约束，识别真实诉求与隐含前提。核心在于：**明确“要做什么、为谁而做，以及做到什么程度”**。 |
+| **S2** | 需求设计 | 将初始需求逐层拆解为 **SR（系统需求）→ AR（分配需求）**，明确需求如何融入现有系统；梳理项目的黄金原则、工程约束与实现风格；细化模块、功能、文件层面的增删改及其依赖关系与接口设计，避免引入技术债。同时完成新需求的功能设计、设计模式选型与DFx设计。核心在于：**将需求转化为可落地、可集成、可演进的系统方案**。 |
+| **S3** | SDD 开发计划 | 基于设计说明书，结合耦合关系与依赖顺序，将AR进一步拆解为具体开发任务、实施步骤与验收标准，形成可直接交付给开发 Agent 执行的开发计划。核心在于：**把系统设计转化为可执行、可验证、可交付的实施清单**。 |
 
 ---
 
@@ -35,15 +35,15 @@ metadata:
 
 ```mermaid
 flowchart TD
-    Start([用户输入]) --> P1[Phase 1: 需求分析<br/>加载 references/s1-requirements-analysis.md]
+    Start([用户输入]) --> P1[S1: 需求分析<br/>加载 references/S1-requirements-analysis.md]
     
     P1 --> R1[委托 Subagent 进行评审 1]
     
-    R1 --> P2[Phase 2: 需求设计<br/>加载 references/s2-requirements-design.md]
+    R1 --> P2[S2: 需求设计<br/>加载 references/S2-requirements-design.md]
     
     P2 --> R2[委托 Subagent 进行评审 2]
     
-    R2 --> P3[Phase 3: 开发计划<br/>加载 references/s3-development-plan.md]
+    R2 --> P3[S3: 开发计划<br/>加载 references/S3-development-plan.md]
     
     P3 --> R3[委托 Subagent 进行评审 3]
     
@@ -62,9 +62,9 @@ flowchart TD
     Parse -->|任务: 评审| Rev[加载 references/reviewer.md] --> End
     
     Parse -->|任务: 生成| Gen{判断所属阶段}
-    Gen -->|Phase 1| S1[加载 references/s1-requirements-analysis.md]
-    Gen -->|Phase 2| S2[加载 references/s2-requirements-design.md]
-    Gen -->|Phase 3| S3[加载 references/s3-development-plan.md]
+    Gen -->|S1| S1[加载 references/S1-requirements-analysis.md]
+    Gen -->|S2| S2[加载 references/S2-requirements-design.md]
+    Gen -->|S3| S3[加载 references/S3-development-plan.md]
 
     S1 --> End([结束当前任务])
     S2 --> End
@@ -79,16 +79,16 @@ flowchart TD
 - **分析判断**：当前用户是要**生成**某个阶段的产出物？还是对已有产出物进行**评审**？亦或是要完整执行 **Pipeline 工作流**？
 - **动作执行**：根据判断结果，严格遵循对应的 Protocol 和进入后续的 S1~S4 步骤。
 
-### S1 需求分析 (Phase 1)
-- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/s1-requirements-analysis.md` 中的规范。若读取失败，立即停止并报错。
+### S1 需求分析
+- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/S1-requirements-analysis.md` 中的规范。若读取失败，立即停止并报错。
 - **输出交付物**：需求分析说明书
 
-### S2 需求设计 (Phase 2)
-- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/s2-requirements-design.md` 中的规范。若读取失败，立即停止并报错。
+### S2 需求设计
+- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/S2-requirements-design.md` 中的规范。若读取失败，立即停止并报错。
 - **输出交付物**：需求设计说明书
 
-### S3 开发计划 (Phase 3)
-- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/s3-development-plan.md` 中的规范。若读取失败，立即停止并报错。
+### S3 开发计划
+- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/S3-development-plan.md` 中的规范。若读取失败，立即停止并报错。
 - **输出交付物**：开发计划
 
 ### S4 评审 (Review)

@@ -18,11 +18,13 @@
 ```
 
 ### 执行角色
+
 - **执行 Agent**: `HDArchitect`
 - **流程 Skill**: `hd-review-pipeline`
 - **核心 Skill**: `requirements-design`
 
 ### 执行要求
+
 在开始生成内容前，必须严格按以下顺序执行：
 
 1. 按 `hd-review-pipeline` 获取并执行当前阶段流程；
@@ -30,17 +32,21 @@
 3. 读取参考文件：`requirements-design/references/s2-requirements-design.md`。
 
 ### 生成约束
+
 你只能依据上述参考文件中的**指南与模板**生成《需求设计说明书》：
+
 - 不得跳过文档读取；
 - 不得使用默认模板、自行改写结构或省略必要字段；
 - 不得生成超出**单模块范围**的功能需求。
 
 ### 阶段交付物
+
 - **文件名**: `需求设计说明书.md`
 - **输出路径**: `.hyper-designer/requirementDesign/需求设计说明书.md`
 - **格式要求**: Markdown，且必须完整符合 Skill 模板结构。
 
 ### 质量审查
+
 文档写入后，必须调用：
 
 `HD_TOOL_DELEGATE(subagent=HCritic, skill=requirements-design)`
@@ -61,7 +67,7 @@
 - [Proc2] 阅读评审标准
    必须读取 Skill 参考文件：
    1. `[requirements-design]/references/reviewer.md`
-   2. `[requirements-design]/references/requirements-design-checklist.md`
+   2. `[requirements-design]/references/requirements-design-review-checklist.md`
 - [Proc3] 执行评审
    1. 逐项检查文档内容，对照检查表的每一条规则
    2. 点亮里程碑
