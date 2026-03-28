@@ -110,7 +110,7 @@ export const requirementWorkflow: WorkflowDefinition = {
       after: [{ id: 'clear-context', description: 'Clear context', fn: clearHook }],
       transitions: [{ id: 'to-requirementDesign', toStageId: 'requirementDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-design` skill，并路由至 `requirementAnalysis` 进行需求分析，并输出需求分析说明书', currentName),
+        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-designer` skill，并路由至 `requirementAnalysis` 进行需求分析，并输出需求分析说明书', currentName),
     },
 
     requirementDesign: {
@@ -129,7 +129,7 @@ export const requirementWorkflow: WorkflowDefinition = {
       after: [{ id: 'clear-context', description: 'Clear context', fn: clearHook }],
       transitions: [{ id: 'to-developmentPlan', toStageId: 'developmentPlan', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-design` skill，并路由至 `requirementDesign` 进行需求设计，并输出需求设计说明书。当你需要探索代码仓库时，优先使用 `{project}-dev-skill` 了解代码库全貌和黄金原则后再针对性阅读代码文件。', currentName),
+        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-designer` skill，并路由至 `requirementDesign` 进行需求设计，并输出需求设计说明书。当你需要探索代码仓库时，优先使用 `{project}-dev-skill` 了解代码库全貌和黄金原则后再针对性阅读代码文件。', currentName),
     },
 
     developmentPlan: {
@@ -147,7 +147,7 @@ export const requirementWorkflow: WorkflowDefinition = {
       outputs: SDD_PLAN_OUTPUTS,
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-design` skill，并路由至 `developmentPlan` 进行根据需求设计说明书，生成SDD实施计划', currentName),
+        buildHandoverPrompt(thisName, '请根据 `hd-review-pipeline` skill流程执行任务，并在后续流程规定处载入 `requirements-designer` skill，并路由至 `developmentPlan` 进行根据需求设计说明书，生成SDD实施计划', currentName),
     },
   },
 }

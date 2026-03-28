@@ -18,15 +18,15 @@
 
 - **执行 Agent**: `HDArchitect`
 - **流程 Skill**: `hd-review-pipeline`
-- **核心 Skill**: `requirements-design`
+- **核心 Skill**: `requirements-designer`
 
 ### 执行要求
 
 在开始生成内容前，必须严格按以下顺序执行：
 
 1. 按 `hd-review-pipeline` 获取并执行当前阶段流程；
-2. 按流程指引加载 `requirements-design`；
-3. 读取参考文件：`requirements-design/references/s1-requirements-analysis.md`。
+2. 按流程指引加载 `requirements-designer`；
+3. 读取参考文件：`requirements-designer/references/s1-requirements-analysis.md`。
 
 ### 生成约束
 
@@ -46,7 +46,7 @@
 
 文档写入后，必须调用：
 
-`HD_TOOL_DELEGATE(subagent=HCritic, skill=requirements-design)`
+`HD_TOOL_DELEGATE(subagent=HCritic, skill=requirements-designer)`
 
 并发送以下委托提示词：
 
@@ -60,11 +60,11 @@
 ## 审核流程
 
 - [Proc1] 载入 Skill 获取评审标准
-   **强制使用 `requirements-design` Skill 进行审核。**
+   **强制使用 `requirements-designer` Skill 进行审核。**
 - [Proc2] 阅读评审标准
    必须读取 Skill 参考文件：
-   1. `[requirements-design]/references/reviewer.md`
-   2. `[requirements-design]/references/requirements-analysis-review-checklist.md`
+   1. `[requirements-designer]/references/reviewer.md`
+   2. `[requirements-designer]/references/requirements-analysis-review-checklist.md`
 - [Proc3] 执行评审
    1. 逐项检查文档内容，对照检查表的每一条规则
    2. 点亮里程碑

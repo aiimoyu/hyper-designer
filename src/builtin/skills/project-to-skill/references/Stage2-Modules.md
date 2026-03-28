@@ -182,7 +182,7 @@ graph TD
 
 ## 输出: Modules.md
 
-```markdown
+````markdown
 ---
 title: {项目名称} 模块分析
 version: 1.0
@@ -197,22 +197,45 @@ project: {project_name}
 
 [1段话：说明为什么这样划分模块，与架构层次的对应关系，以及主要依据]
 
-## 模块层次
+---
+
+## 系统模块架构
+
+> 纯分层视图——只展示"哪些模块属于哪一层"，**不画依赖箭头**。
+> 模块间的依赖关系见下方 [模块依赖与交互](#模块依赖与交互)。
 
 ```mermaid
-graph TD
-    M001[M001-Core] --> M001.1[M001.1-Config]
-    M001 --> M001.2[M001.2-Utils]
-    M002[M002-API] --> M001
-    M003[M003-Auth] --> M002
-    M003 --> M001
+graph TB
+    subgraph L3["业务层 Business"]
+        M003["M003-Auth<br/>认证授权"]
+    end
+
+    subgraph L2["接口层 Interface"]
+        M002["M002-API<br/>HTTP 接口"]
+    end
+
+    subgraph L1["基础层 Foundation"]
+        M001["M001-Core<br/>核心基础设施"]
+        M001.1["M001.1-Config"]
+        M001.2["M001.2-Utils"]
+    end
+
+    style L3 fill:#e8f5e9,stroke:#388e3c
+    style L2 fill:#e3f2fd,stroke:#1976d2
+    style L1 fill:#fff3e0,stroke:#f57c00
 ```
+
+**层次规则**：上层（业务层）可依赖同层或下层模块，禁止下层反向依赖上层。
+
+---
 
 ## 模块清单
 
-| ID | 名称 | 职责（一句话） | 路径 | 文件数 | 层次 |
-|----|------|--------------|------|--------|------|
+| ID | 名称 | 职责（一句话） | 路径 | 文件数 | 所属层 |
+|----|------|--------------|------|--------|--------|
 | M001 | Core | {responsibility} | `src/core/` | 15 | 基础层 |
+| M001.1 | Config | {responsibility} | `src/core/config/` | 3 | 基础层 |
+| M001.2 | Utils | {responsibility} | `src/core/utils/` | 4 | 基础层 |
 | M002 | API | {responsibility} | `src/api/` | 20 | 接口层 |
 | M003 | Auth | {responsibility} | `src/auth/` | 10 | 业务层 |
 
@@ -245,55 +268,21 @@ M001-Core (核心基础设施)
 
 ### M002-API 功能树
 
-```
-M002-API (接口层)
-├── 📁 routes/
-│   ├── index.ts
-│   │   └── fn: createRouter() - 创建路由实例
-│   └── handlers/
-│       └── user.ts
-│           └── fn: handleGetUser() - 获取用户处理器
-├── 📁 middleware/
-│   └── auth.ts
-│       └── fn: authMiddleware() - 认证中间件
-└── 📁 validators/
-    └── user.ts
-        └── fn: validateUserInput() - 用户输入验证
-```
-
 ### M003-Auth 功能树
-
-```
-M003-Auth (认证模块)
-├── 📁 service/
-│   └── index.ts
-│       └── class: AuthService
-│           ├── method: login()
-│           ├── method: logout()
-│           └── method: refreshToken()
-├── 📁 strategies/
-│   └── jwt.ts
-│       └── class: JwtStrategy - JWT认证策略
-└── 📁 tokens/
-    └── manager.ts
-        └── class: TokenManager
-            ├── method: generate()
-            └── method: verify()
-```
 
 ---
 
-## 模块依赖
+## 模块依赖与交互
+
+### 依赖关系图
+
+> **箭头语义**：`A --> B` 表示 **A 依赖 B**（A 调用/引用 B 的导出）。
 
 ```mermaid
 graph LR
-    M001[M001-Core]
-    M002[M002-API]
-    M003[M003-Auth]
-
-    M002 --> M001
-    M003 --> M001
-    M003 --> M002
+    M003[M003-Auth] -->|依赖| M002[M002-API]
+    M003 -->|依赖| M001[M001-Core]
+    M002 -->|依赖| M001
 ```
 
 ### 依赖矩阵
@@ -304,9 +293,50 @@ graph LR
 | M002-API | M001 | M003 | 1 |
 | M003-Auth | M001, M002 | — | 2 |
 
+### 典型交互流程
+
+> 选取最能体现模块协作方式的 1–3 条关键路径，用序列图说明运行时调用顺序。
+
+#### 1. 用户登录
+
+关键文件：`src/api/routes/auth.ts` → `src/auth/service/index.ts` → `src/core/config/loader.ts`
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant M002 as M002-API
+    participant M003 as M003-Auth
+    participant M001 as M001-Core
+
+    Client->>M002: POST /login {credentials}
+    M002->>M003: AuthService.login(credentials)
+    M003->>M001: Config.get("jwt.secret")
+    M003->>M001: Logger.info("login attempt")
+    M003-->>M002: AuthResult {token, user}
+    M002-->>Client: 200 {token, user}
+```
+
+#### 2. {其他重要流程}
+
+关键文件：`{file1}` → `{file2}` → `{file3}`
+
+```mermaid
+sequenceDiagram
+    participant ...
+    ...
+```
+
+### 循环依赖分析
+
+| 循环 | 严重程度 | 原因分析 | 建议 |
+|------|----------|----------|------|
+| {cycle} | 高/中/低 | {why} | {suggestion} |
+
+*无循环依赖* ✓ / *发现 {N} 个循环依赖，见上表*
+
 ---
 
-## 模块公共接口（详细）
+## 模块公共接口
 
 > 模块间接口需要详细描述，模块内接口可适当简化
 
@@ -319,23 +349,23 @@ erDiagram
     CONFIG_OPTIONS ||--o{ CONFIG : defines
     CONFIG ||--|| LOGGER : initializes
     LOGGER ||--o{ LOG_ENTRY : produces
-    
+
     CONFIG_OPTIONS {
         string env "环境标识"
         number port "服务端口"
         object database "数据库配置"
     }
-    
+
     CONFIG {
         string version "配置版本"
         datetime loadedAt "加载时间"
     }
-    
+
     LOGGER {
         string level "日志级别"
         string format "输出格式"
     }
-    
+
     LOG_ENTRY {
         string level "级别"
         string message "消息"
@@ -347,183 +377,28 @@ erDiagram
 
 | 接口 | 类型 | 签名 | 描述 | 文件 |
 |------|------|------|------|------|
-| `loadConfig()` | Function | `(path: string) => Config` | 加载并验证配置文件，支持 JSON/YAML 格式 | `src/core/config/loader.ts:15` |
+| `loadConfig()` | Function | `(path: string) => Config` | 加载并验证配置文件，支持 JSON/YAML | `src/core/config/loader.ts:15` |
 | `validateSchema()` | Function | `(config: unknown) => boolean` | 使用 JSON Schema 验证配置结构 | `src/core/config/loader.ts:45` |
 
 #### 导出类
 
 | 接口 | 类型 | 描述 | 文件 |
 |------|------|------|------|
-| `Logger` | Class | 结构化日志工具，支持多输出目标和格式化 | `src/core/logger.ts:10` |
+| `Logger` | Class | 结构化日志，支持多输出目标 | `src/core/logger.ts:10` |
 | `ConfigOptions` | Interface | 配置选项类型定义 | `src/core/config/types.ts:5` |
 
-#### 接口使用示例
+#### 使用示例
 
 ```typescript
-// 加载配置
 import { loadConfig, Logger } from '@core';
 
 const config = loadConfig('./config/app.yaml');
 const logger = new Logger({ level: config.logLevel });
-
 logger.info('Application started', { port: config.port });
 ```
 
 ### M002-API 公共接口
-
-#### 接口关系图
-
-```mermaid
-erDiagram
-    ROUTER ||--o{ ROUTE : contains
-    ROUTE ||--|| HANDLER : executes
-    HANDLER ||--|| REQUEST : receives
-    HANDLER ||--|| RESPONSE : returns
-    
-    ROUTER {
-        string basePath "基础路径"
-        Route[] routes "路由列表"
-    }
-    
-    ROUTE {
-        string method "HTTP方法"
-        string path "路径模式"
-        Handler handler "处理函数"
-    }
-    
-    REQUEST {
-        string method "方法"
-        string path "路径"
-        object params "路径参数"
-        object query "查询参数"
-        object body "请求体"
-    }
-    
-    RESPONSE {
-        number status "状态码"
-        object body "响应体"
-    }
-```
-
-#### 导出函数
-
-| 接口 | 类型 | 签名 | 描述 | 文件 |
-|------|------|------|------|------|
-| `createRouter()` | Function | `(options?: RouterOptions) => Router` | 创建路由实例，支持中间件链 | `src/api/routes/index.ts:10` |
-| `authMiddleware()` | Function | `(req, res, next) => void` | 认证中间件，验证 JWT Token | `src/api/middleware/auth.ts:5` |
-
-#### 导出类
-
-| 接口 | 类型 | 描述 | 文件 |
-|------|------|------|------|
-| `Router` | Class | HTTP 路由器，支持 RESTful 风格 | `src/api/routes/index.ts:25` |
-| `RequestContext` | Interface | 请求上下文类型定义 | `src/api/types.ts:15` |
-
 ### M003-Auth 公共接口
-
-#### 接口关系图
-
-```mermaid
-erDiagram
-    AUTH_SERVICE ||--|| TOKEN_MANAGER : uses
-    AUTH_SERVICE ||--|| USER : authenticates
-    TOKEN_MANAGER ||--o{ TOKEN : generates
-    TOKEN ||--|| USER : belongs_to
-    
-    AUTH_SERVICE {
-        method login "用户登录"
-        method logout "用户登出"
-        method refreshToken "刷新令牌"
-    }
-    
-    TOKEN_MANAGER {
-        string secret "密钥"
-        number expiresIn "过期时间"
-    }
-    
-    TOKEN {
-        string accessToken "访问令牌"
-        string refreshToken "刷新令牌"
-        datetime expiresAt "过期时间"
-    }
-    
-    USER {
-        string id "用户ID"
-        string username "用户名"
-        string[] roles "角色列表"
-    }
-```
-
-#### 导出函数
-
-| 接口 | 类型 | 签名 | 描述 | 文件 |
-|------|------|------|------|------|
-| `createAuthService()` | Function | `(options: AuthOptions) => AuthService` | 创建认证服务实例 | `src/auth/service/index.ts:10` |
-
-#### 导出类
-
-| 接口 | 类型 | 描述 | 文件 |
-|------|------|------|------|
-| `AuthService` | Class | 认证服务，处理登录/登出/令牌刷新 | `src/auth/service/index.ts:25` |
-| `TokenManager` | Class | 令牌管理器，生成和验证 JWT | `src/auth/tokens/manager.ts:5` |
-| `AuthResult` | Interface | 认证结果类型定义 | `src/auth/types.ts:10` |
-
----
-
-## 模块间数据流
-
-### 主流程
-
-```mermaid
-graph LR
-    Request --> M002[M002-API]
-    M002 --> M003[M003-Auth]
-    M003 --> M001[M001-Core]
-    M001 --> Response
-```
-
-### 关键数据路径
-
-1. **认证流程**
-
-   ```
-   HTTP Request → M002.Router → M003.AuthMiddleware → M003.TokenValidator → M001.Database → Response
-   ```
-
-   关键文件：`{file1}` → `{file2}` → `{file3}`
-
-2. **{其他重要流程}**
-
-   ```
-   {path}
-   ```
-
-### 模块间调用序列图
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant M002 as M002-API
-    participant M003 as M003-Auth
-    participant M001 as M001-Core
-    
-    Client->>M002: POST /login
-    M002->>M003: AuthService.login()
-    M003->>M001: Logger.info()
-    M003->>M001: Config.get()
-    M003-->>M002: AuthResult
-    M002-->>Client: Response
-```
-
----
-
-## 循环依赖分析
-
-| 循环 | 严重程度 | 原因分析 | 建议 |
-|------|----------|----------|------|
-| {cycle} | 高/中/低 | {why} | {suggestion} |
-
-*无循环依赖* ✓ / *发现 {N} 个循环依赖，见上表*
 
 ---
 
@@ -533,8 +408,8 @@ sequenceDiagram
 |------|----------|----------|
 | M001-Core | [M001-Core.md](modules/M001-Core.md) | 待生成（Stage 3） |
 | M002-API | [M002-API.md](modules/M002-API.md) | 待生成（Stage 3） |
-
-```
+| M003-Auth | [M003-Auth.md](modules/M003-Auth.md) | 待生成（Stage 3） |
+````
 
 ---
 

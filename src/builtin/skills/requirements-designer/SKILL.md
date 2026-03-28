@@ -1,5 +1,5 @@
 ---
-name: requirements-design
+name: requirements-designer
 description: |
   端到端的轻量级软件设计工作流，涵盖从需求澄清、系统设计到 SDD 开发计划生成的全链路。
   适用场景：从零规划软件项目、功能增强设计、需求拆解、架构设计制定及软件设计评审。
@@ -29,47 +29,61 @@ metadata:
 本 Skill 支持两种运行协议，每次调用**仅能选择其中一种**执行。
 
 ### 1. Pipeline Protocol (全链路端到端模式)
-适用于用户要求完整经历“需求->设计->计划”全流程的场景。
-- **机制**：严格按 P1 -> P2 -> P3 顺序执行。
-- **强制约束**：每个阶段生成产出物后，**必须暂停当前生成任务**，委托评审 Subagent 进行交叉 Review。Review 通过后方可进入下一阶段。
+
+适用于用户希望完整经历 **“需求分析 → 需求设计 → 开发计划”** 全流程的场景。
+
+**执行机制**：必须严格按照 **S1 → Review1 → S2 → Review2 → S3 → Review3** 的顺序推进，禁止跳阶段、并行生成或跨阶段提前产出。
+
+**阶段前置条件**：进入每个阶段前，必须先加载并遵循该阶段对应的参考文档；若参考文档读取失败，立即停止流程并向用户报告错误。
+
+#### Review
+
+**委托评审提示词**：
+```text
+当前位于 requirements-designer 的 {当前阶段名称} 阶段。
+请对产出物 {产出物文件绝对路径} 进行评审。
+评审标准请加载并参考 {references/reviewer.md 绝对路径} 中的相关章节。
+```
+
+**评审结果处理规则**：
+- **通过**：可直接进入下一阶段；
+- **条件通过**：必须先根据评审意见完成修订，再进入下一阶段；
+- **不通过**：禁止进入下一阶段，必须返回当前阶段修改。
+
+**修改循环约束**：
+- 每个阶段最多允许 **3 次审核**；
+- 若超过 3 次仍未通过，必须暂停流程并请求用户介入，协助澄清需求、放宽约束或调整目标。
+
+#### Pipeline 执行流程
 
 ```mermaid
 flowchart TD
-    Start([用户输入]) --> P1[S1: 需求分析<br/>加载 references/S1-requirements-analysis.md]
-    
+    Start([用户输入]) --> P1[S1: 需求分析]
     P1 --> R1[委托 Subagent 进行评审 1]
-    
-    R1 --> P2[S2: 需求设计<br/>加载 references/S2-requirements-design.md]
-    
+    R1 --> P2[S2: 需求设计]
     P2 --> R2[委托 Subagent 进行评审 2]
-    
-    R2 --> P3[S3: 开发计划<br/>加载 references/S3-development-plan.md]
-    
+    R2 --> P3[S3: 开发计划]
     P3 --> R3[委托 Subagent 进行评审 3]
-    
     R3 --> End([流程结束，输出最终方案])
 ```
 
-### 2. Router Protocol (单点路由模式)
-适用于明确仅需执行某一特定阶段任务（生成或评审）的场景。
-- **机制**：解析用户意图，精准路由至对应阶段，按需加载单点资源。
-- **强制约束**：该模式下单次对话仅执行单阶段、单任务，严禁擅自跨阶段生成。
+**[S1] 需求分析**
+- 输入：用户需求描述
+- 加载：references/S1-requirements-analysis.md
+- 输出：需求分析说明书
+- 门禁：委托Subagent审核
 
-```mermaid
-flowchart TD
-    Start([用户输入]) --> Parse{S0: 意图与角色识别}
-    
-    Parse -->|任务: 评审| Rev[加载 references/reviewer.md] --> End
-    
-    Parse -->|任务: 生成| Gen{判断所属阶段}
-    Gen -->|S1| S1[加载 references/S1-requirements-analysis.md]
-    Gen -->|S2| S2[加载 references/S2-requirements-design.md]
-    Gen -->|S3| S3[加载 references/S3-development-plan.md]
+**[S2] 需求设计**
+- 输入：需求分析说明书
+- 加载：references/S2-requirements-design.md
+- 输出：需求设计说明书
+- 门禁：委托Subagent审核
 
-    S1 --> End([结束当前任务])
-    S2 --> End
-    S3 --> End
-```
+**[S3] SDD 开发计划**
+- 输入：需求分析说明书 & 需求设计说明书
+- 加载：references/S3-development-plan.md
+- 输出：开发计划
+- 门禁：委托Subagent审核
 
 ---
 
