@@ -59,32 +59,41 @@
 
 ```mermaid
 graph LR
-    subgraph 外部
-        Client["👤 前端/用户"]
-    end
-    subgraph "🟢 新增"
-        NewModule[新模块]
-    end
-    subgraph "🟡 修改"
-        OldModule[既有模块]
-    end
-    subgraph "🔴 保护"
-        Protected[受保护模块]
-    end
-    subgraph "⚪ 不涉及"
-        Unrelated[不涉及模块]
+    classDef ext fill:#87CEEB,stroke:#333,color:#000
+    classDef add fill:#90EE90,stroke:#333,color:#000
+    classDef mod fill:#FFD700,stroke:#333,color:#000
+    classDef pro fill:#FF6B6B,stroke:#333,color:#000
+    classDef unt fill:#E0E0E0,stroke:#999,color:#666
+    
+    subgraph ext_box["📦 外部"]
+        U["[User] <br/>&lt;调用方&gt;"]:::ext
     end
 
-    Client -->|"IF-E1 外部接口"| OldModule
-    Client -->|"IF-E2 外部接口"| NewModule
-    NewModule -->|"IF-R1 复用接口"| Protected
-    OldModule -->|"IF-N1 新增内部接口"| NewModule
+    subgraph modA["📦 module_a"]
+        A1["[Add] <br/>&lt;File/Class/Func&gt;"]:::add
+        A2["[Mod] <br/>&lt;File/Class/Func&gt;"]:::mod
+        A3["[Pro] <br/>&lt;File/Class/Func&gt;"]:::pro
+        A4["[Unt] <br/>&lt;File/Class/Func&gt;"]:::unt
+    end
 
-    style Client fill:#87CEEB,stroke:#333,color:#000
-    style NewModule fill:#90EE90,stroke:#333,color:#000
-    style OldModule fill:#FFD700,stroke:#333,color:#000
-    style Protected fill:#FF6B6B,stroke:#333,color:#000
-    style Unrelated fill:#E0E0E0,stroke:#999,color:#666
+    subgraph modB["📦 module_b"]
+        B1["[Add] <br/>&lt;File/Class/Func&gt;"]:::add
+        B2["[Mod] <br/>&lt;File/Class/Func&gt;"]:::mod
+    end
+
+    subgraph modC["📦 module_c"]
+        C1["[Pro] <br/>&lt;File/Class/Func&gt;"]:::pro
+        C2["[Unt] <br/>&lt;File/Class/Func&gt;"]:::unt
+    end
+
+    U  -->|"IF-E01: 发起请求"| A1
+    U  -->|"IF-E02: 查询结果"| B1
+    A1 -->|"IF-N01: 创建并委托处理"| B1
+    A1 -->|"IF-N02: 调用工具方法"| A2
+    B2 -->|"IF-M01: 适配新数据格式"| A1
+    A2 -->|"IF-M02: 增加返回字段"| B2
+    B1 -.->|"IF-R01: 仅调用，不修改"| C1
+    A1 -.->|"IF-R02: 仅读取配置"| A3
 ```
 
 ---
