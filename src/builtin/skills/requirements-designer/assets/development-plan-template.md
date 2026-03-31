@@ -7,15 +7,15 @@
 
 | 项目 | 内容 |
 |------|------|
-| **需求来源** | [需求分析说明书名称/路径] |
-| **设计来源** | [需求设计说明书名称/路径] |
-| **项目类型** | [全新项目 / 增量项目] |
-| **任务总数** | [N 个开发任务] |
-| **预估工作量** | [N 人日 / N 人周] |
-| **里程碑** | [如 M1: 编码完成 / M2: 联调完成 / M3: 验收完成] |
+| **需求来源** | [Requirements analysis document name/path] |
+| **设计来源** | [Requirements design document name/path] |
+| **项目类型** | [Brand New Project / Incremental Project] |
+| **任务总数** | [N development tasks] |
+| **预估工作量** | [N person-days / N person-weeks] |
+| **里程碑** | [e.g. M1: Coding complete / M2: Integration complete / M3: Acceptance complete] |
 
-<!-- instruction: 用 2-3 句话概述本次开发范围、核心工作和交付目标。 -->
-**本次开发摘要**：[描述]
+<!-- instruction: Use 2-3 sentences to summarize development scope, core work and delivery targets. -->
+**本次开发摘要**：[Description]
 
 ---
 
@@ -23,10 +23,10 @@
 
 ### 2.1 环境与依赖确认
 
-<!-- instruction: 仅保留会阻塞开发的前置项；可按项目实际增减。 -->
+<!-- instruction: Only keep pre-items that would block development; can adjust based on actual project. -->
 
 ```text
-□ 已创建开发分支：feature/[需求名]-[日期]
+□ 已创建开发分支：feature/[Requirement name]-[Date]
 □ 已确认关键依赖与版本
 □ 已确认数据库/配置/外部服务访问权限（如有）
 □ 已确认其他必要前置条件
@@ -34,62 +34,62 @@
 
 ### 2.2 代码阅读清单
 
-<!-- instruction: 列出修改前必须阅读的关键代码，如模块入口、数据模型、权限、错误处理。 -->
+<!-- instruction: List key code that must be read before modification, e.g. module entry, data model, permission, error handling. -->
 
 ```text
-□ [文件/目录路径 1]：了解 [职责]
-□ [文件/目录路径 2]：了解 [职责]
-□ [文件/目录路径 3]：了解 [职责]
+□ [File/Directory path 1]：了解 [Responsibility]
+□ [File/Directory path 2]：了解 [Responsibility]
+□ [File/Directory path 3]：了解 [Responsibility]
 ```
 
 ### 2.3 修改围栏提醒
 
-<!-- instruction: 来自设计说明书；仅保留“禁止修改 / 允许修改 / 条件修改”三类边界。 -->
+<!-- instruction: From design document; only keep three boundary categories: "Prohibit Modification / Allow Modification / Conditional Modification". -->
 
 ```text
 ⚠️ 禁止修改：
-- [路径]（原因：[说明]）
+- [Path]（原因：[Description]）
 
 ✅ 允许修改：
-- [路径]（范围：[说明]）
+- [Path]（范围：[Description]）
 
 🟡 条件修改：
-- [路径]（条件：[说明]）
+- [Path]（条件：[Description]）
 ```
 
 ---
 
 ## §3 开发任务列表
 
-<!-- instruction: 任务编号格式可如 T-{里程碑编号}{序号:02d}；每个任务只保留实现和验收所需信息。 -->
+<!-- instruction: Task numbering format can be T-{milestone number}{sequence:02d}; each task only keeps implementation and acceptance required information. -->
 
-### 里程碑 M1：[名称]（目标日期：[日期]）
+### 里程碑 M1：[Name]（目标日期：[Date]）
 
-#### 任务 T-101：[任务名称]
+#### 任务 T-101：[Task name]
 
 | 项目 | 内容 |
 |------|------|
-| **对应 AR** | [AR 编号 / 名称] |
-| **系统元素** | [模块名]（新增 / 扩展） |
+| **对应 AR** | [AR number / name] |
+| **系统元素** | [Module name]（新增 / 扩展） |
 | **复杂度** | [quick / medium / deep / integration] |
-| **依赖任务** | [无 / T-xxx] |
+| **依赖任务** | [None / T-xxx] |
 
-<!-- instruction: 用 1-2 句话从实现者视角说明本任务做什么。 -->
-**任务描述**：[描述]
+<!-- instruction: Use 1-2 sentences from implementer perspective to explain what this task does. -->
+**任务描述**：[Description]
 
 **修改文件**：
 
 | 文件路径 | 修改类型 | 修改说明 |
 |----------|----------|----------|
-| `[路径]` | [新增/修改/删除] | [说明] |
+| `[Path]` | [新增/修改/删除] | [Description] |
 
 **功能点**：
-- [ ] [功能点 1]
-- [ ] [功能点 2]
+- [ ] [Functional point 1]
+- [ ] [Functional point 2]
 
 **实现要点**：
-1. [关键步骤 1]
-2. [关键步骤 2]
+1. [Key step 1]
+2. [Key step 2]
 
 **测试与验收**：
 - [ ] 已补充单元测试
@@ -102,11 +102,11 @@
 **QA 场景**：
 
 ```text
-场景：[T-101-01 场景名]
+场景：[T-101-01 Scenario name]
 - 类型：[正常 / 异常 / 边界]
-- 前置条件：[说明]
-- 步骤：[操作与断言]
-- 验收命令：[命令]
+- 前置条件：[Description]
+- 步骤：[Operations and assertions]
+- 验收命令：[Command]
 - 证据：[evidence/xxx.log]
 ```
 
@@ -118,15 +118,15 @@
 
 ---
 
-### 里程碑 M2：[名称]（目标日期：[日期]）
+### 里程碑 M2：[Name]（目标日期：[Date]）
 
-<!-- instruction: 按与 M1 相同格式继续列任务；如任务较多，可只展开关键任务，其余简写。 -->
+<!-- instruction: Continue listing tasks in same format as M1; if many tasks, can only expand key tasks, rest can be simplified. -->
 
 ---
 
-### 里程碑 M3：[名称]（目标日期：[日期]）
+### 里程碑 M3：[Name]（目标日期：[Date]）
 
-<!-- instruction: 按与 M1 相同格式继续列任务。 -->
+<!-- instruction: Continue listing tasks in same format as M1. -->
 
 ---
 
@@ -144,7 +144,7 @@ T-202 ─┴→ T-203
 ```
 
 **并行建议**：
-- [T-xxx 和 T-xxx] 可并行
+- [T-xxx and T-xxx] 可并行
 - [T-xxx] 依赖 [T-xxx]
 
 **关键路径**：[T-xxx → T-xxx → T-xxx]
@@ -163,17 +163,17 @@ T-202 ─┴→ T-203
 
 ### 5.2 测试清单
 
-<!-- instruction: 可按任务、模块或场景组织；无需把同类信息拆成过多表格。 -->
+<!-- instruction: Can organize by task, module or scenario; no need to split similar information into too many tables. -->
 
 | 对象 | 测试类型 | 场景 | 验收命令 |
 |------|----------|------|----------|
-| [T-101 / 模块名] | [单元 / 集成 / E2E] | [主路径 / 异常路径 / 边界] | `[命令]` |
+| [T-101 / Module name] | [单元 / 集成 / E2E] | [主路径 / 异常路径 / 边界] | `[Command]` |
 
 ### 5.3 回归范围
 
 | 模块/范围 | 测试命令 | 通过标准 |
 |-----------|----------|----------|
-| [现有模块] | `[命令]` | [原有用例全部通过] |
+| [Existing module] | `[Command]` | [All original test cases pass] |
 
 ---
 
@@ -233,7 +233,7 @@ npm run test:integration
 
 | 风险 | 影响 | 缓解措施 |
 |------|------|----------|
-| [技术/依赖风险] | [高/中/低] | [措施] |
+| [Technical/Dependency risk] | [High/Medium/Low] | [Measure] |
 
 ### 7.2 编码注意
 

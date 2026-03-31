@@ -1,43 +1,43 @@
-```yaml
+---
 metadata:
   pattern: pipeline
   stages: 2
   sub_patterns: generator
-```
+---
 
-# S3 开发计划 (SDD Development Plan)
+# S3 Development Plan (SDD)
 
-基于需求设计说明书，完成任务拆解与计划编排，产出**开发计划（SDD）**，为开发 Agent（如 Claude Code）提供可直接执行的、无歧义的开发任务序列。
+Based on the requirements design specification, complete task decomposition and plan scheduling, producing the **Development Plan (SDD)**. This provides an unambiguous, directly executable task sequence for development agents (e.g., Claude Code).
 
-## 核心立场
+## Core Principles
 
-| 原则 | 做法 | 反模式 |
-|------|------|--------|
-| **框架优先** | 全新项目必须先搭骨架再写业务 | ❌ 上来就写业务代码 |
-| **耦合度优先** | 按功能耦合度分组任务，而非机械按 AR 划分 | ❌ 每个 AR 单独一个计划 |
-| **工作量适中** | 单个计划 2-5 人日，总计划数 ≤ 3 个 | ❌ 计划过碎或过重 |
-| **测试先行** | 每个任务先定义测试场景，再实现功能 | ❌ 先写实现再补测试 |
-| **可追溯** | 每个任务可追溯到 AR 和功能点 | ❌ 脱离设计自由发挥 |
-| **位置明确** | 每个任务标注具体修改文件、行号、函数名 | ❌ 模糊的"修改相关代码" |
+| Principle | Practice | Anti-pattern |
+|-----------|----------|--------------|
+| **Framework First** | Greenfield projects must scaffold the skeleton before writing business logic | ❌ Dive straight into business code |
+| **Coupling Priority** | Group tasks by functional coupling, not mechanically by AR | ❌ One plan per AR |
+| **Right-sized Workload** | Each plan is 2–5 person-days; total plan count ≤ 3 | ❌ Plans too granular or too heavy |
+| **Test First** | Define test scenarios for each task before implementing features | ❌ Write implementation first, then add tests |
+| **Traceable** | Every task traces back to an AR and its capability points | ❌ Freelance beyond the design |
+| **Explicit Locations** | Every task specifies exact files, line numbers, function names to modify | ❌ Vague "modify related code" |
 
-## 阶段目标
+## Stage Objectives
 
-完成以下四项分析与确认并完成文档生成：
+Complete the following four analysis and confirmation items, then generate the document:
 
-1. 需求设计说明书与代码库理解
-2. 任务拆解方案（AR → 开发任务的映射、分组与排序）
-3. 修改位置定位（每个任务的具体文件与修改点）
-4. 测试与验收策略（TDD 测试清单、QA 场景、验收流程）
+1. Understanding of the requirements design specification & codebase
+2. Task decomposition plan (AR → development task mapping, grouping, and ordering)
+3. Modification location targeting (specific files and change points for each task)
+4. Test & acceptance strategy (TDD test checklist, QA scenarios, acceptance workflow)
 
-**阶段共 2 个流程节点，遵照下方 [Proc] 按顺序执行，严禁跳步**
+**This stage has 2 process nodes. Follow the [Proc] sequence below strictly — no skipping.**
 
 ---
 
-## [Proc1] 计划探索
+## [Proc1] Plan Exploration
 
-### 1.1 确认计划材料
+### 1.1 Confirm Plan Materials
 
-开始前，**必须确认以下材料是否齐备**。缺少时一次性向用户索取：
+Before starting, **must confirm whether the following materials are available.** Request all missing items from the user in a single batch:
 
 ```
 开发计划需要以下材料，请补充缺少的部分：
@@ -49,91 +49,91 @@ metadata:
    - 本项目代码：[路径 / 仓库链接]
 ```
 
-### 1.2 代码库分析与修改定位
+### 1.2 Codebase Analysis & Modification Targeting
 
-**逐项完成以下分析**（增量项目必须探索，全新项目跳过）：
+**Complete the following analysis items one by one** (mandatory for incremental projects; skip for greenfield projects):
 
-| 分析维度 | 要做的事 |
-|----------|----------|
-| **定位修改文件** | 根据 AR 功能点，定位需要修改/新增的具体文件 |
-| **定位修改位置** | 精确到行号范围或函数名，确认修改类型（新增/修改/删除） |
-| **确认围栏边界** | 核对需求设计说明书中的冻结模块，确保任务不越界 |
-| **识别集成点** | 新增代码如何与现有代码集成（调用方式、注册方式、配置方式） |
-| **识别现有模式** | 现有代码的命名规范、目录结构、错误处理约定 |
+| Analysis Dimension | What to Do |
+|--------------------|------------|
+| **Locate Target Files** | Based on AR capability points, locate specific files to modify/create |
+| **Locate Modification Points** | Pinpoint to line-number ranges or function names; confirm modification type (add/modify/delete) |
+| **Verify Fence Boundaries** | Cross-check frozen modules from the requirements design specification; ensure no task crosses boundaries |
+| **Identify Integration Points** | How new code integrates with existing code (call method, registration method, configuration method) |
+| **Identify Existing Patterns** | Existing code's naming conventions, directory structure, error-handling conventions |
 
-### 1.3 任务分组与排序分析
+### 1.3 Task Grouping & Ordering Analysis
 
-**按以下优先级确定任务分组与排序**：
+**Determine task grouping and ordering according to the following priority**:
 
-排序原则：框架优先，渐进细化
-Wave数量：按任务复杂度决定，通常1-3个
+Ordering principle: Framework first, progressive refinement
+Wave count: Determined by task complexity, typically 1–3
 
 ```
-Wave 0（基础设施层）：
-├── 项目脚手架初始化
-├── 构建工具配置
-├── 目录结构创建
-├── 基础类型定义
-└── 核心依赖安装
+Wave 0 (Infrastructure Layer):
+├── Project scaffolding initialization
+├── Build tool configuration
+├── Directory structure creation
+├── Base type definitions
+└── Core dependency installation
 
-Wave 1（数据与接口层）：
-├── 数据模型/Schema 定义
-├── 接口类型声明
-├── 基础工具函数
-└── 配置文件
+Wave 1 (Data & Interface Layer):
+├── Data model / Schema definitions
+├── Interface type declarations
+├── Base utility functions
+└── Configuration files
 
-Wave 2（核心业务层）：
-├── 核心业务逻辑实现
-├── 服务层实现
-└── 业务规则处理
+Wave 2 (Core Business Layer):
+├── Core business logic implementation
+├── Service layer implementation
+└── Business rule handling
 
-Wave 3（接口与集成层）：
-├── API 端点实现
-├── UI 组件实现
-└── 模块间集成
+Wave 3 (Interface & Integration Layer):
+├── API endpoint implementation
+├── UI component implementation
+└── Inter-module integration
 
-Wave FINAL（验收层）：
-├── 集成测试
-├── 端到端测试
-└── 需求覆盖审查
+Wave FINAL (Acceptance Layer):
+├── Integration tests
+├── End-to-end tests
+└── Requirements coverage audit
 ```
 
 ---
 
-## [Proc2] 开发计划生成（完成相关代码探索后执行）
+## [Proc2] Development Plan Generation (Execute after relevant code exploration is complete)
 
-### 2.1 任务编写原则
+### 2.1 Task Writing Principles
 
-#### 事实优先原则
+#### Facts-First Principle
 
-> **⚠️ 在不清楚事实前，不得生成任何任务。**
+> **⚠️ Do NOT generate any task before the facts are clear.**
 
-- 以当前代码为唯一事实源
-- 不轻信文档与分析文件
-- 不确定则先探索
+- Treat the current codebase as the single source of truth
+- Do not blindly trust documents or analysis files
+- When uncertain, explore first
 
-#### 任务编号规则
+#### Task Numbering Rules
 
-- 格式：`T-{里程碑编号}{序号:02d}`，如 `T-101`（M1 第 1 个任务）
-- 全新项目的框架构建任务从 `T-001` 开始（Wave 0 单独编号）
+- Format: `T-{milestone-number}{sequence:02d}`, e.g., `T-101` (Milestone 1, task 1)
+- For greenfield projects, framework scaffolding tasks start from `T-001` (Wave 0 has its own numbering)
 
-#### 任务内容要求
+#### Task Content Requirements
 
-每个任务**必须包含**：
+Each task **must include**:
 
-| 必填项 | 说明 |
-|--------|------|
-| AR 映射 | 对应哪个 AR 及其功能点 |
-| 修改文件与位置 | 具体文件路径、行号/函数名、修改类型 |
-| 功能点清单 | 直接来自 AR 功能点，可勾选 |
-| 实现要点 | 关键步骤，从实现者视角描述 |
-| 测试清单 | 测试文件路径、正常/异常/边界场景 |
-| QA 场景 | 至少 2 个（正常路径 + 异常路径），含具体断言 |
-| 验收条件 | 可执行的验收命令 |
+| Required Field | Description |
+|----------------|-------------|
+| AR Mapping | Which AR and its capability points this task corresponds to |
+| Target Files & Locations | Specific file paths, line numbers / function names, modification type |
+| Capability Point Checklist | Directly from AR capability points; checkable |
+| Implementation Notes | Key steps described from the implementer's perspective |
+| Test Checklist | Test file paths, normal / exception / boundary scenarios |
+| QA Scenarios | At least 2 (happy path + error path), with specific assertions |
+| Acceptance Criteria | Executable acceptance commands |
 
-#### 全新项目框架构建任务
+#### Greenfield Project Framework Scaffolding Task
 
-**全新项目的第一个里程碑必须是框架构建**，包含：
+**The first milestone for a greenfield project must be framework scaffolding**, including:
 
 ```
 1. 项目初始化
@@ -157,43 +157,27 @@ Wave FINAL（验收层）：
 - [ ] npm run dev 服务可启动
 ```
 
-### 2.2 生成流程
+### 2.2 Generation Workflow
 
-1. 加载文档模板 `assets/development-plan-template.md`
-3. 按模板结构填充内容，生成文档到指定位置
-5. 输出文档摘要，供用户快速审阅
+1. Load the document template `assets/development-plan-template.md`
+2. Populate the template structure with content; generate the document to the designated location
+3. Output a document summary for the user to review quickly
 
-### 2.3 质量自检清单
+### 2.3 Quality Self-Check Checklist
 
-**任务完整性**：
+**Task Completeness**:
 
-- [ ] 每个 AR 都对应至少一个开发任务
-- [ ] 每个任务的功能点清单直接来自 AR 功能点
-- [ ] 每个任务有明确的修改文件路径和位置
-- [ ] 每个任务有测试清单（测试文件路径、场景覆盖）
-- [ ] 每个任务有 QA 场景（正常路径 + 异常路径）
-- [ ] 任务依赖关系已完整标注
-- [ ] 修改围栏已在执行说明中体现
+- [ ] Every AR corresponds to at least one development task
+- [ ] Each task's capability point checklist comes directly from AR capability points
+- [ ] Each task has explicit target file paths and locations
+- [ ] Each task has a test checklist (test file paths, scenario coverage)
+- [ ] Each task has QA scenarios (happy path + error path)
+- [ ] Task dependencies are fully annotated
+- [ ] Modification fences are reflected in the execution instructions
 
-**计划结构**：
+**Plan Structure**:
 
-- [ ] 里程碑数量合理（≤ 3 个）
-- [ ] 任务按依赖关系和技术层次排序（非机械按 AR）
-- [ ] 耦合 AR 已合并到同一里程碑
-- [ ] 全新项目已包含框架构建里程碑
-
-**测试计划**：
-
-- [ ] 每个任务有明确的测试文件路径
-- [ ] 测试清单覆盖正常路径和异常路径
-- [ ] QA 场景包含具体断言（expect 语句）
-- [ ] QA 场景包含可执行的验收命令
-- [ ] 集成测试覆盖主成功场景
-
-**验收标准**：
-
-- [ ] 每个 QA 场景有明确的断言和证据文件路径
-- [ ] 验收命令可执行
-- [ ] 验收失败处理流程明确
-- [ ] 修改围栏检测流程已定义（冻结区域、允许修改区域、越界处理）
-- [ ] 围栏检测在验收流程中优先执行
+- [ ] Milestone count is reasonable (≤ 3)
+- [ ] Tasks are ordered by dependency relations and technical layers (not mechanically by AR)
+- [ ] Coupled ARs are merged into the same milestone
+- [ ] Greenfield projects include a framework scaffolding milestone

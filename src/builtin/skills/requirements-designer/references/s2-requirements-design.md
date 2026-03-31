@@ -1,42 +1,42 @@
-```yaml
+---
 metadata:
   pattern: pipeline
   stages: 3
   sub_patterns: [inversion, generator]
-```
+---
 
-# S2 需求设计 (Requirements Design)
+# S2 Requirements Design
 
-基于需求分析说明书，完成架构变更设计与 SR-AR 分解，产出**需求设计说明书**，为后续开发计划和代码实现提供清晰技术蓝图。
+Based on the requirements analysis specification, complete the architecture change design and SR-AR decomposition, producing the **Requirements Design Specification**. This provides a clear technical blueprint for subsequent development planning and code implementation.
 
-## 核心立场
+## Core Principles
 
-| 原则 | 做法 | 反模式 |
-|------|------|--------|
-| **最小变更** | 优先复用、扩展现有模块和接口 | ❌ 动辄推翻重写 |
-| **边界清晰** | 每个模块有明确的允许/禁止修改范围 | ❌ 模糊的"按需调整" |
-| **接口优先** | 先定接口契约，再设计内部实现 | ❌ 先写实现再补接口 |
-| **可追溯** | 每个设计决策可追溯到需求分析说明书 | ❌ 凭经验拍脑袋 |
-| **防技术债** | 接口变更必须标注兼容性影响和迁移方案 | ❌ 默默改掉不说 |
+| Principle | Practice | Anti-pattern |
+|-----------|----------|--------------|
+| **Minimal Change** | Prefer reusing and extending existing modules and interfaces | ❌ Rewrite from scratch at the slightest provocation |
+| **Clear Boundaries** | Each module has an explicit allowed/prohibited modification scope | ❌ Vague "adjust as needed" |
+| **Interface First** | Define interface contracts before designing internal implementation | ❌ Write implementation first, then retrofit interfaces |
+| **Traceable** | Every design decision traces back to the requirements analysis specification | ❌ Decide based on gut feeling |
+| **Prevent Tech Debt** | Interface changes must annotate compatibility impact and migration plan | ❌ Silently change without disclosure |
 
-## 阶段目标
+## Stage Objectives
 
-完成以下四项分析与确认并完成文档生成：
+Complete the following four analysis and confirmation items, then generate the document:
 
-1. 现有架构与代码库理解
-2. 架构变更方案（模块增删改 + 修改边界 + 冻结区域）
-3. 接口变更方案（新增 / 修改 / 复用接口及兼容性影响）
-4. 设计模式选型与 DFx 策略
+1. Understanding of existing architecture & codebase
+2. Architecture change plan (module add/remove/modify + modification boundaries + frozen zones)
+3. Interface change plan (new / modified / reused interfaces and compatibility impact)
+4. Design pattern selection & DFx strategy
 
-**阶段共 3 个流程节点，遵照下方 [Proc] 按顺序执行，严禁跳步**
+**This stage has 3 process nodes. Follow the [Proc] sequence below strictly — no skipping.**
 
 ---
 
-## [Proc1] 设计探索
+## [Proc1] Design Exploration
 
-### 1.1 确认设计材料
+### 1.1 Confirm Design Materials
 
-**确认以下材料是否齐备**。缺少时一次性向用户索取：
+**Confirm whether the following materials are available.** Request all missing items from the user in a single batch:
 
 ```
 需求设计需要以下材料，请补充缺少的部分：
@@ -56,128 +56,121 @@ metadata:
    - 现有系统设计说明书 / 模块功能设计说明书 / 业界设计参考
 ```
 
-**无代码库**：确认"全新项目"后，跳过 1.2 的存量分析，直接设计。
+**No codebase**: After confirming "greenfield project," skip the existing-system analysis in 1.2 and proceed directly to design.
 
-### 1.2 代码库与参考资料分析
+### 1.2 Codebase & Reference Material Analysis
 
-**必须基于代码库逐项完成以下分析**：
+**Must complete the following analysis items based on the codebase**:
 
-| 分析维度 | 要做的事 |
-|----------|----------|
-| **模块结构** | 识别现有模块及其职责边界 |
-| **依赖关系** | 模块间的调用/依赖链路 |
-| **核心接口** | 主要接口定义、提供方与消费方 |
-| **数据模型** | 核心实体及其关系 |
-| **设计模式** | 识别现有代码中已使用的设计模式（如 Strategy、Observer、Factory 等） |
-| **技术栈** | 框架、中间件、基础设施 |
+| Analysis Dimension | What to Do |
+|--------------------|------------|
+| **Module Structure** | Identify existing modules and their responsibility boundaries |
+| **Dependency Relations** | Call/dependency chains between modules |
+| **Core Interfaces** | Major interface definitions, providers, and consumers |
+| **Data Models** | Core entities and their relationships |
+| **Design Patterns** | Identify design patterns already used in existing code (e.g., Strategy, Observer, Factory, etc.) |
+| **Tech Stack** | Frameworks, middleware, infrastructure |
 
-### 1.3 需求映射分析
+### 1.3 Requirements Mapping Analysis
 
-将需求分析说明书中的功能需求映射到现有架构：
+Map functional requirements from the requirements analysis specification to the existing architecture:
 
-- 哪些功能可通过**扩展现有模块**实现？
-- 哪些功能需要**新增模块**？
-- 哪些现有模块**需要修改**
-- 哪些现有模块**不应被修改**，包括**保护（涉及但禁止修改）**和**不涉及**？为什么？
-- 新旧模块之间需要哪些**接口连接**？是复用现有接口还是新增？
-- 新模块集成后是否**真实启动**？
-- 修改现有接口时，**向后兼容性**如何保证？
-
----
-
-## [Proc2] 架构变更确认（完成代码分析后执行）
-
-> **铁律**：Inversion 模式，架构方案未经用户确认前，**不生成设计文档**。
-
-### 2.1 模块变更与修改边界确认
-
-展示完整的模块变更方案，包括修改边界（围栏），**一次性**向用户确认：
-
-> **Q1**：“我建议本次需求涉及的模块变更为：新增 _**、修改**_、删除/废弃 _**、禁止修改**_，这个划分是否合理？”
->
-> **Q2**：“新功能接入现有系统的方式为：通过 _**模块，复用已有接口**_，新增接口 _**，修改接口**_，这个方案是否接受？”
->
-> **Q3**：“我识别到的风险与边界为：___（如稳定核心模块不可改、接口兼容性要求、避免逻辑下沉到旧模块等），是否需要调整？”
-
-### 2.2 设计模式与 DFx 策略确认
-
-展示完整的技术设计策略，包括架构模式与质量属性保障措施，**一次性**向用户确认：
-
-> **Q1**：“我建议本次设计采用的模式策略为 ___，这个选型是否合理？”
->
-> **Q2**：“本次 DFx 保障方案为：可用性/可靠性方面 [如容错与降级、重试与熔断、超时控制、幂等设计、数据一致性]，易用性方面 [如错误提示与降级]，可扩展性方面 [如插件机制]，这些措施是否覆盖到位？”
->
-### 2.4 Inversion 完成条件
-
-满足以下**全部**条件后，方可进入文档生成：
-
-- [ ] 用户已确认模块变更方案与修改边界
-- [ ] 用户已确认接口变更方案与兼容性处理
-- [ ] 用户已确认设计模式与 DFx 策略
-- [ ] 无未解决的技术冲突或模糊地带
+- Which features can be implemented by **extending existing modules**?
+- Which features require **new modules**?
+- Which existing modules **need modification**?
+- Which existing modules **must NOT be modified**, including **protected (involved but modification prohibited)** and **not involved**? Why?
+- What **interface connections** are needed between new and existing modules? Reuse existing interfaces or create new ones?
+- After integration, does the new module **actually start up**?
+- When modifying existing interfaces, how is **backward compatibility** ensured?
 
 ---
 
-## [Proc3] 文档生成（Generator 模式）
+## [Proc2] Architecture Change Confirmation (Execute after codebase analysis is complete)
 
-### 3.1 SR-AR 分解原则
+> **Iron Rule**: Inversion pattern — **do NOT generate the design document** until the architecture plan is confirmed by the user.
 
-**在生成文档时，遵循以下分解规则**：
+### 2.1 Module Change & Modification Boundary Confirmation
 
-#### SR 分解规则
+Present the complete module change plan including modification boundaries (fences), and confirm with the user **in a single batch**:
 
-- **总量控制**：SR 总数一般 1-2 个，不宜过多
-- **场景对应**：每个 SR 对应需求分析说明书中的一个主要场景或功能域
-- **合并优先**：新增 SR 前先自问——**"它对应哪个主要场景？能否合并到现有 SR？"**
+> **Q1**："我建议本次需求涉及的模块变更为：新增 ___、修改 ___、删除/废弃 ___、禁止修改 ___，这个划分是否合理？"
+>
+> **Q2**："新功能接入现有系统的方式为：通过 ___ 模块，复用已有接口 ___，新增接口 ___，修改接口 ___，这个方案是否接受？"
+>
+> **Q3**："我识别到的风险与边界为：___（如稳定核心模块不可改、接口兼容性要求、避免逻辑下沉到旧模块等），是否需要调整？"
 
-#### AR 分配规则
+### 2.2 Design Pattern & DFx Strategy Confirmation
 
-- **一 AR 一元素**：每个 AR 只归属一个系统元素（模块/组件/服务）
-- **默认 1-2 个**：每个 SR 默认 1-2 个 AR，最多 3 个
-- **超限确认**：超过 3 个须与用户确认拆分理由
-- **必须列功能点**：每个 AR 必须列出具体功能点，不能只写笼统描述
-- **合理拆分理由**：归属不同系统元素 / 技术栈不同 / 可并行实现且边界清晰
+Present the complete technical design strategy including architecture patterns and quality attribute safeguards, and confirm with the user **in a single batch**:
 
-### 3.2 生成流程
+> **Q1**："我建议本次设计采用的模式策略为 ___，这个选型是否合理？"
+>
+> **Q2**："本次 DFx 保障方案为：可用性/可靠性方面 [如容错与降级、重试与熔断、超时控制、幂等设计、数据一致性]，易用性方面 [如错误提示与降级]，可扩展性方面 [如插件机制]，这些措施是否覆盖到位？"
 
-1. 加载文档模板 `assets/requirements-design-template.md`
-2. 若仍存在未确认项或冲突，**先完成确认再生成**
-3. 按模板结构填充内容，生成文档到指定位置
-4. 执行质量自检
-5. 输出文档摘要，供用户快速审阅
+### 2.4 Inversion Completion Criteria
 
-### 3.3 质量自检清单
+All of the following conditions must be met before proceeding to document generation:
 
-**架构设计**：
+- [ ] User has confirmed the module change plan and modification boundaries
+- [ ] User has confirmed the interface change plan and compatibility handling
+- [ ] User has confirmed the design pattern and DFx strategy
+- [ ] No unresolved technical conflicts or ambiguous areas remain
 
-- [ ] 统一架构变更图已绘制，展示新增/修改/保护（涉及该模块的使用，但禁止修改）/不涉及
-- [ ] 每个模块的变更类型、修改范围、保护原因已明确
-- [ ] 接口变更清单完整，标注兼容性影响和迁移方案
-- [ ] 无"隐式修改"——所有受影响模块均已出现在变更表中
+---
 
-**SR-AR 分解**：
+## [Proc3] Document Generation (Generator Pattern)
 
-- [ ] SR 总数合理（1-2 个，超过3个需要与用户确认），对应主要场景
-- [ ] 每个 AR 列出具体功能点
-- [ ] SR、AR数量新增要思考必要性
+### 3.1 Generation Workflow
 
-**设计模式**：
+1. Load the document template `assets/requirements-design-template.md`
+2. If any unconfirmed items or conflicts remain, **complete confirmation before generating**
+3. Populate the template structure with content; generate the document to the designated location
+4. Execute the quality self-check
+5. Output a document summary for the user to review quickly
 
-- [ ] 已识别现有代码中的设计模式
-- [ ] 新增设计模式有明确选型理由和适用场景
+### 3.2 SR-AR Decomposition Principles
 
-**DFx 设计**：
+**When generating the document, follow these decomposition rules**:
 
-- [ ] 安全性策略已定义（认证、授权、数据保护）
-- [ ] 易用性方案已覆盖（错误提示、降级策略）
-- [ ] 可测试性设计已明确（Mock 边界、测试策略）
-- [ ] 可扩展性设计已说明（扩展点、配置化策略）
+#### SR Decomposition Rules
 
-**性能目标**：
+- **Total Control**: SR count should generally be 1–2; avoid excessive numbers
+- **Scenario Correspondence**: Each SR corresponds to one major scenario or functional domain from the requirements analysis specification
+- **Merge First**: Before adding a new SR, ask — **"Which major scenario does it correspond to? Can it be merged into an existing SR?"**
 
-- [ ] 性能指标与需求分析说明书一致
-- [ ] 性能目标已分解到模块级别
+#### AR Assignment Rules
 
-**文档质量**
+- **One AR, One Element**: Each AR belongs to exactly one system element (module/component/service)
+- **Default 1–2**: Each SR defaults to 1–2 ARs, maximum 3
+- **Over-limit Confirmation**: Exceeding 3 requires confirming the split rationale with the user
+- **Must List Capability Points**: Each AR must list specific capability points — no vague descriptions
+- **Valid Split Reasons**: Belongs to different system elements / different tech stacks / can be developed in parallel with clear boundaries
 
-- [ ] 文档不涉及代码，通过自然语言和mermaid图示描述
+### 3.3 Quality Self-Check Checklist
+
+**Architecture Design**:
+
+- [ ] Unified architecture change diagram is drawn, showing add/modify/protect/not-involved
+- [ ] Change type, modification scope, and protection rationale for each module are explicit
+- [ ] Interface change list is complete, with compatibility impact and migration plan annotated
+- [ ] No "implicit modifications" — all affected modules appear in the change table
+
+**SR-AR Decomposition**:
+
+- [ ] SR count is reasonable (1–2; exceeding 3 requires user confirmation), corresponding to major scenarios
+- [ ] Each AR lists specific capability points
+- [ ] Any increase in SR/AR count has been justified for necessity
+
+**Design Patterns**:
+
+- [ ] Existing design patterns in the codebase have been identified
+- [ ] Newly introduced design patterns have explicit selection rationale and applicable scenarios
+
+**Performance Targets**:
+
+- [ ] Performance metrics are consistent with the requirements analysis specification
+- [ ] Performance targets are decomposed to the module level
+
+**Document Quality**:
+
+- [ ] Document contains no code; described through natural language and Mermaid diagrams

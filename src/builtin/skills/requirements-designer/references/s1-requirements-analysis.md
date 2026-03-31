@@ -1,85 +1,87 @@
-```yaml
+---
 metadata:
   pattern: pipeline
   stages: 2
   sub_patterns: [inversion, generator]
-```
+---
 
-# S1 需求分析 (Requirements Analysis)
+# S1 Requirements Analysis
 
-将原始输入（GitHub Issue、产品需求、口头描述等）转化为结构化的需求规格说明。
-采用 **Inversion 模式**逐步确认需求，再用 **Generator 模式**生成文档。
+Transform raw inputs (GitHub Issues, product requirements, verbal descriptions, etc.) into a structured requirements specification.
+Use the **Inversion pattern** to progressively confirm requirements, then the **Generator pattern** to produce the document.
 
-## 核心立场
+## Core Principles
 
-| 原则 | 做法 | 反模式 |
-|------|------|--------|
-| **保持好奇** | 提出自然涌现的问题 | ❌ 照着清单审问 |
-| **开放线索** | 展现多个探索方向，让用户选择 | ❌ 强制单一问答路径 |
-| **灵活应变** | 新信息出现时立即调整方向 | ❌ 死守预设框架 |
-| **耐心以待** | 让问题轮廓自然显现 | ❌ 过早下结论 |
-| **立足实际** | 深入代码库和已有材料进行探索 | ❌ 纯理论推演 |
+| Principle | Practice | Anti-pattern |
+|-----------|----------|--------------|
+| **Stay Curious** | Ask naturally emerging questions | ❌ Interrogate from a checklist |
+| **Open Threads** | Present multiple exploration directions; let the user choose | ❌ Force a single Q&A path |
+| **Adapt Flexibly** | Adjust direction immediately when new information appears | ❌ Cling to a preset framework |
+| **Be Patient** | Let the problem contour emerge naturally | ❌ Jump to conclusions prematurely |
+| **Ground in Reality** | Explore deeply into the codebase and existing materials | ❌ Pure theoretical reasoning |
 
-## 阶段目标
+## Stage Objectives
 
-完成以下六项识别与确认并生成文档生成：
+Complete the following six identification and confirmation items, then generate the document:
 
-1. 业务背景与问题定义
-2. 干系人识别与角色分析
-3. 功能性需求
-4. 非功能性需求
-5. 约束条件与假设
-6. 需求优先级排序
+1. Business context & problem definition
+2. Stakeholder identification & role analysis
+3. Functional requirements
+4. Non-functional requirements
+5. Constraints & assumptions
+6. Requirements prioritization
 
-**阶段共 2 个流程节点，遵照下方 [Proc] 按顺序执行，严禁跳步**
+**This stage has 2 process nodes. Follow the [Proc] sequence below strictly — no skipping.**
 
 ---
 
-## [Proc1] 需求挖掘（Inversion 模式）
+## [Proc1] Requirements Elicitation (Inversion Pattern)
 
-> **铁律**：需求完全理解之前，**不生成任何文档**。
+> **Iron Rule**: **Do NOT generate any document** until requirements are fully understood.
 
-### 1.1 初始理解
+### 1.1 Initial Understanding
 
-在接收用户输入后，先用简洁自然的语言反馈你当前的理解状态，格式如下：
+After receiving user input, first provide a concise, natural-language summary of your current understanding state in the following format:
 
-> “我目前理解的是：___；暂时还不够明确的是：___。”
+> "我目前理解的是：___；暂时还不够明确的是：___。"
 
-此阶段应以自然对话方式推进澄清，**不要急于进入结构化整理或方案输出**。
+At this stage, proceed with clarification in a natural conversational manner — **do not rush into structured organization or solution output**.
 
-请基于当前存在的模糊点，**一次性**向用户发起确认，至少包括以下两类问题：
+Based on the ambiguities that currently exist, issue a **single batch** of confirmation questions to the user, including at least the following two types:
 
-- **Q1：理解确认**  
-  “我目前的理解是：___，这样理解是否正确？”
+- **Q1: Understanding Confirmation**
+  "我目前的理解是：___，这样理解是否正确？"
 
-- **Q2：模糊点澄清**  
-  “目前还不够明确的是：___。对此我有以下几种理解，请你确认更接近哪一种：___。”
+- **Q2: Ambiguity Clarification**
+  "目前还不够明确的是：___。对此我有以下几种理解，请你确认更接近哪一种：___。"
 
-### 1.2 识别业务背景与干系人
+### 1.2 Identify Business Context & Stakeholders
 
-**业务背景**：
-- 当前面临的具体挑战或痛点
-- 项目的业务价值与成功标准
+**Business Context**:
+- The specific challenges or pain points currently faced
+- Business value and success criteria for the project
 
-**干系人**：
-- 主要角色（用户、客户、开发团队、运维团队等）
-- 各角色的核心使用场景
+**Stakeholders**:
+- Key roles (users, customers, development team, operations team, etc.)
+- Core usage scenarios for each role
 
-完成分析后，**一次性**向用户提出以下确认问题：
+After completing the analysis, issue the following confirmation question to the user **in a single batch**:
 
 > **Q1**："我识别到的业务背景为 ___，涉及干系人包括 ___，是否有遗漏或偏差？"
 
-### 1.3 场景与需求细化
+### 1.3 Scenario & Requirements Refinement
 
-**场景梳理**：
-- 主要成功场景（Happy Path）
-- 关键失败/异常场景
+**Scenario Mapping**:
+- Primary success scenarios (Happy Path)
+- Key failure / exception scenarios
 
-**功能性需求**：系统需要实现的功能与服务
+**Supporting Capability Derivation**: Derive which supporting capabilities the system must possess through scenario walkthrough. Identify any capability the user may not have considered but is required for the system to function.
 
-**非功能性需求**：性能、可扩展性、安全性、可用性等
+**Functional Requirements**: Features and services the system needs to implement
 
-完成分析后，**一次性**向用户提出以下三个确认问题：
+**Non-functional Requirements**: Performance, scalability, security, usability, etc.
+
+After completing the analysis, issue the following three confirmation questions to the user **in a single batch**:
 
 > **Q1**："我识别到的核心场景为：[谁 → 在什么情况下 → 做了什么 → 系统如何响应 → 最终结果]，是否准确？"
 >
@@ -87,32 +89,69 @@ metadata:
 >
 > **Q3**："非功能性需求为 ___，优先级是否合理？"
 
-### 1.4 约束条件与假设
+### 1.4 Constraints & Assumptions
 
-- **技术约束**：技术栈、平台、语言、兼容性要求
-- **安全与合规**：数据隐私、合规性、权限要求
-- **资源约束**：时间、人力、预算限制
-- **假设前提**：分析过程中做出的隐含假设
+- **Technical Constraints**: Tech stack, platform, language, compatibility requirements
+- **Security & Compliance**: Data privacy, regulatory compliance, permission requirements
+- **Resource Constraints**: Time, staffing, budget limitations
+- **Assumptions**: Implicit assumptions made during the analysis
 
-完成分析后，**一次性**向用户提出以下两个确认问题：
+After completing the analysis, issue the following two confirmation questions to the user **in a single batch**:
 
 > **Q1**："识别到的技术约束为 ___，是否有补充？"
 >
 > **Q2**："分析过程中的假设为 ___，是否成立？"
 
-### 1.5 Inversion 完成条件
+### 1.5 Inversion Completion Criteria
 
-满足以下**全部**条件后，方可进入文档生成阶段：
+All of the following conditions must be met before proceeding to the document generation stage:
 
-- [ ] 用户已确认 1.3 ~ 1.5 的所有问题
-- [ ] 无未解决的歧义或冲突
-- [ ] 需求边界（做什么 / 不做什么）已明确
+- [ ] User has confirmed all questions from 1.3 – 1.5
+- [ ] No unresolved ambiguities or conflicts remain
+- [ ] Requirements boundaries (what to do / what NOT to do) are clearly defined
 
 ---
 
-## [Proc2] 文档生成（Generator 模式）
+## [Proc2] Document Generation (Generator Pattern)
 
-1. 必须载入文档模板 `assets/requirements-analysis-template.md`
-2. 若仍存在未确认项或冲突，**先向用户提问，完成确认再生成**
-3. 按模板结构填充内容，生成文档到指定位置
-4. 输出生成文档的摘要，供用户快速审阅
+### 2.1 Generation Workflow
+
+1. Must load the document template `assets/requirements-analysis-template.md`
+2. If any unconfirmed items or conflicts remain, **ask the user first; complete confirmation before generating**
+3. Populate the template structure with content; generate the document to the designated location
+4. Execute the quality self-check
+5. Output a document summary for the user to review quickly
+
+### 2.2 Quality Self-Check Checklist
+
+**Requirements Clarification**:
+
+- [ ] User requirements have been fully understood
+- [ ] Requirements have been deeply explored; confirmed no omitted or ambiguous capability
+
+**Business Context & Stakeholders**:
+
+- [ ] Business value description is specific and traceable to the business root cause (not vague statements)
+- [ ] Requirements description defines clear boundaries — states both "what to do" and "what NOT to do"
+
+**Functional Requirements**:
+
+- [ ] Functional requirements fully cover major business scenarios
+- [ ] Feature descriptions include core behaviors and user value
+- [ ] Business rules and constraints are explicit (validation logic, state transitions, preconditions, etc.)
+
+**Non-functional Requirements**:
+
+- [ ] Non-functional requirements include quantifiable acceptance criteria
+- [ ] Key quality attributes such as availability and reliability are covered
+
+**Scenarios & Acceptance**:
+
+- [ ] Primary success scenarios are fully described (role → trigger → action → response → outcome)
+- [ ] Supporting capabilities the user may not have considered have been derived
+
+**Constraints & Assumptions**:
+
+- [ ] Technical constraints are explicit (tech stack, platform, compatibility, etc.)
+- [ ] Compliance and security requirements are listed with verification methods noted
+- [ ] Assumptions made during analysis are recorded and confirmed
