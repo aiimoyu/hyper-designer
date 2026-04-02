@@ -6,6 +6,7 @@ import type { AgentConfig as LocalAgentConfig } from '../../../agents/types'
 import {
   createAgentTransformer,
   createUsingHyperDesignerTransformer,
+  createNoWorkflowPromptTransformer,
   createSystemTransformer as createCoreSystemTransformer,
   hasUsingHyperDesignerTag,
 } from '../../../transform'
@@ -400,8 +401,10 @@ export async function createOpenCodePlatformOrchestrator(
       'chat.message': async (chatInput, chatOutput) => {
         const agentTransformer = createAgentTransformer()
         const usingHyperDesignerTransformer = createUsingHyperDesignerTransformer()
+        const noWorkflowPromptTransformer = createNoWorkflowPromptTransformer()
         await agentTransformer(chatInput as never, chatOutput as never)
         await usingHyperDesignerTransformer(chatInput as never, chatOutput as never)
+        await noWorkflowPromptTransformer(chatInput as never, chatOutput as never)
       },
       'experimental.chat.system.transform': async (transformInput: unknown, transformOutput: { system: string[] }) => {
         await transformHooks['experimental.chat.system.transform'](transformInput, transformOutput)

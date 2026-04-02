@@ -1,5 +1,5 @@
 export { resolveNodeConfig, type NodeRuntimeConfig } from './agentRouting'
-export { createAgentTransformer, createUsingHyperDesignerTransformer } from './chatMessageTransform'
+export { createAgentTransformer, createUsingHyperDesignerTransformer, createNoWorkflowPromptTransformer } from './chatMessageTransform'
 export {
   transformSystemMessages,
   createSystemTransformer,

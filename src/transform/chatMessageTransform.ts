@@ -1,3 +1,4 @@
+import type { Part } from '@opencode-ai/sdk'
 import { isHDAgent } from '../agents/utils'
 import { resolveNodeConfig } from './agentRouting'
 import { appendUsingHyperDesignerSystemPrompt } from './systemTransformer'
@@ -22,6 +23,7 @@ export interface ChatMessageOutput {
     }
     system?: string
   }
+  parts: Part[]
 }
 
 export type ChatMessageTransformHook = (
@@ -70,5 +72,41 @@ export function createUsingHyperDesignerTransformer(): ChatMessageTransformHook 
 
     HyperDesignerLogger.debug('UsingHyperDesignerTransformer', `Injecting hyper-designer system prompt for agent: ${agentName}`)
     output.message.system = appendUsingHyperDesignerSystemPrompt(output.message.system)
+  }
+}
+
+/**
+ * 当工作流未初始化时，修改用户提示词，添加工作流选择引导
+ */
+export function createNoWorkflowPromptTransformer(): ChatMessageTransformHook {
+  return async (_input, output) => {
+    if (workflowService.isInitialized()) {
+      return
+    }
+
+    const parts = output.parts
+    if (!parts || parts.length === 0) {
+      return
+    }
+
+    const textParts = parts.filter((part): part is Part & { type: 'text' } => part.type === 'text')
+    if (textParts.length === 0) {
+      return
+    }
+
+    const originalText = textParts.map(p => p.text).join('\n')
+    const modifiedText = `<user_instruction>
+${originalText}
+</user_intent>
+
+[System Status] No workflow is currently active.
+[Directive] Please analyze the user's intent, assist them in selecting the appropriate workflow, and facilitate the handover to that workflow to fulfill the request.`
+
+    textParts[0]!.text = modifiedText
+
+    HyperDesignerLogger.debug('NoWorkflowPromptTransformer', '修改用户提示词以引导工作流选择', {
+      originalLength: originalText.length,
+      modifiedLength: modifiedText.length,
+    })
   }
 }
