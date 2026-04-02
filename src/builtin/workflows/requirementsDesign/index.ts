@@ -25,18 +25,18 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
 }
 
 const HANDOVER_MILESTONES: MilestoneDefinition[] = [
-  {
-    id: 'hd-gate',
-    name: 'Quality Gate',
-    description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
-    failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
-  },
-  {
-    id: "hd-int-mod",
-    name: "Interactive Modification",
-    description: "This milestone will be automatically activated after the document has been interactively modified with the user. To ensure document quality and alignment with user intent, interactive modification is required. Use the `hd_prepare_review` and `hd_finalize_review` tools to retrieve the modifications and complete this milestone.",
-    failureMessage: "The 'Interactive Modification' milestone is not completed. You must use `hd_prepare_review` and `hd_finalize_review` tools to retrieve changes and activate this milestone. Only then can you proceed to the next stage.",
-  }
+  // {
+  //   id: 'hd-gate',
+  //   name: 'Quality Gate',
+  //   description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
+  //   failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
+  // },
+  // {
+  //   id: "hd-int-mod",
+  //   name: "Interactive Modification",
+  //   description: "This milestone will be automatically activated after the document has been interactively modified with the user. To ensure document quality and alignment with user intent, interactive modification is required. Use the `hd_prepare_review` and `hd_finalize_review` tools to retrieve the modifications and complete this milestone.",
+  //   failureMessage: "The 'Interactive Modification' milestone is not completed. You must use `hd_prepare_review` and `hd_finalize_review` tools to retrieve changes and activate this milestone. Only then can you proceed to the next stage.",
+  // }
 ]
 
 const REQUIREMENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
@@ -106,7 +106,7 @@ export const requirementWorkflow: WorkflowDefinition = {
       required: true,
       inputs: [],
       outputs: REQUIREMENT_ANALYSIS_OUTPUTS,
-      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "ADT-Design", fn: referenceSetupHook }],
       after: [{ id: 'clear-context', description: 'Clear context', fn: clearHook }],
       transitions: [{ id: 'to-requirementDesign', toStageId: 'requirementDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>

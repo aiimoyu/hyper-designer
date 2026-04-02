@@ -6,16 +6,16 @@ import { projectAnalysisWorkflow } from './projectAnalysis'
 import { projectToSkillWorkflow } from './projectToSkill'
 
 export const BUILTIN_WORKFLOW_PLUGINS: WorkflowPluginRegistration[] = [
-  {
-    factory: () => classicWorkflow,
-  },
+  // {
+  //   factory: () => classicWorkflow,
+  // },
   {
     factory: () => projectAnalysisWorkflow,
   },
   {
     factory: () => requirementWorkflow,
   },
-  {
-    factory: () => projectToSkillWorkflow,
-  },
+  // {
+  //   factory: () => projectToSkillWorkflow,
+  // },
 ]

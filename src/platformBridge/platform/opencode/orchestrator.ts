@@ -340,9 +340,10 @@ export function buildOpenCodeMappedAgents(input: {
     ]),
   ) as Record<string, OpencodeAgentConfig & { hidden?: boolean }>
 
+  const hyperAgentName = input.hyperAgent.name ?? 'Hyper'
   return {
     ...mappedBuiltinAgents,
-    Hyper: toOpencodeAgentConfig(input.hyperAgent),
+    [hyperAgentName]: toOpencodeAgentConfig(input.hyperAgent),
   }
 }
 

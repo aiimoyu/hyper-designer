@@ -24,192 +24,67 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
 }
 
 const PROJECT_OVERVIEW_OUTPUTS: StageFileItem[] = [
-  {
-    id: '项目概览',
-    path: './.hyper-designer/projectAnalysis/project-overview.md',
-    type: 'file',
-    description: 'Project overview with basic info, tech stack, directory structure, and entry points',
-  },
+  { id: '项目概览', path: './.hyper-designer/projectAnalysis/overview.md', type: 'file', description: 'Project overview with basic info, tech stack, directory structure, and entry points' },
+  { id: '系统架构', path: './.hyper-designer/projectAnalysis/architecture.md', type: 'file', description: 'System architecture with layers, design patterns, and component relationships' },
+  { id: '模块分析', path: './.hyper-designer/projectAnalysis/modules.md', type: 'file', description: 'Module hierarchy, dependencies, interfaces, and data flow' },
 ]
 
-const FUNCTION_TREE_MODULE_INPUTS: StageFileItem[] = [
-  {
-    id: '项目概览',
-    path: './.hyper-designer/projectAnalysis/project-overview.md',
-    type: 'file',
-    description: 'Project overview from stage 1',
-  },
+const COMPONENT_ANALYSIS_INPUTS: StageFileItem[] = [
+  { id: '项目概览', path: './.hyper-designer/projectAnalysis/overview.md', type: 'file', description: 'Project overview from stage 1' },
+  { id: '系统架构', path: './.hyper-designer/projectAnalysis/architecture.md', type: 'file', description: 'System architecture from stage 1' },
+  { id: '模块分析', path: './.hyper-designer/projectAnalysis/modules.md', type: 'file', description: 'Module analysis from stage 1' },
 ]
 
-const FUNCTION_TREE_MODULE_OUTPUTS: StageFileItem[] = [
-  {
-    id: '功能树',
-    path: './.hyper-designer/projectAnalysis/function-tree.md',
-    type: 'file',
-    description: 'Function tree with hierarchy, dependencies, and module mapping',
-  },
-  {
-    id: '模块关系',
-    path: './.hyper-designer/projectAnalysis/module-relationships.md',
-    type: 'file',
-    description: 'Module relationships with dependencies, interfaces, and data flow',
-  },
-]
-
-const INTERFACE_DATAFLOW_INPUTS: StageFileItem[] = [
-  {
-    id: '功能树',
-    path: './.hyper-designer/projectAnalysis/function-tree.md',
-    type: 'file',
-    description: 'Function tree from stage 2',
-  },
-  {
-    id: '模块关系',
-    path: './.hyper-designer/projectAnalysis/module-relationships.md',
-    type: 'file',
-    description: 'Module relationships from stage 2',
-  },
-]
-
-const INTERFACE_DATAFLOW_OUTPUTS: StageFileItem[] = [
-  {
-    id: '接口契约',
-    path: './.hyper-designer/projectAnalysis/interface-contracts.md',
-    type: 'file',
-    description: 'Interface contracts with API catalog, function signatures, and error contracts',
-  },
-  {
-    id: '数据流',
-    path: './.hyper-designer/projectAnalysis/data-flow.md',
-    type: 'file',
-    description: 'Data flow with models, flow diagrams, transformations, and storage',
-  },
-]
-
-const DEFECT_CHECK_INPUTS: StageFileItem[] = [
-  {
-    id: '项目概览',
-    path: './.hyper-designer/projectAnalysis/project-overview.md',
-    type: 'file',
-    description: 'Project overview from stage 1',
-  },
-  {
-    id: '功能树',
-    path: './.hyper-designer/projectAnalysis/function-tree.md',
-    type: 'file',
-    description: 'Function tree from stage 2',
-  },
-  {
-    id: '模块关系',
-    path: './.hyper-designer/projectAnalysis/module-relationships.md',
-    type: 'file',
-    description: 'Module relationships from stage 2',
-  },
-  {
-    id: '接口契约',
-    path: './.hyper-designer/projectAnalysis/interface-contracts.md',
-    type: 'file',
-    description: 'Interface contracts from stage 3',
-  },
-  {
-    id: '数据流',
-    path: './.hyper-designer/projectAnalysis/data-flow.md',
-    type: 'file',
-    description: 'Data flow from stage 3',
-  },
-]
-
-const DEFECT_CHECK_OUTPUTS: StageFileItem[] = [
-  {
-    id: '最终分析报告',
-    path: './.hyper-designer/projectAnalysis/analysis-report.md',
-    type: 'file',
-    description: 'Final analysis report with completeness check, consistency check, defects found, and patches applied',
-  },
+const COMPONENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
+  { id: '组件分析', path: './.hyper-designer/projectAnalysis/components/', type: 'folder', description: 'Individual component analysis files (C001-xxx.md, C002-xxx.md, etc.)' },
 ]
 
 export const projectAnalysisWorkflow: WorkflowDefinition = {
   id: 'projectAnalysis',
   name: 'Project Analysis',
-  description: '4-stage prompt-driven workflow: project overview → function tree and module → interface and data flow → defect check and patch. All outputs are pure Markdown with YAML Front Matter.',
-  entryStageId: 'projectOverview',
+  description: '2-stage workflow: system analysis → component analysis. Generates architecture docs, module analysis, and detailed component documentation.',
+  entryStageId: 'systemAnalysis',
 
   promptBindings: {
-    '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'workflow.md')),
+    '{HYPER_DESIGNER_WORKFLOW_OVERVIEW_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
   },
 
   stages: {
-    projectOverview: {
-      stageId: 'projectOverview',
-      name: 'Project Overview',
-      description: 'Analyze the target project and generate project overview and directory structure',
+    systemAnalysis: {
+      stageId: 'systemAnalysis',
+      name: 'System Analysis',
+      description: 'Analyze the target project: basic info, tech stack, architecture, modules, and dependencies.',
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'projectOverview.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'systemAnalysis.md')),
       },
       requiredMilestones: [],
       required: true,
       inputs: [],
       outputs: PROJECT_OVERVIEW_OUTPUTS,
-      transitions: [{ id: 'to-function-tree', toStageId: 'functionTreeAndModule', mode: 'auto', priority: 0 }],
+      transitions: [{ id: 'to-component-analysis', toStageId: 'componentAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '执行项目概览分析', currentName),
+        buildHandoverPrompt(thisName, '执行系统分析，生成overview.md、architecture.md、modules.md，你应该首先载入 `project-analysis` skill，根据路由模式阅读系统分析相关内容，并按照其文档进行操作', currentName),
     },
 
-    functionTreeAndModule: {
-      stageId: 'functionTreeAndModule',
-      name: 'Function Tree and Module',
-      description: 'Build function tree and analyze module relationships',
+    componentAnalysis: {
+      stageId: 'componentAnalysis',
+      name: 'Component Analysis',
+      description: 'Deep dive into each component: file structure, classes, functions, design patterns, data flow.',
       agent: 'HAnalysis',
       inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
       promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'functionTreeAndModule.md')),
+        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'componentAnalysis.md')),
       },
       requiredMilestones: [],
       required: true,
-      inputs: FUNCTION_TREE_MODULE_INPUTS,
-      outputs: FUNCTION_TREE_MODULE_OUTPUTS,
-      transitions: [{ id: 'to-interface', toStageId: 'interfaceAndDataFlow', mode: 'auto', priority: 0 }],
-      getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '建立功能树并分析模块关系', currentName),
-    },
-
-    interfaceAndDataFlow: {
-      stageId: 'interfaceAndDataFlow',
-      name: 'Interface and Data Flow',
-      description: 'Analyze interface contracts and data flow',
-      agent: 'HAnalysis',
-      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
-      promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'interfaceAndDataFlow.md')),
-      },
-      requiredMilestones: [],
-      required: true,
-      inputs: INTERFACE_DATAFLOW_INPUTS,
-      outputs: INTERFACE_DATAFLOW_OUTPUTS,
-      after: [{ id: 'summarize-interface', description: 'Summarize interface and data flow context', fn: summarizeHook }],
-      transitions: [{ id: 'to-defect-check', toStageId: 'defectCheckAndPatch', mode: 'auto', priority: 0 }],
-      getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '分析接口契约和数据流', currentName),
-    },
-
-    defectCheckAndPatch: {
-      stageId: 'defectCheckAndPatch',
-      name: 'Defect Check and Patch',
-      description: 'Check analysis completeness, patch previous outputs, and generate final report',
-      agent: 'HAnalysis',
-      inject: [{ provider: 'stage-inputs' }, { provider: 'stage-outputs' }],
-      promptBindings: {
-        '{HYPER_DESIGNER_WORKFLOW_STAGE_PROMPT}': workflowFilePrompt(join(__dirname, 'prompts', 'defectCheckAndPatch.md')),
-      },
-      requiredMilestones: [],
-      required: true,
-      inputs: DEFECT_CHECK_INPUTS,
-      outputs: DEFECT_CHECK_OUTPUTS,
+      inputs: COMPONENT_ANALYSIS_INPUTS,
+      outputs: COMPONENT_ANALYSIS_OUTPUTS,
+      after: [{ id: 'summarize-components', description: 'Summarize component analysis context', fn: summarizeHook }],
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '检查分析完整性，修补输出，生成最终报告', currentName),
+        buildHandoverPrompt(thisName, '深入分析每个组件，生成详细的组件分析文件，你应该首先载入 `project-analysis` skill，根据路由模式阅读组件分析相关内容，并按照其文档进行操作', currentName),
     },
   },
 }
