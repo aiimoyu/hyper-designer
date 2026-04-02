@@ -19,6 +19,7 @@ function makeCtx(options?: {
         create: vi.fn().mockImplementation(createImpl),
         delete: vi.fn().mockResolvedValue({}),
         prompt: vi.fn().mockResolvedValue({ data: { info: {}, parts: [] } }),
+        abort: vi.fn().mockResolvedValue(true),
       },
       tui: {
         publish: vi.fn().mockImplementation(publishImpl),
@@ -228,6 +229,51 @@ describe('createOpenCodeAdapter', () => {
 
       const callArgs = (ctx.client.session.prompt as ReturnType<typeof vi.fn>).mock.calls[0][0]
       expect(callArgs.body).not.toHaveProperty('system')
+    })
+  })
+
+  describe('cancelSession', () => {
+    it('calls ctx.client.session.abort exactly once with correct args', async () => {
+      const ctx = makeCtx()
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.cancelSession({ sessionId: 'ses-cancel-001' })
+
+      expect(ctx.client.session.abort).toHaveBeenCalledOnce()
+      expect(ctx.client.session.abort).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: { id: 'ses-cancel-001' },
+          query: { directory: '/tmp/test' },
+        })
+      )
+    })
+
+    it('logs info at start with sessionId context', async () => {
+      const infoSpy = vi.spyOn(HyperDesignerLogger, 'info')
+      const ctx = makeCtx()
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.cancelSession({ sessionId: 'ses-cancel-log' })
+
+      const startCall = infoSpy.mock.calls.find(
+        ([module, msg]) => module === 'OpenCode' && typeof msg === 'string' && msg.includes('取消')
+      )
+      expect(startCall).toBeDefined()
+      expect(startCall?.[2]).toMatchObject({ sessionId: 'ses-cancel-log' })
+    })
+
+    it('logs completion info with sessionId context', async () => {
+      const infoSpy = vi.spyOn(HyperDesignerLogger, 'info')
+      const ctx = makeCtx()
+      const adapter = createOpenCodeAdapter(ctx)
+
+      await adapter.cancelSession({ sessionId: 'ses-cancel-done' })
+
+      const doneCall = infoSpy.mock.calls.find(
+        ([module, msg]) => module === 'OpenCode' && typeof msg === 'string' && msg.includes('已取消')
+      )
+      expect(doneCall).toBeDefined()
+      expect(doneCall?.[2]).toMatchObject({ sessionId: 'ses-cancel-done' })
     })
   })
 })

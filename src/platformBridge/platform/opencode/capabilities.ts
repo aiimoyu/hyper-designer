@@ -7,6 +7,7 @@ import type {
   PlatformCapabilities,
   SendPromptParams,
   SendPromptResult,
+  CancelNotification,
 } from '../../capabilities/types'
 
 type JsonSchema = {
@@ -188,6 +189,15 @@ export function createOpenCodeAdapter(ctx: PluginInput): PlatformAdapter {
       HyperDesignerLogger.info('OpenCode', '上下文清空完成', { sessionId, newSessionId })
       return newSessionId
     },
+
+    cancelSession: async (params: CancelNotification): Promise<void> => {
+      HyperDesignerLogger.info('OpenCode', '取消会话执行', { sessionId: params.sessionId })
+      await ctx.client.session.abort({
+        path: { id: params.sessionId },
+        query: { directory: ctx.directory },
+      })
+      HyperDesignerLogger.info('OpenCode', '会话已取消', { sessionId: params.sessionId })
+    },
   }
 }
 
@@ -200,6 +210,7 @@ export function createOpenCodePlatformCapabilities(ctx: PluginInput): PlatformCa
       sendPrompt: adapter.sendPrompt,
       deleteSession: adapter.deleteSession,
       summarizeSession: adapter.summarizeSession,
+      cancelSession: adapter.cancelSession,
     },
     composite: {
       clearSession: adapter.clearSession,

@@ -22,12 +22,17 @@ export interface PlatformToolRegistration {
   handler: (params: Record<string, unknown>) => Promise<string>
 }
 
+export interface CancelNotification {
+  sessionId: string
+}
+
 export interface PlatformAdapter {
   createSession: (title: string) => Promise<string>
   sendPrompt: (params: SendPromptParams) => Promise<SendPromptResult>
   deleteSession: (sessionId: string) => Promise<void>
   summarizeSession: (sessionId: string) => Promise<void>
   clearSession: (sessionId: string) => Promise<string>
+  cancelSession: (params: CancelNotification) => Promise<void>
   registerTools?: (tools: PlatformToolRegistration[]) => void
   unregisterTools?: (toolNames: string[]) => void
 }
@@ -37,6 +42,7 @@ export interface NativePlatformCapabilities {
   sendPrompt: (params: SendPromptParams) => Promise<SendPromptResult>
   deleteSession: (sessionId: string) => Promise<void>
   summarizeSession: (sessionId: string) => Promise<void>
+  cancelSession: (params: CancelNotification) => Promise<void>
 }
 
 export interface CompositePlatformCapabilities {

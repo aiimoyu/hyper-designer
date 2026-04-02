@@ -680,6 +680,17 @@ export async function executeWorkflowHandover(definition: WorkflowDefinition, se
     }
     writeWorkflowStateFile(state);
   }
+  // 交接完成：取消旧会话（fire-and-forget）
+  if (adapter && sessionID) {
+    adapter.cancelSession({ sessionId: sessionID }).catch((error) => {
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.warn('Workflow', `取消旧会话失败: ${err.message}`, {
+        sessionId: sessionID,
+        action: 'cancelSession',
+        recovery: 'continueHandover',
+      })
+    })
+  }
 
   return state;
 }
