@@ -1,6 +1,8 @@
 import type { ToolDefinition } from '../../tools/types'
 import { resolveAgentConfig } from '../agentConfig'
 import { getStageOrder, resolveNextSelectedStage } from '../stageOrder'
+import { existsSync, mkdirSync, readdirSync, renameSync } from 'fs'
+import { join } from 'path'
 
 /**
  * WorkflowService - 工作流服务类
@@ -211,6 +213,9 @@ export interface HandoverResult {
   instruction?: string;
   error?: string;
   state?: WorkflowState;
+  ended?: boolean;
+  archivedPath?: string;
+  message?: string;
 }
 
 export interface ForceNextStepResult {
@@ -765,12 +770,37 @@ export class WorkflowService extends EventEmitter {
    * 在调度交接前验证质量门是否通过（score > 75）。
    * 成功时返回包含 instruction 的对象，要求 Agent 立即停止所有工作。
    *
-   * @param stageName 目标阶段名称（可选）。若省略，自动计算下一阶段：
+   * @param nextName 目标阶段名称（可选）。若省略，自动计算下一阶段：
    *                 - 当前阶段为 null → 第一个被选中的阶段
    *                 - 当前阶段不为 null → 下一个被选中的阶段
+   *                 - 如果是最后一个阶段且 nextName 为空，进入 End 流程
+   * @param end 是否强制结束工作流
    * @returns 结构化结果对象
    */
-  async hdScheduleHandover(stageName?: string): Promise<HandoverResult> {
+  async hdScheduleHandover(nextName: string, end?: boolean): Promise<HandoverResult> {
+    // 处理 end=true 的情况
+    if (end === true) {
+      HyperDesignerLogger.info('Workflow', '执行工作流结束操作')
+      const endResult = this.endWorkflow()
+      if (endResult.success) {
+        // 设置特殊的 handoverTo 值，orchestrator 会检测并调用 cancelSession
+        this.setHandover('WORKFLOW_END')
+        return {
+          scheduled: true,
+          status: 'pending',
+          ended: true,
+          ...(endResult.archivedPath ? { archivedPath: endResult.archivedPath } : {}),
+          message: 'Workflow has been completed and archived. All files have been moved to .hyper-designer/history. Thank you for using this service. Goodbye!',
+          instruction: 'STOP. You MUST return to the user immediately and say goodbye. The workflow has ended.',
+        }
+      }
+      return {
+        scheduled: false,
+        status: 'failed',
+        error: `Failed to end workflow: ${endResult.error}`,
+      }
+    }
+
     // 检查工作流是否已初始化
     if (!this.definition) {
       return {
@@ -799,22 +829,22 @@ export class WorkflowService extends EventEmitter {
       s => state?.workflow[s]?.selected !== false
     );
 
-    // 计算目标阶段：若未提供 stageName，自动选择下一阶段
-    let targetStage: string;
-    if (stageName) {
-      // 验证传入的 stageName 是否有效
-      if (!selectedStages.includes(stageName)) {
+    // 计算目标阶段：若未提供 nextName，自动选择下一阶段
+    let targetStage: string | null = null
+    if (nextName) {
+      // 验证传入的 nextName 是否有效
+      if (!selectedStages.includes(nextName)) {
         const validOptions = selectedStages.map(s => `"${s}"`).join(", ");
         return {
           scheduled: false,
           status: "failed",
-          error: `Invalid stage name "${stageName}".\n\nValid stage options: ${validOptions}`,
+          error: `Invalid stage name "${nextName}".\n\nValid stage options: ${validOptions}`,
         };
       }
-      targetStage = stageName;
+      targetStage = nextName
     } else if (!currentStage && state?.current === null) {
       // 初始状态：选择第一个被选中的阶段
-      targetStage = selectedStages[0];
+      targetStage = selectedStages[0] ?? null
     } else if (currentStage) {
       // 有当前阶段：选择下一个被选中的阶段
       const currentIndex = selectedStages.indexOf(currentStage);
@@ -827,18 +857,42 @@ export class WorkflowService extends EventEmitter {
       }
       const nextIndex = currentIndex + 1;
       if (nextIndex >= selectedStages.length) {
+        // 最后一个阶段，进入 End 流程
+        HyperDesignerLogger.info('Workflow', '当前是最后一个阶段，执行归档结束')
+        const endResult = this.endWorkflow()
+        if (endResult.success) {
+          // 设置特殊的 handoverTo 值，orchestrator 会检测并调用 cancelSession
+          this.setHandover('WORKFLOW_END')
+          return {
+            scheduled: true,
+            status: 'pending',
+            ended: true,
+            ...(endResult.archivedPath ? { archivedPath: endResult.archivedPath } : {}),
+            message: 'Workflow has been completed and archived. All files have been moved to .hyper-designer/history. Thank you for using this service. Goodbye!',
+            instruction: 'STOP. You MUST return to the user immediately and say goodbye. The workflow has ended.',
+          }
+        }
         return {
           scheduled: false,
-          status: "failed",
-          error: `Current stage "${currentStage}" is the final stage. Workflow completed.\n\n**Workflow Finished**: All stages have been successfully completed. The workflow will now enter idle state.\n\nPlease inform the user: The workflow has finished execution. Thank you for using this service. You may select a new workflow or perform other operations as needed.`,
-        };
+          status: 'failed',
+          error: `Failed to end workflow: ${endResult.error}`,
+        }
       }
-      targetStage = selectedStages[nextIndex];
+      targetStage = selectedStages[nextIndex] ?? null
     } else {
       return {
         scheduled: false,
         status: "failed",
         error: "Current stage is not set. Cannot perform handover.",
+      };
+    }
+
+    // 如果 targetStage 为 null（不应该发生，但做防御性检查）
+    if (!targetStage) {
+      return {
+        scheduled: false,
+        status: "failed",
+        error: "Cannot determine target stage for handover.",
       };
     }
 
@@ -1028,6 +1082,69 @@ export class WorkflowService extends EventEmitter {
     }
 
     return allTools
+  }
+
+  /**
+   * 结束工作流并归档
+   * 将 .hyper-designer 目录中除了 history 之外的所有文件和文件夹移动到 history 目录下的新文件夹中
+   * @returns 归档结果
+   */
+  endWorkflow(): { success: boolean; archivedPath?: string; error?: string } {
+    const projectRoot = process.cwd()
+    const hdDir = join(projectRoot, '.hyper-designer')
+    const historyDir = join(hdDir, 'history')
+
+    // 检查 .hyper-designer 目录是否存在
+    if (!existsSync(hdDir)) {
+      HyperDesignerLogger.warn('Workflow', '.hyper-designer 目录不存在')
+      return { success: false, error: '.hyper-designer directory does not exist' }
+    }
+
+    try {
+      // 创建 history 目录（如果不存在）
+      if (!existsSync(historyDir)) {
+        mkdirSync(historyDir, { recursive: true })
+      }
+
+      // 生成归档文件夹名称（使用时间戳）
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const archiveFolderName = `workflow-end-${timestamp}`
+      const archivePath = join(historyDir, archiveFolderName)
+      mkdirSync(archivePath, { recursive: true })
+
+      // 获取 .hyper-designer 目录下的所有文件和文件夹
+      const entries = readdirSync(hdDir)
+
+      for (const entry of entries) {
+        // 跳过 history 目录本身
+        if (entry === 'history') {
+          continue
+        }
+
+        const sourcePath = join(hdDir, entry)
+        const destPath = join(archivePath, entry)
+
+        // 移动文件或文件夹
+        renameSync(sourcePath, destPath)
+        HyperDesignerLogger.debug('Workflow', `归档: ${entry} -> ${archiveFolderName}`)
+      }
+
+      HyperDesignerLogger.info('Workflow', '工作流归档完成', {
+        archivedPath: archivePath,
+      })
+
+      return {
+        success: true,
+        archivedPath: archivePath,
+      }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.error('Workflow', '工作流归档失败', err)
+      return {
+        success: false,
+        error: err.message,
+      }
+    }
   }
 
   /**

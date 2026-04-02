@@ -106,7 +106,7 @@ export const requirementWorkflow: WorkflowDefinition = {
       required: true,
       inputs: [],
       outputs: REQUIREMENT_ANALYSIS_OUTPUTS,
-      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "ADT-Design", fn: referenceSetupHook }],
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
       after: [{ id: 'clear-context', description: 'Clear context', fn: clearHook }],
       transitions: [{ id: 'to-requirementDesign', toStageId: 'requirementDesign', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>

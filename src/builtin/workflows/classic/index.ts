@@ -274,7 +274,7 @@ export const classicWorkflow: WorkflowDefinition = {
       required: true,
       inputs: [],
       outputs: IR_ANALYSIS_OUTPUTS,
-      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "ADT-Design", fn: referenceSetupHook }],
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
       transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>

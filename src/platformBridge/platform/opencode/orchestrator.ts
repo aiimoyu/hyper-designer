@@ -214,6 +214,22 @@ export function createEventHandler(
     const workflowState = workflowServiceLike.getState()
     const workflow = workflowServiceLike.getDefinition()
 
+    // 检查是否需要结束工作流（ended=true 触发 session abort）
+    if (workflowState?.current?.handoverTo === 'WORKFLOW_END') {
+      HyperDesignerLogger.info('OpenCode', '工作流已结束，执行 session abort')
+      const adapter = capabilities.toAdapter()
+      try {
+        await adapter.cancelSession({ sessionId: sessionID })
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error))
+        HyperDesignerLogger.error('OpenCode', 'session abort 失败', err, {
+          sessionID,
+          action: 'cancelSession',
+        })
+      }
+      return
+    }
+
     if (!(workflowState && workflowState.current?.handoverTo && workflowState.current !== null && !workflowServiceLike.isHandoverInProgress() && workflow)) {
       return
     }

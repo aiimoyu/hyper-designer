@@ -53,29 +53,11 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     },
     {
       name: 'hd_workflow_select',
-      description: 'Select and initialize a workflow for the Hyper Designer project. This MUST be called before any workflow operations. Required stages cannot be deselected.',
+      description: 'Select and initialize a workflow for the Hyper Designer project. This MUST be called before any workflow operations. All available stages will be selected by default.',
       params: {
         type_id: {
           type: 'string',
-          description: "The workflow ID to select (e.g., 'classic', 'lite-designer')",
-        },
-        stages: {
-          type: 'array',
-          optional: true,
-          description: 'Stage selection array. If omitted, all stages are selected.',
-          items: {
-            type: 'object',
-            properties: {
-              key: {
-                type: 'string',
-                description: 'Stage key (e.g., "IRAnalysis")',
-              },
-              selected: {
-                type: 'boolean',
-                description: 'Whether to include this stage',
-              },
-            },
-          },
+          description: "The workflow ID to select (e.g., 'classic', 'lite-designer', 'requirement-designer')",
         },
       },
       execute: async params => {
@@ -91,36 +73,33 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           }, null, 2)
         }
 
-        const inputStages = Array.isArray(params.stages) ? params.stages : undefined
-        const stages = inputStages
-          ? inputStages
-            .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-            .map(item => ({
-              key: String(item.key),
-              selected: Boolean(item.selected),
-            }))
-          : detail.stages.map(stage => ({ key: stage.key, selected: true }))
-
+        const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }))
         const result = workflowService.selectWorkflow({ typeId, stages })
         return JSON.stringify(result, null, 2)
       },
     },
     {
       name: 'hd_handover',
-      description: `Set the handover workflow stage of the Hyper Designer project.
-- PREFERRED: Pass stage_name explicitly for clarity and reliability
-- If stage_name is omitted: automatically selects the next stage (first stage if current is null, next stage otherwise)
-- IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state. 建议传入下一个阶段名称作为参数！！！`,
+      description: `Handover or end the workflow of the Hyper Designer project.
+- next_name: The target stage to handover to. If empty/null/undefined, automatically selects the next stage (first stage if current is null, next stage otherwise). If this is the final stage, workflow will end.
+- end: Optional boolean. If true, forces workflow to end regardless of next_name.
+- IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.`,
       params: {
-        stage_name: {
+        next_name: {
           type: 'string',
+          optional: false,
+          description: 'The name of the workflow stage to handover to. Pass empty string to auto-select next stage. If this is the final stage, workflow will end.',
+        },
+        end: {
+          type: 'boolean',
           optional: true,
-          description: 'The name of the workflow stage to set as handover. PREFERRED to pass explicitly. If omitted, automatically selects the next stage.',
+          description: 'If true, ends the workflow regardless of next_name. All files will be archived to .hyper-designer/history.',
         },
       },
       execute: async params => {
-        const stageName = typeof params.stage_name === 'string' ? params.stage_name : undefined
-        const result = await workflowService.hdScheduleHandover(stageName)
+        const nextName = typeof params.next_name === 'string' ? params.next_name.trim() : ''
+        const endFlag = typeof params.end === 'boolean' ? params.end : false
+        const result = await workflowService.hdScheduleHandover(nextName, endFlag)
         return JSON.stringify(result, null, 2)
       },
     },
