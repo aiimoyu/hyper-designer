@@ -34,14 +34,14 @@
 
 ## [S2] 并行生成模块文档
 
-同时委派多个 Subagent，对确认范围内的每个模块单独的进行深入分析。所有模块同时启动，不串行等待。
+同时委派多个 Subagent，使用 `project-analysis` SKILL ，对确认范围内的每个模块单独的进行深入分析。所有模块同时启动，不串行等待。
 
 ### Subagent 任务模板
 
 对每个模块，使用以下模板生成 Subagent 任务描述：
 
-```
-任务：深入分析模块 {ModuleID}-{ModuleName} 并生成模块详情文件
+```text
+任务：深入分析模块 {ModuleID}-{ModuleName} 并根据 `project-analysis` SKILL 中 `assets/module-detail-template.md` 模板，生成模块详情文件
 
 上下文：
   项目路径：{project-path}
@@ -55,9 +55,13 @@
 
 执行步骤：
 
-1. 代码深度阅读（必须）
+1. 载入SKILL模板（必须）
+   - Load 'project-analysis'
+   - `references/gitnexus-commands.md` for 代码结构分析
+   - `assets/module-detail-template.md` for 输出结构
+
+2. 代码深度阅读
    阅读模块路径下的所有文件，建立完整认知。
-   辅助以 gitnexus 分析，可参考 `project-analysis` SKILL 中的 `references/gitnexus-commands.md`
 
    a. 文件结构梳理
       - 列出所有文件，理解文件间的 import 关系
@@ -84,9 +88,11 @@
       - 评估测试覆盖情况
       - 标注潜在风险（未处理异常、并发安全、内存泄漏）
 
-2. 按模板生成文件
+3. 按模板生成文件
    MUST 基于 `project-analysis` SKILL 中 assets中的模板进行生成
-   Load 'assets/module-detail-template.md'，逐节填写。确保：
+   Load 'assets/module-detail-template.md'，逐节填写。
+   
+   确保：
    - 概述准确反映模块在系统中的角色
    - 所有公开接口已列出，签名与源码一致
    - 代码引用包含 文件:行号 格式
