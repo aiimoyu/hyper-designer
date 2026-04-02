@@ -1,12 +1,12 @@
 ---
-title: [项目名称] 模块总览
+title: 模块总览
 version: 1.0
 last_updated: YYYY-MM-DD
 type: module-index
 project: [项目名称]
 ---
 
-# [项目名称] 模块总览
+# 模块总览
 
 ## 模块划分说明
 

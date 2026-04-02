@@ -1,12 +1,12 @@
 ---
-title: [项目名称] 系统架构
+title: 系统架构
 version: 1.0
 last_updated: YYYY-MM-DD
 type: system-architecture
 project: [项目名称]
 ---
 
-# [项目名称] 系统架构
+# 系统架构
 
 ## 1. 系统边界
 

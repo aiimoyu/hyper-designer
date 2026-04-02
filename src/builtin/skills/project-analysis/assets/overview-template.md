@@ -1,12 +1,12 @@
 ---
-title: [项目名称]
+title: 概览
 version: 1.0
 last_updated: YYYY-MM-DD
 type: project-overview
 project: [项目名称]
 ---
 
-# [项目名称] 概览
+# 概览
 
 ## 快速摘要
 
