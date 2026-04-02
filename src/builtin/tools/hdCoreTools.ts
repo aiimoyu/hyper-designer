@@ -110,7 +110,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
       description: `Set the handover workflow stage of the Hyper Designer project.
 - PREFERRED: Pass stage_name explicitly for clarity and reliability
 - If stage_name is omitted: automatically selects the next stage (first stage if current is null, next stage otherwise)
-- IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state.`,
+- IMPORTANT: After calling this tool, you MUST STOP all work and return immediately. Do NOT continue with any tasks, do NOT call other tools. The actual handover will be processed by system hooks when the session enters idle state. 建议传入下一个阶段名称作为参数！！！`,
       params: {
         stage_name: {
           type: 'string',

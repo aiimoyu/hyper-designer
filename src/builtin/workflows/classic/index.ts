@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const HANDOVER_MILESTONES: MilestoneDefinition[] = [
   {
-    id: 'gate',
+    id: 'hd-gate',
     name: 'Quality Gate',
     description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
     failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',
@@ -274,7 +274,7 @@ export const classicWorkflow: WorkflowDefinition = {
       required: true,
       inputs: [],
       outputs: IR_ANALYSIS_OUTPUTS,
-      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "Hyper", fn: referenceSetupHook }],
+      before: [{ id: 'reference-setup', description: 'Setup REFERENCE.md and wait for user confirmation', agent: "ADT-Design", fn: referenceSetupHook }],
       after: [{ id: 'summarize-ir', description: 'Summarize IR context', fn: summarizeHook }],
       transitions: [{ id: 'to-scenario', toStageId: 'scenarioAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>

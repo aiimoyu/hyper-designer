@@ -31,15 +31,15 @@ Complete the following six identification and confirmation items, then generate 
 5. Constraints & assumptions
 6. Requirements prioritization
 
-**This stage has 2 process nodes. Follow the [Proc] sequence below strictly — no skipping.**
+**This stage has 2 Step nodes. Follow the [S] sequence below strictly — no skipping.**
 
 ---
 
-## [Proc1] Requirements Elicitation (Inversion Pattern)
+## [S1] Requirements Elicitation (Inversion Pattern)
 
 > **Iron Rule**: **Do NOT generate any document** until requirements are fully understood.
 
-### 1.1 Initial Understanding
+### [A1.1] Initial Understanding
 
 After receiving user input, first provide a concise, natural-language summary of your current understanding state in the following format:
 
@@ -55,7 +55,7 @@ Based on the ambiguities that currently exist, issue a **single batch** of confi
 - **Q2: Ambiguity Clarification**
   "目前还不够明确的是：___。对此我有以下几种理解，请你确认更接近哪一种：___。"
 
-### 1.2 Identify Business Context & Stakeholders
+### [A1.2] Identify Business Context & Stakeholders
 
 **Business Context**:
 - The specific challenges or pain points currently faced
@@ -69,7 +69,7 @@ After completing the analysis, issue the following confirmation question to the 
 
 > **Q1**："我识别到的业务背景为 ___，涉及干系人包括 ___，是否有遗漏或偏差？"
 
-### 1.3 Scenario & Requirements Refinement
+### [A1.3] Scenario & Requirements Refinement
 
 **Scenario Mapping**:
 - Primary success scenarios (Happy Path)
@@ -89,7 +89,7 @@ After completing the analysis, issue the following three confirmation questions 
 >
 > **Q3**："非功能性需求为 ___，优先级是否合理？"
 
-### 1.4 Constraints & Assumptions
+### [A1.4] Constraints & Assumptions
 
 - **Technical Constraints**: Tech stack, platform, language, compatibility requirements
 - **Security & Compliance**: Data privacy, regulatory compliance, permission requirements
@@ -102,7 +102,7 @@ After completing the analysis, issue the following two confirmation questions to
 >
 > **Q2**："分析过程中的假设为 ___，是否成立？"
 
-### 1.5 Inversion Completion Criteria
+### [A1.5] Inversion Completion Criteria
 
 All of the following conditions must be met before proceeding to the document generation stage:
 
@@ -112,9 +112,9 @@ All of the following conditions must be met before proceeding to the document ge
 
 ---
 
-## [Proc2] Document Generation (Generator Pattern)
+## [S2] Document Generation (Generator Pattern)
 
-### 2.1 Generation Workflow
+### [A2.1] Generation Workflow
 
 1. Must load the document template `assets/requirements-analysis-template.md`
 2. If any unconfirmed items or conflicts remain, **ask the user first; complete confirmation before generating**
@@ -122,7 +122,7 @@ All of the following conditions must be met before proceeding to the document ge
 4. Execute the quality self-check
 5. Output a document summary for the user to review quickly
 
-### 2.2 Quality Self-Check Checklist
+### [A2.2] Quality Self-Check Checklist
 
 **Requirements Clarification**:
 
@@ -154,4 +154,4 @@ All of the following conditions must be met before proceeding to the document ge
 
 - [ ] Technical constraints are explicit (tech stack, platform, compatibility, etc.)
 - [ ] Compliance and security requirements are listed with verification methods noted
-- [ ] Assumptions made during analysis are recorded and confirmed
+- [ ] Assumptions made during analysis are recorded and confirmedirmed
