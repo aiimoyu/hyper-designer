@@ -18,14 +18,18 @@ const REFERENCE_FILENAME = 'REFERENCE.md'
 /** REFERENCE.md 文件内容模板 */
 const REFERENCE_TEMPLATE = `# 参考资料清单
 
-> 以下是用户填写的各分类的参考资料路径或链接，帮助 Agent 在执行任务中更好地理解项目需求，Agent 在执行任务的过程中应该积极的参考下面内容。
+> Below are the reference material paths or links provided by the user to help the Agent better understand the project requirements. The Agent should actively refer to the following content while performing tasks.
 
 ## 1. Codebase (代码库)
 
 | 子类别 | 您的资料（路径/链接/描述） |
 | --- | --- |
-| Project Code (本项目代码) | |
-| Reference Code (参考项目代码) | |
+| Current Codebase (本项目代码) | |
+| Current Codebase Analysis Document(本项目代码分析) | |
+| Reference Codebase (参考项目代码) | |
+| Reference Codebase Analysis Document (参考项目代码分析) | |
+
+- **[Directive]** Before exploring the project, you MUST check if '.hyper-designer\codebase-analysis\SKILL.md' exists within the codebase path. If it exists, prioritize reading this file to obtain project analysis information. This will facilitate a better understanding of the project and accelerate the design process.
 
 ## 2. Domain Analysis Materials (领域分析资料)
 
@@ -52,6 +56,8 @@ const REFERENCE_TEMPLATE = `# 参考资料清单
 | Industry Design References (业界设计参考) | |
 | System Design Specification (系统设计说明书) | |
 | Requirement Design Specification (需求设计说明书) | |
+
+> 该参考资料索引文档可自定义！若上述表格中没有你想要填写的分类，可自行添加分类和子类别。
 `
 
 /**

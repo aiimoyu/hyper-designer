@@ -36,23 +36,19 @@ export type FetchSessionMessages = (sessionID: string) => Promise<SessionMessage
 
 export function createHyperSessionHistoryTransformer(fetchMessages: FetchSessionMessages): ChatMessageTransformHook {
   return async (input, output) => {
-    HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "111")
     if (input.agent !== 'Hyper') {
       HyperDesignerLogger.debug('HyperSessionHistoryTransformer', `Agent ${input.agent} is not Hyper, skipping session history injection`)
       return
     }
-    HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "222")
     const sessionID = input.sessionID
     if (!sessionID) {
       return
     }
-    HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "333")
     try {
       const messages = await fetchMessages(sessionID)
       if (!messages || !Array.isArray(messages)) {
         return
       }
-      HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "444")
       const userPrompts = messages
         .filter((msg) => msg.info?.role === 'user')
         .map((msg) => {
@@ -66,7 +62,6 @@ export function createHyperSessionHistoryTransformer(fetchMessages: FetchSession
         userPrompts,
         totalMessages: messages.length,
       })
-      HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "555")
       if (userPrompts.length === 0 && workflowService.isInitialized()) {
         injectActiveWorkflowStatus(output)
       }

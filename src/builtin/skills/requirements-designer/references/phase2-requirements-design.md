@@ -38,23 +38,17 @@ Complete the following four analysis and confirmation items, then generate the d
 
 **Confirm whether the following materials are available.** Request all missing items from the user in a single batch:
 
-```
-需求设计需要以下材料，请补充缺少的部分：
+- **Requirements Analysis Specification (Mandatory)**：The output from the previous phase.
+- **Current Project Codebase (Mandatory)**：Need to analyze the project's existing code to proceed with the design.
+- **Current Project Codebase Analysis Document (Recommended)**：The entry path is usually located at `{project path}\.hyper-designer\codebase-analysis\SKILL.md`. If available, this must be read to deepen understanding and align with the project's "Golden Development Principles."
+- **Reference Project Codebase (Optional)**：External codebase that can be referenced to assist with the design.
+- **Reference Project Codebase Analysis Document (Optional)**：Similarly located at `{reference project path}\.hyper-designer\codebase-analysis\SKILL.md`. If available, this must be read to accelerate the exploration process.
+- **Domain Materials (Optional)**：Domain architecture analysis / Compliance requirements / Specific domain needs.
+- **Design References (Optional)**：Existing system design specifications / Modules.
 
-1. 需求分析说明书（必须）
-   - [已完成的需求分析说明书路径]
+Confirm with the user what you discovered:
 
-2. 代码库
-   - 本项目代码分析文档：[路径 / 文档链接]
-   - 本项目代码：[路径 / 仓库链接 / 模块结构]
-   - 参考项目代码：[有类似实现可参考时提供]
-
-3. 领域资料（如有）
-   - 领域架构分析 / 合规要求 / 特殊领域需求
-
-4. 设计参考（如有）
-   - 现有系统设计说明书 / 模块功能设计说明书 / 业界设计参考
-```
+> "我找到了：_**。必须文件缺少：**_。建议文件缺少：___。是否有补充？"
 
 **No codebase**: After confirming "greenfield project," skip the existing-system analysis in 1.2 and proceed directly to design.
 
@@ -93,9 +87,9 @@ Map functional requirements from the requirements analysis specification to the 
 
 Present the complete module change plan including modification boundaries (fences), and confirm with the user **in a single batch**:
 
-> **Q1**："我建议本次需求涉及的模块变更为：新增 ___、修改 ___、删除/废弃 ___、禁止修改 ___，这个划分是否合理？"
+> **Q1**："我建议本次需求涉及的模块变更为：新增 ___、修改___、删除/废弃 ___、禁止修改___，这个划分是否合理？"
 >
-> **Q2**："新功能接入现有系统的方式为：通过 ___ 模块，复用已有接口 ___，新增接口 ___，修改接口 ___，这个方案是否接受？"
+> **Q2**："新功能接入现有系统的方式为：通过 ___模块，复用已有接口___，新增接口 ___，修改接口___，这个方案是否接受？"
 >
 > **Q3**："我识别到的风险与边界为：___（如稳定核心模块不可改、接口兼容性要求、避免逻辑下沉到旧模块等），是否需要调整？"
 

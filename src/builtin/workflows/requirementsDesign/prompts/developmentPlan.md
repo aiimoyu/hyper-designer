@@ -33,6 +33,8 @@ Before starting content generation, the following must be executed strictly in o
 You may only generate the "Development Plan" based on the **guidelines and templates** in the reference file above:
 
 - Do not skip document reading;
+- ALWAYS first check whether the `{project path}\.hyper-designer/codebase-analysis/SKILL.md` directory exists within that project directory when exploring a project. If it does, read it, this will improve your understanding of the project and speed up the design process.
+- MUST combine the project analysis from `{project path}\.hyper-designer/codebase-analysis/SKILL.md` with the actual code files, and always treat the actual code as the source of truth.
 - Do not use default templates, rewrite the structure on your own, or omit required fields;
 - Do not generate development tasks beyond the **single-module scope**.
 
