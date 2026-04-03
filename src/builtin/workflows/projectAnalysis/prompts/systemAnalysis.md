@@ -29,15 +29,24 @@ Analyze the target project and generate 3 core documents.
 - [Proc1.2] Read `references/phase1-overview.md` in the `project-analysis` skill to obtain the complete methodology`
 - [Proc2] Execute according to stages S1-S8 in `references/phase1-system-analysis.md`, and skipping steps is prohibited.
 - [Proc3.1] Confirm the user's intent (continue to component analysis or end the workflow)
-- [Proc3.2] Use the `hd_handover` tool to explicitly hand over the work to the `component-analysis` stage or end the workflow.
-- [Proc3.3] Stop
+- [Proc3.2] If the user chooses to end the workflow, copy the `.hyper-designer/projectAnalysis` directory to `{analysis project path}/.hyper-designer/codebase-analysis`.
+- [Proc4.1] Use the `hd_handover` tool to explicitly hand over the work to the `component-analysis` stage or end the workflow.
+- [Proc4.2] Stop
 
 ## Output
+
+**output path**: ALWAYS save outputs to the `.hyper-designer/projectAnalysis` directory under the current running directory. NEVER output directly to the analysis project directory (unless the running directory equals the analysis project directory).
+
 
 1. `overview.md` — Project Overview
 2. `architecture.md` — System Architecture
 3. `modules.md` — Module Analysis
 4. `SKILL.md` — Skill Documentation (including methodology and output instructions)
+
+## Copy File
+
+- **end directly** you need to copy the entire `.hyper-designer/projectAnalysis` directory to `{analysis project path}/.hyper-designer/codebase-analysis`, because when analyzing the project in subsequent tasks, it will only check whether `{project path}/.hyper-designer/codebase-analysis` exists, not the current running directory (otherwise there would be conflicts when multiple projects exist).
+- **entering component analysis stage** you DO NOT need to copy the file, because the component-analysis stage will directly read the output of this stage in the current running directory.
 
 ## Work Handover
 

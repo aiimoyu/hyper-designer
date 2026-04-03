@@ -19,7 +19,7 @@
 
 ```bash
 cd <project-path>
-npx -y gitnexus@latest analyze --skip-agents-md --skip-git .
+npx -y gitnexus@latest analyze --skip-agents-md --skip-git {path}
 ```
 
 ## Cypher 查询

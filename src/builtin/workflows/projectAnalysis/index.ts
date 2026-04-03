@@ -27,6 +27,7 @@ const PROJECT_OVERVIEW_OUTPUTS: StageFileItem[] = [
   { id: '项目概览', path: './.hyper-designer/projectAnalysis/overview.md', type: 'file', description: 'Project overview with basic info, tech stack, directory structure, and entry points' },
   { id: '系统架构', path: './.hyper-designer/projectAnalysis/architecture.md', type: 'file', description: 'System architecture with layers, design patterns, and component relationships' },
   { id: '模块分析', path: './.hyper-designer/projectAnalysis/modules.md', type: 'file', description: 'Module hierarchy, dependencies, interfaces, and data flow' },
+  { id: 'SKILL文档', path: './.hyper-designer/projectAnalysis/SKILL.md', type: 'file', description: 'Documentation for the project-analysis skill, including methodology and output instructions' },
 ]
 
 const COMPONENT_ANALYSIS_INPUTS: StageFileItem[] = [
@@ -37,6 +38,7 @@ const COMPONENT_ANALYSIS_INPUTS: StageFileItem[] = [
 
 const COMPONENT_ANALYSIS_OUTPUTS: StageFileItem[] = [
   { id: '组件分析', path: './.hyper-designer/projectAnalysis/components/', type: 'folder', description: 'Individual component analysis files (C001-xxx.md, C002-xxx.md, etc.)' },
+  { id: '项目原则', path: './.hyper-designer/projectAnalysis/principles', type: 'folder', description: 'Project principles and guidelines' }
 ]
 
 export const projectAnalysisWorkflow: WorkflowDefinition = {
@@ -65,7 +67,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       outputs: PROJECT_OVERVIEW_OUTPUTS,
       transitions: [{ id: 'to-component-analysis', toStageId: 'componentAnalysis', mode: 'auto', priority: 0 }],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '执行系统分析，生成overview.md、architecture.md、modules.md，你应该首先载入 `project-analysis` skill，根据路由模式阅读系统分析相关内容，并按照其文档进行操作', currentName),
+        buildHandoverPrompt(thisName, '执行系统分析，生成overview.md、architecture.md、modules.md、SKILL.md 到 **当前目录的**（不是分析项目目录） `.hyper-designer/projectAnalysis` 目录下，你应该首先载入 `project-analysis` skill，根据路由模式阅读系统分析相关内容，并按照其文档进行操作', currentName),
     },
 
     componentAnalysis: {
@@ -84,7 +86,7 @@ export const projectAnalysisWorkflow: WorkflowDefinition = {
       after: [{ id: 'summarize-components', description: 'Summarize component analysis context', fn: summarizeHook }],
       transitions: [],
       getHandoverPrompt: (currentName, thisName) =>
-        buildHandoverPrompt(thisName, '深入分析每个组件，生成详细的组件分析文件，你应该首先载入 `project-analysis` skill，根据路由模式阅读组件分析相关内容，并按照其文档进行操作', currentName),
+        buildHandoverPrompt(thisName, '深入分析每个组件，生成详细的组件分析文件到 **当前目录的**（不是分析项目目录） `.hyper-designer/projectAnalysis` 目录下，你应该首先载入 `project-analysis` skill，根据路由模式阅读组件分析相关内容，并按照其文档进行操作', currentName),
     },
   },
 }

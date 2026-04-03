@@ -6,7 +6,7 @@
 
 ```bash
 cd <project-path>
-npx -y gitnexus@latest analyze --skip-agents-md --skip-git .
+npx -y gitnexus@latest analyze --skip-agents-md --skip-git {path}
 ```
 
 - 成功：记录节点数、边数、集群数，后续分析可使用 GitNexus 辅助导航
