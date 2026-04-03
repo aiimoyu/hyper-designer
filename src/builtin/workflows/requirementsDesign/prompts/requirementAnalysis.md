@@ -26,11 +26,11 @@ Before starting content generation, the following must be executed strictly in o
 
 1. Use `hd-review-pipeline` to obtain and execute the current stage workflow;
 2. Load `requirements-designer` according to the workflow guidance;
-3. Read the reference file: `requirements-designer/references/s1-requirements-analysis.md`.
+3. Read the reference file: `requirements-designer/references/phase1-requirements-analysis.md`.
 
 ### Generation Constraints
 
-You may only generate the "Requirements Analysis Specification" based on the **guidelines and templates** in the reference file above:
+You may only generate the "需求分析说明书" based on the **guidelines and templates** in the reference file above:
 
 - Do not skip document reading;
 - Do not use default templates, rewrite the structure on your own, or omit required fields;
@@ -38,8 +38,8 @@ You may only generate the "Requirements Analysis Specification" based on the **g
 
 ### Stage Deliverables
 
-- **File Name**: `Requirements Analysis Specification.md`
-- **Output Path**: `.hyper-designer/requirementAnalysis/Requirements Analysis Specification.md`
+- **File Name**: `需求分析说明书.md`
+- **Output Path**: `.hyper-designer/requirementAnalysis/需求分析说明书.md`
 - **Format Requirement**: Markdown, and it must fully comply with the Skill template structure.
 
 ### Quality Review
@@ -55,7 +55,7 @@ and send the following delegation prompt:
 
 ## Review Objective
 Please act as a senior architecture reviewer and conduct a strict review of the following document:
-`.hyper-designer/requirementAnalysis/Requirements Analysis Specification.md`
+`.hyper-designer/requirementAnalysis/需求分析说明书.md`
 
 ## Review Process
 
@@ -67,7 +67,7 @@ Please act as a senior architecture reviewer and conduct a strict review of the 
    2. `[requirements-designer]/references/requirements-analysis-review-checklist.md`
 - [S3] Execute the review
    1. Check the document content item by item against every rule in the checklist
-   2. Mark the milestone as completed
+   2. MUST mark the milestone as completed, or the review result will not be properly recorded and cause workflow confusion in the next execution.
    3. Output the review result
 
 

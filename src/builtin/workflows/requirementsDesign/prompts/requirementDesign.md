@@ -29,7 +29,7 @@ Before starting content generation, the following must be executed strictly in o
 
 1. Use `hd-review-pipeline` to obtain and execute the current stage workflow;
 2. Load `requirements-designer` according to the workflow guidance;
-3. Read the reference file: `requirements-designer/references/s2-requirements-design.md`.
+3. Read the reference file: `requirements-designer/references/phase2-requirements-design.md`.
 
 ### Generation Constraints
 
@@ -41,8 +41,8 @@ You may only generate the "Requirements Design Specification" based on the **gui
 
 ### Stage Deliverables
 
-- **File Name**: `Requirements Design Specification.md`
-- **Output Path**: `.hyper-designer/requirementDesign/Requirements Design Specification.md`
+- **File Name**: `需求设计说明书.md`
+- **Output Path**: `.hyper-designer/requirementDesign/需求设计说明书.md`
 - **Format Requirement**: Markdown, and it must fully comply with the Skill template structure.
 
 ### Quality Review
@@ -58,7 +58,7 @@ and send the following delegation prompt:
 
 ## Review Objective
 Please act as a senior architecture reviewer and conduct a strict review of the following document:
-`.hyper-designer/requirementDesign/Requirements Design Specification.md`
+`.hyper-designer/requirementDesign/需求设计说明书.md`
 
 ## Review Process
 

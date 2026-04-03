@@ -39,15 +39,15 @@ Evaluate the document across all five dimensions. Compute the weighted score and
 
 ### [S2] Tool Submission *(required before outputting the report)*
 
-Before rendering any output to the user, call `hd_record_milestone` with: 
+Before rendering any output to the user, call `hd_record_milestone` with:
 
-- `id`: "hd-gate"
+- `id`: "hd-subagent-gate"
 - `mark`: `true` if **passed or conditional**, `false` if failed
 - `detail`: an object containing:
   - `score`: the final computed score (0–100)
   - `comment`: a concise one-sentence summary capturing the document's core value and its most significant weakness
 
-- **Use ID hd-gate ONLY**: NEVER use any ID other than hd-gate for quality gate records. Even IDs with similar meanings will not be recognized by the system.
+- **Use ID hd-subagent-gate ONLY**: NEVER use any ID other than hd-subagent-gate for quality gate records. Even IDs with similar meanings will not be recognized by the system.
 - **Milestones are the Sole Authority** NEVER skip milestone records for any reason, as doing so will block the process from proceeding.
 
 ### [S3] Final Report Output

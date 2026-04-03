@@ -2,12 +2,14 @@
 
 ## 目录
 
-- [初始化](#初始化)
-- [Cypher 查询](#cypher-查询)
-- [query 命令](#query-命令语义搜索)
-- [context 命令](#context-命令符号视图)
-- [impact 命令](#impact-命令变更影响)
-- [多仓库场景](#多仓库场景)
+- [GitNexus 命令速查](#gitnexus-命令速查)
+  - [目录](#目录)
+  - [初始化](#初始化)
+  - [Cypher 查询](#cypher-查询)
+  - [query 命令（语义搜索）](#query-命令语义搜索)
+  - [context 命令（符号视图）](#context-命令符号视图)
+  - [impact 命令（变更影响）](#impact-命令变更影响)
+  - [多仓库场景](#多仓库场景)
 
 ---
 
@@ -17,7 +19,7 @@
 
 ```bash
 cd <project-path>
-npx gitnexus analyze .
+npx -y gitnexus@latest analyze --skip-agents-md --skip-git .
 ```
 
 ## Cypher 查询

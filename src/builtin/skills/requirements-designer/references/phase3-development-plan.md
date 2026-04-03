@@ -5,7 +5,7 @@ metadata:
   sub_patterns: generator
 ---
 
-# S3 Development Plan (SDD)
+# Phase3 Development Plan (SDD)
 
 Based on the requirements design specification, complete task decomposition and plan scheduling, producing the **Development Plan (SDD)**. This provides an unambiguous, directly executable task sequence for development agents (e.g., Claude Code).
 
@@ -29,13 +29,13 @@ Complete the following four analysis and confirmation items, then generate the d
 3. Modification location targeting (specific files and change points for each task)
 4. Test & acceptance strategy (TDD test checklist, QA scenarios, acceptance workflow)
 
-**This stage has 2 Step nodes. Follow the [S] sequence below strictly — no skipping.**
+**This stage has 2 Action nodes. Follow the [A] sequence below strictly — no skipping.**
 
 ---
 
-## [S1] Plan Exploration
+## [A1] Plan Exploration
 
-### [A1.1] Confirm Plan Materials
+### [1.1] Confirm Plan Materials
 
 Before starting, **must confirm whether the following materials are available.** Request all missing items from the user in a single batch:
 
@@ -49,7 +49,7 @@ Before starting, **must confirm whether the following materials are available.**
    - 本项目代码：[路径 / 仓库链接]
 ```
 
-### [A1.2] Codebase Analysis & Modification Targeting
+### [1.2] Codebase Analysis & Modification Targeting
 
 **Complete the following analysis items one by one** (mandatory for incremental projects; skip for greenfield projects):
 
@@ -61,7 +61,7 @@ Before starting, **must confirm whether the following materials are available.**
 | **Identify Integration Points** | How new code integrates with existing code (call method, registration method, configuration method) |
 | **Identify Existing Patterns** | Existing code's naming conventions, directory structure, error-handling conventions |
 
-### [A1.3] Task Grouping & Ordering Analysis
+### [1.3] Task Grouping & Ordering Analysis
 
 **Determine task grouping and ordering according to the following priority**:
 
@@ -100,9 +100,9 @@ Wave FINAL (Acceptance Layer):
 
 ---
 
-## [S2] Development Plan Generation
+## [A2] Development Plan Generation
 
-### [A2.1] Task Writing Principles
+### [2.1] Task Writing Principles
 
 #### Facts-First Principle
 
@@ -157,13 +157,13 @@ Each task **must include**:
 - [ ] npm run dev 服务可启动
 ```
 
-### [A2.2] Generation Workflow
+### [2.2] Generation Workflow
 
 1. Load the document template `assets/development-plan-template.md`
 2. Populate the template structure with content; generate the document to the designated location
 3. Output a document summary for the user to review quickly
 
-### [A2.3] Quality Self-Check Checklist
+### [2.3] Quality Self-Check Checklist
 
 **Task Completeness**:
 

@@ -26,7 +26,7 @@ function buildHandoverPrompt(thisName: string, stageTask: string, currentName?: 
 
 const HANDOVER_MILESTONES: MilestoneDefinition[] = [
   // {
-  //   id: 'hd-gate',
+  //   id: 'hd-subagent-gate',
   //   name: 'Quality Gate',
   //   description: 'A phase quality gate to ensure deliverables meet quality standards. Please invoke HCritic for a quality review after materials are prepared. This milestone will be activated by HCritic upon approval.',
   //   failureMessage: 'Phase output failed the quality gate review. Please ensure deliverables are submitted to HCritic and meet quality standards before proceeding with the handover.',

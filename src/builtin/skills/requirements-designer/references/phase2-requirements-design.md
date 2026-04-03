@@ -5,7 +5,7 @@ metadata:
   sub_patterns: [inversion, generator]
 ---
 
-# S2 Requirements Design
+# Phase2 Requirements Design
 
 Based on the requirements analysis specification, complete the architecture change design and SR-AR decomposition, producing the **Requirements Design Specification**. This provides a clear technical blueprint for subsequent development planning and code implementation.
 
@@ -28,13 +28,13 @@ Complete the following four analysis and confirmation items, then generate the d
 3. Interface change plan (new / modified / reused interfaces and compatibility impact)
 4. Design pattern selection & DFx strategy
 
-**This stage has 3 Step nodes. Follow the [S] sequence below strictly — no skipping.**
+**This stage has 3 Action nodes. Follow the [A] sequence below strictly — no skipping.**
 
 ---
 
-## [S1] Design Exploration
+## [A1] Design Exploration
 
-### [A1.1] Confirm Design Materials
+### [1.1] Confirm Design Materials
 
 **Confirm whether the following materials are available.** Request all missing items from the user in a single batch:
 
@@ -58,7 +58,7 @@ Complete the following four analysis and confirmation items, then generate the d
 
 **No codebase**: After confirming "greenfield project," skip the existing-system analysis in 1.2 and proceed directly to design.
 
-### [A1.2] Codebase & Reference Material Analysis
+### [1.2] Codebase & Reference Material Analysis
 
 **Must complete the following analysis items based on the codebase**:
 
@@ -71,7 +71,7 @@ Complete the following four analysis and confirmation items, then generate the d
 | **Design Patterns** | Identify design patterns already used in existing code (e.g., Strategy, Observer, Factory, etc.) |
 | **Tech Stack** | Frameworks, middleware, infrastructure |
 
-### [A1.3] Requirements Mapping Analysis
+### [1.3] Requirements Mapping Analysis
 
 Map functional requirements from the requirements analysis specification to the existing architecture:
 
@@ -85,11 +85,11 @@ Map functional requirements from the requirements analysis specification to the 
 
 ---
 
-## [S2] Architecture Change Confirmation
+## [A2] Architecture Change Confirmation
 
 > **Iron Rule**: Inversion pattern — **do NOT generate the design document** until the architecture plan is confirmed by the user.
 
-### [A2.1] Module Change & Modification Boundary Confirmation
+### [2.1] Module Change & Modification Boundary Confirmation
 
 Present the complete module change plan including modification boundaries (fences), and confirm with the user **in a single batch**:
 
@@ -99,7 +99,7 @@ Present the complete module change plan including modification boundaries (fence
 >
 > **Q3**："我识别到的风险与边界为：___（如稳定核心模块不可改、接口兼容性要求、避免逻辑下沉到旧模块等），是否需要调整？"
 
-### [A2.2] Design Pattern & DFx Strategy Confirmation
+### [2.2] Design Pattern & DFx Strategy Confirmation
 
 Present the complete technical design strategy including architecture patterns and quality attribute safeguards, and confirm with the user **in a single batch**:
 
@@ -107,7 +107,7 @@ Present the complete technical design strategy including architecture patterns a
 >
 > **Q2**："本次 DFx 保障方案为：可用性/可靠性方面 [如容错与降级、重试与熔断、超时控制、幂等设计、数据一致性]，易用性方面 [如错误提示与降级]，可扩展性方面 [如插件机制]，这些措施是否覆盖到位？"
 
-### [A2.3] Inversion Completion Criteria
+### [2.3] Inversion Completion Criteria
 
 All of the following conditions must be met before proceeding to document generation:
 
@@ -118,9 +118,9 @@ All of the following conditions must be met before proceeding to document genera
 
 ---
 
-## [S3] Document Generation (Generator Pattern)
+## [A3] Document Generation (Generator Pattern)
 
-### [A3.1] Generation Workflow
+### [3.1] Generation Workflow
 
 1. Load the document template `assets/requirements-design-template.md`
 2. If any unconfirmed items or conflicts remain, **complete confirmation before generating**
@@ -128,7 +128,7 @@ All of the following conditions must be met before proceeding to document genera
 4. Execute the quality self-check
 5. Output a document summary for the user to review quickly
 
-### [A3.2] SR-AR Decomposition Principles
+### [3.2] SR-AR Decomposition Principles
 
 **When generating the document, follow these decomposition rules**:
 
@@ -146,7 +146,7 @@ All of the following conditions must be met before proceeding to document genera
 - **Must List Capability Points**: Each AR must list specific capability points — no vague descriptions
 - **Valid Split Reasons**: Belongs to different system elements / different tech stacks / can be developed in parallel with clear boundaries
 
-### [A3.3] Quality Self-Check Checklist
+### [3.3] Quality Self-Check Checklist
 
 **Architecture Design**:
 

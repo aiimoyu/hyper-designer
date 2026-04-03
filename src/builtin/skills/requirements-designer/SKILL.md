@@ -1,10 +1,9 @@
 ---
 name: requirements-designer
 description: |
-  端到端的软件需求设计工作流，通过"苏格拉底式对话 + SR-AR 架构分解 + SDD 任务拆解"三阶段产出完整设计方案。
-  适用场景：从零规划软件项目、中大型功能增强设计、复杂需求拆解、系统架构设计评审。
-  与 lite-designer 的区别：本 skill 侧重深度设计（含 SR-AR 分解、DFx 设计、修改围栏），适合需要严格架构审查的场景；lite-designer 侧重快速产出，适合中小规模需求。
-  触发关键词：需求分析、需求设计、SR-AR 分解、SDD、开发计划、架构设计、系统设计、DFx 设计。
+  An end-to-end software requirements design workflow that produces a complete design solution through a three-phase process: "Socratic Dialogue + SR-AR architectural decomposition + SDD task breakdown".
+  Applicable scenarios: planning software projects from scratch, designing medium-to-large feature enhancements, decomposing complex requirements, and reviewing system architecture designs.
+  Trigger keywords: requirements analysis, requirements design, SR-AR decomposition, SDD, development plan, architecture design, system design, DFx design.
 metadata:
   pattern: pipeline
   stages: 3
@@ -13,114 +12,101 @@ metadata:
 
 # Requirements Designer
 
-三步轻量化软件设计工作流。专为中小型新功能开发或现有功能增强量身打造，确保需求可落地、架构无技术债。
+A lightweight three-step software design workflow. Tailored for small-to-medium-sized new feature development or enhancement of existing functionality, ensuring requirements are implementable and the architecture remains free of technical debt.
 
-## 阶段定义
+## Phase Definitions
 
-| 阶段 | 名称 | 简介 |
+| Phase | Name | Description |
 |:---:|:---:|:---|
-| **Phase1** | 需求分析 | 深入理解需求本质，通过苏格拉底式对话澄清目标、用户、场景、边界与约束，识别真实诉求与隐含前提。核心在于：**明确"要做什么、为谁而做，以及做到什么程度"**。 |
-| **Phase2** | 需求设计 | 将初始需求逐层拆解为 **SR（系统需求）→ AR（分配需求）**，明确需求如何融入现有系统；梳理项目的黄金原则、工程约束与实现风格；细化模块、功能、文件层面的增删改及其依赖关系与接口设计，避免引入技术债。同时完成新需求的功能设计、设计模式选型与DFx设计。核心在于：**将需求转化为可落地、可集成、可演进的系统方案**。 |
-| **Phase3** | SDD 开发计划 | 基于设计说明书，结合耦合关系与依赖顺序，将AR进一步拆解为具体开发任务、实施步骤与验收标准，形成可直接交付给开发 Agent 执行的开发计划。核心在于：**把系统设计转化为可执行、可验证、可交付的实施清单**。 |
+| **Phase1** | Requirements Analysis | Deeply understand the essence of the requirement through Socratic dialogue, clarify goals, users, scenarios, boundaries, and constraints, and identify the real intent and implicit assumptions. The core is to: **make clear "what to build, for whom, and to what extent"**. |
+| **Phase2** | Requirements Design | Gradually decompose the initial requirement into **SR (System Requirements) → AR (Allocated Requirements)**, clarify how the requirement integrates into the existing system; sort out the project’s golden rules, engineering constraints, and implementation style; refine changes at the module, function, and file level, including additions, deletions, modifications, dependencies, and interface design, so as to avoid introducing technical debt. Also complete functional design for new requirements, design pattern selection, and DFx design. The core is to: **transform requirements into a system solution that is implementable, integrable, and evolvable**. |
+| **Phase3** | SDD Development Plan | Based on the design specification, further decompose AR into concrete development tasks, implementation steps, and acceptance criteria according to coupling relationships and dependency order, forming a development plan that can be directly handed over to a development Agent for execution. The core is to: **translate the system design into an executable, verifiable, and deliverable implementation checklist**. |
 
 ---
 
-## 执行协议 (Execution Protocols)
+## Execution Protocols
 
-本 Skill 通过 **Stage0 意图识别** 路由到不同的执行路径（全流水线 / 仅评审），每次调用**仅能选择一种**执行。
+This Skill routes to different execution paths (full pipeline / single domain) through **Stage0 Intent Recognition**, and **only one** execution mode may be selected per invocation.
 
-### 1. Pipeline Protocol (全链路端到端模式)
+### 1. Pipeline Protocol (End-to-End Full Workflow Mode)
 
-适用于用户希望完整经历 **“需求分析 → 需求设计 → 开发计划”** 全流程的场景。
+Applicable when the user wants to go through the complete process of **“requirements analysis → requirements design → development plan”**.
 
-**执行机制**：必须严格按照 **Phase1 → Review1 → Phase2 → Review2 → Phase3 → Review3** 的顺序推进，禁止跳阶段、并行生成或跨阶段提前产出。
+**Execution mechanism**: Must strictly proceed in the order of **Phase1.1 → Review1.2 → Phase2.1 → Review2.2 → Phase3.1 → Review3.2**. Skipping phases, parallel generation, or producing outputs for later phases in advance is prohibited.
 
-**阶段前置条件**：进入每个阶段前，必须先加载并遵循该阶段对应的参考文档；若参考文档读取失败，立即停止流程并向用户报告错误。
+**Phase prerequisites**: Before entering each phase, the corresponding reference document for that phase must first be loaded and followed. If the reference document cannot be read, the workflow must stop immediately and report the error to the user.
 
-#### Review
-
-**委托评审提示词**：
-
-```text
-当前位于 requirements-designer 的 {当前阶段名称} 阶段。
-请对产出物 {产出物文件绝对路径} 进行评审。
-评审标准请加载并参考 {references/reviewer.md 绝对路径} 中的相关章节。
-```
-
-**评审结果处理规则**：
-
-- **通过**：可直接进入下一阶段；
-- **条件通过**：必须先根据评审意见完成修订，再进入下一阶段；
-- **不通过**：禁止进入下一阶段，必须返回当前阶段修改。
-
-**修改循环约束**：
-
-- 每个阶段最多允许 **3 次审核**；
-- 若超过 3 次仍未通过，必须暂停流程并请求用户介入，协助澄清需求、放宽约束或调整目标。
-
-#### Pipeline 执行流程
+#### Pipeline Execution Flow
 
 ```mermaid
 flowchart TD
-    Start([用户输入]) --> R0[Stage0: 意图识别 Router]
-    R0 -->|"全流水线"| P1[Phase1: 需求分析]
-    R0 -->|"仅评审"| Rev[Stage4: 评审]
-    P1 --> R1[委托 Subagent 进行评审 1]
-    R1 --> P2[Phase2: 需求设计]
-    P2 --> R2[委托 Subagent 进行评审 2]
-    R2 --> P3[Phase3: 开发计划]
-    P3 --> R3[委托 Subagent 进行评审 3]
-    R3 --> End([流程结束，输出最终方案])
+    Start([User Input]) --> R0[Stage0: Intent Recognition Router]
+    R0 -->|"Full Pipeline"| P1[Phase1: Requirements Analysis]
+    R0 -->|"Review Only"| Rev[Stage4: Review]
+    P1 --> R1[Delegate Subagent to perform Review 1]
+    R1 --> P2[Phase2: Requirements Design]
+    P2 --> R2[Delegate Subagent to perform Review 2]
+    R2 --> P3[Phase3: Development Plan]
+    P3 --> R3[Delegate Subagent to perform Review 3]
+    R3 --> End([Workflow Ends, Output Final Solution])
     Rev --> End
 ```
 
-#### [Phase1] 需求分析
+#### [Phase1] Requirements Analysis
 
-- 输入：用户需求描述
-- 加载：references/s1-requirements-analysis.md for 需求分析阶段的方法论和步骤规范
-- 输出：需求分析说明书
-- 门禁：委托Subagent审核
+- Input: user requirement description
+- Load: `references/phase1-requirements-analysis.md` for the methodology and procedural规范 of the requirements analysis phase
+- Output: requirements analysis specification
+- Gate: must be reviewed by a delegated Subagent
 
-#### [Phase2] 需求设计
+#### [Phase2] Requirements Design
 
-- 输入：需求分析说明书
-- 加载：references/s2-requirements-design.md for 需求设计阶段的方法论和步骤规范
-- 输出：需求设计说明书
-- 门禁：委托Subagent审核
+- Input: requirements analysis specification
+- Load: `references/phase2-requirements-design.md` for the methodology and procedural规范 of the requirements design phase
+- Output: requirements design specification
+- Gate: must be reviewed by a delegated Subagent
 
-#### [Phase3] SDD 开发计划
+#### [Phase3] SDD Development Plan
 
-- 输入：需求分析说明书 & 需求设计说明书
-- 加载：references/s3-development-plan.md for 开发计划阶段的方法论和步骤规范
-- 输出：开发计划
-- 门禁：委托Subagent审核
+- Input: requirements analysis specification & requirements design specification
+- Load: `references/phase3-development-plan.md` for the methodology and procedural规范 of the development planning phase
+- Output: development plan
+- Gate: must be reviewed by a delegated Subagent
 
----
+#### Review
 
-## 阶段执行指令 (Execution Steps)
+**Role isolation principle**: If you are the "designer" main Agent, you are **prohibited** from reading the review reference file (to prevent review criteria from influencing design thinking and to ensure review independence). You must delegate this action to a reviewer Subagent.
 
-### [Stage0] 意图识别 (Router)
+**Load Reference**:
+- **Load SKILL**: Load `adt-design-req-design` skill - NEVER execute work without loading the skill first
+- **Reference**: Read `adt-design-req-design/references/reviewer.md` for review 
 
-- **分析判断**：当前用户是要**生成**某个阶段的产出物？还是对已有产出物进行**评审**？亦或是要完整执行 **Pipeline 工作流**？
-- **动作执行**：根据判断结果，严格遵循对应的 Protocol 和进入后续的 Stage1~Stage4 步骤。
+**Review result handling rules**:
 
-### [Stage1] 需求分析 (Phase1)
+- **Pass**: may directly proceed to the next phase;
+- **Conditional Pass**: revisions must first be completed according to the review comments before proceeding to the next phase;
+- **Fail**: proceeding to the next phase is prohibited; the current phase must be revised first.
 
-- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/s1-requirements-analysis.md` 中的规范（缺少规范会导致产出物不符合质量标准）。若读取失败，立即停止并报错。
-- **输出交付物**：需求分析说明书
+**Revision loop constraints**:
 
-### [Stage2] 需求设计 (Phase2)
+- Each phase may undergo review at most **3 times**;
+- If the phase still does not pass after 3 attempts, the workflow must be paused and user intervention requested to help clarify requirements, relax constraints, or adjust goals.
 
-- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/s2-requirements-design.md` 中的规范（缺少规范会导致产出物不符合质量标准）。若读取失败，立即停止并报错。
-- **输出交付物**：需求设计说明书
+### 2. Router Protocol (Single-Phase Execution Mode)
 
-### [Stage3] 开发计划 (Phase3)
+Applicable when the user wants to directly enter a specific phase (for example, requirements design only).
 
-- **[!! 强制前置动作 !!]**：必须读取并遵循 `references/s3-development-plan.md` 中的规范（缺少规范会导致产出物不符合质量标准）。若读取失败，立即停止并报错。
-- **输出交付物**：开发计划
+**Prerequisite**: If the user directly specifies a phase, the model must check whether the outputs of preceding phases have already been completed. If not, execution must be refused and the missing prerequisites must be explained to the user.
 
-### [Stage4] 评审 (Review)
+**Single phase**: The user may directly enter any one of Phase1, Phase2, Phase3, or Review:
+- Enter Phase1: must read and follow the execution specification in `references/phase1-requirements-analysis.md`, and output a requirements analysis specification;
+- Enter Phase2: must read and follow the execution specification in `references/phase2-requirements-design.md`, and output a requirements design specification;
+- Enter Phase3: must read and follow the execution specification in `references/phase3-development-plan.md`, and output a development plan;
+- Enter Review: must read and follow the review criteria in `references/reviewer.md`, and review the specified phase output.
 
-- **角色隔离原则**：当前作为"设计师"主干 Agent 时，**禁止**读取评审参考文件（防止评审标准影响设计思路，确保评审独立性），必须委派（Delegate）评审员 Subagent 执行此动作。
-- **[!! 强制前置动作 !!]**：承担评审任务的 Agent 必须读取并遵循 `references/reviewer.md`（评审标准是质量保证的基础）。若读取失败，立即停止并报错。
-- **输出交付物**：打分结果与具体的改进意见。
+**REFERENCE constraint**: No matter which phase is entered, the corresponding reference document for that phase **must** be loaded and followed first. If the reference document cannot be read, the workflow must stop immediately and report the error to the user.
+
+## Execution Steps
+
+- **Intent recognition**: Is the current user asking to **generate** the output of a phase? Or to **review** an existing output? Or to execute the complete **Pipeline workflow**?
+- **Action execution**: Execute the corresponding Pipeline or Router protocol according to the user’s intent.

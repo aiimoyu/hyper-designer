@@ -26,7 +26,7 @@ Before starting content generation, the following must be executed strictly in o
 
 1. Use `hd-review-pipeline` to obtain and execute the current stage workflow;
 2. Load `requirements-designer` according to the workflow guidance;
-3. Read the reference file: `requirements-designer/references/s3-development-plan.md`.
+3. Read the reference file: `requirements-designer/references/phase3-development-plan.md`.
 
 ### Generation Constraints
 
