@@ -187,6 +187,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           return JSON.stringify({
             stage: currentStage,
             id: milestoneId,
+            name: milestone.name,
             mark: milestone.mark,
             timestamp: milestone.updatedAt,
             detail: milestone.detail,
@@ -197,6 +198,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           stage: currentStage,
           milestones: Object.entries(milestones).map(([key, m]) => ({
             id: key,
+            name: m.name,
             mark: m.mark,
             timestamp: m.updatedAt,
             detail: m.detail,
@@ -206,11 +208,18 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     },
     {
       name: 'hd_record_milestone',
-      description: 'Record or overwrite a milestone for the current workflow stage. Multiple calls with the same id will overwrite the previous milestone.',
+      description: `Record or overwrite a milestone for the current workflow stage. Multiple calls with the same id will overwrite the previous milestone.
+- id: A private, unique identifier for the milestone. Used for querying and setting. Should NOT be exposed or leaked.
+- name: The display name of the milestone (e.g., "Quality Gate"). This is what everyone sees and knows. Names CAN be duplicated across milestones.
+- IMPORTANT: id and name MUST NOT be identical. id is for internal reference (e.g., 'hd-gate-passed'), name is for human display (e.g., 'Quality Gate').`,
       params: {
         id: {
           type: 'string',
-          description: "Milestone identifier (name). WARNING: Built-in milestones (starting with 'hd-') control workflow flow and should NOT be lit unless you explicitly understand their impact (e.g., 'hd-force-advance' enables forced progression). For normal stage completion, use custom milestone ids.",
+          description: "Private milestone identifier. Used for querying and setting. Should NOT be exposed or leaked. WARNING: Built-in milestones (starting with 'hd-') control workflow flow and should NOT be lit unless you explicitly understand their impact (e.g., 'hd-force-advance' enables forced progression). For normal stage completion, use custom milestone ids.",
+        },
+        name: {
+          type: 'string',
+          description: 'The display name of the milestone. This is the human-readable label that everyone knows. Names may be duplicated.',
         },
         mark: {
           type: 'boolean',
@@ -224,6 +233,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
       },
       execute: async params => {
         const typeValue = params.id
+        const nameValue = params.name
         const markValue = params.mark
 
         if (typeof typeValue !== 'string') {
@@ -231,11 +241,35 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
             success: false,
             error: `Invalid id parameter. Expected string, got ${typeValue === undefined ? 'undefined' : typeof typeValue}`,
             requiredFields: {
-              id: 'string (the milestone identifier/name)',
+              id: 'string (private identifier, must NOT equal name)',
+              name: 'string (display name, e.g., "Quality Gate")',
               mark: 'boolean (true to light up, false to turn off)',
               detail: 'object (optional, additional context)',
             },
-            example: { id: 'stage-completed', mark: true, detail: { reason: 'All tasks finished' } },
+            example: { id: 'hd-interactive-modification', name: 'Interactive Modification', mark: true, detail: { reason: 'User review completed' } },
+          }, null, 2)
+        }
+
+        if (typeof nameValue !== 'string') {
+          return JSON.stringify({
+            success: false,
+            error: `Invalid name parameter. Expected string, got ${nameValue === undefined ? 'undefined' : typeof nameValue}`,
+            requiredFields: {
+              id: 'string (private identifier, must NOT equal name)',
+              name: 'string (display name, e.g., "Quality Gate")',
+              mark: 'boolean (true to light up, false to turn off)',
+              detail: 'object (optional, additional context)',
+            },
+            example: { id: 'hd-interactive-modification', name: 'Interactive Modification', mark: true, detail: { reason: 'User review completed' } },
+          }, null, 2)
+        }
+
+        if (typeValue === nameValue) {
+          return JSON.stringify({
+            success: false,
+            error: `id and name must NOT be identical. id="${typeValue}" is a private identifier used for querying and setting, while name="${nameValue}" is the human-readable display name. They must differ.`,
+            hint: 'Use a distinct id like "hd-interactive-modification" with name "Interactive Modification".',
+            example: { id: 'hd-interactive-modification', name: 'Interactive Modification', mark: true },
           }, null, 2)
         }
 
@@ -244,11 +278,12 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
             success: false,
             error: `Invalid mark parameter. Expected boolean, got ${markValue === undefined ? 'undefined' : typeof markValue}`,
             requiredFields: {
-              id: 'string (the milestone identifier/name)',
+              id: 'string (private identifier, must NOT equal name)',
+              name: 'string (display name, e.g., "Quality Gate")',
               mark: 'boolean (true to light up, false to turn off)',
               detail: 'object (optional, additional context)',
             },
-            example: { id: 'stage-completed', mark: true, detail: { reason: 'All tasks finished' } },
+            example: { id: 'hd-interactive-modification', name: 'Interactive Modification', mark: true, detail: { reason: 'All tasks finished' } },
           }, null, 2)
         }
 
@@ -267,6 +302,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           stage,
           milestone: {
             type: typeValue,
+            name: nameValue,
             mark: markValue,
             detail: detailValue,
           },
@@ -276,7 +312,8 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           success: true,
           stage,
           milestone: {
-            type: typeValue,
+            id: typeValue,
+            name: nameValue,
             timestamp,
             mark: markValue,
             detail: detailValue,

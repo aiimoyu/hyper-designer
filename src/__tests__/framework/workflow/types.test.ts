@@ -289,6 +289,7 @@ describe('workflow type definitions', () => {
       it('should have type, timestamp, and detail fields', () => {
         const milestone: StageMilestone = {
           type: 'gate',
+          name: 'Quality Gate',
           timestamp: '2026-03-12T10:00:00Z',
           mark: true,
           detail: { score: 90 },

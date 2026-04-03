@@ -735,6 +735,7 @@ export class WorkflowService extends EventEmitter {
       stage: targetStage,
       milestone: {
         type: GATE_MILESTONE_KEY,
+        name: 'Quality Gate',
         mark,
         detail,
       },
@@ -743,7 +744,7 @@ export class WorkflowService extends EventEmitter {
     return state;
   }
 
-  setStageMilestone(params: { stage: string; milestone: { type: string; mark: boolean; detail: unknown } }): WorkflowState {
+  setStageMilestone(params: { stage: string; milestone: { type: string; name: string; mark: boolean; detail: unknown } }): WorkflowState {
     const nodeId = `workflow.${params.stage}.main`
     return setWorkflowStageMilestone({ nodeId, milestone: params.milestone })
   }

@@ -42,6 +42,7 @@ Evaluate the document across all five dimensions. Compute the weighted score and
 Before rendering any output to the user, call `hd_record_milestone` with:
 
 - `id`: "hd-subagent-gate"
+- `name`: "Quality Gate"
 - `mark`: `true` if **passed or conditional**, `false` if failed
 - `detail`: an object containing:
   - `score`: the final computed score (0–100)

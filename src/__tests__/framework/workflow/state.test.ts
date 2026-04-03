@@ -126,7 +126,7 @@ const transitionOnlyWorkflowDef: WorkflowDefinition = {
           id: 'before-b',
           description: 'before hook for B',
           fn: async ({ setMilestone, setInfo }) => {
-            setMilestone?.({ key: 'hook_local', mark: false, detail: { source: 'before' } })
+            setMilestone?.({ key: 'hook_local', name: 'Hook Local', mark: false, detail: { source: 'before' } })
             setInfo?.({ hookFlag: true })
           },
         },

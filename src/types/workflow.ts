@@ -28,7 +28,7 @@ export type StageHookFn = (ctx: {
   stageName: string
   workflow: WorkflowDefinition
   nodeId?: string
-  setMilestone?: (input: { key: string; mark: boolean; detail: unknown }) => void
+  setMilestone?: (input: { key: string; name: string; mark: boolean; detail: unknown }) => void
   setInfo?: (patch: Record<string, unknown>) => void
   sessionID?: string
   adapter?: WorkflowPlatformAdapter

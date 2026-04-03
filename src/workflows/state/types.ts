@@ -59,6 +59,7 @@ export interface WorkflowState {
 }
 
 export interface WorkflowCurrentMilestone {
+  name: string;
   mark: boolean;
   detail: unknown;
   updatedAt: string;

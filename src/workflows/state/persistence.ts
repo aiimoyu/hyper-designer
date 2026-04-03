@@ -153,6 +153,7 @@ function sanitizeRuntime(value: unknown): WorkflowState['runtime'] {
         continue
       }
       milestones[key] = {
+        name: typeof milestone.name === 'string' ? milestone.name : key,
         mark: milestone.mark,
         detail: 'detail' in milestone ? milestone.detail : null,
         updatedAt: milestone.updatedAt,

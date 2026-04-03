@@ -99,14 +99,15 @@ function getLatestNodeMilestone(
 }
 
 function createNodeContextSetters(state: WorkflowState): {
-  setMilestone: (input: { key: string; mark: boolean; detail: unknown }) => void
+  setMilestone: (input: { key: string; name: string; mark: boolean; detail: unknown }) => void
   setInfo: (patch: Record<string, unknown>) => void
 } {
   return {
-    setMilestone: ({ key, mark, detail }) => {
+    setMilestone: ({ key, name, mark, detail }) => {
       setCurrentNodeMilestone(state, {
         key,
         milestone: {
+          name,
           mark,
           detail,
           updatedAt: new Date().toISOString(),
@@ -423,6 +424,7 @@ interface StageMilestoneInput {
   nodeId: string
   milestone: {
     type: string
+    name: string
     mark: boolean
     detail: unknown
   }
@@ -432,6 +434,7 @@ function createGateMilestone(detail: GateMilestoneDetail): StageMilestone {
   const passed = typeof detail.score === 'number' && detail.score > GATE_PASS_THRESHOLD
   return {
     type: GATE_MILESTONE_KEY,
+    name: 'Quality Gate',
     timestamp: new Date().toISOString(),
     mark: passed,
     detail,
@@ -447,6 +450,7 @@ export function setWorkflowGateResult(gateEvaluation: GateEvaluationInput): Work
     setCurrentNodeMilestone(state, {
       key: GATE_MILESTONE_KEY,
       milestone: {
+        name: 'Quality Gate',
         mark: createGateMilestone(gateEvaluation.detail).mark,
         detail: gateEvaluation.detail,
         updatedAt: new Date().toISOString(),
@@ -473,6 +477,7 @@ export function setWorkflowStageMilestone(input: StageMilestoneInput): WorkflowS
   setCurrentNodeMilestone(state, {
     key: input.milestone.type,
     milestone: {
+      name: input.milestone.name,
       mark: input.milestone.mark,
       detail: input.milestone.detail,
       updatedAt: new Date().toISOString(),

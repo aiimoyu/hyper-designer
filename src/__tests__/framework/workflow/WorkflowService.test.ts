@@ -71,7 +71,7 @@ const transitionOnlyWorkflow: WorkflowDefinition = {
         id: 'before-b',
         description: 'before hook',
         fn: async ({ setMilestone }) => {
-          setMilestone?.({ key: 'hook_milestone', mark: false, detail: { marker: true } })
+          setMilestone?.({ key: 'hook_milestone', name: 'Hook Milestone', mark: false, detail: { marker: true } })
         },
       }],
       transitions: [],
@@ -274,13 +274,14 @@ describe("WorkflowService", () => {
 
       service.setGateResult({ score: 90, comment: 'approved' });
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'hd-int-mod',
-          mark: true,
-          detail: { source: 'test' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'hd-int-mod',
+                name: 'hd-int-mod',
+                mark: true,
+                detail: { source: 'test' },
+              },
+            });
       createOutputFiles();
       const accepted = await service.hdScheduleHandover('scenarioAnalysis');
 
@@ -294,13 +295,14 @@ describe("WorkflowService", () => {
       initWithWorkflow(service);
       service.setCurrent('IRAnalysis');
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'gate',
-          mark: false,
-          detail: { score: 60, comment: 'Document needs revision' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'gate',
+                name: 'gate',
+                mark: false,
+                detail: { score: 60, comment: 'Document needs revision' },
+              },
+            });
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
 
@@ -314,13 +316,14 @@ describe("WorkflowService", () => {
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'hd-int-mod',
-          mark: true,
-          detail: { source: 'test' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'hd-int-mod',
+                name: 'hd-int-mod',
+                mark: true,
+                detail: { source: 'test' },
+              },
+            });
       createOutputFiles();
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
@@ -334,22 +337,24 @@ describe("WorkflowService", () => {
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'gate approved' });
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'hd-int-mod',
-          mark: true,
-          detail: { source: 'test' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'hd-int-mod',
+                name: 'hd-int-mod',
+                mark: true,
+                detail: { source: 'test' },
+              },
+            });
       createOutputFiles();
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'doc_review',
-          mark: false,
-          detail: { reviewer: 'HCritic' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'doc_review',
+                name: 'doc_review',
+                mark: false,
+                detail: { reviewer: 'HCritic' },
+              },
+            });
 
       const result = await service.hdScheduleHandover('scenarioAnalysis');
 
@@ -362,29 +367,32 @@ describe("WorkflowService", () => {
       Reflect.set(service, 'definition', handoverMilestoneWorkflow);
       service.setCurrent('stageA');
       service.setStageMilestone({
-        stage: 'stageA',
-        milestone: {
-          type: 'gate',
-          mark: true,
-          detail: { score: 90, comment: 'approved' },
-        },
-      });
+              stage: 'stageA',
+              milestone: {
+                type: 'gate',
+                name: 'gate',
+                mark: true,
+                detail: { score: 90, comment: 'approved' },
+              },
+            });
       service.setStageMilestone({
-        stage: 'stageA',
-        milestone: {
-          type: 'doc_review',
-          mark: false,
-          detail: { reviewer: 'HCritic' },
-        },
-      });
+              stage: 'stageA',
+              milestone: {
+                type: 'doc_review',
+                name: 'doc_review',
+                mark: false,
+                detail: { reviewer: 'HCritic' },
+              },
+            });
       service.setStageMilestone({
-        stage: 'stageA',
-        milestone: {
-          type: 'traceability',
-          mark: false,
-          detail: { status: 'pending' },
-        },
-      });
+              stage: 'stageA',
+              milestone: {
+                type: 'traceability',
+                name: 'traceability',
+                mark: false,
+                detail: { status: 'pending' },
+              },
+            });
 
       const rejected = await service.hdScheduleHandover('stageB');
 
@@ -393,13 +401,14 @@ describe("WorkflowService", () => {
       expect(rejected.error).not.toContain('traceability');
 
       service.setStageMilestone({
-        stage: 'stageA',
-        milestone: {
-          type: 'doc_review',
-          mark: true,
-          detail: { reviewer: 'HCritic' },
-        },
-      });
+              stage: 'stageA',
+              milestone: {
+                type: 'doc_review',
+                name: 'doc_review',
+                mark: true,
+                detail: { reviewer: 'HCritic' },
+              },
+            });
 
       const accepted = await service.hdScheduleHandover('stageB');
 
@@ -421,13 +430,14 @@ describe("WorkflowService", () => {
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'approved' });
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'hd-int-mod',
-          mark: true,
-          detail: { source: 'test' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'hd-int-mod',
+                name: 'hd-int-mod',
+                mark: true,
+                detail: { source: 'test' },
+              },
+            });
       createOutputFiles();
 
       const result = await service.hdScheduleHandover();
@@ -459,13 +469,14 @@ describe("WorkflowService", () => {
       expect(rejected.error).toContain('gate');
 
       service.setStageMilestone({
-        stage: 'stageA',
-        milestone: {
-          type: 'gate',
-          mark: true,
-          detail: { score: 90 },
-        },
-      });
+              stage: 'stageA',
+              milestone: {
+                type: 'gate',
+                name: 'gate',
+                mark: true,
+                detail: { score: 90 },
+              },
+            });
 
       const accepted = await service.hdScheduleHandover('stageB');
       expect(accepted.scheduled).toBe(true);
@@ -477,13 +488,14 @@ describe("WorkflowService", () => {
       service.setCurrent('IRAnalysis');
       service.setGateResult({ score: 90, comment: 'approved' });
       service.setStageMilestone({
-        stage: 'IRAnalysis',
-        milestone: {
-          type: 'hd-int-mod',
-          mark: true,
-          detail: { source: 'test' },
-        },
-      });
+              stage: 'IRAnalysis',
+              milestone: {
+                type: 'hd-int-mod',
+                name: 'hd-int-mod',
+                mark: true,
+                detail: { source: 'test' },
+              },
+            });
       createOutputFiles();
 
       const firstAttempt = await service.hdScheduleHandover('scenarioAnalysis');

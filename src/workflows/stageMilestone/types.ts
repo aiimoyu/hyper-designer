@@ -3,6 +3,7 @@ export const FORCE_ADVANCE_MILESTONE_KEY = 'force_advance'
 export const GATE_PASS_THRESHOLD = 75
 export interface StageMilestoneRecord {
   type: string
+  name: string
   timestamp: string
   mark: boolean
   detail: unknown

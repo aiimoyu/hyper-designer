@@ -4,6 +4,7 @@ import { finalizeReview } from './finalizeReview'
 import { prepareReview } from './prepareReview'
 
 const INTERACTIVE_MODIFICATION_MILESTONE_ID = 'hd-int-mod'
+const INTERACTIVE_MODIFICATION_MILESTONE_NAME = 'Interactive Modification'
 
 export function createDocumentReviewToolDefinitions(): ToolDefinition[] {
   return [
@@ -66,6 +67,7 @@ export function createDocumentReviewToolDefinitions(): ToolDefinition[] {
               stage: currentStage,
               milestone: {
                 type: INTERACTIVE_MODIFICATION_MILESTONE_ID,
+                name: INTERACTIVE_MODIFICATION_MILESTONE_NAME,
                 mark: true,
                 detail: { completedAt: new Date().toISOString() },
               },
