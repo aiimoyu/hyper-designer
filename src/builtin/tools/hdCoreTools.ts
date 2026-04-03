@@ -152,7 +152,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
         end: {
           type: 'boolean',
           optional: true,
-          description: 'If true, ends the workflow regardless of next_name. All files will be archived to .hyper-designer/history.',
+          description: 'If true, ends the workflow regardless of next_name. All files will be archived to .hyper-designer/history and .hyper-designer/codebase-analysis.',
         },
       },
       execute: async (params, ctx) => {

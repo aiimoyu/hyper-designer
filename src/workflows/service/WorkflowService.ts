@@ -1,7 +1,7 @@
 import type { ToolDefinition } from '../../tools/types'
 import { resolveAgentConfig } from '../agentConfig'
 import { getStageOrder, resolveNextSelectedStage } from '../stageOrder'
-import { existsSync, mkdirSync, readdirSync, renameSync } from 'fs'
+import { existsSync, mkdirSync, readdirSync, renameSync, copyFileSync, statSync } from 'fs'
 import { join } from 'path'
 
 /**
@@ -1087,56 +1087,61 @@ export class WorkflowService extends EventEmitter {
 
   /**
    * 结束工作流并归档
-   * 将 .hyper-designer 目录中除了 history 之外的所有文件和文件夹移动到 history 目录下的新文件夹中
+   * 将 .hyper-designer 目录中除了 history 和 codebase-analysis 之外的所有文件和文件夹
+   * 先拷贝到 codebase-analysis，再移动到 history
    * @returns 归档结果
    */
   endWorkflow(): { success: boolean; archivedPath?: string; error?: string } {
     const projectRoot = process.cwd()
     const hdDir = join(projectRoot, '.hyper-designer')
     const historyDir = join(hdDir, 'history')
+    const codebaseAnalysisDir = join(hdDir, 'codebase-analysis')
 
-    // 检查 .hyper-designer 目录是否存在
     if (!existsSync(hdDir)) {
       HyperDesignerLogger.warn('Workflow', '.hyper-designer 目录不存在')
       return { success: false, error: '.hyper-designer directory does not exist' }
     }
 
     try {
-      // 创建 history 目录（如果不存在）
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const archiveFolderName = `workflow-end-${timestamp}`
+
+      if (!existsSync(codebaseAnalysisDir)) {
+        mkdirSync(codebaseAnalysisDir, { recursive: true })
+      }
       if (!existsSync(historyDir)) {
         mkdirSync(historyDir, { recursive: true })
       }
 
-      // 生成归档文件夹名称（使用时间戳）
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-      const archiveFolderName = `workflow-end-${timestamp}`
-      const archivePath = join(historyDir, archiveFolderName)
-      mkdirSync(archivePath, { recursive: true })
+      const codebasePath = join(codebaseAnalysisDir, archiveFolderName)
+      const historyPath = join(historyDir, archiveFolderName)
+      mkdirSync(codebasePath, { recursive: true })
+      mkdirSync(historyPath, { recursive: true })
 
-      // 获取 .hyper-designer 目录下的所有文件和文件夹
       const entries = readdirSync(hdDir)
+      const skipDirs = new Set(['history', 'codebase-analysis'])
 
       for (const entry of entries) {
-        // 跳过 history 目录本身
-        if (entry === 'history') {
+        if (skipDirs.has(entry)) {
           continue
         }
 
         const sourcePath = join(hdDir, entry)
-        const destPath = join(archivePath, entry)
 
-        // 移动文件或文件夹
-        renameSync(sourcePath, destPath)
+        this.copyEntry(sourcePath, join(codebasePath, entry))
+
+        renameSync(sourcePath, join(historyPath, entry))
         HyperDesignerLogger.debug('Workflow', `归档: ${entry} -> ${archiveFolderName}`)
       }
 
       HyperDesignerLogger.info('Workflow', '工作流归档完成', {
-        archivedPath: archivePath,
+        archivedPath: historyPath,
+        codebaseAnalysisPath: codebasePath,
       })
 
       return {
         success: true,
-        archivedPath: archivePath,
+        archivedPath: historyPath,
       }
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
@@ -1145,6 +1150,19 @@ export class WorkflowService extends EventEmitter {
         success: false,
         error: err.message,
       }
+    }
+  }
+
+  private copyEntry(sourcePath: string, destPath: string): void {
+    const st = statSync(sourcePath)
+    if (st.isDirectory()) {
+      mkdirSync(destPath, { recursive: true })
+      const entries = readdirSync(sourcePath)
+      for (const entry of entries) {
+        this.copyEntry(join(sourcePath, entry), join(destPath, entry))
+      }
+    } else {
+      copyFileSync(sourcePath, destPath)
     }
   }
 
