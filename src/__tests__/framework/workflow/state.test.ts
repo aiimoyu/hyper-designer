@@ -632,10 +632,7 @@ describe("workflow state management", () => {
       setWorkflowCurrent('IRAnalysis')
     })
 
-    it('denies when failureCount is less than 3', () => {
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
-
+    it('denies when failureCount is less than 1', () => {
       const result = forceWorkflowNextStep(classicWorkflowDef)
 
       expect('error' in result).toBe(true)
@@ -645,8 +642,6 @@ describe("workflow state management", () => {
     })
 
     it('denies when handover target is not next selected stage', () => {
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
       setWorkflowHandover('invalidHandover', classicWorkflowDef)
       setWorkflowHandover('dataCollection', classicWorkflowDef)
 
@@ -658,9 +653,7 @@ describe("workflow state management", () => {
       }
     })
 
-    it('succeeds when failureCount >= 3 and target is next selected stage', () => {
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
+    it('succeeds when failureCount >= 1 and target is next selected stage', () => {
       setWorkflowHandover('invalidHandover', classicWorkflowDef)
 
       const result = forceWorkflowNextStep(classicWorkflowDef)
@@ -674,8 +667,6 @@ describe("workflow state management", () => {
 
     it('records auditable force_advance milestone without setting gate milestone', () => {
       setWorkflowHandover('invalidHandover', classicWorkflowDef)
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
-      setWorkflowHandover('invalidHandover', classicWorkflowDef)
 
       const result = forceWorkflowNextStep(classicWorkflowDef)
 
@@ -684,7 +675,7 @@ describe("workflow state management", () => {
         const milestone = findLatestNodeMilestone(result, 'workflow.IRAnalysis.main', 'force_advance')
         expect(milestone?.mark).toBe(true)
         expect(milestone?.detail).toMatchObject({
-          reason: 'Forced transition after 3+ failed handover attempts',
+          reason: 'Forced transition after 1+ failed handover attempts',
         })
         const gateMilestone = findLatestNodeMilestone(result, 'workflow.IRAnalysis.main', 'gate')
         expect(gateMilestone).toBeUndefined()

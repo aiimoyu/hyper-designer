@@ -33,22 +33,24 @@ From all identified issues, select **no more than 5**, applying the following pr
 
 Complete the following steps **in order**:
 
-### Internal Analysis
+### [S1] Internal Analysis
+
 Evaluate the document across all five dimensions. Compute the weighted score and identify all issues by severity.
 
+### [S2] Tool Submission *(required before outputting the report)*
 
-### Tool Submission *(required before outputting the report)*
 Before rendering any output to the user, call `hd_record_milestone` with: 
 
-- `type`: "hd-gate"
+- `id`: "hd-gate"
 - `mark`: `true` if **passed or conditional**, `false` if failed
 - `detail`: an object containing:
   - `score`: the final computed score (0–100)
   - `comment`: a concise one-sentence summary capturing the document's core value and its most significant weakness
 
-Only proceed to Step 3 after successful submission.
+- **Use ID hd-gate ONLY**: NEVER use any ID other than hd-gate for quality gate records. Even IDs with similar meanings will not be recognized by the system.
+- **Milestones are the Sole Authority** NEVER skip milestone records for any reason, as doing so will block the process from proceeding.
 
-### Final Report Output
+### [S3] Final Report Output
 
 Only after `hd_record_milestone` returns successfully, render the full report using the format below.
 
@@ -56,9 +58,10 @@ Only after `hd_record_milestone` returns successfully, render the full report us
 
 # Output Format *(strictly follow)*
 
-### 📊 Overall Score: [score] / 100
+```text
+### Overall Score: [score] / 100
 
-### 📝 Summary Assessment
+### Summary Assessment
 
 *[50–100 words. Identify the document's core value and its most significant risk or weakness.]*
 
@@ -70,6 +73,7 @@ Only after `hd_record_milestone` returns successfully, render the full report us
 4. ...
 5. ...
 
-### 💡 Highlights *(Optional)*
+### Highlights *(Optional)*
 
 *[If notable strengths exist, call them out in one sentence. Omit this section entirely if none.]*
+```

@@ -720,7 +720,7 @@ export function forceWorkflowNextStep(
       value: {
         mark: true,
         detail: {
-          reason: 'Forced transition after 3+ failed handover attempts',
+          reason: 'Forced transition after 1+ failed handover attempts',
         },
       },
     })

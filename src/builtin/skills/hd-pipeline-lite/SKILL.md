@@ -78,7 +78,7 @@ graph TD
 1. **委托评审**
    - 调用 `HD_TOOL_DELEGATE`，委托Subagent `HCritic` 审查本阶段文档；
    - 多个输出件须分别委托；流转决策按**最差结果**执行。
-   - 主 agent 禁止 `hd_record_milestone` 点亮门禁，仅HCritic 可点亮 `hd-mandatory-review`。
+   - 主 agent 禁止 `hd_record_milestone` 点亮门禁里程碑，仅HCritic 可点亮。
 
 2. **流转决策**
    - 识别评审结果
@@ -127,7 +127,7 @@ graph TD
 
 3. **获取批注差异**
    - 调用 `hd_finalize_review`，获取快照差异并清理快照；
-   - 用户选择**大幅修订**时，调用 `hd_record_milestone` 点亮 `hd-mandatory-review`。
+   - 用户选择**大幅修订**时，调用 `hd_record_milestone` 点亮 `id=hd-mandatory-review` 里程碑。
 
 4. **处理变更**
    - 逐条遍历差异，确认变更位置：
@@ -154,7 +154,7 @@ graph TD
 1. **委托评审**
    - 调用 `HD_TOOL_DELEGATE`，委托 `HCritic` 审查本阶段文档；
    - 多个输出件分别委托；流转决策按**最差结果**执行。
-   - 主 agent 禁止 `hd_record_milestone` 点亮门禁，仅HCritic 可点亮 `hd-mandatory-review`。
+   - 主 agent 禁止 `hd_record_milestone` 点亮门禁里程碑，仅HCritic 可点亮。
 
 2. **流转决策**
    - 已达第 **2 轮**仍不通过 → 中止流程，请求用户介入；

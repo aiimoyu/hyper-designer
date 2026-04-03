@@ -90,10 +90,10 @@ describe("HyperDesigner Plugin", () => {
     expect(pluginInstance).toHaveProperty("event")
     expect(pluginInstance).toHaveProperty("experimental.chat.system.transform")
 
-    expect(typeof pluginInstance.config).toBe("function")
-    expect(typeof pluginInstance.tool).toBe("object")
-    expect(typeof pluginInstance.event).toBe("function")
-    expect(typeof pluginInstance["experimental.chat.system.transform"]).toBe("function")
+    expect(pluginInstance.config).toBe("function")
+    expect(pluginInstance.tool).toBe("object")
+    expect(pluginInstance.event).toBe("function")
+    expect(pluginInstance["experimental.chat.system.transform"]).toBe("function")
   })
 
   it("should provide workflow state management tools", async () => {
@@ -187,17 +187,17 @@ describe("HyperDesigner Plugin", () => {
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          type: "gate",
+          id: "gate",
           mark: true,
           detail: { score: 85, comment: "评审通过" }
         },
         createMockToolContext(),
       )
-      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { type: string; timestamp: string; mark: boolean; detail: { score: number; comment: string } } }
+      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { id: string; timestamp: string; mark: boolean; detail: { score: number; comment: string } } }
 
       expect(result.success).toBe(true)
       expect(result.stage).toBe("IRAnalysis")
-      expect(result.milestone.type).toBe("gate")
+      expect(result.milestone.id).toBe("gate")
       expect(result.milestone.mark).toBe(true)
       expect(result.milestone.detail.score).toBe(85)
       expect(result.milestone.detail.comment).toBe("评审通过")
@@ -222,7 +222,7 @@ describe("HyperDesigner Plugin", () => {
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          type: 'doc_review',
+          id: 'doc_review',
           mark: false,
           detail: { reason: 'Need revision' },
         },
@@ -233,7 +233,7 @@ describe("HyperDesigner Plugin", () => {
         success: boolean
         stage: string
         milestone: {
-          type: string
+          id: string
           timestamp: string
           mark: boolean
           detail: { reason: string }
@@ -242,7 +242,7 @@ describe("HyperDesigner Plugin", () => {
 
       expect(result.success).toBe(true)
       expect(result.stage).toBe('IRAnalysis')
-      expect(result.milestone.type).toBe('doc_review')
+      expect(result.milestone.id).toBe('doc_review')
       expect(result.milestone.mark).toBe(false)
       expect(result.milestone.detail.reason).toBe('Need revision')
     })
@@ -265,17 +265,17 @@ describe("HyperDesigner Plugin", () => {
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          type: "gate",
+          id: "gate",
           mark: false,
           detail: { score: 60 }
         },
         createMockToolContext(),
       )
-      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { type: string; timestamp: string; mark: boolean; detail: { score: number; comment?: string | null } } }
+      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { id: string; timestamp: string; mark: boolean; detail: { score: number; comment?: string | null } } }
 
       expect(result.success).toBe(true)
       expect(result.stage).toBe("IRAnalysis")
-      expect(result.milestone.type).toBe("gate")
+      expect(result.milestone.id).toBe("gate")
       expect(result.milestone.mark).toBe(false)
       expect(result.milestone.detail.score).toBe(60)
       expect(result.milestone.detail.comment).toBeUndefined()
@@ -300,17 +300,17 @@ describe("HyperDesigner Plugin", () => {
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          type: "force_advance",
+          id: "force_advance",
           mark: true,
           detail: { reason: "Three failed attempts" }
         },
         createMockToolContext(),
       )
-      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { type: string; timestamp: string; mark: boolean; detail: { reason: string } } }
+      const result = JSON.parse(output) as { success: boolean; stage: string; milestone: { id: string; timestamp: string; mark: boolean; detail: { reason: string } } }
 
       expect(result.success).toBe(true)
       expect(result.stage).toBe("IRAnalysis")
-      expect(result.milestone.type).toBe("force_advance")
+      expect(result.milestone.id).toBe("force_advance")
       expect(result.milestone.mark).toBe(true)
       expect(result.milestone.detail.reason).toBe("Three failed attempts")
       expect(result.milestone.timestamp).toBeDefined()
@@ -334,7 +334,7 @@ describe("HyperDesigner Plugin", () => {
 
       const output = await pluginInstance.tool!.hd_record_milestone.execute(
         {
-          type: "gate",
+          id: "gate",
           mark: true,
           detail: { score: 85 }
         },

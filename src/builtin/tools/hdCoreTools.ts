@@ -34,24 +34,24 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
         return JSON.stringify({ workflows }, null, 2)
       },
     },
-    {
-      name: 'hd_workflow_detail',
-      description: 'Get detailed information about a specific workflow, including its stages, their descriptions, and which stages are required. Use this to understand a workflow before selecting it.',
-      params: {
-        type_id: {
-          type: 'string',
-          description: "The ID of the workflow to get details for (e.g., 'classic')",
-        },
-      },
-      execute: async params => {
-        const typeId = String(params.type_id)
-        const detail = workflowService.getWorkflowDetail(typeId)
-        if (!detail) {
-          return JSON.stringify({ error: `Workflow '${typeId}' not found`, availableWorkflows: workflowService.listWorkflows().map(w => w.id) }, null, 2)
-        }
-        return JSON.stringify(detail, null, 2)
-      },
-    },
+    // {
+    //   name: 'hd_workflow_detail',
+    //   description: 'Get detailed information about a specific workflow, including its stages, their descriptions, and which stages are required. Use this to understand a workflow before selecting it.',
+    //   params: {
+    //     type_id: {
+    //       type: 'string',
+    //       description: "The ID of the workflow to get details for (e.g., 'classic')",
+    //     },
+    //   },
+    //   execute: async params => {
+    //     const typeId = String(params.type_id)
+    //     const detail = workflowService.getWorkflowDetail(typeId)
+    //     if (!detail) {
+    //       return JSON.stringify({ error: `Workflow '${typeId}' not found`, availableWorkflows: workflowService.listWorkflows().map(w => w.id) }, null, 2)
+    //     }
+    //     return JSON.stringify(detail, null, 2)
+    //   },
+    // },
     {
       name: 'hd_workflow_select',
       description: 'Select and initialize a workflow for the Hyper Designer project. This MUST be called before any workflow operations. All available stages will be selected by default.',
@@ -147,12 +147,70 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
       },
     },
     {
-      name: 'hd_record_milestone',
-      description: 'Record or overwrite a milestone for the current workflow stage. Multiple calls with the same type will overwrite the previous milestone.',
+      name: 'hd_get_milestone',
+      description: 'Get the status of a specific milestone or all milestones for the current workflow stage.',
       params: {
-        type: {
+        id: {
           type: 'string',
-          description: 'Milestone type identifier',
+          optional: true,
+          description: 'The milestone id to query. If omitted, returns all milestones for the current stage.',
+        },
+      },
+      execute: async params => {
+        const state = workflowService.getState()
+        if (!state || !state.initialized) {
+          return JSON.stringify({
+            error: 'Workflow not initialized. Use hd_workflow_select to initialize a workflow first.',
+          }, null, 2)
+        }
+
+        const currentStage = state.current?.name
+        if (!currentStage) {
+          return JSON.stringify({
+            error: 'No current stage set. Use hd_handover to advance to a stage first.',
+          }, null, 2)
+        }
+
+        const milestones = state.runtime?.currentNodeContext?.milestones ?? {}
+        const milestoneId = params.id as string | undefined
+
+        if (milestoneId) {
+          const milestone = milestones[milestoneId]
+          if (!milestone) {
+            return JSON.stringify({
+              stage: currentStage,
+              id: milestoneId,
+              status: 'not_set',
+              available_milestones: Object.keys(milestones),
+            }, null, 2)
+          }
+          return JSON.stringify({
+            stage: currentStage,
+            id: milestoneId,
+            mark: milestone.mark,
+            timestamp: milestone.updatedAt,
+            detail: milestone.detail,
+          }, null, 2)
+        }
+
+        return JSON.stringify({
+          stage: currentStage,
+          milestones: Object.entries(milestones).map(([key, m]) => ({
+            id: key,
+            mark: m.mark,
+            timestamp: m.updatedAt,
+            detail: m.detail,
+          })),
+        }, null, 2)
+      },
+    },
+    {
+      name: 'hd_record_milestone',
+      description: 'Record or overwrite a milestone for the current workflow stage. Multiple calls with the same id will overwrite the previous milestone.',
+      params: {
+        id: {
+          type: 'string',
+          description: "Milestone identifier (name). WARNING: Built-in milestones (starting with 'hd-') control workflow flow and should NOT be lit unless you explicitly understand their impact (e.g., 'hd-force-advance' enables forced progression). For normal stage completion, use custom milestone ids.",
         },
         mark: {
           type: 'boolean',
@@ -161,23 +219,23 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
         detail: {
           type: 'object',
           optional: true,
-          description: 'Additional details as key-value pairs. Structure is flexible and can contain any properties.',
+          description: 'Additional context for this milestone (e.g., evidence for why it was lit, reference links, notes). This is for documentation purposes and does not affect workflow logic.',
         },
       },
       execute: async params => {
-        const typeValue = params.type
+        const typeValue = params.id
         const markValue = params.mark
 
         if (typeof typeValue !== 'string') {
           return JSON.stringify({
             success: false,
-            error: `Invalid type parameter. Expected string, got ${typeValue === undefined ? 'undefined' : typeof typeValue}`,
+            error: `Invalid id parameter. Expected string, got ${typeValue === undefined ? 'undefined' : typeof typeValue}`,
             requiredFields: {
-              type: 'string (the name of milestone)',
+              id: 'string (the milestone identifier/name)',
               mark: 'boolean (true to light up, false to turn off)',
-              detail: 'object (optional, any key-value pairs)',
+              detail: 'object (optional, additional context)',
             },
-            example: { type: 'example-milestone', mark: true, detail: { message: 'Example milestone passed' } },
+            example: { id: 'stage-completed', mark: true, detail: { reason: 'All tasks finished' } },
           }, null, 2)
         }
 
@@ -186,11 +244,11 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
             success: false,
             error: `Invalid mark parameter. Expected boolean, got ${markValue === undefined ? 'undefined' : typeof markValue}`,
             requiredFields: {
-              type: 'string (the name of milestone)',
+              id: 'string (the milestone identifier/name)',
               mark: 'boolean (true to light up, false to turn off)',
-              detail: 'object (optional, any key-value pairs)',
+              detail: 'object (optional, additional context)',
             },
-            example: { type: 'example-milestone', mark: true, detail: { message: 'Example milestone passed' } },
+            example: { id: 'stage-completed', mark: true, detail: { reason: 'All tasks finished' } },
           }, null, 2)
         }
 
@@ -228,12 +286,12 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
     },
     {
       name: 'hd_force_next_step',
-      description: 'Force advance to the next step in the workflow, bypassing gate checks. Use this when gate approval cannot be achieved after multiple attempts. Call this tool with parameter: {"_": ""}',
+      description: `Force advance to the next step in the workflow, bypassing gate checks. This is a fallback tool used when hd_handover fails or when the user explicitly requests to skip the quality review. Except when explicitly authorized by the user, NEVER use this tool. Call this tool with parameter: {"_": ""}`,
       params: {
         _: {
           type: 'string',
           optional: true,
-          description: '无实际意义的占位参数，调用时传入随机字符串',
+          description: 'Placeholder parameter with no practical significance',
         },
       },
       execute: async () => {

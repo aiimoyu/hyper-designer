@@ -501,8 +501,6 @@ describe("WorkflowService", () => {
     it('denies force-next-step when failureCount is below threshold', () => {
       initWithHandover(service);
       service.setCurrent('IRAnalysis');
-      service.setHandover('invalid-stage');
-      service.setHandover('invalid-stage');
 
       const result = service.hdForceNextStep();
 
@@ -513,8 +511,6 @@ describe("WorkflowService", () => {
     it('denies force-next-step when handover target is not the next selected stage', () => {
       initWithHandover(service);
       service.setCurrent('IRAnalysis');
-      service.setHandover('invalid-stage');
-      service.setHandover('invalid-stage');
       service.setHandover('invalid-stage');
       service.setHandover('IRAnalysis');
 
@@ -527,8 +523,6 @@ describe("WorkflowService", () => {
     it('forces transition when threshold met and target is the next selected stage', () => {
       initWithHandover(service);
       service.setCurrent('IRAnalysis');
-      service.setHandover('invalid-stage');
-      service.setHandover('invalid-stage');
       service.setHandover('invalid-stage');
 
       const result = service.hdForceNextStep();
@@ -547,8 +541,6 @@ describe("WorkflowService", () => {
       initWithHandover(service);
       service.setCurrent('IRAnalysis');
       service.setHandover('invalid-stage');
-      service.setHandover('invalid-stage');
-      service.setHandover('invalid-stage');
 
       const result = service.hdForceNextStep();
 
@@ -563,7 +555,7 @@ describe("WorkflowService", () => {
       expect(forceAdvanceEvent).toBeDefined();
       expect((forceAdvanceEvent?.value as { mark?: boolean } | undefined)?.mark).toBe(true);
       expect((forceAdvanceEvent?.value as { detail?: unknown } | undefined)?.detail).toMatchObject({
-        reason: 'Forced transition after 3+ failed handover attempts',
+        reason: 'Forced transition after 1+ failed handover attempts',
       });
       expect(gateEvent).toBeUndefined();
     });

@@ -16,10 +16,10 @@ export function forceAdvanceToNextSelectedStage(
 
   const currentStage = state.current.name
   const failureCountBefore = state.current.failureCount ?? 0
-  if (failureCountBefore < 3) {
+  if (failureCountBefore < 1) {
     return {
-      error: `Force-next-step denied: failureCount threshold not met (${failureCountBefore}/3).`,
-      reason: `failureCount ${failureCountBefore} is below required threshold 3`,
+      error: `Force-next-step denied: failureCount threshold not met (${failureCountBefore}/1).`,
+      reason: `failureCount ${failureCountBefore} is below required threshold 1`,
     }
   }
 
