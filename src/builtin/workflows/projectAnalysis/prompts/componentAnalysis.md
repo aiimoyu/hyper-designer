@@ -1,4 +1,4 @@
-# 阶段 2: 组件分析
+# Stage 2: Component Analysis
 
 ```xml
 <workflow_context>
@@ -10,37 +10,36 @@
 </workflow_context>
 ```
 
-## 重要说明
+## Important Note
 
-本阶段是 **project-analysis** skill 的一部分。project-analysis 是一个项目分析工作流，包含2个阶段：
+This stage is part of the **project-analysis** skill. project-analysis is a project analysis workflow that contains 2 stages:
 
-1. 系统分析
-2. 组件分析（当前阶段）
+1. System Analysis
+2. Component Analysis (current stage)
 
-在使用本阶段提示时，请确保理解整个 skill 的上下文和目标。
+When using the prompt for this stage, please make sure you understand the context and objective of the entire skill.
 
-## 任务
+## Task
 
-深入分析阶段1中识别的每个模块/组件，生成单独的组件详情文件。
+Perform in-depth analysis of each module/component identified in Stage 1, and generate separate component detail files.
 
-## 执行步骤
+## Execution Steps
 
-- [Proc1.1] 确认目标项目路径
-- [Proc1.2] 读取 `project-analysis` skill 中的 `references/phase2-component-analysis.md` 获取完整方法论`
-- [Proc1.3] 载入 `overview.md`、`architecture.md` 和 `modules.md` 以获取组件列表和相关信息
-- [Proc2] 按照 `references/phase2-component-analysis.md` 中的 S1-S8 阶段执行，禁止跳步。
-- [Proc3.1] 使用 `hd_handover` 工具结束工作流。
+- [Proc1.1] Confirm the target project path
+- [Proc1.2] Read `references/phase2-component-analysis.md` in the `project-analysis` skill to obtain the complete methodology`
+- [Proc1.3] Load `overview.md`, `architecture.md`, and `modules.md` to obtain the component list and related information
+- [Proc2] Execute according to stages S1-S8 in `references/phase2-component-analysis.md`, and skipping steps is prohibited.
+- [Proc3.1] Use the `hd_handover` tool to end the workflow.
 - [Proc3.2] Stop
 
+## Output
 
-## 输出
+Component analysis files in the `components/` directory (such as `C001-Core.md`)
 
-`components/` 目录下的组件分析文件（如 `C001-Core.md`）
+## Work Handover
 
-## 工作交接
+You are the final stage of this workflow. After completion, please notify the user that the analysis is complete and enter the closing process.
 
-你是该工作流最后一个阶段，完成后请通知用户分析已完成，进入结束流程。
+**Work Handover**: NEVER stop any work without using `hd_handover` to end the workflow.
 
-**工作交接**：NEVER 不使用 `hd_handover` 结束工作流而停止任何工作。
-
-如果你完成了工作不使用 `hd_handover` 进行明确结束工作流，会导致用户下次进入工作流时，之前的工作状态和上下文没有被正确清理，可能会引发混乱和错误。
+If you complete the work without using `hd_handover` to explicitly end the workflow, the previous work status and context will not be properly cleared when the user enters the workflow next time, which may cause confusion and errors.

@@ -1,4 +1,4 @@
-## 当前阶段：开发计划（developmentPlan）
+## Current Stage: Development Plan (developmentPlan)
 
 ```xml
 <workflow_context>
@@ -14,61 +14,70 @@
 </workflow_context>
 ```
 
-### 执行角色
+### Execution Roles
 
-- **执行 Agent**: `HDArchitect`
-- **流程 Skill**: `hd-review-pipeline`
-- **核心 Skill**: `requirements-designer`
+- **Executing Agent**: `HDArchitect`
+- **Process Skill**: `hd-review-pipeline`
+- **Core Skill**: `requirements-designer`
 
-### 执行要求
+### Execution Requirements
 
-在开始生成内容前，必须严格按以下顺序执行：
+Before starting content generation, the following must be executed strictly in order:
 
-1. 按 `hd-review-pipeline` 获取并执行当前阶段流程；
-2. 按流程指引加载 `requirements-designer`；
-3. 读取参考文件：`requirements-designer/references/s3-development-plan.md`。
+1. Use `hd-review-pipeline` to obtain and execute the current stage workflow;
+2. Load `requirements-designer` according to the workflow guidance;
+3. Read the reference file: `requirements-designer/references/s3-development-plan.md`.
 
-### 生成约束
+### Generation Constraints
 
-你只能依据上述参考文件中的**指南与模板**生成《开发计划》：
+You may only generate the "Development Plan" based on the **guidelines and templates** in the reference file above:
 
-- 不得跳过文档读取；
-- 不得使用默认模板、自行改写结构或省略必要字段；
-- 不得生成超出**单模块范围**的开发任务。
+- Do not skip document reading;
+- Do not use default templates, rewrite the structure on your own, or omit required fields;
+- Do not generate development tasks beyond the **single-module scope**.
 
-### 阶段交付物
+### Stage Deliverables
 
-- **文件名**: `{模块名}-dev-plan.md`
-- **输出路径**: `.hyper-designer/developmentPlan/{模块名}-dev-plan.md`
-- **格式要求**: Markdown，且必须完整符合 Skill 模板结构。
+- **File Name**: `{module_name}-dev-plan.md`
+- **Output Path**: `.hyper-designer/developmentPlan/{module_name}-dev-plan.md`
+- **Format Requirement**: Markdown, and it must fully comply with the Skill template structure.
 
-### 质量审查
+### Quality Review
 
-文档写入后，必须调用：
+After writing the document, you must call:
 
 `HD_TOOL_DELEGATE(subagent=HCritic, skill=requirements-designer)`
 
-并发送以下委托提示词：
+and send the following delegation prompt:
 
 ```markdown
-# 阶段评审任务：开发计划审核
+# Stage Review Task: Development Plan Review
 
-## 审核目标
-请作为资深架构评审员，对以下目录中的开发计划文档进行严格审核：
+## Review Objective
+Please act as a senior architecture reviewer and conduct a strict review of the development plan documents in the following directory:
 `.hyper-designer/developmentPlan/`
 
-## 强制前置准备
-在输出评审结果前，必须读取：
-1. `requirements-designer/references/reviewer.md`
-2. `requirements-designer/references/development-plan-review-checklist.md`
+## Review Process
 
-## 输出要求
-请基于 Checklist 输出：
-1. **评审总分**（0-100）
-2. **缺陷与修改建议**（按 Blocker / Critical / Minor 分类）
-3. **最终结论**（PASS / FAIL）
+- [S1] Load the Skill to obtain review criteria
+   **You must use the `requirements-designer` Skill for the review.**
+- [S2] Read the review criteria
+   You must read the Skill reference files:
+   1. `[requirements-designer]/references/reviewer.md`
+   2. `[requirements-designer]/references/development-plan-review-checklist.md`
+- [S3] Execute the review
+   1. Check the document content item by item against every rule in the checklist
+   2. Mark the milestone as completed
+   3. Output the review result
 
-## 工具要求
-评审完成后，必须调用 `hd_record_milestone` 记录里程碑状态。
-**通过**与**条件通过**，均需要点亮里程碑。
+
+## Output Requirements
+Please output the following based on the Checklist:
+1. **Overall Review Score** (0-100)
+2. **Defects and Revision Suggestions** (categorized by Blocker / Critical / Minor)
+3. **Final Conclusion** (PASS / FAIL)
+
+## Tool Requirement
+After the review is completed, you must call `hd_record_milestone` to record the milestone status.
+For both **Pass** and **Conditional Pass**, the milestone must be marked as completed.
 ```
