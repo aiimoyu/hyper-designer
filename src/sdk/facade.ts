@@ -1,6 +1,8 @@
 import type {
   AgentConfig,
   AgentPluginFactory,
+  CommandDefinition,
+  CommandPluginFactory,
   ToolDefinition,
   ToolPluginFactory,
   WorkflowDefinition,
@@ -19,6 +21,10 @@ import {
   getToolNames,
   createTools,
   clearToolsForTest,
+  registerCommand,
+  getCommandNames,
+  createCommands,
+  clearCommandsForTest,
 } from '../plugin/registry'
 import { workflowService } from '../workflows/service'
 import { HyperDesignerLogger } from '../utils/logger'
@@ -52,6 +58,14 @@ export interface SDK {
       clear: () => void
     }
   }
+  command: {
+    plugins: {
+      register: (name: string, factory: CommandPluginFactory) => void
+      list: () => string[]
+      getAll: () => Promise<Record<string, CommandDefinition>>
+      clear: () => void
+    }
+  }
 }
 
 export const sdk: SDK = {
@@ -81,6 +95,14 @@ export const sdk: SDK = {
       list: getToolNames,
       getAll: createTools,
       clear: clearToolsForTest,
+    },
+  },
+  command: {
+    plugins: {
+      register: registerCommand,
+      list: getCommandNames,
+      getAll: createCommands,
+      clear: clearCommandsForTest,
     },
   },
 }

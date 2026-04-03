@@ -58,6 +58,7 @@ describe('createOpenCodePlatformOrchestrator', () => {
       workflowService,
       pluginTools: {},
       mappedAgents: {},
+      mappedCommands: {},
     })
 
     const hooks = orchestrator.toPluginHooks()
@@ -98,6 +99,7 @@ describe('createOpenCodePlatformOrchestrator', () => {
       },
       pluginTools: {},
       mappedAgents: {},
+      mappedCommands: {},
     })
 
     const hooks = orchestrator.toPluginHooks()
@@ -132,6 +134,7 @@ describe('createOpenCodePlatformOrchestrator', () => {
         } as ToolDefinition,
       },
       mappedAgents: {},
+      mappedCommands: {},
     })
 
     const hooks = orchestrator.toPluginHooks()

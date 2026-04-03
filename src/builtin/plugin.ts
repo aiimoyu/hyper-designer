@@ -1,7 +1,8 @@
 import { BUILTIN_AGENT_PLUGINS } from './agents'
+import { BUILTIN_COMMAND_PLUGINS } from './commands'
 import { BUILTIN_TOOL_PLUGINS } from './tools'
 import { BUILTIN_WORKFLOW_PLUGINS } from './workflows'
-import type { AgentConfig, PluginContext, ToolDefinition, WorkflowDefinition } from '../types'
+import type { AgentConfig, CommandDefinition, PluginContext, ToolDefinition, WorkflowDefinition } from '../types'
 import { definePlugin } from '../plugin'
 import { resolve } from 'path'
 
@@ -41,6 +42,14 @@ async function buildBuiltinTools(): Promise<Record<string, ToolDefinition>> {
   return tools
 }
 
+async function buildBuiltinCommands(): Promise<Record<string, CommandDefinition>> {
+  const commands: Record<string, CommandDefinition> = {}
+  for (const registration of BUILTIN_COMMAND_PLUGINS) {
+    commands[registration.name] = await registration.factory()
+  }
+  return commands
+}
+
 export const BUILTIN_PLUGIN = definePlugin(async ctx => ({
   agent: async agents => ({
     ...(agents ?? {}),
@@ -53,5 +62,9 @@ export const BUILTIN_PLUGIN = definePlugin(async ctx => ({
   tool: async tools => ({
     ...(tools ?? {}),
     ...(await buildBuiltinTools()),
+  }),
+  command: async commands => ({
+    ...(commands ?? {}),
+    ...(await buildBuiltinCommands()),
   }),
 }))

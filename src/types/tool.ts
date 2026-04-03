@@ -13,6 +13,7 @@ export interface ToolContextAdapter {
   sendPrompt: (params: { sessionId: string; agent: string; text: string; schema?: Record<string, unknown>; system?: string }) => Promise<{ structuredOutput?: unknown; text: string }>
   summarizeSession?: (sessionId: string) => Promise<void>
   clearSession?: (sessionId: string) => Promise<string>
+  cancelSession?: (params: { sessionId: string }) => Promise<void>
   registerTools?: (tools: Array<{ name: string; description: string; params: Record<string, { type: string; description?: string; optional?: boolean }>; handler: (params: Record<string, unknown>) => Promise<string> }>) => void
 }
 
@@ -20,6 +21,7 @@ export interface ToolContext {
   workflowId: string
   currentStage: string | null
   state: Record<string, unknown> | null
+  sessionID?: string
   adapter?: ToolContextAdapter
 }
 

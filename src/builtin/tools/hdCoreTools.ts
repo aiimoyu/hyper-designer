@@ -1,5 +1,6 @@
 import type { ToolDefinition } from '../../types'
 import { workflowService } from '../../workflows/service'
+import { HyperDesignerLogger } from '../../utils/logger'
 
 export function createHdCoreToolDefinitions(): ToolDefinition[] {
   return [
@@ -60,7 +61,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           description: "The workflow ID to select (e.g., 'classic', 'lite-designer', 'requirement-designer')",
         },
       },
-      execute: async params => {
+      execute: async (params, ctx) => {
         const typeId = String(params.type_id)
         const detail = workflowService.getWorkflowDetail(typeId)
         if (!detail) {
@@ -75,6 +76,29 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
 
         const stages = detail.stages.map(stage => ({ key: stage.key, selected: true }))
         const result = workflowService.selectWorkflow({ typeId, stages })
+
+        if (result.success) {
+          const handoverResult = await workflowService.hdScheduleHandover('')
+          if (handoverResult.scheduled === true) {
+            const sessionID = ctx.sessionID
+            const adapter = ctx.adapter
+            if (sessionID && adapter?.cancelSession) {
+              HyperDesignerLogger.info('hd_workflow_select', '初始化完成并触发首次 handover', {
+                sessionID,
+                workflow: typeId,
+                handoverTo: handoverResult.handover_to,
+              })
+              adapter.cancelSession({ sessionId: sessionID }).catch((error) => {
+                const err = error instanceof Error ? error : new Error(String(error))
+                HyperDesignerLogger.error('hd_workflow_select', '取消 session 失败（不影响 handover 调度）', err, {
+                  sessionID,
+                  action: 'cancelSession',
+                })
+              })
+            }
+          }
+        }
+
         return JSON.stringify(result, null, 2)
       },
     },
@@ -96,10 +120,29 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           description: 'If true, ends the workflow regardless of next_name. All files will be archived to .hyper-designer/history.',
         },
       },
-      execute: async params => {
+      execute: async (params, ctx) => {
         const nextName = typeof params.next_name === 'string' ? params.next_name.trim() : ''
         const endFlag = typeof params.end === 'boolean' ? params.end : false
         const result = await workflowService.hdScheduleHandover(nextName, endFlag)
+
+        if (result.scheduled === true) {
+          const sessionID = ctx.sessionID
+          const adapter = ctx.adapter
+          if (sessionID && adapter?.cancelSession) {
+            HyperDesignerLogger.info('hd_handover', '调度成功，立即取消当前 session 以阻止模型继续输出', {
+              sessionID,
+              handoverTo: result.handover_to,
+            })
+            adapter.cancelSession({ sessionId: sessionID }).catch((error) => {
+              const err = error instanceof Error ? error : new Error(String(error))
+              HyperDesignerLogger.error('hd_handover', '取消 session 失败（不影响 handover 调度）', err, {
+                sessionID,
+                action: 'cancelSession',
+              })
+            })
+          }
+        }
+
         return JSON.stringify(result, null, 2)
       },
     },

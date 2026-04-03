@@ -1,5 +1,5 @@
 import { tool } from '@opencode-ai/plugin'
-import type { Hooks, PluginInput } from '@opencode-ai/plugin'
+import type { Hooks, PluginInput, ToolContext as OpencodeToolContext } from '@opencode-ai/plugin'
 import type { AgentConfig as OpencodeAgentConfig } from '@opencode-ai/sdk'
 
 import type { AgentConfig as LocalAgentConfig } from '../../../agents/types'
@@ -12,7 +12,7 @@ import {
 } from '../../../transform'
 import { HyperDesignerLogger } from '../../../utils/logger'
 import { workflowService } from '../../../workflows/service'
-import type { ToolContext, ToolDefinition, ToolParamSchema, ToolParamsSchema } from '../../../tools/types'
+import type { ToolDefinition, ToolParamSchema, ToolParamsSchema } from '../../../tools/types'
 import type { PlatformCapabilities } from '../../capabilities/types'
 import type {
   AgentMappingInput,
@@ -144,7 +144,7 @@ function convertSingleSchemaToOpenCodeArg(schema: ToolParamSchema): OpenCodeArg 
 
 export function convertWorkflowToolsToOpenCode(
   tools: ToolDefinition[],
-  getContext: () => ToolContext,
+  getContext: ToolContextFactory,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Record<string, any> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,12 +156,12 @@ export function convertWorkflowToolsToOpenCode(
     result[t.name] = tool({
       description: t.description,
       args,
-      async execute(params: Record<string, unknown>) {
+      async execute(params: Record<string, unknown>, opencodeCtx: OpencodeToolContext) {
         HyperDesignerLogger.debug(MODULE_NAME, `执行工作流工具: ${t.name}`, {
           toolName: t.name,
           params,
         })
-        const ctx = getContext()
+        const ctx = getContext(opencodeCtx)
         return t.execute(params, ctx)
       },
     })
@@ -392,10 +392,11 @@ export async function createOpenCodePlatformOrchestrator(
       workflowService: input.workflowService,
       pluginTools: input.pluginTools,
     },
-    () => ({
+    (opencodeCtx) => ({
       workflowId: input.workflowService.getDefinition()?.id ?? '',
       currentStage: input.workflowService.getCurrentStage(),
       state: input.workflowService.getState() as unknown as Record<string, unknown> | null,
+      sessionID: opencodeCtx.sessionID,
       adapter: input.capabilities.toAdapter(),
     }),
   )
@@ -406,6 +407,10 @@ export async function createOpenCodePlatformOrchestrator(
         config.agent = {
           ...(config.agent as Record<string, unknown> | undefined ?? {}),
           ...input.mappedAgents,
+        }
+        config.command = {
+          ...(config.command as Record<string, unknown> | undefined ?? {}),
+          ...input.mappedCommands,
         }
       },
       tool: {

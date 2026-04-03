@@ -10,7 +10,7 @@
 |--------|----------|----------|
 | 名称是否明确 | ERROR | 格式为 `[System Name - Sub-feature Name]`，能区分不同需求 |
 | 描述是否清晰 | WARNING | 一句话说明核心目标，"要做什么" |
-| 输入来源是否标注 | ERROR | 必须追溯来源：`GitHub Issue #N / Product Requirement / Oral` |
+| 输入来源是否标注 | INFO | 必须追溯来源：`GitHub Issue #N / Product Requirement / Oral` |
 | 项目类型是否正确 | WARNING | `Feature Enhancement / New Feature Development` |
 
 ---

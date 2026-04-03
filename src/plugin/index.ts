@@ -1,5 +1,6 @@
 import type {
   AgentConfig,
+  CommandDefinition,
   PluginContext,
   PluginFactory,
   PluginRegistrations,
@@ -94,13 +95,15 @@ export async function buildRegistrations(
   let agents: Record<string, AgentConfig> = {}
   let workflows: Record<string, WorkflowDefinition> = {}
   let tools: Record<string, ToolDefinition> = {}
+  let commands: Record<string, CommandDefinition> = {}
 
   for (const plugin of plugins) {
     const hooks = await plugin(ctx)
     if (hooks.agent) agents = await hooks.agent(agents)
     if (hooks.workflow) workflows = await hooks.workflow(workflows)
     if (hooks.tool) tools = await hooks.tool(tools)
+    if (hooks.command) commands = await hooks.command(commands)
   }
 
-  return { agent: agents, workflow: workflows, tool: tools }
+  return { agent: agents, workflow: workflows, tool: tools, command: commands }
 }

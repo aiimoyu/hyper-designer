@@ -4,6 +4,7 @@ import {
   registerAgentsFromRecord,
   registerWorkflowsFromRecord,
   registerToolsFromRecord,
+  registerCommandsFromRecord,
   markBootstrapped,
   resetBootstrapForTest,
 } from '../plugin/registry'
@@ -52,6 +53,7 @@ export async function bootstrapSDK(opts: BootstrapOptions = {}): Promise<void> {
   registerAgentsFromRecord(registrations.agent)
   registerWorkflowsFromRecord(registrations.workflow)
   registerToolsFromRecord(registrations.tool)
+  registerCommandsFromRecord(registrations.command)
   markBootstrapped()
 
   sdkBootstrapped = true

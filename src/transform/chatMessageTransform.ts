@@ -79,7 +79,12 @@ export function createUsingHyperDesignerTransformer(): ChatMessageTransformHook 
  * 当工作流未初始化时，修改用户提示词，添加工作流选择引导
  */
 export function createNoWorkflowPromptTransformer(): ChatMessageTransformHook {
-  return async (_input, output) => {
+  return async (input, output) => {
+    // 仅当消息发送给 Hyper 模型时才进行变更
+    if (input.agent !== 'Hyper') {
+      return
+    }
+
     if (workflowService.isInitialized()) {
       return
     }
@@ -95,12 +100,36 @@ export function createNoWorkflowPromptTransformer(): ChatMessageTransformHook {
     }
 
     const originalText = textParts.map(p => p.text).join('\n')
-    const modifiedText = `<user_instruction>
-${originalText}
-</user_intent>
-
-[System Status] No workflow is currently active.
+    
+    const hasWrapperTag = (originalText.includes('<user_instruction>') && originalText.includes('</user_instruction>')) ||
+                          (originalText.includes('<user_instruction>') && originalText.includes('</user_intent>'))
+    const hasSystemStatus = originalText.includes('[System Status]')
+    
+    if (hasWrapperTag && hasSystemStatus) {
+      HyperDesignerLogger.debug('NoWorkflowPromptTransformer', '提示词已包含包装标签和系统状态，跳过注入', {
+        textLength: originalText.length,
+      })
+      return
+    }
+    
+    const systemStatusBlock = `[System Status] No workflow is currently active.
 [Directive] Please analyze the user's intent, assist them in selecting the appropriate workflow, and facilitate the handover to that workflow to fulfill the request.`
+    
+    let modifiedText: string
+    if (hasWrapperTag && !hasSystemStatus) {
+      modifiedText = originalText.replace(
+        '</user_instruction>',
+        `\n${systemStatusBlock}\n</user_instruction>`
+      )
+    } else if (!hasWrapperTag) {
+      modifiedText = `<user_instruction>
+${originalText}
+</user_instruction>
+
+${systemStatusBlock}`
+    } else {
+      modifiedText = originalText
+    }
 
     textParts[0]!.text = modifiedText
 

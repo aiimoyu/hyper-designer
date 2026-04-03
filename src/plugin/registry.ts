@@ -2,6 +2,9 @@ import type {
   AgentConfig,
   AgentPluginFactory,
   AgentPluginRegistration,
+  CommandDefinition,
+  CommandPluginFactory,
+  CommandPluginRegistration,
   ToolDefinition,
   ToolPluginFactory,
   ToolPluginRegistration,
@@ -13,6 +16,7 @@ import type {
 const agentPlugins = new Map<string, AgentPluginFactory>()
 const workflowPlugins = new Map<string, WorkflowPluginFactory>()
 const toolPlugins = new Map<string, ToolPluginFactory>()
+const commandPlugins = new Map<string, CommandPluginFactory>()
 
 let bootstrapped = false
 
@@ -105,10 +109,37 @@ export function clearToolsForTest(): void {
   toolPlugins.clear()
 }
 
+export function registerCommand(name: string, factory: CommandPluginFactory): void {
+  commandPlugins.set(name, factory)
+}
+
+export function registerCommands(registrations: CommandPluginRegistration[]): void {
+  for (const { name, factory } of registrations) {
+    registerCommand(name, factory)
+  }
+}
+
+export function getCommandNames(): string[] {
+  return Array.from(commandPlugins.keys())
+}
+
+export async function createCommands(): Promise<Record<string, CommandDefinition>> {
+  const result: Record<string, CommandDefinition> = {}
+  for (const [name, factory] of commandPlugins) {
+    result[name] = await factory()
+  }
+  return result
+}
+
+export function clearCommandsForTest(): void {
+  commandPlugins.clear()
+}
+
 export function clearAllForTest(): void {
   clearAgentsForTest()
   clearWorkflowsForTest()
   clearToolsForTest()
+  clearCommandsForTest()
   resetBootstrapForTest()
 }
 
@@ -127,5 +158,11 @@ export function registerWorkflowsFromRecord(workflows: Record<string, WorkflowDe
 export function registerToolsFromRecord(tools: Record<string, ToolDefinition>): void {
   for (const [name, tool] of Object.entries(tools)) {
     registerTool(name, () => tool)
+  }
+}
+
+export function registerCommandsFromRecord(commands: Record<string, CommandDefinition>): void {
+  for (const [name, cmd] of Object.entries(commands)) {
+    registerCommand(name, () => cmd)
   }
 }

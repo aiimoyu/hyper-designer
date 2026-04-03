@@ -1,6 +1,6 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import type { AgentConfig as OpencodeAgentConfig } from "@opencode-ai/sdk"
-import type { ToolDefinition } from '../../src/types'
+import type { CommandDefinition, ToolDefinition } from '../../src/types'
 import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"
 import {
@@ -57,12 +57,15 @@ export const HyperDesignerPlugin: Plugin = async (ctx) => {
     pluginToolDefinitions.map(definition => [definition.name, definition]),
   ) as Record<string, ToolDefinition>
 
+  const mappedCommands = await sdk.command.plugins.getAll() as Record<string, CommandDefinition>
+
   const orchestrator = await createOpenCodePlatformOrchestrator({
     ctx,
     capabilities: platformCapabilities,
     workflowService,
     pluginTools,
     mappedAgents,
+    mappedCommands,
   })
 
   const hooks = orchestrator.toPluginHooks()

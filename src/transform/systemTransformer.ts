@@ -27,7 +27,7 @@ You are currently running within the Hyper Designer plugin environment. Please p
  * 内建需要屏蔽的 skill 列表（精确且区分大小写）
  * 业务侧可在此维护默认屏蔽项
  */
-export const DEFAULT_BLOCKED_SKILLS: string[] = ["using-superpowers"]
+export const DEFAULT_BLOCKED_SKILLS: string[] = ["using-superpowers", "brainstorming"]
 
 export function resolveBlockedSkills(config: HDConfig | null): string[] {
   const configured = config?.transform?.blockedSkills ?? []
