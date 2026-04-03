@@ -6,7 +6,7 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
   return [
     {
       name: 'hd_workflow_state',
-      description: 'Get the current workflow state of the Hyper Designer project. Returns uninitialized status if no workflow has been selected. Call this tool with parameter: {"_": ""}',
+      description: 'Get a summary of the current workflow state. Shows initialized status, workflow type, plan (stages overview), and execution (current stage progress). Returns uninitialized message if no workflow has been selected. Call this tool with parameter: {"_": ""}',
       params: {
         _: {
           type: 'string',
@@ -15,8 +15,43 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
         },
       },
       execute: async () => {
-        const result = workflowService.hdGetWorkflowState()
-        return JSON.stringify(result, null, 2)
+        const state = workflowService.getState()
+        if (!state || !state.initialized) {
+          return JSON.stringify({
+            initialized: false,
+            message: 'Workflow not initialized. Use hd_workflow_list to see available workflows, then use hd_workflow_select to choose one.',
+          }, null, 2)
+        }
+
+        // Build formatted summary — only expose what the user needs
+        const summary: Record<string, unknown> = {}
+
+        summary.initialized = state.initialized
+
+        summary.workflow = state.typeId
+
+        summary.plan = Object.entries(state.workflow).map(([stageName, stage]) => ({
+          stage: stageName,
+          completed: stage.mark,
+          selected: stage.selected ?? true,
+        }))
+
+        const currentStage = state.current
+        const milestones = state.runtime?.currentNodeContext?.milestones ?? {}
+
+        summary.execution = {
+          current_stage: currentStage?.name ?? null,
+          agent: currentStage?.agent ?? null,
+          handover_to: currentStage?.handoverTo ?? null,
+          failure_count: currentStage?.failureCount ?? 0,
+          milestones: Object.entries(milestones).map(([, m]) => ({
+            name: m.name,
+            completed: m.mark,
+            updated_at: m.updatedAt,
+          })),
+        }
+
+        return JSON.stringify(summary, null, 2)
       },
     },
     {
@@ -179,28 +214,26 @@ export function createHdCoreToolDefinitions(): ToolDefinition[] {
           if (!milestone) {
             return JSON.stringify({
               stage: currentStage,
-              id: milestoneId,
+              milestone: milestoneId,
               status: 'not_set',
-              available_milestones: Object.keys(milestones),
+              available_milestones: Object.values(milestones).map(m => m.name),
             }, null, 2)
           }
           return JSON.stringify({
             stage: currentStage,
-            id: milestoneId,
             name: milestone.name,
-            mark: milestone.mark,
-            timestamp: milestone.updatedAt,
+            completed: milestone.mark,
+            updated_at: milestone.updatedAt,
             detail: milestone.detail,
           }, null, 2)
         }
 
         return JSON.stringify({
           stage: currentStage,
-          milestones: Object.entries(milestones).map(([key, m]) => ({
-            id: key,
+          milestones: Object.values(milestones).map(m => ({
             name: m.name,
-            mark: m.mark,
-            timestamp: m.updatedAt,
+            completed: m.mark,
+            updated_at: m.updatedAt,
             detail: m.detail,
           })),
         }, null, 2)

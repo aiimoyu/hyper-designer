@@ -1,4 +1,4 @@
-import type { Part } from '@opencode-ai/sdk'
+import type { Part, SessionMessagesResponse } from '@opencode-ai/sdk'
 import { isHDAgent } from '../agents/utils'
 import { resolveNodeConfig } from './agentRouting'
 import { appendUsingHyperDesignerSystemPrompt } from './systemTransformer'
@@ -7,6 +7,7 @@ import { workflowService } from '../workflows/service'
 
 export interface ChatMessageInput {
   agent?: string
+  sessionID?: string
   model?: {
     providerID: string
     modelID: string
@@ -30,6 +31,108 @@ export type ChatMessageTransformHook = (
   input: ChatMessageInput,
   output: ChatMessageOutput,
 ) => Promise<void>
+
+export type FetchSessionMessages = (sessionID: string) => Promise<SessionMessagesResponse | null>
+
+export function createHyperSessionHistoryTransformer(fetchMessages: FetchSessionMessages): ChatMessageTransformHook {
+  return async (input, output) => {
+    HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "111")
+    if (input.agent !== 'Hyper') {
+      HyperDesignerLogger.debug('HyperSessionHistoryTransformer', `Agent ${input.agent} is not Hyper, skipping session history injection`)
+      return
+    }
+    HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "222")
+    const sessionID = input.sessionID
+    if (!sessionID) {
+      return
+    }
+    HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "333")
+    try {
+      const messages = await fetchMessages(sessionID)
+      if (!messages || !Array.isArray(messages)) {
+        return
+      }
+      HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "444")
+      const userPrompts = messages
+        .filter((msg) => msg.info?.role === 'user')
+        .map((msg) => {
+          const textParts = msg.parts?.filter((p): p is Part & { type: 'text' } => p.type === 'text') ?? []
+          return textParts.map((p) => p.text).join('\n')
+        })
+        .filter(Boolean)
+
+      HyperDesignerLogger.info('HyperSessionHistory', `Session history: ${userPrompts.length} user prompt(s) found`, {
+        sessionID,
+        userPrompts,
+        totalMessages: messages.length,
+      })
+      HyperDesignerLogger.debug('HyperSessionHistoryTransformer', "555")
+      if (userPrompts.length === 0 && workflowService.isInitialized()) {
+        injectActiveWorkflowStatus(output)
+      }
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error))
+      HyperDesignerLogger.error('HyperSessionHistory', 'Failed to fetch session messages', err, {
+        sessionID,
+        action: 'fetchSessionHistory',
+      })
+    }
+  }
+}
+
+function injectActiveWorkflowStatus(output: ChatMessageOutput): void {
+  const parts = output.parts
+  if (!parts || parts.length === 0) {
+    return
+  }
+
+  const textParts = parts.filter((part): part is Part & { type: 'text' } => part.type === 'text')
+  if (textParts.length === 0) {
+    return
+  }
+
+  const originalText = textParts.map(p => p.text).join('\n')
+
+  const hasWrapperTag = originalText.includes('<user_instruction>') && originalText.includes('</user_instruction>')
+  const hasSystemStatus = originalText.includes('[System Status]')
+
+  if (hasWrapperTag && hasSystemStatus) {
+    HyperDesignerLogger.debug('ActiveWorkflowPromptTransformer', '提示词已包含包装标签和系统状态，跳过注入', {
+      textLength: originalText.length,
+    })
+    return
+  }
+
+  const state = workflowService.getState()
+  const currentStage = state?.current?.name ?? 'unknown'
+
+  const systemStatusBlock = `[System Status] There is currently a running workflow. Current stage: ${currentStage}
+[Directive] You must first confirm the user's intent: whether to continue the previous work or start a new workflow. If starting a new workflow, remind the user to use the command \`/hyper-end\` and send the instruction again.`
+
+  let modifiedText: string
+  if (hasWrapperTag && !hasSystemStatus) {
+    modifiedText = originalText.replace(
+      '</user_instruction>',
+      `\n${systemStatusBlock}\n</user_instruction>`
+    )
+  } else if (!hasWrapperTag) {
+    modifiedText = `<user_instruction>
+${originalText}
+</user_instruction>
+
+${systemStatusBlock}`
+  } else {
+    modifiedText = originalText
+  }
+
+  textParts[0]!.text = modifiedText
+
+  HyperDesignerLogger.info('ActiveWorkflowPromptTransformer', '注入活跃工作流状态提示', {
+    currentStage,
+    originalLength: originalText.length,
+    modifiedLength: modifiedText.length,
+  })
+}
 
 export function createAgentTransformer(): ChatMessageTransformHook {
   return async (input, output) => {

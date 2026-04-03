@@ -7,6 +7,7 @@ import {
   createAgentTransformer,
   createUsingHyperDesignerTransformer,
   createNoWorkflowPromptTransformer,
+  createHyperSessionHistoryTransformer,
   createSystemTransformer as createCoreSystemTransformer,
   hasUsingHyperDesignerTag,
 } from '../../../transform'
@@ -420,12 +421,23 @@ export async function createOpenCodePlatformOrchestrator(
         await workflowHooks.event(eventInput)
       },
       'chat.message': async (chatInput, chatOutput) => {
+        const fetchSessionMessages: import('../../../transform').FetchSessionMessages = async (sessionID) => {
+          const response = await input.ctx.client.session.messages({
+            path: { id: sessionID },
+            query: { directory: input.ctx.directory },
+          })
+          return response.data ?? null
+        }
+
+        const hyperSessionHistoryTransformer = createHyperSessionHistoryTransformer(fetchSessionMessages)
         const agentTransformer = createAgentTransformer()
         const usingHyperDesignerTransformer = createUsingHyperDesignerTransformer()
         const noWorkflowPromptTransformer = createNoWorkflowPromptTransformer()
+
+        await hyperSessionHistoryTransformer(chatInput as never, chatOutput as never)
+        await noWorkflowPromptTransformer(chatInput as never, chatOutput as never)
         await agentTransformer(chatInput as never, chatOutput as never)
         await usingHyperDesignerTransformer(chatInput as never, chatOutput as never)
-        await noWorkflowPromptTransformer(chatInput as never, chatOutput as never)
       },
       'experimental.chat.system.transform': async (transformInput: unknown, transformOutput: { system: string[] }) => {
         await transformHooks['experimental.chat.system.transform'](transformInput, transformOutput)
